@@ -1,5 +1,7 @@
 @baseUrl = http://localhost:4000
 
+
+
 // TEST DE CLIENTES
 ### Test de Listado de clientes
 GET {{baseUrl}}/api/clientes
@@ -66,11 +68,11 @@ Content-Type: application/json
 // TEST DE ACTUALIZACION
 
 ### Test de Actualizacion de cliente - [Actualizar un solo campo]
-PUT {{baseUrl}}/api/clientes/5491122334455
+PUT {{baseUrl}}/api/clientes/3514330429
 Content-Type: application/json
 
 {
-  "email": "test_prueba@example.com"
+  "telefono": "5493514330429"
 }
 
 ### Test de Actualizacion de cliente - [Actualizar varios campos]
