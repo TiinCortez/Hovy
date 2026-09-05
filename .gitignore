@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (nunca subir secretos)
+.env
+.env.*.local
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Sistema y editores
+.DS_Store
+.vscode/
+.idea/
+*.swp
