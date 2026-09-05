@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import fondoIzquierdo from '../../../assets/images/FondoLadoIzquierdo01.webp';
 import logo from '../../../assets/icons/LogoLogin.svg';

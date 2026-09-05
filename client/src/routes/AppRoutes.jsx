@@ -1,8 +1,7 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import DashboardLayout from '../components/layout/DashboardLayout.jsx';
-import RequireAuth from '../components/layout/requireAuth.jsx';
+import RequireAuth from '../components/layout/RequireAuth.jsx';
 import Home from '../pages/Home.jsx';
 import Login from '../pages/Auth/Login/Login.jsx';
 
