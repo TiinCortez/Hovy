@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "../config/supabase.js";
+import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from "../utils/telefono.js";
 
 const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
 
@@ -51,13 +52,20 @@ export const createCliente = async (req, res) => {
     });
   }
 
+  // El teléfono se guarda siempre en formato canónico: es la clave natural y es
+  // UNIQUE, así que dos formatos del mismo número serían dos clientes.
+  const telefonoNormalizado = normalizarTelefono(telefono);
+  if (!telefonoNormalizado) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+  }
+
   try {
     const { data, error } = await supabaseAdmin
       .from('clientes')
       .insert({
         nombre,
         apellido,
-        telefono,
+        telefono: telefonoNormalizado,
         tipo_cliente,
         email: email ?? null,
         domicilio_fiscal: domicilio_fiscal ?? null,
@@ -100,13 +108,20 @@ export const createCliente = async (req, res) => {
 
 // PUT /api/clientes/:telefono [Actualizacion de cliente]
 export const updateCliente = async (req, res) => {
-  const { telefono: telefonoActual } = req.params;
+  const { telefono: telefonoParam } = req.params;
 
-  if (!telefonoActual) {
+  if (!telefonoParam) {
     return res.status(400).json({
       ok: false,
       error: 'El teléfono del cliente a actualizar es obligatorio.',
     });
+  }
+
+  // Normalizamos el identificador antes de buscarlo: si el caller manda
+  // "3514330429" tiene que encontrar al cliente guardado como "5493514330429".
+  const telefonoActual = normalizarTelefono(telefonoParam);
+  if (!telefonoActual) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
   }
 
   const {
@@ -140,10 +155,20 @@ export const updateCliente = async (req, res) => {
     });
   }
 
+  // El teléfono nuevo (cambio de número) también va normalizado, por el mismo
+  // motivo que en createCliente.
+  let telefonoNuevo;
+  if (telefono !== undefined) {
+    telefonoNuevo = normalizarTelefono(telefono);
+    if (!telefonoNuevo) {
+      return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+    }
+  }
+
   const camposParaActualizar = {};
   if (nombre !== undefined) camposParaActualizar.nombre = nombre;
   if (apellido !== undefined) camposParaActualizar.apellido = apellido;
-  if (telefono !== undefined) camposParaActualizar.telefono = telefono;
+  if (telefono !== undefined) camposParaActualizar.telefono = telefonoNuevo;
   if (tipo_cliente !== undefined) camposParaActualizar.tipo_cliente = tipo_cliente;
   if (email !== undefined) camposParaActualizar.email = email;
   if (domicilio_fiscal !== undefined) camposParaActualizar.domicilio_fiscal = domicilio_fiscal;
