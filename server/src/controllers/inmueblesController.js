@@ -68,7 +68,17 @@ export const createInmueble = async (req, res) => {
       latitud: latManual,
       longitud: lonManual
     } = req.body;
-
+    // Validación lógica de superficies
+    if (
+      superficie_construida !== undefined &&
+      superficie_total !== undefined &&
+      Number(superficie_construida) > Number(superficie_total)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "La superficie construida no puede ser mayor a la superficie total"
+      });
+    }
     // Validación básica de campos obligatorios
     if (!id_cliente || !direccion || !tipo_inmueble || !provincia || !barrio) {
       return res.status(400).json({
