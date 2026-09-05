@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Card({ children, className = '', title, ...props }) {
   return (
     // Tarjeta con borde suave (Level 1 de elevación según el diseño)

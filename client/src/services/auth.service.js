@@ -1,6 +1,6 @@
 import { supabase } from './supaBaseClient.js';
 
-// Adaptación del auth.service.js para operar de forma segura con Supabase[cite: 4]
+// Adaptación del auth.service.js para operar de forma segura con Supabase
 const login = async (email, password, navigateToComponent) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: email,
@@ -9,7 +9,7 @@ const login = async (email, password, navigateToComponent) => {
 
   if (error) {
     console.error('Error de autenticación:', error.message);
-    throw new Error('Usuario o clave incorrectos'); // Abstracción del manejo de error[cite: 4]
+    throw new Error('Usuario o clave incorrectos'); // Abstracción del manejo de error
   }
 
   if (data.session) {

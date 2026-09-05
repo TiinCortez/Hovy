@@ -1,16 +1,21 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+// Layouts y Guardianes
 import DashboardLayout from '../components/layout/DashboardLayout.jsx';
-import RequireAuth from '../components/layout/requireAuth.jsx';
+import RequireAuth from '../components/layout/RequireAuth.jsx';
+
+// Vistas Públicas
 import Home from '../pages/Home.jsx';
 import Login from '../pages/Auth/Login.jsx';
 
-// Componentes temporales (Mocks) que reemplazaremos por las vistas reales
-const Dashboard = () => <h1>Panel General (Dashboard)</h1>;
+// Vistas Privadas Reales
+import Dashboard from '../pages/Dashboard.jsx';
+
+// Componentes temporales (Mocks) que reemplazaremos en los siguientes pasos
 const Clients = () => <h1>Listado de Clientes</h1>;
 const Calendar = () => <h1>Agenda Semanal</h1>;
 const Analytics = () => <h1>Estadísticas</h1>;
+
 
 export default function AppRoutes() {
   return (
@@ -24,13 +29,14 @@ export default function AppRoutes() {
         <Route 
           path="/dashboard" 
           element={
-            <RequireAuth>
+            //<RequireAuth>
               <DashboardLayout>
                 <Dashboard />
               </DashboardLayout>
-            </RequireAuth>
+            //</RequireAuth>
           } 
         />
+        
         <Route 
           path="/clients" 
           element={
@@ -41,6 +47,7 @@ export default function AppRoutes() {
             </RequireAuth>
           } 
         />
+        
         <Route 
           path="/calendar" 
           element={
@@ -51,6 +58,7 @@ export default function AppRoutes() {
             </RequireAuth>
           } 
         />
+        
         <Route 
           path="/analytics" 
           element={
