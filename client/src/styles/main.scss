@@ -1,0 +1,217 @@
+/* ==========================================
+   SCSS PROPIO: COLORES HOVY Y VARIABLES
+   ========================================== */
+$hovy-green: #1B3006;
+$hovy-cream: #F2F2E6;
+$hovy-gray: #4A4A4A;
+$hovy-border: #D1D1C4;
+
+$primary: $hovy-green;
+$body-bg: $hovy-cream;
+$body-color: $hovy-gray;
+$font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+/* ==========================================
+   BOOTSTRAP: IMPORTACIONES SELECTIVAS
+   ========================================== */
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/modal";
+@import "bootstrap/scss/offcanvas";
+@import "bootstrap/scss/utilities/api";
+
+/* ==========================================
+   SCSS PROPIO: ESTRUCTURA DE COMPONENTES
+   ========================================== */
+
+/* --- BOTONES Y COMPONENTES GENÉRICOS --- */
+.btn-primary {
+  background-color: $hovy-green;
+  border-color: $hovy-green;
+  color: white;
+  &:hover, &:focus {
+    background-color: #122104;
+    border-color: #122104;
+    color: white;
+  }
+}
+.btn-outline-primary {
+  color: $hovy-green;
+  border-color: $hovy-green;
+  &:hover {
+    background-color: $hovy-green;
+    color: white;
+  }
+}
+
+/* --- HOME & HERO SECTION --- */
+.home-navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid $hovy-border;
+  padding: 1rem 2rem;
+  .nav-link {
+    color: $hovy-gray;
+    font-weight: 500;
+    &:hover { color: $hovy-green; }
+  }
+}
+
+/* Animación Ken Burns (Slow Zoom In/Out) */
+@keyframes kenBurns {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.hero-section {
+  position: relative;
+  overflow: hidden; /* Oculta el desbordamiento de la imagen al hacer zoom */
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  
+  /* Pseudo-elemento para animar solo el fondo sin afectar el texto (GPU Accelerated) */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('/hero-bg.webp') center/cover no-repeat;
+    z-index: 0;
+    /* Animación infinita de 25 segundos para asegurar la lentitud */
+    animation: kenBurns 25s ease-in-out infinite;
+  }
+
+  /* Protegemos el contenido para que quede por encima del fondo animado */
+  .container {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .hero-title {
+    font-weight: 800;
+    font-size: 3.5rem;
+    letter-spacing: -0.02em;
+    @media (max-width: 768px) { font-size: 2.5rem; }
+  }
+  .hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 400;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.home-footer {
+  background-color: $hovy-cream;
+  color: $hovy-gray;
+  border-top: 1px solid $hovy-border;
+}
+
+/* --- LOGIN SPLIT SCREEN --- */
+.login-container {
+  min-height: 100vh;
+  background-color: $hovy-cream;
+}
+
+.login-image-panel {
+  background: url('/login-bg.webp') center/cover no-repeat;
+  border-top-right-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  min-height: 100vh;
+  
+  @media (max-width: 991.98px) {
+    display: none;
+  }
+}
+
+.login-form-wrapper {
+  max-width: 450px;
+  width: 100%;
+}
+
+.login-card {
+  background-color: transparent;
+  border: none;
+  
+  @media (min-width: 992px) {
+    background-color: #ffffff;
+    border: 1px solid $hovy-border;
+    border-radius: 1.5rem;
+    padding: 3rem !important;
+    box-shadow: 0px 10px 30px rgba(27, 48, 6, 0.05);
+  }
+}
+
+/* --- SIDEBAR & DASHBOARD --- */
+.hovy-sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid $hovy-border;
+  min-height: 100vh;
+  .nav-link {
+    color: $hovy-gray;
+    border-radius: 24px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    &:hover { background-color: rgba(27, 48, 6, 0.05); }
+    &.active {
+      background-color: $hovy-green;
+      color: #ffffff;
+    }
+  }
+}
+
+.hovy-bottom-nav { display: none; }
+
+@media (max-width: 767.98px) {
+  .hovy-sidebar { display: none !important; }
+  .hovy-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    background-color: #ffffff;
+    border-top: 1px solid $hovy-border;
+    z-index: 1050;
+    box-shadow: 0px -4px 20px rgba(27, 48, 6, 0.05);
+    padding-bottom: env(safe-area-inset-bottom);
+    
+    .nav-link {
+      flex: 1; color: $hovy-gray; font-size: 0.75rem; border-radius: 12px;
+      &.active {
+        color: $hovy-green; font-weight: bold; background-color: transparent;
+        svg { stroke-width: 2.5; }
+      }
+    }
+  }
+  .hovy-content-wrapper { padding-bottom: 80px; }
+}
+
+.hovy-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid $hovy-border;
+  height: 72px;
+}
+.hovy-brand {
+  font-weight: 800;
+  color: $hovy-green;
+  letter-spacing: -0.02em;
+}
+.icon-button {
+  background: transparent; border: none; border-radius: 50%; color: $hovy-gray;
+  &:hover { background-color: rgba(27, 48, 6, 0.05); }
+}
+.max-w-1280 { max-width: 1280px; }
