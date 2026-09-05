@@ -1,0 +1,10 @@
+# Revisores sugeridos por defecto para todos los PRs.
+# Actualizar con los usuarios de GitHub de cada integrante del equipo.
+# El dueño del repo es TiinCortez.
+
+* @TiinCortez
+
+# Áreas específicas (agregar cuando estén definidos los dueños):
+# /client/ @usuario-frontend
+# /server/ @usuario-backend
+# /docs/   @usuario-documentacion
