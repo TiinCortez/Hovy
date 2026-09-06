@@ -3,12 +3,6 @@ import jwt from 'jsonwebtoken';
 export const JWT_SECRET = process.env.JWT_SECRET || 'hovy-dev-secret-change-me';
 
 export const authMiddleware = (req, res, next) => {
-  const publicRoutes = ['/auth/login', '/auth/register', '/auth/health'];
-
-  if (publicRoutes.includes(req.path)) {
-    return next();
-  }
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
