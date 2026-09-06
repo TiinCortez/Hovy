@@ -1,0 +1,124 @@
+@baseUrl = http://localhost:4000
+
+
+
+// TEST DE CLIENTES
+### Test de Listado de clientes
+GET {{baseUrl}}/api/clientes
+
+// TEST DE CREACION
+### Test de Creacion de cliente - [Atributos minimos]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "telefono": "5491122334455",
+  "tipo_cliente": "Casual"
+}
+
+### Test de Creacion de cliente - [Falta atributo telefono]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "tipo_cliente": "Casual"
+}
+
+### Test de Creacion de cliente - [Atributo del tipo_cliente invalido]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "telefono": "5491122334455",
+  "tipo_cliente": "otro"
+}
+
+### Test de Creacion de cliente - [Telefono Duplicado (Intentar dos veces)]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Otro",
+  "apellido": "Cliente",
+  "telefono": "5491122334455",
+  "tipo_cliente": "Empresa"
+}
+
+### Test de Creacion de cliente - [Atributos Completos]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Maria",
+  "apellido": "Gomez",
+  "telefono": "5491199887766",
+  "tipo_cliente": "Empresa",
+  "email": "maria@example.com",
+  "domicilio_fiscal": "Calle Falsa 123",
+  "cuit_cuil": "20304050607",
+  "razon_social": "Maria Gomez SA"
+}
+
+// TEST DE ACTUALIZACION
+
+### Test de Actualizacion de cliente - [Actualizar un solo campo]
+PUT {{baseUrl}}/api/clientes/3514330429
+Content-Type: application/json
+
+{
+  "telefono": "5493514330429"
+}
+
+### Test de Actualizacion de cliente - [Actualizar varios campos]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "nombre": "Juan Actualizado",
+  "domicilio_fiscal": "Nueva Direccion 456",
+  "tipo_cliente": "Empresa"
+}
+
+### Test de Actualizacion de cliente - [Actualizar telefono a uno que no existe]
+PUT {{baseUrl}}/api/clientes/5490000000000
+Content-Type: application/json
+
+{
+  "email": "no-existe@example.com"
+}
+
+### Test de Actualizacion de cliente - [Datos invalidos]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "tipo_cliente": "otro"
+}
+
+### Test de Actualizacion de cliente - [Editar dato NotNull]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+
+### Test de Actualizacion de cliente - [Sin campos para actualizar]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{}
+
+### Test de Actualizacion de cliente - [Actualizar telefono a uno que ya existe]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "telefono": "5491199887766"
+}
