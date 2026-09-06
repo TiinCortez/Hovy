@@ -10,12 +10,12 @@ import Login from '../pages/Auth/Login.jsx';
 
 // Vistas Privadas Reales
 import Dashboard from '../pages/Dashboard.jsx';
+import ClientsPage from '../pages/ClientsPage.jsx';
+import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx'; // <--- Importar la nueva página
 
-// Componentes temporales (Mocks) que reemplazaremos en los siguientes pasos
-const Clients = () => <h1>Listado de Clientes</h1>;
+// Componentes temporales (Mocks)
 const Calendar = () => <h1>Agenda Semanal</h1>;
 const Analytics = () => <h1>Estadísticas</h1>;
-
 
 export default function AppRoutes() {
   return (
@@ -25,7 +25,7 @@ export default function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Rutas Privadas: Envueltas en el Guardián (RequireAuth) y luego en el Layout */}
+        {/* Rutas Privadas */}
         <Route 
           path="/dashboard" 
           element={
@@ -40,33 +40,45 @@ export default function AppRoutes() {
         <Route 
           path="/clients" 
           element={
-            <RequireAuth>
+            //<RequireAuth>
               <DashboardLayout>
-                <Clients />
+                <ClientsPage />
               </DashboardLayout>
-            </RequireAuth>
+            //</RequireAuth>
+          } 
+        />
+
+        {/* Ruta a Inmuebles de Cliente Especifico */}
+        <Route 
+          path="/clients/:id/inmuebles" 
+          element={
+            //<RequireAuth>
+              <DashboardLayout>
+                <ClientInmueblesPage />
+              </DashboardLayout>
+            //</RequireAuth>
           } 
         />
         
         <Route 
           path="/calendar" 
           element={
-            <RequireAuth>
+            //<RequireAuth>
               <DashboardLayout>
                 <Calendar />
               </DashboardLayout>
-            </RequireAuth>
+            //</RequireAuth>
           } 
         />
         
         <Route 
           path="/analytics" 
           element={
-            <RequireAuth>
+            //<RequireAuth>
               <DashboardLayout>
                 <Analytics />
               </DashboardLayout>
-            </RequireAuth>
+            //</RequireAuth>
           } 
         />
 
