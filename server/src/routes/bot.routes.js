@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { botRateLimit } from '../middlewares/botRateLimit.js';
-import { verificarApiKeyBot } from '../middlewares/botAuth.js';
+import { botRateLimit } from '../middleware/botRateLimit.js';
+import { verificarApiKeyBot } from '../middleware/botAuth.js';
 import { getClienteByTelefono } from '../controllers/botClientesController.js';
 import { createCliente, updateCliente } from '../controllers/clientesController.js';
 

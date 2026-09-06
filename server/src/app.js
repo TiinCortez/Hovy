@@ -13,14 +13,15 @@ app.use(express.json());
 
 app.use('/auth', authRoutes);
 
-app.use(authMiddleware);
-
-app.use('/api/clientes', requireRole(['admin']), clientesRoutes);
-app.use('/api/inmuebles', requireRole(['admin']), inmueblesRoutes);
-
-// Canal del bot de WhatsApp (n8n): mismo dominio de negocio, pero con su propia
-// autenticación por API key. Va en un prefijo aparte para que /api/clientes
-// quede libre de sumarle el JWT de usuarios sin pisarse con esto.
+// Canal del bot de WhatsApp (n8n): autenticación propia por API key
+// (verificarApiKeyBot), sin pasar por el JWT de usuarios.
 app.use('/api/bot', botRoutes);
+
+
+// Cambie el orden de la peticion del token especifico por rutas, eliminando el global
+// ya que tambien las pediria en el bot, cuando este solamente necesito el header con el api-key.
+// tener en cuenta para nuevas rutas.
+app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
+app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 
 export default app;

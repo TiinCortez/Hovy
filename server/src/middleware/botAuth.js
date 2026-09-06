@@ -1,7 +1,5 @@
 import crypto from 'crypto';
 
-
-
 // Creacion de la X-API-KEY (autenticacion) para el futuro bot (n8n) que va a interactuar con la APP.
 
 // Esta implementacion es aparte del JWT del usuario.
