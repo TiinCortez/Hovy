@@ -25,4 +25,5 @@ app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes)
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 
+
 export default app;
