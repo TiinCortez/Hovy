@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -15,8 +15,7 @@ import {
   ChevronRight, 
   MoreVertical,
   Calendar,
-  Home,
-  ChevronDown
+  Home
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -33,32 +32,44 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Cargar clientes desde la base de datos Supabase
-  const fetchClients = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setClients(data || []);
-    } catch (error) {
-      console.error('Error al cargar clientes:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 1. Efecto corregido para cargar clientes
   useEffect(() => {
-    fetchClients();
+    let isMounted = true;
+
+    const loadClients = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('clientes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (isMounted) {
+          setClients(data || []);
+        }
+      } catch (error) {
+        console.error('Error al cargar clientes:', error.message);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadClients();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleClientCreated = (newClient) => {
     setClients(prev => [newClient, ...prev]);
   };
 
+  // 2. AQUÍ ESTÁ LA DECLARACIÓN DE KPIS QUE FALTABA
   const kpis = [
     { title: 'TOTAL CLIENTES', value: clients.length.toString(), badge: 'Base Activa', badgeType: 'success', icon: Users },
     { title: 'INMUEBLES ACTIVOS', value: '86', detail: 'Fincas gestionadas', icon: Building2 },
@@ -66,6 +77,7 @@ export default function ClientsPage() {
     { title: 'PAGOS PENDIENTES', value: '0', badge: '$0 ARS', badgeType: 'warning', icon: Clock }
   ];
 
+  // 3. Filtros
   const filteredClients = clients.filter(client => {
     const fullName = `${client.nombre || ''} ${client.apellido || ''}`.toLowerCase();
     const razonSocial = (client.razon_social || '').toLowerCase();

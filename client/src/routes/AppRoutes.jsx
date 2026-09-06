@@ -63,22 +63,22 @@ export default function AppRoutes() {
         <Route 
           path="/calendar" 
           element={
-            //<RequireAuth>
+            <RequireAuth>
               <DashboardLayout>
                 <Calendar />
               </DashboardLayout>
-            //</RequireAuth>
+            </RequireAuth>
           } 
         />
         
         <Route 
           path="/analytics" 
           element={
-            //<RequireAuth>
+            <RequireAuth>
               <DashboardLayout>
                 <Analytics />
               </DashboardLayout>
-            //</RequireAuth>
+            </RequireAuth>
           } 
         />
 

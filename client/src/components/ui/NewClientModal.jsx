@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, User, Phone, Mail, FileText, Building, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {User, Phone, Mail, FileText, Building, MapPin, AlertCircle} from 'lucide-react';
 import Button from './Button';
 import { supabase } from '../../services/supaBaseClient';
 
