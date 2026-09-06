@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getInmuebles, createInmueble} from '../controllers/inmueblesController.js';
+import { getInmuebles, createInmueble, darDeBajaInmueble} from '../controllers/inmueblesController.js';
 
 const router = Router();
 
@@ -8,5 +8,9 @@ router.get('/', getInmuebles);
 
 // POST /api/inmuebles
 router.post('/', createInmueble);
+
+// DELETE /api/inmuebles/:id
+router.delete('/:id/baja', darDeBajaInmueble);
+
 
 export default router;

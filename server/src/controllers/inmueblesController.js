@@ -35,7 +35,8 @@ export const getInmuebles = async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('inmuebles')
-      .select('*');
+      .select('*')
+      .eq('activo', true); // Solo traer inmuebles activos
 
     if (error) {
       return res.status(500).json({ ok: false, error: error.message });
@@ -132,6 +133,36 @@ export const createInmueble = async (req, res) => {
       coordenadasObtenidas: Boolean(latitud && longitud)
     });
 
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// PATCH o DELETE /api/inmuebles/:id/baja
+export const darDeBajaInmueble = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabaseAdmin
+      .from('inmuebles')
+      .update({ activo: false })
+      .eq('id_inmueble', id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ ok: false, error: "Inmueble no encontrado" });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      mensaje: "Inmueble dado de baja correctamente",
+      data
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }

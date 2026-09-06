@@ -1,0 +1,170 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+
+@baseUrl = http://localhost:4000
+
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Cliente que ya cargado en la bd, usado como caso real.
+@telefono = 5493514330429
+
+// TEST DE AUTENTICACION CON X-API-KEY
+
+### Test de Autenticacion sin X-API-KEY  -  [Espera 401]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+
+### Test de Autenticacion con X-API-KEY Incorrecta  -  [Espera 403]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: esta-key-no-es-la-correcta
+
+### Test de Autenticacion con X-API-KEY Correcta  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: {{apiKey}}
+
+// TEST DE NORMALIZACION DE TELEFONO
+
+// Primeros tres test con el mismo cliente, escrito en distintos formatos.
+// Los tres test tendrian que devolver un 200 y el mismo id del cliente.
+// Si se creara un nuevo cliente estaria fallando la normalizacion.
+
+### TEST DE NORMALIZACION DE TELEFONO Formato 549 + 10 dígitos  - [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/5493514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato sin país ni 9  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/3514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con país pero sin el 9 (así suele llegar el wa_id de WhatsApp en AR)  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/543514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con prefijo nacional 0  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/03514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con el viejo prefijo 15  -  [Espera 400] 
+// Se espera un celular argentino con código de área y 
+// sin el prefijo 15 (ej: 3514330429 o 5493514330429).
+GET {{baseUrl}}/api/bot/clientes/0351154330429
+x-api-key: {{apiKey}}
+
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con letras y números  -  [Espera 400]
+GET {{baseUrl}}/api/bot/clientes/abc123
+x-api-key: {{apiKey}}
+
+
+// TEST DE VALIDACION DE USUARIO NO CLIENTE
+
+
+### TEST DE VALIDACION DE USUARIO NO CLIENTE - [Espera 404]
+// Esta seria la rama del n8n para la creacion de un cliente / recuperacion.
+GET {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+
+
+// TEST DE CREACION DE CLIENTE
+### TEST DE CREACION DE CLIENTE Duplicado (mismo numero) distinto formato  - [Espera 409, NO crea nada = ya existe]
+
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "apellido": "Duplicado",
+  "telefono": "0351 433-0429",
+  "tipo_cliente": "Casual"
+}
+
+### TEST DE CREACION DE CLIENTE Nuevo cliente con telefono normalizado  - [Espera 200]
+
+// Crea un usuario en la base de datos con el telefono normalizado [Se agregaria en bd como: 5491155667788]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "11 5566-7788",
+  "tipo_cliente": "Casual"
+}
+
+### TEST DE CREACION DE CLIENTE Falta un campo not null - [Espera 400]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "1155667789"
+}
+
+### TEST DE CREACION DE CLIENTE Atributo telefono invalido - [Espera 400]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "123",
+  "tipo_cliente": "Casual"
+}
+
+
+// ACTUALIZACION DE CLIENTE
+### ACTUALIZACION DE CLIENTE Cambio de email (Normalizando el numero antes) - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "juan.prueba@example.com"
+}
+
+### ACTUALIZACION DE CLIENTE Cambio de email (Normalizando el numero antes) - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/5491155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "juan.prueba@example.com"
+}
+
+### ACTUALIZACION DE CLIENTE Cambio de Telefono [Luego lo cambiamos por un token enviado al email] - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "telefono": "011 5566-7799"
+}
+
+### ACTUALIZACION DE CLIENTE Numero invalido - [Espera 400]
+PUT {{baseUrl}}/api/bot/clientes/1100000000
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "nadie@example.com"
+}
+
+
+// VALIDACION DEL RATE LIMIT [PARA QUE NO ROMPAN EL BOT A MENSAJES :( ] 
+
+// Para probarlo primero hay que bajar el valor del .env : BOT_RATE_LIMIT_MAX=5 
+// Luego de cinco request tendria que devolver un 429 con msj de error.
+// VOLVER A DEJAR EL VALOR ORIGINAL DEL .ENV :P
+
+### VALIDACION DEL RATE LIMIT Repetir hasta superar el limite - [Espera 429] 
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: {{apiKey}}
+
+### VALIDACION DEL RATE LIMIT Comprobar que no rompe el resto de los endpoints - [Espera 200]
+GET {{baseUrl}}/api/clientes
+
+### VALIDACION DEL RATE LIMIT Comprobar que no rompe el resto de los endpoints - [Espera 200]
+GET {{baseUrl}}/api/inmuebles
