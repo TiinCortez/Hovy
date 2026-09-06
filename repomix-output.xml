@@ -1,0 +1,3676 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    ci.yml
+  CODEOWNERS
+  dependabot.yml
+  pull_request_template.md
+client/
+  public/
+    favicon.svg
+    hero-bg.webp
+    icons.svg
+    login-bg.webp
+  src/
+    assets/
+      hero.png
+      react.svg
+      vite.svg
+    components/
+      layout/
+        DashboardLayout.jsx
+        Header.jsx
+        RequireAuth.jsx
+        SideBar.jsx
+      ui/
+        Button.jsx
+        Card.jsx
+        Input.jsx
+    pages/
+      Auth/
+        Login.jsx
+      ClientsPage.jsx
+      Dashboard.jsx
+      Home.jsx
+    routes/
+      AppRoutes.jsx
+    services/
+      api/
+        http.service.js
+      auth.service.js
+      supaBaseClient.js
+    styles/
+      main.scss
+    App.jsx
+    main.jsx
+  .env.example
+  .gitignore
+  eslint.config.js
+  index.html
+  package.json
+  README.md
+  vite.config.js
+docs/
+  ARQUITECTURA.md
+  GITFLOW.md
+  supabase-auth.sql
+server/
+  src/
+    config/
+      supabase.js
+    controllers/
+      botClientesController.js
+      clientesController.js
+      inmueblesController.js
+    middleware/
+      authMiddleware.js
+      botAuth.js
+      botRateLimit.js
+    routes/
+      auth.routes.js
+      bot.routes.js
+      clientes.routes.js
+      inmuebles.routes.js
+    services/
+      visionService.js
+    test/
+      bot.http
+      clientes.http
+    utils/
+      telefono.js
+    app.js
+    server.js
+  .env.example
+  .gitignore
+  package.json
+.editorconfig
+.gitignore
+.nvmrc
+package.json
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="client/src/pages/ClientsPage.jsx">
+import React, { useState } from 'react';
+import { 
+  Users, 
+  Building2, 
+  CheckCircle2, 
+  Clock, 
+  Search, 
+  SlidersHorizontal, 
+  Download, 
+  UserPlus, 
+  Phone, 
+  Mail, 
+  Star, 
+  ChevronRight, 
+  MoreVertical,
+  Calendar,
+  Home,
+  MapPin,
+  ChevronDown
+} from 'lucide-react';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+
+export default function ClientsPage() {
+  const [activeFilter, setActiveFilter] = useState('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Datos mock alineados al diseño y la interfaz
+  const kpis = [
+    { title: 'TOTAL CLIENTES', value: '48', badge: '+4 este mes', badgeType: 'success', icon: Users },
+    { title: 'INMUEBLES ACTIVOS', value: '86', detail: 'Fincas gestionadas', icon: Building2 },
+    { title: 'CLIENTES AL DÍA', value: '42', badge: '87.5% de cartera', badgeType: 'success', icon: CheckCircle2 },
+    { title: 'PAGOS PENDIENTES', value: '6', badge: '$420.000 ARS', badgeType: 'warning', icon: Clock }
+  ];
+
+  const clients = [
+    {
+      id: 1,
+      initials: 'JG',
+      name: 'Jardines Gómez S.L.',
+      subtitle: 'Martín Gómez (Director Op.)',
+      type: 'Empresa',
+      status: 'Al día',
+      rating: '4.9',
+      phone: '+34 600 123 456',
+      email: 'jardinesgomez.es',
+      propertiesCount: '4 inmuebles',
+      zone: 'Zona Norte',
+      nextService: 'Hoy, 09:00',
+      serviceType: 'Mantenimiento integral'
+    },
+    {
+      id: 2,
+      initials: 'EA',
+      name: 'Estancia Los Álamos',
+      subtitle: 'Rodrigo Peñaloza (Administrador)',
+      type: 'Agro / Predio',
+      status: 'Al día',
+      rating: '5.0',
+      phone: '+54 9 11 4982-334',
+      email: 'adm@losalamos.com',
+      propertiesCount: '6 parcelas',
+      zone: 'Sector Valle',
+      nextService: 'Mañana, 08:30',
+      serviceType: 'Riego e inspección'
+    },
+    {
+      id: 3,
+      initials: 'MV',
+      name: 'María Vallejo',
+      subtitle: 'Propietaria Particular',
+      type: 'Particular',
+      status: 'Pendiente ($65k)',
+      rating: '4.7',
+      phone: '+54 9 261 540-192',
+      email: 'mvallejo@privado.com',
+      propertiesCount: '1 residencia',
+      zone: 'Colina Alta',
+      nextService: 'Jue 18, 14:00',
+      serviceType: 'Poda de aromáticas'
+    },
+    {
+      id: 4,
+      initials: 'CR',
+      name: 'Carlos Ruiz',
+      subtitle: 'Desarrollador Inmobiliario',
+      type: 'Particular',
+      status: 'Al día',
+      rating: '4.8',
+      phone: '+54 9 261 765-432',
+      email: 'cruiz@gruporuiz.com',
+      propertiesCount: '2 predios',
+      zone: 'El Retiro',
+      nextService: 'Mañana, 14:30',
+      serviceType: 'Fumigación y abono'
+    }
+  ];
+
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          client.subtitle.toLowerCase().includes(searchTerm.toLowerCase());
+    if (activeFilter === 'Todos') return matchesSearch;
+    if (activeFilter === 'Al día') return matchesSearch && client.status === 'Al día';
+    if (activeFilter === 'Pendientes') return matchesSearch && client.status.includes('Pendiente');
+    if (activeFilter === 'Empresas') return matchesSearch && client.type === 'Empresa';
+    if (activeFilter === 'Particulares') return matchesSearch && client.type === 'Particular';
+    return matchesSearch;
+  });
+
+  return (
+    <div className="d-flex flex-column gap-4 pb-5">
+      
+      {/* 1. Header de Sección */}
+      <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+        <div>
+          <div className="d-flex align-items-center gap-2 mb-1">
+            <span className="badge bg-light text-success fw-semibold text-uppercase px-2 py-1" style={{ fontSize: '0.7rem' }}>
+              Directorio Operativo
+            </span>
+            <span className="rounded-circle bg-secondary d-inline-block" style={{ width: '4px', height: '4px' }}></span>
+            <span className="text-secondary small fw-medium">Temporada 2026</span>
+          </div>
+          <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
+          <p className="text-secondary small m-0">Directorio general de clientes y gestión integral de inmuebles vinculados.</p>
+        </div>
+
+        {/* Acciones del Header */}
+        <div className="d-flex align-items-center gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
+          <Button variant="outline-primary" className="btn-sm text-nowrap rounded-3 bg-white">
+            <Download size={16} /> Exportar (.csv)
+          </Button>
+          <Button variant="outline-primary" className="btn-sm text-nowrap rounded-3 bg-white">
+            <SlidersHorizontal size={16} /> Filtros
+          </Button>
+          <Button variant="primary" className="btn-sm text-nowrap rounded-3 ms-auto ms-md-0">
+            <UserPlus size={16} /> + Nuevo Cliente
+          </Button>
+        </div>
+      </div>
+
+      {/* 2. Tarjetas KPI de Resumen (Responsive Grid / Touch Scroll en móvil) */}
+      <div className="row g-3 flex-nowrap flex-md-wrap overflow-x-auto pb-2 pb-md-0 scrollbar-none">
+        {kpis.map((kpi, index) => {
+          const IconComponent = kpi.icon;
+          return (
+            <div key={index} className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
+              <Card className="h-100 p-3 shadow-sm border-0">
+                <div className="d-flex align-items-start justify-content-between mb-2">
+                  <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                    {kpi.title}
+                  </span>
+                  <div className="p-2 rounded-3 bg-light text-success d-flex align-items-center justify-content-center">
+                    <IconComponent size={18} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="fw-bold text-dark m-0 fs-3">{kpi.value}</h3>
+                  {kpi.badge && (
+                    <span className={`badge mt-2 fw-semibold ${kpi.badgeType === 'warning' ? 'bg-warning text-dark' : 'bg-success-subtle text-success'}`}>
+                      {kpi.badge}
+                    </span>
+                  )}
+                  {kpi.detail && (
+                    <p className="text-secondary small m-0 mt-2">{kpi.detail}</p>
+                  )}
+                </div>
+              </Card>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 3. Filtros y Búsqueda */}
+      <Card className="p-2 p-md-3 shadow-sm border-0">
+        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+          
+          {/* Buscador */}
+          <div className="input-group bg-light rounded-4 px-3 py-1 border-0 flex-grow-1">
+            <span className="input-group-text bg-transparent border-0 text-secondary p-0 me-2">
+              <Search size={18} />
+            </span>
+            <input 
+              type="text" 
+              className="form-control bg-transparent border-0 shadow-none text-dark small"
+              placeholder="Buscar por nombre, empresa, teléfono..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Chips de Selección Rapida */}
+          <div className="d-flex align-items-center gap-2 overflow-x-auto pb-1 pb-lg-0 scrollbar-none">
+            {['Todos', 'Al día', 'Pendientes', 'Empresas', 'Particulares'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`btn btn-sm rounded-pill text-nowrap px-3 py-1 font-semibold ${
+                  activeFilter === filter 
+                    ? 'btn-primary' 
+                    : 'btn-light text-secondary border'
+                }`}
+                style={{ fontSize: '0.8rem' }}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+        </div>
+      </Card>
+
+      {/* 4. Grid de Tarjetas de Clientes */}
+      <div className="row g-3">
+        {filteredClients.map((client) => (
+          <div key={client.id} className="col-12 col-md-6 col-xl-4">
+            <Card className="h-100 p-3 shadow-sm border-0 d-flex flex-column justify-between">
+              <div>
+                {/* Cabecera del Cliente */}
+                <div className="d-flex align-items-start justify-content-between gap-2 mb-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div 
+                      className="rounded-3 d-flex align-items-center justify-content-center fw-bold text-success"
+                      style={{ width: '44px', height: '44px', backgroundColor: '#cbecc1' }}
+                    >
+                      {client.initials}
+                    </div>
+                    <div>
+                      <h5 className="fw-bold text-dark m-0 fs-6">{client.name}</h5>
+                      <p className="text-secondary small m-0 text-truncate" style={{ maxWidth: '180px' }}>
+                        {client.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                  <button className="btn btn-sm btn-link text-secondary p-0">
+                    <MoreVertical size={18} />
+                  </button>
+                </div>
+
+                {/* Badges y Calificación */}
+                <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                  <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small">
+                    {client.type}
+                  </span>
+                  <span className={`badge rounded-pill px-2 py-1 small ${
+                    client.status.includes('Pendiente') 
+                      ? 'bg-warning-subtle text-dark border border-warning' 
+                      : 'bg-success-subtle text-success'
+                  }`}>
+                    {client.status}
+                  </span>
+                  <div className="ms-auto d-flex align-items-center gap-1 text-warning small fw-bold">
+                    <Star size={14} fill="#ffc107" />
+                    <span className="text-dark">{client.rating}</span>
+                  </div>
+                </div>
+
+                {/* Contacto Rápido */}
+                <div className="p-2 rounded-3 bg-light mb-3 d-flex flex-column gap-1">
+                  <div className="d-flex align-items-center gap-2 text-secondary small">
+                    <Phone size={14} />
+                    <span className="text-dark fw-medium">{client.phone}</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 text-secondary small">
+                    <Mail size={14} />
+                    <span className="text-dark fw-medium text-truncate">{client.email}</span>
+                  </div>
+                </div>
+
+                {/* Info Inmuebles y Próximo Turno */}
+                <div className="row g-2 mb-3">
+                  <div className="col-6">
+                    <div className="p-2 rounded-3 bg-light">
+                      <span className="text-secondary d-block" style={{ fontSize: '0.7rem' }}>Inmuebles</span>
+                      <span className="fw-bold text-dark small d-flex align-items-center gap-1 mt-1">
+                        <Home size={14} className="text-success" /> {client.propertiesCount}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="p-2 rounded-3 bg-light">
+                      <span className="text-secondary d-block" style={{ fontSize: '0.7rem' }}>Próximo servicio</span>
+                      <span className="fw-bold text-dark small d-flex align-items-center gap-1 mt-1 text-truncate">
+                        <Calendar size={14} className="text-success" /> {client.nextService}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón Acción hacia Ficha */}
+              <button className="btn btn-light w-100 rounded-3 text-success fw-bold small d-flex align-items-center justify-content-center gap-2 py-2 mt-2">
+                Ver Inmuebles & Ficha <ChevronRight size={16} />
+              </button>
+            </Card>
+          </div>
+        ))}
+      </div>
+
+      {/* 5. Footer / Paginación */}
+      <div className="d-flex flex-column flex-sm-row align-items-center justify-between gap-3 pt-3 border-top">
+        <span className="text-secondary small">
+          Mostrando <strong className="text-dark">{filteredClients.length}</strong> de <strong className="text-dark">48</strong> clientes
+        </span>
+        <button className="btn btn-sm btn-link text-success fw-bold text-decoration-none d-flex align-items-center gap-1">
+          Cargar más clientes <ChevronDown size={16} />
+        </button>
+      </div>
+
+    </div>
+  );
+}
+</file>
+
+<file path=".github/workflows/ci.yml">
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: Client (lint + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  server:
+    name: Server (install + syntax check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Chequeo de sintaxis
+        run: |
+          for f in $(find src -name '*.js'); do
+            node --check "$f"
+          done
+</file>
+
+<file path=".github/CODEOWNERS">
+# Revisores sugeridos por defecto para todos los PRs.
+# Actualizar con los usuarios de GitHub de cada integrante del equipo.
+# El dueño del repo es TiinCortez.
+
+* @TiinCortez
+
+# Áreas específicas (agregar cuando estén definidos los dueños):
+# /client/ @usuario-frontend
+# /server/ @usuario-backend
+# /docs/   @usuario-documentacion
+</file>
+
+<file path=".github/dependabot.yml">
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+</file>
+
+<file path=".github/pull_request_template.md">
+## Resumen
+
+<!-- Qué hace este PR y a qué historia de Jira corresponde (ej: US-001 - Registrar cliente) -->
+
+**Jira:** US-XXX - Título de la historia
+
+## Cambios principales
+
+<!-- Listar de forma concisa qué se agregó/modificó -->
+
+-
+
+## Cómo se probó
+
+<!-- Pasos concretos para reproducir la prueba (qué se tocó y qué resultado se espera) -->
+
+-
+
+## Checklist
+
+- [ ] El CI está en verde (lint + build)
+- [ ] Fue revisado por al menos un compañero
+- [ ] No se subieron archivos `.env` ni secretos
+- [ ] La rama se creó desde `develop` siguiendo el GITFLOW
+- [ ] (Si aplica) Se actualizó la documentación correspondiente
+</file>
+
+<file path="client/public/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="client/public/icons.svg">
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bluesky-icon" viewBox="0 0 16 17">
+    <g clip-path="url(#bluesky-clip)"><path fill="#08060d" d="M7.75 7.735c-.693-1.348-2.58-3.86-4.334-5.097-1.68-1.187-2.32-.981-2.74-.79C.188 2.065.1 2.812.1 3.251s.241 3.602.398 4.13c.52 1.744 2.367 2.333 4.07 2.145-2.495.37-4.71 1.278-1.805 4.512 3.196 3.309 4.38-.71 4.987-2.746.608 2.036 1.307 5.91 4.93 2.746 2.72-2.746.747-4.143-1.747-4.512 1.702.189 3.55-.4 4.07-2.145.156-.528.397-3.691.397-4.13s-.088-1.186-.575-1.406c-.42-.19-1.06-.395-2.741.79-1.755 1.24-3.64 3.752-4.334 5.099"/></g>
+    <defs><clipPath id="bluesky-clip"><path fill="#fff" d="M.1.85h15.3v15.3H.1z"/></clipPath></defs>
+  </symbol>
+  <symbol id="discord-icon" viewBox="0 0 20 19">
+    <path fill="#08060d" d="M16.224 3.768a14.5 14.5 0 0 0-3.67-1.153c-.158.286-.343.67-.47.976a13.5 13.5 0 0 0-4.067 0c-.128-.306-.317-.69-.476-.976A14.4 14.4 0 0 0 3.868 3.77C1.546 7.28.916 10.703 1.231 14.077a14.7 14.7 0 0 0 4.5 2.306q.545-.748.965-1.587a9.5 9.5 0 0 1-1.518-.74q.191-.14.372-.293c2.927 1.369 6.107 1.369 8.999 0q.183.152.372.294-.723.437-1.52.74.418.838.963 1.588a14.6 14.6 0 0 0 4.504-2.308c.37-3.911-.63-7.302-2.644-10.309m-9.13 8.234c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.894 0 1.614.82 1.599 1.82.001 1-.705 1.82-1.6 1.82m5.91 0c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.893 0 1.614.82 1.599 1.82 0 1-.706 1.82-1.6 1.82"/>
+  </symbol>
+  <symbol id="documentation-icon" viewBox="0 0 21 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="m15.5 13.333 1.533 1.322c.645.555.967.833.967 1.178s-.322.623-.967 1.179L15.5 18.333m-3.333-5-1.534 1.322c-.644.555-.966.833-.966 1.178s.322.623.966 1.179l1.534 1.321"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M17.167 10.836v-4.32c0-1.41 0-2.117-.224-2.68-.359-.906-1.118-1.621-2.08-1.96-.599-.21-1.349-.21-2.848-.21-2.623 0-3.935 0-4.983.369-1.684.591-3.013 1.842-3.641 3.428C3 6.449 3 7.684 3 10.154v2.122c0 2.558 0 3.838.706 4.726q.306.383.713.671c.76.536 1.79.64 3.581.66"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M3 10a2.78 2.78 0 0 1 2.778-2.778c.555 0 1.209.097 1.748-.047.48-.129.854-.503.982-.982.145-.54.048-1.194.048-1.749a2.78 2.78 0 0 1 2.777-2.777"/>
+  </symbol>
+  <symbol id="github-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M9.356 1.85C5.05 1.85 1.57 5.356 1.57 9.694a7.84 7.84 0 0 0 5.324 7.44c.387.079.528-.168.528-.376 0-.182-.013-.805-.013-1.454-2.165.467-2.616-.935-2.616-.935-.349-.91-.864-1.143-.864-1.143-.71-.48.051-.48.051-.48.787.051 1.2.805 1.2.805.695 1.194 1.817.857 2.268.649.064-.507.27-.857.49-1.052-1.728-.182-3.545-.857-3.545-3.87 0-.857.31-1.558.8-2.104-.078-.195-.349-1 .077-2.078 0 0 .657-.208 2.14.805a7.5 7.5 0 0 1 1.946-.26c.657 0 1.328.092 1.946.26 1.483-1.013 2.14-.805 2.14-.805.426 1.078.155 1.883.078 2.078.502.546.799 1.247.799 2.104 0 3.013-1.818 3.675-3.558 3.87.284.247.528.714.528 1.454 0 1.052-.012 1.896-.012 2.156 0 .208.142.455.528.377a7.84 7.84 0 0 0 5.324-7.441c.013-4.338-3.48-7.844-7.773-7.844" clip-rule="evenodd"/>
+  </symbol>
+  <symbol id="social-icon" viewBox="0 0 20 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M12.5 6.667a4.167 4.167 0 1 0-8.334 0 4.167 4.167 0 0 0 8.334 0"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M2.5 16.667a5.833 5.833 0 0 1 8.75-5.053m3.837.474.513 1.035c.07.144.257.282.414.309l.93.155c.596.1.736.536.307.965l-.723.73a.64.64 0 0 0-.152.531l.207.903c.164.715-.213.991-.84.618l-.872-.52a.63.63 0 0 0-.577 0l-.872.52c-.624.373-1.003.094-.84-.618l.207-.903a.64.64 0 0 0-.152-.532l-.723-.729c-.426-.43-.289-.864.306-.964l.93-.156a.64.64 0 0 0 .412-.31l.513-1.034c.28-.562.735-.562 1.012 0"/>
+  </symbol>
+  <symbol id="x-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
+  </symbol>
+</svg>
+</file>
+
+<file path="client/src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="client/src/assets/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="client/src/pages/Dashboard.jsx">
+import { 
+  CalendarCheck, 
+  ClipboardList, 
+  AlertTriangle, 
+  MapPin, 
+  TrendingUp, 
+  MoreVertical,
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  PlayCircle
+} from 'lucide-react';
+import Card from '../components/ui/Card.jsx';
+
+export default function Dashboard() {
+  // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
+  const mockData = {
+    usuario: "The Boss",
+    kpis: {
+      turnosHoy: 12,
+      solicitudesNuevas: 5,
+      alertasPendientes: 3,
+      kilometrosRuta: 48
+    },
+    ganancias: {
+      total: "1.250.000",
+      variacion: "+12.5%"
+    },
+    logistica: {
+      clientesAVisitar: 12,
+      combustibleEstimado: "15 L",
+      zonaPrincipal: "Zona Norte"
+    },
+    // Épica 4: Turnos del día con estados específicos
+    agenda: [
+      { id: 1, cliente: "Residencia Lomas", horario: "09:00 AM", servicio: "Mantenimiento", estado: "En ejecución" },
+      { id: 2, cliente: "Torre Norte Terraza", horario: "11:30 AM", servicio: "Riego & Poda", estado: "Coordinado" },
+      { id: 3, cliente: "Country Los Olivos", horario: "14:00 PM", servicio: "Diseño Paisajístico", estado: "Coordinado" },
+      { id: 4, cliente: "Casa Familia Pérez", horario: "16:30 PM", servicio: "Fertilización", estado: "Realizado" }
+    ],
+    // Épica 14 y 4: Notificaciones y Alertas del negocio
+    alertas: [
+      { id: 1, tipo: "Ciclo de corte", mensaje: "Césped en Residencia Lomas excede los 15 días sin corte.", severidad: "alta", fecha: "Hace 1 hora" },
+      { id: 2, tipo: "Altura límite", mensaje: "Lote 4B en Country Los Olivos reportado con maleza alta.", severidad: "media", fecha: "Hace 3 horas" },
+      { id: 3, tipo: "Nueva solicitud", mensaje: "Juan Pérez solicitó presupuesto para instalación de riego.", severidad: "baja", fecha: "Ayer, 16:00" }
+    ]
+  };
+
+  // Función auxiliar para renderizar los badges de estado de la agenda
+  const getEstadoBadge = (estado) => {
+    switch (estado) {
+      case 'En ejecución':
+        return <span className="badge rounded-pill bg-warning text-dark px-3 py-2 fw-semibold d-flex align-items-center gap-1"><PlayCircle size={14}/> En curso</span>;
+      case 'Realizado':
+        return <span className="badge rounded-pill bg-success text-white px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Realizado</span>;
+      case 'Coordinado':
+      default:
+        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Pendiente</span>;
+    }
+  };
+
+  // Función auxiliar para renderizar los íconos de las alertas según severidad
+  const getAlertaIcon = (severidad) => {
+    switch (severidad) {
+      case 'alta': return <div className="p-2 rounded-circle bg-danger bg-opacity-10 text-danger"><AlertTriangle size={20} /></div>;
+      case 'media': return <div className="p-2 rounded-circle bg-warning bg-opacity-10 text-warning"><AlertTriangle size={20} /></div>;
+      case 'baja': return <div className="p-2 rounded-circle bg-info bg-opacity-10 text-info"><ClipboardList size={20} /></div>;
+      default: return <AlertTriangle size={20} />;
+    }
+  };
+
+  return (
+    <div className="d-flex flex-column gap-4 pb-5">
+      {/* Encabezado */}
+      <div>
+        <h2 className="fw-bold fs-2 text-dark mb-1">Hola, {mockData.usuario}</h2>
+        <p className="text-secondary m-0">Aquí tienes el resumen de tu jardín para hoy.</p>
+      </div>
+
+      {/* KPIs Top (4 columnas en desktop, 2 en móvil) */}
+      <div className="row g-3">
+        <div className="col-6 col-lg-3">
+          <Card className="h-100 p-2">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(170, 59, 255, 0.1)', color: '#1B3006' }}>
+                <CalendarCheck size={24} />
+              </div>
+              <div>
+                <p className="text-secondary small fw-semibold m-0">Turnos hoy</p>
+                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.turnosHoy}</h3>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className="col-6 col-lg-3">
+          <Card className="h-100 p-2">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: '#79542D' }}>
+                <ClipboardList size={24} />
+              </div>
+              <div>
+                <p className="text-secondary small fw-semibold m-0">Solicitudes nuevas</p>
+                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.solicitudesNuevas}</h3>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className="col-6 col-lg-3">
+          <Card className="h-100 p-2">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: '#ba1a1a' }}>
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <p className="text-secondary small fw-semibold m-0">Alertas</p>
+                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.alertasPendientes}</h3>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className="col-6 col-lg-3">
+          <Card className="h-100 p-2">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(27, 48, 6, 0.1)', color: '#1B3006' }}>
+                <MapPin size={24} />
+              </div>
+              <div>
+                <p className="text-secondary small fw-semibold m-0">Ruta diaria (Km)</p>
+                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.kilometrosRuta}</h3>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Middle Section: Ganancias & Agenda */}
+      <div className="row g-4">
+        {/* Columna Izquierda */}
+        <div className="col-12 col-lg-5 d-flex flex-column gap-4">
+          
+          {/* Resumen de Ganancias */}
+          <Card className="h-100">
+            <div className="d-flex justify-content-between align-items-start mb-2">
+              <h4 className="fw-bold text-dark m-0 fs-5">Resumen de Ganancias</h4>
+              <TrendingUp size={24} className="text-secondary" />
+            </div>
+            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: '3rem', color: '#1B3006', letterSpacing: '-0.02em' }}>
+              ${mockData.ganancias.total}
+            </h2>
+            <p className="fw-semibold text-success small mb-5">
+              <TrendingUp size={16} className="me-1"/> {mockData.ganancias.variacion} respecto al mes pasado
+            </p>
+            <a href="#estadisticas" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
+              Ver estadísticas detalladas <ArrowRight size={18} className="ms-1" />
+            </a>
+          </Card>
+
+          {/* Resumen Logística (Épica 5) */}
+          <Card>
+            <h4 className="fw-bold text-dark m-0 fs-5 mb-3">Logística de Hoy</h4>
+            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
+              <span className="text-secondary fw-semibold">Clientes a visitar</span>
+              <span className="fw-bold text-dark">{mockData.logistica.clientesAVisitar}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
+              <span className="text-secondary fw-semibold">Combustible est.</span>
+              <span className="fw-bold text-dark">{mockData.logistica.combustibleEstimado}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light">
+              <span className="text-secondary fw-semibold">Zona principal</span>
+              <span className="fw-bold text-dark">{mockData.logistica.zonaPrincipal}</span>
+            </div>
+          </Card>
+
+        </div>
+
+        {/* Columna Derecha: Agenda de hoy */}
+        <div className="col-12 col-lg-7">
+          <Card className="h-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4 className="fw-bold text-dark m-0 fs-5">Turnos de hoy</h4>
+              <a href="#todos" className="text-decoration-none small fw-semibold text-secondary">Ver todos</a>
+            </div>
+            
+            <div className="d-flex flex-column gap-3">
+              {mockData.agenda.map((turno) => (
+                <div key={turno.id} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
+                  <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
+                    <CalendarCheck size={24} />
+                  </div>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold text-dark m-0 fs-6">{turno.cliente}</h5>
+                    <p className="text-secondary small m-0">{turno.horario} - {turno.servicio}</p>
+                  </div>
+                  <div>
+                    {getEstadoBadge(turno.estado)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="text-center mt-4">
+              <a href="#agenda-completa" className="text-decoration-none fw-bold" style={{ color: '#1B3006' }}>
+                Ver agenda completa
+              </a>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bottom Section: Notificaciones y Alertas (Épica 14) */}
+      <div className="row mt-2">
+        <div className="col-12">
+          <Card>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4 className="fw-bold text-dark m-0 fs-5">Alertas y Notificaciones</h4>
+              <button className="btn btn-sm btn-light rounded-circle p-2 text-secondary"><MoreVertical size={20}/></button>
+            </div>
+            
+            <div className="table-responsive">
+              <table className="table table-hover align-middle m-0">
+                <thead className="text-secondary small">
+                  <tr>
+                    <th className="border-0 pb-3 fw-semibold">Tipo de Alerta</th>
+                    <th className="border-0 pb-3 fw-semibold">Mensaje</th>
+                    <th className="border-0 pb-3 fw-semibold text-end">Tiempo</th>
+                  </tr>
+                </thead>
+                <tbody className="border-top">
+                  {mockData.alertas.map((alerta) => (
+                    <tr key={alerta.id}>
+                      <td className="py-3">
+                        <div className="d-flex align-items-center gap-3">
+                          {getAlertaIcon(alerta.severidad)}
+                          <span className="fw-bold text-dark">{alerta.tipo}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-secondary">{alerta.mensaje}</td>
+                      <td className="py-3 text-secondary text-end small">{alerta.fecha}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/services/api/http.service.js">
+import axios from 'axios';
+
+// Configuración base de Axios siguiendo el patrón de interceptores para manejo global
+const httpService = axios.create({
+  // Si tienes un backend propio aparte de Supabase, define la URL aquí.
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptor de Peticiones (Request)
+httpService.interceptors.request.use(
+  (request) => {
+    // Aquí puedes integrar lógica para bloquear la pantalla o mostrar un spinner global
+    
+    // Inyectamos el token de autorización si existe en la sesión
+    const accessToken = sessionStorage.getItem('accessToken');
+    if (accessToken) {
+      request.headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    return request;
+  },
+  (error) => {
+    console.error('Error en la petición (request):', error);
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor de Respuestas (Response)
+httpService.interceptors.response.use(
+  (response) => {
+    // Aquí puedes ocultar el spinner global o desbloquear la pantalla
+    return response;
+  },
+  (error) => {
+    // Manejo centralizado de errores HTTP
+    if (error.response) {
+      if (error.response.status === 401) {
+        console.error('No autenticado: La sesión ha expirado o no es válida.');
+        // Aquí luego conectaremos el deslogueo automático o redirección al /login
+      } else if (error.response.status === 403) {
+        console.error('No autorizado: No tienes permisos para acceder a esta funcionalidad.');
+      } else {
+        console.error(error.response.data?.message || 'Inconvenientes en el servidor. Intente más tarde.');
+      }
+    } else {
+      console.error('Error de red: El servidor no responde.');
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default httpService;
+</file>
+
+<file path="client/src/styles/main.scss">
+/* ==========================================
+   SCSS PROPIO: COLORES HOVY Y VARIABLES
+   ========================================== */
+$hovy-green: #1B3006;
+$hovy-cream: #F2F2E6;
+$hovy-gray: #4A4A4A;
+$hovy-border: #D1D1C4;
+
+$primary: $hovy-green;
+$body-bg: $hovy-cream;
+$body-color: $hovy-gray;
+$font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+/* ==========================================
+   BOOTSTRAP: IMPORTACIONES SELECTIVAS
+   ========================================== */
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/modal";
+@import "bootstrap/scss/offcanvas";
+@import "bootstrap/scss/utilities/api";
+
+/* ==========================================
+   SCSS PROPIO: ESTRUCTURA DE COMPONENTES
+   ========================================== */
+
+/* --- BOTONES Y COMPONENTES GENÉRICOS --- */
+.btn-primary {
+  background-color: $hovy-green;
+  border-color: $hovy-green;
+  color: white;
+  &:hover, &:focus {
+    background-color: #122104;
+    border-color: #122104;
+    color: white;
+  }
+}
+.btn-outline-primary {
+  color: $hovy-green;
+  border-color: $hovy-green;
+  &:hover {
+    background-color: $hovy-green;
+    color: white;
+  }
+}
+
+/* --- HOME & HERO SECTION --- */
+.home-navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid $hovy-border;
+  padding: 1rem 2rem;
+  .nav-link {
+    color: $hovy-gray;
+    font-weight: 500;
+    &:hover { color: $hovy-green; }
+  }
+}
+
+/* Animación Ken Burns (Slow Zoom In/Out) */
+@keyframes kenBurns {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.hero-section {
+  position: relative;
+  overflow: hidden; /* Oculta el desbordamiento de la imagen al hacer zoom */
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  
+  /* Pseudo-elemento para animar solo el fondo sin afectar el texto (GPU Accelerated) */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('/hero-bg.webp') center/cover no-repeat;
+    z-index: 0;
+    /* Animación infinita de 25 segundos para asegurar la lentitud */
+    animation: kenBurns 25s ease-in-out infinite;
+  }
+
+  /* Protegemos el contenido para que quede por encima del fondo animado */
+  .container {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .hero-title {
+    font-weight: 800;
+    font-size: 3.5rem;
+    letter-spacing: -0.02em;
+    @media (max-width: 768px) { font-size: 2.5rem; }
+  }
+  .hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 400;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.home-footer {
+  background-color: $hovy-cream;
+  color: $hovy-gray;
+  border-top: 1px solid $hovy-border;
+}
+
+/* --- LOGIN SPLIT SCREEN --- */
+.login-container {
+  min-height: 100vh;
+  background-color: $hovy-cream;
+}
+
+.login-image-panel {
+  background: url('/login-bg.webp') center/cover no-repeat;
+  border-top-right-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  min-height: 100vh;
+  
+  @media (max-width: 991.98px) {
+    display: none;
+  }
+}
+
+.login-form-wrapper {
+  max-width: 450px;
+  width: 100%;
+}
+
+.login-card {
+  background-color: transparent;
+  border: none;
+  
+  @media (min-width: 992px) {
+    background-color: #ffffff;
+    border: 1px solid $hovy-border;
+    border-radius: 1.5rem;
+    padding: 3rem !important;
+    box-shadow: 0px 10px 30px rgba(27, 48, 6, 0.05);
+  }
+}
+
+/* --- SIDEBAR & DASHBOARD --- */
+.hovy-sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid $hovy-border;
+  min-height: 100vh;
+  .nav-link {
+    color: $hovy-gray;
+    border-radius: 24px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    &:hover { background-color: rgba(27, 48, 6, 0.05); }
+    &.active {
+      background-color: $hovy-green;
+      color: #ffffff;
+    }
+  }
+}
+
+.hovy-bottom-nav { display: none; }
+
+@media (max-width: 767.98px) {
+  .hovy-sidebar { display: none !important; }
+  .hovy-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    background-color: #ffffff;
+    border-top: 1px solid $hovy-border;
+    z-index: 1050;
+    box-shadow: 0px -4px 20px rgba(27, 48, 6, 0.05);
+    padding-bottom: env(safe-area-inset-bottom);
+    
+    .nav-link {
+      flex: 1; color: $hovy-gray; font-size: 0.75rem; border-radius: 12px;
+      &.active {
+        color: $hovy-green; font-weight: bold; background-color: transparent;
+        svg { stroke-width: 2.5; }
+      }
+    }
+  }
+  .hovy-content-wrapper { padding-bottom: 80px; }
+}
+
+.hovy-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid $hovy-border;
+  height: 72px;
+}
+.hovy-brand {
+  font-weight: 800;
+  color: $hovy-green;
+  letter-spacing: -0.02em;
+}
+.icon-button {
+  background: transparent; border: none; border-radius: 50%; color: $hovy-gray;
+  &:hover { background-color: rgba(27, 48, 6, 0.05); }
+}
+.max-w-1280 { max-width: 1280px; }
+</file>
+
+<file path="client/.env.example">
+# Variables de entorno - CLIENT (Hovy)
+# Copiar este archivo como .env y completar con los valores del proyecto Supabase
+
+# URL del proyecto Supabase (https://<proyecto>.supabase.co)
+VITE_SUPABASE_URL=
+
+# Anon Key de Supabase (clave pública, segura gracias a RLS)
+VITE_SUPABASE_ANON_KEY=
+</file>
+
+<file path="client/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Variables de entorno (Secretos y Claves API)
+.env
+.env*.local
+.env.production
+.env.development
+</file>
+
+<file path="client/eslint.config.js">
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+  },
+])
+</file>
+
+<file path="client/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>client</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="client/README.md">
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+</file>
+
+<file path="client/vite.config.js">
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+</file>
+
+<file path="docs/ARQUITECTURA.md">
+# Arquitectura de Hovy
+
+> Resumen ejecutivo para el equipo. Versión: Sprint 0 (septiembre 2026).
+
+## Visión general
+
+```
+┌─────────────────────────────┐        ┌──────────────────────────────┐
+│  client (React + Vite)      │        │  server (Node + Express)     │
+│  · Interfaz del Jefe (PWA)  │  HTTP  │  · API /api/*                │
+│  · Formulario del cliente   │ ─────▶ │  · Integraciones externas    │
+│  · Caché local (offline)    │        │    (WhatsApp, Mercado Pago,  │
+└──────────────┬──────────────┘        │     clima, mapas, ARCA)      │
+               │ supabase-js (anon)    └──────────────┬───────────────┘
+               ▼                                      │ supabase-js (service)
+        ┌─────────────────────────────────────────────▼────────────────┐
+        │                    Supabase (cloud)                          │
+        │  · PostgreSQL (datos del negocio) + RLS                      │
+        │  · Auth (login Jefe, recuperar contraseña)                   │
+        │  · Storage (fotos de evidencia de servicios)                 │
+        │  · Realtime (notificaciones/alertas)                         │
+        └─────────────────────────────────────────────────────────────┘
+```
+
+## Principios
+
+1. **El cliente nunca ve el precio** hasta que el Jefe lo comunica (regla central del negocio). El frontend del cliente solo muestra el formulario de solicitud.
+2. **Offline-first (PWA):** el Jefe opera en el campo sin señal. La app guarda localmente (IndexedDB + cola de operaciones) y sincroniza cuando vuelve la conexión. La capa de sync se diseña como módulo propio.
+3. **Seguridad por RLS:** cada tabla de Supabase tiene Row Level Security habilitado. El frontend usa la **anon key** (pública pero limitada por RLS). La **service key** vive SOLO en el server, para tareas de administración e integraciones.
+4. **El operario no tiene interfaz** — todo se gestiona desde la vista del Jefe.
+
+## Flujo de datos típico (ej: registrar cliente)
+
+```
+Jefe → client (formulario) → supabase-js (anon key) → INSERT en tabla clientes
+      → RLS valida que el usuario autenticado pueda insertar → OK
+      → el server NO interviene en CRUD simple (solo integraciones)
+```
+
+## Reglas de negocio que condicionan la arquitectura
+
+- Solo un presupuesto **aprobado** genera un turno.
+- La verificación de pagos es **manual** (botón "Pagado"); la automática es opcional.
+- El sistema **solo sugiere** asignaciones/reasignaciones; la decisión final es del Jefe.
+- Integraciones externas (WhatsApp, Mercado Pago, clima, mapas, ARCA) se desarrollan con **mocks** hasta el Sprint 6.
+
+## Decisiones registradas (ADR-lite)
+
+| Fecha | Decisión | Estado |
+|---|---|---|
+| 2026-09 | Supabase cloud (plan free) para desarrollo local del equipo | ✅ activa |
+| 2026-09 | Producción: Cloud Pro vs self-hosted en VPS | ⏳ pendiente (no bloquea el desarrollo) |
+| 2026-09 | Node 22 como versión única del equipo (`.nvmrc`) | ✅ activa |
+| 2026-09 | CI obligatorio (lint + build) antes de mergear a develop | ✅ activa |
+
+## Deuda técnica conocida (se atiende en próximos sprints)
+
+- CORS abierto (`app.use(cors())`) → restringir a dominio propio en producción.
+- Endpoint `GET /api/clientes` sin autenticación → proteger con auth + RLS.
+- Esquema de BD sin migraciones versionadas → `supabase db pull` + carpeta `supabase/migrations/`.
+- Rotar service role key (fue compartida por chat).
+- Sin tests automatizados → preparar vitest cuando el equipo arranque a testear.
+</file>
+
+<file path="docs/GITFLOW.md">
+# Convenciones de Uso de GitFlow — Proyecto Hovy
+
+> Última actualización: 30/08/2026
+
+
+## 1. Objetivo
+
+**Idea central:** lo que está en `main` es lo que se despliega a producción (lo que usa la empresa). Nada llega a `main` sin pasar por revisión y sin que el CI (chequeos automáticos) esté en verde.
+
+
+## 2. Modelo de ramas (GitFlow ligero)
+
+```
+main (producción — protegida)
+ │
+ ├── develop (integración del sprint — protegida)
+ │     ├── feat/US-001-registrar-cliente
+ │     ├── feat/US-022-sugerir-asignacion
+ │     └── fix/US-043-boton-pagado
+ │
+ └── hotfix/... (solo errores graves en producción)
+```
+
+| Rama | Para qué sirve | ¿Push directo? | ¿Cómo se actualiza? |
+| - | - | - | - |
+| `main` | Producción. Siempre estable y desplegable | NO | Solo mediante Pull Request desde `develop` o `hotfix` |
+| `develop` | Integra todo el trabajo del sprint | NO | Solo mediante Pull Request desde ramas de trabajo |
+| `feat/...` | Una historia de usuario por rama | Sí | La crea cada desarrollador desde `develop` |
+| `fix/...` | Corrección de errores dentro del sprint | Sí | Igual que `feat` |
+| `hotfix/...` | Error grave en producción, corrección urgente | Sí | Sale de `main` y vuelve a `main` y `develop` |
+
+
+
+## 3. Nomenclatura de ramas
+
+Las ramas de trabajo **siempre** se nombran según la historia de Jira:
+
+```
+feat/US-001-registrar-cliente
+feat/US-022-sugerir-asignacion-turnos
+fix/US-043-boton-pagado
+chore/sprint-0-bootstrap
+hotfix/error-login-produccion
+```
+
+Reglas:
+
+- Prefijo según el tipo: `feat/` (nueva funcionalidad), `fix/` (corrección), `chore/` (infraestructura/ajustes), `hotfix/` (urgencia en producción).
+
+- Después del prefijo va el **código de la historia** (`US-001`) y un nombre corto en minúsculas separado por guiones.
+
+- **Una rama = una historia.** Si la historia se complica, se habla con el equipo; no se mezclan historias en una misma rama.
+
+
+## 4. Commits
+
+- **Mensajes cortos y descriptivos**, en imperativo: `feat: registrar cliente`, `fix: validar teléfono duplicado`.
+
+- Se puede referenciar el código de Jira al final: `feat: registrar cliente (HOVY-12)`.
+
+- **Un commit = un cambio lógico.** No commitear "todo junto" al final del día; commitear en pasos pequeños.
+
+- No commitear: `.env`, `node_modules`, archivos de build, archivos personales. (tengo que cubrirlo en el `.gitignore`.)
+
+
+## 5. Flujo de trabajo diario (paso a paso)
+
+**1. Antes de empezar a trabajar, traer la última versión de `develop`:**
+
+```
+git checkout develop
+git pull origin develop
+```
+
+**2. Crear la rama de la historia:**
+
+```
+git checkout -b feat/US-001-registrar-cliente
+```
+
+**3. Trabajar y commitear en pasos pequeños:**
+
+```
+git add .
+git commit -m "feat: registrar cliente (HOVY-12)"
+```
+
+**4. Subir la rama a GitHub la primera vez:**
+
+```
+git push -u origin feat/US-001-registrar-cliente
+```
+
+**5. Cuando la historia está terminada y probada localmente:**
+
+- Ir a GitHub → **Pull Request** (base: `develop` ← compare: `feat/US-001-registrar-cliente`)
+
+- Completar la descripción con qué se hizo y cómo se probó
+
+- **Avisar a un compañero** para que la revise (el autor nunca se revisa a sí mismo)
+
+**6. Mientras espera la revisión, el autor arranca otra rama desde `develop` actualizado.**
+
+**7. Si la rama queda atrasada respecto de `develop`** (otro compañero mergeó algo), actualizarla antes del merge:
+
+```
+git checkout feat/US-001-registrar-cliente
+git pull origin develop
+```
+
+
+## 6. Pull Requests (PR)
+
+Reglas obligatorias:
+
+1. **Base siempre `develop`** (o `main` solo para hotfixes y cierres de sprint).
+
+2. **El CI debe estar en verde** (lint + tests automáticos) — si está rojo, no se mergea.
+
+3. **Al menos 1 revisión de otro integrante.** La revisión busca errores, no aprobar por compromiso.
+
+4. El **autor del PR hace el merge** cuando la revisión está aprobada y el CI pasó.
+
+5. Después del merge, **borrar la rama** (GitHub lo ofrece con un botón).
+
+6. PRs chicos y enfocados. Un PR gigante es difícil de revisar y concentra errores.
+
+
+## 7. Cierre de sprint
+
+Al final de cada sprint:
+
+1. Verificar que todo lo del sprint esté mergeado a `develop`.
+
+2. Probar en conjunto que `develop` esté estable.
+
+3. Crear PR de `develop` → `main`.
+
+4. Mergear y **crear un tag de versión**:
+
+```
+git checkout main
+git pull origin main
+git tag -a v1.0.0 -m "Sprint 1 - Clientes e inmuebles"
+git push origin v1.0.0
+```
+
+> `main` con su tag = entregable del sprint. El despliegue automático a producción escucha a `main`.
+
+
+## 8. Hotfix (emergencia en producción)
+
+Cuando hay un error grave en lo que usa la empresa:
+
+```
+git checkout main
+git checkout -b hotfix/error-login-produccion
+# corregir, commitear, pushear
+git push -u origin hotfix/error-login-produccion
+```
+
+- El PR del hotfix va a `main` **y también a `develop`** (para que la corrección quede en ambos lados).
+
+- Se despliega con prioridad y después se revisa con calma.
+
+
+## 9. Qué NO hacer (errores comunes)
+
+- **Nunca pushear directo a `main` ni a `develop`.** Siempre por PR.
+
+- No mergear un PR sin revisión o con el CI en rojo.
+
+- No dejar ramas viejas sin borrar.
+
+- No commitear secretos (contraseñas, claves de API) — el `.env` nunca se sube.
+
+- No usar `git add .` a ciegas: revisar qué se agrega (`git status`).
+
+- No "arreglar a mano" en `main` o `develop` desde GitHub web sin PR.
+
+
+## 10. Comandos útiles
+
+```
+git status                      # qué cambió
+git log --oneline -10           # últimos commits
+git checkout develop            # cambiar de rama
+git branch -a                   # ver todas las ramas
+git pull origin develop         # actualizar rama actual con develop
+git push origin rama            # subir commits de la rama
+git branch -d nombre-rama       # borrar rama local (después del merge)
+```
+
+
+## 11. Roles y responsabilidades
+
+- **Todo integrante:** sigue estas convenciones, revisa PRs de compañeros y mantiene sus ramas limpias.
+
+- **Scrum Master:** vela por que el flujo se cumpla y resuelve dudas de Git.
+
+- **DevOps:** administra el repo (protección de ramas, CI/CD, tags) y el despliegue a producción.
+</file>
+
+<file path="docs/supabase-auth.sql">
+CREATE TABLE IF NOT EXISTS public.usuarios (
+  id BIGSERIAL PRIMARY KEY,
+  usuario TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  rol TEXT NOT NULL CHECK (rol IN ('admin', 'user', 'viewer')) DEFAULT 'user',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO public.usuarios (usuario, password_hash, rol)
+VALUES (
+  'hovy',
+  '$2b$10$I304t/p.IXucJPg0wFdZcujf2E7kK2GLxqjiAE1O8Qi8VWEDz9ux6',
+  'admin'
+)
+ON CONFLICT (usuario) DO UPDATE
+SET password_hash = EXCLUDED.password_hash,
+    rol = EXCLUDED.rol;
+
+SELECT id, usuario, rol, created_at
+FROM public.usuarios
+WHERE usuario = 'hovy';
+</file>
+
+<file path="server/src/config/supabase.js">
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+</file>
+
+<file path="server/src/controllers/botClientesController.js">
+import { supabaseAdmin } from '../config/supabase.js';
+import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from '../utils/telefono.js';
+
+// GET /api/bot/clientes/:telefono
+//
+// Primer paso del flujo de n8n: bifurcar la conversación según si el número ya
+// es cliente o no. Existe como endpoint (en vez de que n8n consulte Postgres
+// directo) para que las credenciales de Supabase no vivan dentro de n8n y para
+// que la normalización del teléfono tenga un solo lugar.
+export const getClienteByTelefono = async (req, res) => {
+  const telefono = normalizarTelefono(req.params.telefono);
+
+  if (!telefono) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+  }
+
+  try {
+    // maybeSingle y no single: single devuelve error PGRST116 cuando no hay
+    // filas, pero acá "no existe" es la rama esperada del flujo (cliente
+    // nuevo), no un error.
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .select('*')
+      .eq('telefono', telefono)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al buscar cliente por teléfono:', error);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo consultar el cliente. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        ok: false,
+        error: `No existe un cliente con el teléfono ${telefono}.`,
+      });
+    }
+
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    console.error('Error inesperado al buscar cliente por teléfono:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al consultar el cliente.',
+    });
+  }
+};
+</file>
+
+<file path="server/src/middleware/botAuth.js">
+import crypto from 'crypto';
+
+// Creacion de la X-API-KEY (autenticacion) para el futuro bot (n8n) que va a interactuar con la APP.
+
+// Esta implementacion es aparte del JWT del usuario.
+// Se realiza para que el bot pueda interactuar con la api, siempre validando la persona por su numero de telefono.
+// Y validando el token que tiene asignado el bot con el backend con un secreto compartido (X-API-KEY).
+
+const HEADER = 'x-api-key';
+
+export const verificarApiKeyBot = (req, res, next) => {
+  const esperada = process.env.BOT_API_KEY;
+  
+  // Condicion de error por si la key no esta configurada.
+  if (!esperada) {
+    console.error('BOT_API_KEY no está definida. Revisar el .env del server.');
+    return res.status(500).json({
+      ok: false,
+      error: 'El servidor no tiene configurada la autenticación del bot.',
+    });
+  }
+
+  const recibida = req.get(HEADER);
+
+  if (!recibida) {
+    return res.status(401).json({
+      ok: false,
+      error: `Falta el header ${HEADER}.`,
+    });
+  }
+
+  // Comparación en tiempo constante. Con === el bucle sale en el primer
+  // carácter distinto, así que midiendo cuánto tarda la respuesta se puede
+  // adivinar la key carácter por carácter. timingSafeEqual siempre tarda lo
+  // mismo, pero exige buffers del mismo largo: si difieren, ya sabemos que no
+  // coincide.
+  const bufRecibida = Buffer.from(recibida);
+  const bufEsperada = Buffer.from(esperada);
+
+  const coincide =
+    bufRecibida.length === bufEsperada.length &&
+    crypto.timingSafeEqual(bufRecibida, bufEsperada);
+
+  if (!coincide) {
+    // Nunca logeamos la key (ni cuando la recibimos, ni cuando la esperamos).
+    return res.status(403).json({
+      ok: false,
+      error: 'API key inválida.',
+    });
+  }
+
+  next();
+};
+</file>
+
+<file path="server/src/middleware/botRateLimit.js">
+import { rateLimit } from 'express-rate-limit';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Límite de volumen para todo el router del bot.
+//
+// La API key es un secreto, y los secretos se filtran (un log, un screenshot,
+// un commit). La pregunta no es si puede pasar, sino qué puede hacer alguien en
+// los primeros minutos. Sin límite: bajarse la tabla de clientes entera.
+//
+// De paso cubre el caso más probable: un nodo de n8n mal armado en loop
+// disparando miles de requests contra Supabase.
+
+const windowMs = Number(process.env.BOT_RATE_LIMIT_WINDOW_MS) || 60_000;
+const limit = Number(process.env.BOT_RATE_LIMIT_MAX) || 120;
+
+export const botRateLimit = rateLimit({
+  windowMs,
+  limit,
+
+  // express-rate-limit cuenta por IP por defecto, y acá eso no sirve: todo el
+  // tráfico llega desde la misma IP (la de n8n), así que un límite por IP o es
+  // tan alto que no protege, o corta al bot entero. Con una clave fija el
+  // límite pasa a ser un cupo global del router, que es lo que queremos.
+  keyGenerator: () => 'bot',
+
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  // El default de la librería responde texto plano; mantenemos el shape
+  // { ok, error } que usa el resto de la API.
+  handler: (req, res) =>
+    res.status(429).json({
+      ok: false,
+      error: 'Demasiadas peticiones. Intentá de nuevo en unos instantes.',
+    }),
+});
+</file>
+
+<file path="server/src/routes/auth.routes.js">
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { supabaseAdmin } from '../config/supabase.js';
+
+const router = Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'hovy-dev-secret-change-me';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+
+const generarToken = (usuario) => jwt.sign(
+  {
+    sub: usuario.id,
+    usuario: usuario.usuario,
+    rol: usuario.rol,
+  },
+  JWT_SECRET,
+  { expiresIn: JWT_EXPIRES_IN }
+);
+
+router.post('/login', async (req, res) => {
+  const { usuario, password } = req.body ?? {};
+
+  if (!usuario || !password) {
+    return res.status(400).json({ ok: false, error: 'usuario y password son obligatorios' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('usuarios')
+      .select('*')
+      .eq('usuario', usuario)
+      .single();
+
+    if (error || !data) {
+      return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
+    }
+
+    const passwordValida = await bcrypt.compare(password, data.password_hash);
+
+    if (!passwordValida) {
+      return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
+    }
+
+    const token = generarToken(data);
+
+    return res.status(200).json({
+      ok: true,
+      token,
+      user: {
+        id: data.id,
+        usuario: data.usuario,
+        rol: data.rol,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message || 'Error al iniciar sesión' });
+  }
+});
+
+router.post('/register', async (req, res) => {
+  const { usuario, password, rol = 'user' } = req.body ?? {};
+
+  const rolesPermitidos = ['admin', 'user', 'viewer'];
+
+  if (!usuario || !password) {
+    return res.status(400).json({ ok: false, error: 'usuario y password son obligatorios' });
+  }
+
+  if (!rolesPermitidos.includes(rol)) {
+    return res.status(400).json({ ok: false, error: 'rol inválido' });
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const { data, error } = await supabaseAdmin
+      .from('usuarios')
+      .insert({
+        usuario,
+        password_hash: passwordHash,
+        rol,
+      })
+      .select('id, usuario, rol, created_at')
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ ok: false, error: 'El usuario ya existe' });
+      }
+      return res.status(500).json({ ok: false, error: error.message || 'No se pudo crear el usuario' });
+    }
+
+    return res.status(201).json({ ok: true, user: data });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message || 'Error al crear usuario' });
+  }
+});
+
+router.get('/health', (req, res) => {
+  res.status(200).json({ ok: true, message: 'Auth OK' });
+});
+
+router.get('/me', (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ ok: false, error: 'Token requerido' });
+  }
+
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const payload = jwt.verify(token, JWT_SECRET);
+
+    return res.status(200).json({ ok: true, user: payload });
+  } catch (error) {
+    return res.status(401).json({ ok: false, error: 'Token inválido o expirado' });
+  }
+});
+
+export default router;
+</file>
+
+<file path="server/src/services/visionService.js">
+import vision from '@google-cloud/vision';
+
+// El cliente detecta automáticamente la variable GOOGLE_APPLICATION_CREDENTIALS
+const client = new vision.ImageAnnotatorClient();
+
+export const clasificarImagen = async (rutaOBufferImagen) => {
+  // Realiza detección de etiquetas (Labels) y propiedades de la imagen
+  const [result] = await client.labelDetection(rutaOBufferImagen);
+  const labels = result.labelAnnotations;
+
+  console.log('Etiquetas detectadas:');
+  labels.forEach(label => console.log(`- ${label.description} (Confianza: ${(label.score * 100).toFixed(2)}%)`));
+
+  return labels;
+};
+</file>
+
+<file path="server/src/test/bot.http">
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+
+@baseUrl = http://localhost:4000
+
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Cliente que ya cargado en la bd, usado como caso real.
+@telefono = 5493514330429
+
+// TEST DE AUTENTICACION CON X-API-KEY
+
+### Test de Autenticacion sin X-API-KEY  -  [Espera 401]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+
+### Test de Autenticacion con X-API-KEY Incorrecta  -  [Espera 403]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: esta-key-no-es-la-correcta
+
+### Test de Autenticacion con X-API-KEY Correcta  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: {{apiKey}}
+
+// TEST DE NORMALIZACION DE TELEFONO
+
+// Primeros tres test con el mismo cliente, escrito en distintos formatos.
+// Los tres test tendrian que devolver un 200 y el mismo id del cliente.
+// Si se creara un nuevo cliente estaria fallando la normalizacion.
+
+### TEST DE NORMALIZACION DE TELEFONO Formato 549 + 10 dígitos  - [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/5493514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato sin país ni 9  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/3514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con país pero sin el 9 (así suele llegar el wa_id de WhatsApp en AR)  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/543514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con prefijo nacional 0  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/03514330429
+x-api-key: {{apiKey}}
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con el viejo prefijo 15  -  [Espera 400] 
+// Se espera un celular argentino con código de área y 
+// sin el prefijo 15 (ej: 3514330429 o 5493514330429).
+GET {{baseUrl}}/api/bot/clientes/0351154330429
+x-api-key: {{apiKey}}
+
+
+### TEST DE NORMALIZACION DE TELEFONO Formato con letras y números  -  [Espera 400]
+GET {{baseUrl}}/api/bot/clientes/abc123
+x-api-key: {{apiKey}}
+
+
+// TEST DE VALIDACION DE USUARIO NO CLIENTE
+
+
+### TEST DE VALIDACION DE USUARIO NO CLIENTE - [Espera 404]
+// Esta seria la rama del n8n para la creacion de un cliente / recuperacion.
+GET {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+
+
+// TEST DE CREACION DE CLIENTE
+### TEST DE CREACION DE CLIENTE Duplicado (mismo numero) distinto formato  - [Espera 409, NO crea nada = ya existe]
+
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "apellido": "Duplicado",
+  "telefono": "0351 433-0429",
+  "tipo_cliente": "Casual"
+}
+
+### TEST DE CREACION DE CLIENTE Nuevo cliente con telefono normalizado  - [Espera 200]
+
+// Crea un usuario en la base de datos con el telefono normalizado [Se agregaria en bd como: 5491155667788]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "11 5566-7788",
+  "tipo_cliente": "Casual"
+}
+
+### TEST DE CREACION DE CLIENTE Falta un campo not null - [Espera 400]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "1155667789"
+}
+
+### TEST DE CREACION DE CLIENTE Atributo telefono invalido - [Espera 400]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "telefono": "123",
+  "tipo_cliente": "Casual"
+}
+
+
+// ACTUALIZACION DE CLIENTE
+### ACTUALIZACION DE CLIENTE Cambio de email (Normalizando el numero antes) - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "juan.prueba@example.com"
+}
+
+### ACTUALIZACION DE CLIENTE Cambio de email (Normalizando el numero antes) - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/5491155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "juan.prueba@example.com"
+}
+
+### ACTUALIZACION DE CLIENTE Cambio de Telefono [Luego lo cambiamos por un token enviado al email] - [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/1155667788
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "telefono": "011 5566-7799"
+}
+
+### ACTUALIZACION DE CLIENTE Numero invalido - [Espera 400]
+PUT {{baseUrl}}/api/bot/clientes/1100000000
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "email": "nadie@example.com"
+}
+
+
+// VALIDACION DEL RATE LIMIT [PARA QUE NO ROMPAN EL BOT A MENSAJES :( ] 
+
+// Para probarlo primero hay que bajar el valor del .env : BOT_RATE_LIMIT_MAX=5 
+// Luego de cinco request tendria que devolver un 429 con msj de error.
+// VOLVER A DEJAR EL VALOR ORIGINAL DEL .ENV :P
+
+### VALIDACION DEL RATE LIMIT Repetir hasta superar el limite - [Espera 429] 
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}
+x-api-key: {{apiKey}}
+
+### VALIDACION DEL RATE LIMIT Comprobar que no rompe el resto de los endpoints - [Espera 200]
+GET {{baseUrl}}/api/clientes
+
+### VALIDACION DEL RATE LIMIT Comprobar que no rompe el resto de los endpoints - [Espera 200]
+GET {{baseUrl}}/api/inmuebles
+</file>
+
+<file path="server/src/utils/telefono.js">
+// Normalización de teléfonos argentinos.
+//
+// El campo `telefono` es la clave natural de la API (va en el path de varios
+// endpoints) y es UNIQUE en Postgres. Como "único" para Postgres significa
+// "string distinto", guardar el mismo número en dos formatos crea dos clientes.
+// Por eso todo teléfono se normaliza antes de tocar la base.
+//
+// Formato canónico: 549 + 10 dígitos nacionales -> 5493514330429
+// Es E.164 sin el "+". El 9 marca celular en Argentina: sin él no se puede
+// mandar un WhatsApp al número.
+//
+//   "3514330429"           -> "5493514330429"
+//   "5493514330429"        -> "5493514330429"
+//   "543514330429"         -> "5493514330429"   (así suele llegar el wa_id)
+//   "+54 9 351 433-0429"   -> "5493514330429"
+//   "03514330429"          -> "5493514330429"
+//   "0351 15 4330429"      -> null              (ver nota sobre el 15)
+
+const DIGITOS_NACIONALES = 10;
+
+export const normalizarTelefono = (valor) => {
+  if (typeof valor !== 'string' && typeof valor !== 'number') return null;
+
+  // Nos quedamos solo con dígitos: descarta +, espacios, guiones y paréntesis.
+  let digitos = String(valor).replace(/\D/g, '');
+  if (!digitos) return null;
+
+  // Prefijo internacional marcado a la vieja usanza (00 54 ...).
+  if (digitos.startsWith('00')) digitos = digitos.slice(2);
+
+  // Código de país. Si después del 54 viene un 9, es el marcador de celular:
+  // no existe código de área argentino que empiece con 9, así que sacarlo no
+  // es ambiguo.
+  if (digitos.startsWith('54')) {
+    digitos = digitos.slice(2);
+    if (digitos.startsWith('9')) digitos = digitos.slice(1);
+  }
+
+  // Prefijo nacional de larga distancia (0351...).
+  if (digitos.startsWith('0')) digitos = digitos.slice(1);
+
+  // Lo que queda tiene que ser código de área + abonado, ni más ni menos.
+  //
+  // Acá cae el viejo prefijo 15 ("0351 15 4330429" deja 12 dígitos). No se
+  // intenta resolver: los códigos de área argentinos tienen 2, 3 o 4 dígitos,
+  // así que no hay forma confiable de saber dónde termina el área y empieza el
+  // 15, y adivinar mal guardaría un teléfono corrupto. Preferimos rechazarlo y
+  // que el caller devuelva un 400 explicando el formato esperado. Desde
+  // WhatsApp nunca llega con 15; el riesgo está solo en la carga manual.
+  if (digitos.length !== DIGITOS_NACIONALES) return null;
+
+  return `549${digitos}`;
+};
+
+// Mensaje único para los 400 de teléfono inválido, así todos los endpoints
+// explican lo mismo.
+export const ERROR_TELEFONO_INVALIDO =
+  'Teléfono inválido. Se espera un celular argentino con código de área y sin el prefijo 15 (ej: 3514330429 o 5493514330429).';
+</file>
+
+<file path="server/src/server.js">
+import app from './app.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  console.log(` Servidor corriendo en http://localhost:${PORT}`);
+});
+</file>
+
+<file path="server/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Variables de entorno (Secretos y Claves API)
+.env
+.env*.local
+.env.production
+.env.development
+
+# Claves GCP
+server/keys/*.json
+</file>
+
+<file path=".editorconfig">
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+</file>
+
+<file path=".gitignore">
+# Dependencias
+node_modules/
+
+# Variables de entorno (nunca subir secretos)
+.env
+.env.*.local
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Sistema y editores
+.DS_Store
+.vscode/
+.idea/
+*.swp
+</file>
+
+<file path=".nvmrc">
+22
+</file>
+
+<file path="package.json">
+{
+  "name": "hovy",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "install:all": "npm install --prefix server && npm install --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
+</file>
+
+<file path="client/src/components/layout/Header.jsx">
+import { Bell, UserCircle } from 'lucide-react';
+
+export default function Header() {
+  return (
+    // Utilizamos clases utilitarias de Flexbox y Spacing de Bootstrap
+    <header className="hovy-header d-flex align-items-center justify-content-between px-4 flex-shrink-0 sticky-top">
+      <div className="brand">
+        <h1 className="hovy-brand fs-4 m-0">Hovy</h1>
+      </div>
+      <div className="d-flex align-items-center gap-3">
+        <button className="icon-button p-2 d-flex align-items-center justify-content-center" aria-label="Notificaciones">
+          <Bell size={24} />
+        </button>
+        <button className="icon-button p-2 d-flex align-items-center justify-content-center" aria-label="Perfil de usuario">
+          <UserCircle size={28} color="#1B3006" />
+        </button>
+      </div>
+    </header>
+  );
+}
+</file>
+
+<file path="client/src/components/layout/RequireAuth.jsx">
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { supabase } from '../../services/supaBaseClient';
+
+// Componente Guardián de Rutas basado en el patrón RequireAuth
+export default function RequireAuth({ children }) {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Verificamos la sesión actual al montar el componente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // Nos suscribimos a los cambios de estado (ej: si el token expira o cierra sesión)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: '#F2F2E6' }}>
+        <div className="spinner-border" style={{ color: '#1B3006' }} role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay sesión activa, redirigimos al Login
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Si pasa la autenticación, renderizamos el componente hijo (Dashboard, etc.)
+  return children;
+}
+</file>
+
+<file path="client/src/components/layout/SideBar.jsx">
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Users, CalendarDays, BarChart3 } from 'lucide-react';
+
+export default function Sidebar() {
+  const navItems = [
+    { path: '/dashboard', label: 'Panel', icon: <LayoutDashboard size={22} /> },
+    { path: '/clients', label: 'Clientes', icon: <Users size={22} /> },
+    { path: '/calendar', label: 'Agenda', icon: <CalendarDays size={22} /> },
+    { path: '/analytics', label: 'Métricas', icon: <BarChart3 size={22} /> },
+  ];
+
+  return (
+    <>
+      {/* Sidebar visible solo en pantallas medianas/grandes (Bootstrap Grid) */}
+      <aside className="hovy-sidebar p-4 d-flex flex-column col-md-3 col-lg-2">
+        <div className="d-flex flex-column gap-2">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className="nav-link px-3 py-2"
+            >
+              {item.icon}
+              <span className="ms-2">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </aside>
+
+      {/* Menú inferior visible solo en móviles (Controlado por SCSS propio) */}
+      <nav className="hovy-bottom-nav px-2 py-2">
+        {navItems.map((item) => (
+          <NavLink
+            key={`mobile-${item.path}`}
+            to={item.path}
+            className="nav-link d-flex flex-column align-items-center justify-content-center p-2 gap-1 text-decoration-none"
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
+  );
+}
+</file>
+
+<file path="client/src/components/ui/Button.jsx">
+export default function Button({
+  children,
+  type = 'button',
+  variant = 'primary', // ej: 'primary', 'outline-primary', 'secondary'
+  className = '',
+  onClick,
+  disabled = false,
+  ...props
+}) {
+  // Aplicamos la forma "Pill" (rounded-pill de Bootstrap) exigida en el diseño minimalista orgánico
+  const baseClass = `btn btn-${variant} rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 ${className}`;
+
+  return (
+    <button
+      type={type}
+      className={baseClass}
+      onClick={onClick}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+</file>
+
+<file path="client/src/components/ui/Card.jsx">
+export default function Card({ children, className = '', title, ...props }) {
+  return (
+    // Tarjeta con borde suave (Level 1 de elevación según el diseño)
+    <div 
+      className={`card border-0 shadow-sm rounded-4 ${className}`} 
+      style={{ backgroundColor: '#ffffff', border: '1px solid #D1D1C4' }} 
+      {...props}
+    >
+      {title && (
+        <div className="card-header bg-transparent border-bottom-0 pt-4 pb-0 px-4">
+          <h5 className="card-title fw-bold m-0" style={{ color: '#1B3006' }}>{title}</h5>
+        </div>
+      )}
+      <div className="card-body p-4">
+        {children}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/components/ui/Input.jsx">
+export default function Input({
+  label,
+  type = 'text',
+  name,
+  register, // Función register proveniente de useForm()
+  rules, // Reglas de validación (ej: { required: true })
+  errors, // Objeto de errores proveniente de useForm()
+  placeholder = '',
+  className = '',
+  ...props
+}) {
+  const error = errors?.[name];
+
+  return (
+    <div className={`mb-3 ${className}`}>
+      {label && (
+        <label htmlFor={name} className="form-label fw-semibold text-secondary mb-1">
+          {label}
+        </label>
+      )}
+      <input
+        id={name}
+        type={type}
+        placeholder={placeholder}
+        // Aplicamos un borde suave y radio redondeado (rounded-4 en Bootstrap)
+        className={`form-control rounded-4 py-2 shadow-sm ${error ? 'is-invalid' : ''}`}
+        {...(register ? register(name, rules) : {})}
+        {...props}
+      />
+      {error && (
+        <div className="invalid-feedback">
+          {error.message}
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/pages/Auth/Login.jsx">
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { Leaf, User, Lock, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
+import Button from '../../components/ui/Button.jsx';
+import AuthService from '../../services/auth.service.js';
+
+export default function Login() {
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Implementación de React Hook Form para control de errores y validaciones[cite: 4]
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+  //const onSUbmit = navigate('/dashboard');
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    setLoginError(null);
+    try {
+      // Usamos el servicio centralizado que inyecta la conexión a Supabase[cite: 4]
+      await AuthService.login(data.email, data.password, () => {
+        navigate('/dashboard');
+      });
+    } catch (error) {
+      setLoginError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }; 
+
+  return (
+    <div className="login-container container-fluid p-0 overflow-hidden">
+      <div className="row g-0 h-100">
+        
+        {/* Mitad Izquierda (Imagen Split Screen) */}
+        <div className="col-lg-6 login-image-panel shadow-lg"></div>
+
+        {/* Mitad Derecha (Formulario) */}
+        <div className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-4">
+          <div className="login-form-wrapper">
+            
+            <div className="login-card p-4">
+              <div className="text-center mb-5">
+                <div className="d-inline-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm p-3 mb-3 border">
+                  <Leaf color="#1B3006" size={40} />
+                </div>
+                <h1 className="fw-bold" style={{ color: '#1B3006', fontSize: '2.5rem' }}>Bienvenido</h1>
+                <p className="text-secondary fs-5 m-0">Sistema de Valle la Armonía</p>
+              </div>
+
+              {/* Manejo de error general de autenticación */}
+              {loginError && (
+                <div className="alert alert-danger d-flex align-items-center py-2 rounded-3 mb-4" role="alert">
+                  <span className="small fw-semibold">{loginError}</span>
+                </div>
+              )}
+
+              {/* Formulario Controlado[cite: 4] */}
+              <form onSubmit={handleSubmit(onSubmit)}>
+                
+                {/* Campo Usuario/Correo */}
+                <div className="mb-4">
+                  <label className="form-label fw-bold text-secondary mb-1">Correo Electrónico</label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-transparent border-end-0 rounded-start-pill ps-3 text-secondary">
+                      <User size={20} />
+                    </span>
+                    <input
+                      type="email"
+                      className={`form-control border-start-0 rounded-end-pill py-2 ${errors.email ? 'is-invalid' : ''}`}
+                      placeholder="Ingrese su correo"
+                      {...register("email", { 
+                        required: "El correo es obligatorio",
+                        pattern: {
+                          value: /\S+@\S+\.\S+/,
+                          message: "El formato del correo no es válido"
+                        }
+                      })}
+                    />
+                  </div>
+                  {errors.email && <div className="text-danger small mt-1 ps-3">{errors.email.message}</div>}
+                </div>
+
+                {/* Campo Contraseña */}
+                <div className="mb-2">
+                  <label className="form-label fw-bold text-secondary mb-1">Contraseña</label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-transparent border-end-0 rounded-start-pill ps-3 text-secondary">
+                      <Lock size={20} />
+                    </span>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className={`form-control border-start-0 border-end-0 py-2 ${errors.password ? 'is-invalid' : ''}`}
+                      placeholder="••••••••"
+                      {...register("password", { required: "La contraseña es obligatoria" })}
+                    />
+                    <span 
+                      className="input-group-text bg-transparent border-start-0 rounded-end-pill pe-3 text-secondary"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </span>
+                  </div>
+                  {errors.password && <div className="text-danger small mt-1 ps-3">{errors.password.message}</div>}
+                </div>
+
+                {/* Recuperar Contraseña */}
+                <div className="text-end mb-4">
+                  <a href="#olvido" className="text-decoration-none fw-semibold small" style={{ color: '#1B3006' }}>
+                    ¿Olvidó su contraseña?
+                  </a>
+                </div>
+
+                {/* Botón Principal */}
+                <Button type="submit" variant="primary" className="w-100 py-3 mb-4 shadow-sm fs-5" disabled={isLoading}>
+                  {isLoading ? 'Verificando...' : (
+                    <>Iniciar Sesión <ArrowRight size={20} /></>
+                  )}
+                </Button>
+
+                <hr className="text-secondary mb-4 opacity-25" />
+
+                {/* Crear Cuenta */}
+                <div className="text-center">
+                  <p className="text-secondary small mb-2">¿No tienes una cuenta?</p>
+                  <Button variant="outline-primary" className="w-100 py-2 rounded-pill bg-transparent border-secondary text-dark fw-semibold">
+                    Crear Cuenta <UserPlus size={18} className="ms-1" />
+                  </Button>
+                </div>
+
+              </form>
+            </div>
+            
+            <div className="text-center mt-5 text-secondary small fw-medium">
+              Valle La Armonía © 2024
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/pages/Home.jsx">
+import { Link } from 'react-router-dom';
+import { 
+  ArrowRight, 
+  Leaf, 
+  User, 
+  Home as HomeIcon, 
+  Users, 
+  MessageCircle
+} from 'lucide-react';
+import Button from '../components/ui/Button.jsx';
+
+export default function Home() {
+  return (
+    <div className="d-flex flex-column min-vh-100 position-relative pb-5 pb-md-0">
+      
+      {/* NAVBAR SUPERIOR */}
+      <nav className="home-navbar d-flex align-items-center justify-content-between sticky-top bg-white px-3 px-md-4 py-3 border-bottom">
+        <div className="d-flex align-items-center gap-2">
+          <Leaf color="#1B3006" size={28} />
+          <h1 className="hovy-brand fs-4 m-0 text-dark fw-bold">Valle La Armonía</h1>
+        </div>
+        
+        {/* Menú Desktop (Oculto en móvil) */}
+        <div className="d-none d-md-flex gap-4 align-items-center">
+          <a href="#servicios" className="nav-link text-decoration-none fw-semibold text-secondary">Servicios</a>
+          <a href="#nosotros" className="nav-link text-decoration-none fw-semibold text-secondary">Nosotros</a>
+          <a href="#contacto" className="nav-link text-decoration-none fw-semibold text-secondary">Contacto</a>
+        </div>
+
+        {/* Botón Ingresar (Adaptativo)[cite: 4] */}
+        <div>
+          <Link to="/login" className="text-decoration-none">
+            {/* Versión Desktop */}
+            <Button variant="primary" className="d-none d-md-flex">Ingresar</Button>
+            {/* Versión Mobile: Círculo oscuro con ícono */}
+            <div className="d-md-none bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
+              <User size={18} />
+            </div>
+          </Link>
+        </div>
+      </nav>
+
+      {/* HERO SECTION ORIGINAL */}
+      <main className="hero-section flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center px-3 py-5">
+        <div className="container position-relative z-1 d-flex flex-column align-items-center">
+          
+          <Leaf color="#ffffff" size={64} className="mb-3 opacity-75" />
+          <h2 className="fs-3 fw-light mb-4 text-white">Valle La Armonía</h2>
+          
+          <h1 className="hero-title mb-4 text-white">
+            Paisajismo que respira con la<br />naturaleza
+          </h1>
+          
+          <p className="hero-subtitle mb-5 text-white">
+            Diseñamos y mantenemos espacios verdes sustentables que<br className="d-none d-md-block" />
+            transforman tu entorno en un refugio de paz.
+          </p>
+          
+          <Button variant="primary" className="px-5 py-3 fs-5 shadow">
+            Solicitar Turno <ArrowRight size={20} />
+          </Button>
+          
+        </div>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-light py-4 border-top text-center mt-auto">
+        <div className="container">
+          <div className="d-flex justify-content-center gap-3 mb-3 small fw-semibold">
+            <a href="#legal" className="text-decoration-none text-secondary">Aviso Legal</a>
+            <span className="text-secondary opacity-50">•</span>
+            <a href="#privacidad" className="text-decoration-none text-secondary">Privacidad</a>
+            <span className="text-secondary opacity-50">•</span>
+            <a href="#whatsapp" className="text-decoration-none text-dark d-flex align-items-center gap-1">
+              <MessageCircle size={16} /> WhatsApp
+            </a>
+          </div>
+          <p className="m-0 small text-secondary opacity-75" style={{ fontSize: '0.75rem' }}>
+            © 2024 Valle La Armonía. Paisajismo Sustentable. Todos los derechos reservados.
+          </p>
+        </div>
+      </footer>
+
+      {/* BOTTOM NAV (Móvil) - Visible solo en pantallas pequeñas */}
+      <nav 
+        className="fixed-bottom d-md-none bg-white border-top d-flex justify-content-around align-items-center pt-2 shadow-lg"
+        style={{ zIndex: 1050, paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
+      >
+        <a href="#inicio" className="text-decoration-none text-center text-dark d-flex flex-column align-items-center">
+          <HomeIcon size={22} className="mb-1" />
+          <span style={{ fontSize: '0.65rem', fontWeight: '600' }}>Inicio</span>
+        </a>
+        <a href="#servicios" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center">
+          <Leaf size={22} className="mb-1" />
+          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Servicios</span>
+        </a>
+        <a href="#nosotros" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center">
+          <Users size={22} className="mb-1" />
+          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Nosotros</span>
+        </a>
+        <a href="#contacto" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center">
+          <MessageCircle size={22} className="mb-1" />
+          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Contacto</span>
+        </a>
+      </nav>
+
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/routes/AppRoutes.jsx">
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts y Guardianes
+import DashboardLayout from '../components/layout/DashboardLayout.jsx';
+import RequireAuth from '../components/layout/RequireAuth.jsx';
+import ClientsPage from '../pages/Clients.jsx';
+
+// Vistas Públicas
+import Home from '../pages/Home.jsx';
+import Login from '../pages/Auth/Login.jsx';
+
+// Vistas Privadas Reales
+import Dashboard from '../pages/Dashboard.jsx';
+
+// Componentes temporales (Mocks) que reemplazaremos en los siguientes pasos
+const Clients = () => <h1>Listado de Clientes</h1>;
+const Calendar = () => <h1>Agenda Semanal</h1>;
+const Analytics = () => <h1>Estadísticas</h1>;
+
+
+export default function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Rutas Públicas */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+
+        {/* Rutas Privadas: Envueltas en el Guardián (RequireAuth) y luego en el Layout */}
+        <Route 
+          path="/dashboard" 
+          element={
+            //<RequireAuth>
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            //</RequireAuth>
+          } 
+        />
+        
+        <Route 
+          path="/clients" 
+          element={
+            //<RequireAuth>
+              <DashboardLayout>
+                <Clients />
+              </DashboardLayout>
+            //</RequireAuth>
+          } 
+        />
+        
+        <Route 
+          path="/calendar" 
+          element={
+            //<RequireAuth>
+              <DashboardLayout>
+                <Calendar />
+              </DashboardLayout>
+            //</RequireAuth>
+          } 
+        />
+        
+        <Route 
+          path="/analytics" 
+          element={
+            //<RequireAuth>
+              <DashboardLayout>
+                <Analytics />
+              </DashboardLayout>
+            //</RequireAuth>
+          } 
+        />
+        <Route 
+          path="/clients" 
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <ClientsPage />
+              </DashboardLayout>
+            </RequireAuth>
+          } 
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+</file>
+
+<file path="client/src/services/auth.service.js">
+import { supabase } from './supaBaseClient.js';
+
+// Adaptación del auth.service.js para operar de forma segura con Supabase
+const login = async (email, password, navigateToComponent) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
+
+  if (error) {
+    console.error('Error de autenticación:', error.message);
+    throw new Error('Usuario o clave incorrectos'); // Abstracción del manejo de error
+  }
+
+  if (data.session) {
+    navigateToComponent();
+  }
+};
+
+const logout = async (navigateToHome) => {
+  await supabase.auth.signOut();
+  if (navigateToHome) {
+    navigateToHome();
+  }
+};
+
+const getSession = async () => {
+  const { data } = await supabase.auth.getSession();
+  return data.session;
+};
+
+const AuthService = {
+  login,
+  logout,
+  getSession,
+};
+
+export default AuthService;
+</file>
+
+<file path="client/src/services/supaBaseClient.js">
+import { createClient } from '@supabase/supabase-js';
+
+// Obtenemos las variables de entorno
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Validamos que existan para evitar errores silenciosos en la consola
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Faltan las variables VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en el archivo .env');
+}
+
+// Inicializamos y exportamos la instancia única del cliente de Supabase
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+</file>
+
+<file path="client/src/App.jsx">
+import AppRoutes from './routes/AppRoutes.jsx';
+
+function App() {
+  // Aquí más adelante inyectaremos los Contextos Globales (AuthContext, ThemeContext, etc.)
+  return (
+    <AppRoutes />
+  );
+}
+
+export default App;
+</file>
+
+<file path="client/src/main.jsx">
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import './styles/main.scss'; // Entrypoint maestro de estilos SCSS y Bootstrap
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+</file>
+
+<file path="client/package.json">
+{
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "axios": "^1.19.0",
+    "bootstrap": "^5.3.8",
+    "lucide-react": "^1.34.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.87.0",
+    "react-router-dom": "^7.18.2",
+    "sass": "^1.103.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "eslint": "^10.9.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "globals": "^17.11.0",
+    "vite": "^8.2.2"
+  }
+}
+</file>
+
+<file path="server/src/middleware/authMiddleware.js">
+import jwt from 'jsonwebtoken';
+
+export const JWT_SECRET = process.env.JWT_SECRET || 'hovy-dev-secret-change-me';
+
+export const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ ok: false, error: 'Token requerido' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch (error) {
+    return res.status(401).json({ ok: false, error: 'Token inválido o expirado' });
+  }
+};
+
+export const requireRole = (roles = []) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ ok: false, error: 'No autenticado' });
+  }
+
+  if (roles.length > 0 && !roles.includes(req.user.rol)) {
+    return res.status(403).json({ ok: false, error: 'No tienes permisos suficientes' });
+  }
+
+  next();
+};
+</file>
+
+<file path="server/src/routes/bot.routes.js">
+import { Router } from 'express';
+import { botRateLimit } from '../middleware/botRateLimit.js';
+import { verificarApiKeyBot } from '../middleware/botAuth.js';
+import { getClienteByTelefono } from '../controllers/botClientesController.js';
+import { createCliente, updateCliente } from '../controllers/clientesController.js';
+
+const router = Router();
+// Los middlewares usan el "router.use" para que protejan todo lo que salga de /api/bot sin tener que agregarlos a cada ruta.
+// El rate limit lo agregamos para evitar que alguien nos mate a peticiones con distintas key.
+router.use(botRateLimit);
+router.use(verificarApiKeyBot);
+
+// GET /api/bot/clientes/:telefono
+router.get('/clientes/:telefono', getClienteByTelefono);
+
+
+// Los endpoints de creacion y modificacion reusan los controllres del cliente normal
+// POST /api/bot/clientes
+router.post('/clientes', createCliente);
+// PUT  /api/bot/clientes/:telefono
+router.put('/clientes/:telefono', updateCliente);
+
+export default router;
+</file>
+
+<file path="server/src/routes/inmuebles.routes.js">
+import { Router } from 'express';
+import { getInmuebles, createInmueble, darDeBajaInmueble} from '../controllers/inmueblesController.js';
+
+const router = Router();
+
+// GET /api/inmuebles
+router.get('/', getInmuebles);
+
+// POST /api/inmuebles
+router.post('/', createInmueble);
+
+// DELETE /api/inmuebles/:id
+router.delete('/:id/baja', darDeBajaInmueble);
+
+
+export default router;
+</file>
+
+<file path="server/src/test/clientes.http">
+@baseUrl = http://localhost:4000
+
+
+
+// TEST DE CLIENTES
+### Test de Listado de clientes
+GET {{baseUrl}}/api/clientes
+
+// TEST DE CREACION
+### Test de Creacion de cliente - [Atributos minimos]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "telefono": "5491122334455",
+  "tipo_cliente": "Casual"
+}
+
+### Test de Creacion de cliente - [Falta atributo telefono]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "tipo_cliente": "Casual"
+}
+
+### Test de Creacion de cliente - [Atributo del tipo_cliente invalido]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "telefono": "5491122334455",
+  "tipo_cliente": "otro"
+}
+
+### Test de Creacion de cliente - [Telefono Duplicado (Intentar dos veces)]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Otro",
+  "apellido": "Cliente",
+  "telefono": "5491122334455",
+  "tipo_cliente": "Empresa"
+}
+
+### Test de Creacion de cliente - [Atributos Completos]
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Maria",
+  "apellido": "Gomez",
+  "telefono": "5491199887766",
+  "tipo_cliente": "Empresa",
+  "email": "maria@example.com",
+  "domicilio_fiscal": "Calle Falsa 123",
+  "cuit_cuil": "20304050607",
+  "razon_social": "Maria Gomez SA"
+}
+
+// TEST DE ACTUALIZACION
+
+### Test de Actualizacion de cliente - [Actualizar un solo campo]
+PUT {{baseUrl}}/api/clientes/3514330429
+Content-Type: application/json
+
+{
+  "telefono": "5493514330429"
+}
+
+### Test de Actualizacion de cliente - [Actualizar varios campos]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "nombre": "Juan Actualizado",
+  "domicilio_fiscal": "Nueva Direccion 456",
+  "tipo_cliente": "Empresa"
+}
+
+### Test de Actualizacion de cliente - [Actualizar telefono a uno que no existe]
+PUT {{baseUrl}}/api/clientes/5490000000000
+Content-Type: application/json
+
+{
+  "email": "no-existe@example.com"
+}
+
+### Test de Actualizacion de cliente - [Datos invalidos]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "tipo_cliente": "otro"
+}
+
+### Test de Actualizacion de cliente - [Editar dato NotNull]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+
+### Test de Actualizacion de cliente - [Sin campos para actualizar]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{}
+
+### Test de Actualizacion de cliente - [Actualizar telefono a uno que ya existe]
+PUT {{baseUrl}}/api/clientes/5491122334455
+Content-Type: application/json
+
+{
+  "telefono": "5491199887766"
+}
+</file>
+
+<file path="server/.env.example">
+# Variables de entorno - SERVER (Hovy)
+# Copiar este archivo como .env y completar con los valores del proyecto Supabase
+
+# URL del proyecto Supabase (https://<proyecto>.supabase.co)
+SUPABASE_URL=
+
+# Service Role Key de Supabase (SOLO para tareas de administración en el server)
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Puerto del servidor
+PORT=4000
+
+# --- Bot de WhatsApp (n8n) ---
+
+# Clave que el bot manda en el header x-api-key para autenticarse contra
+# /api/bot. Generar una nueva con:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# No inventarla a mano: una clave adivinable es lo mismo que no tener clave.
+BOT_API_KEY=
+
+# Límite de peticiones del router /api/bot. Es un cupo GLOBAL (no por IP: todo
+# el tráfico llega desde n8n). Acota el daño si la API key se filtra y frena un
+# flujo de n8n que quede en loop.
+BOT_RATE_LIMIT_WINDOW_MS=60000
+BOT_RATE_LIMIT_MAX=120
+</file>
+
+<file path="README.md">
+# Hovy — Sistema de Gestión Operativa para "Valle La Armonía"
+
+Sistema web para la gestión operativa de la empresa de mantenimiento de espacios verdes: clientes, inmuebles, solicitudes, presupuestos, turnos, ejecución de servicios, cobros y fidelización.
+
+## Stack
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 19 + Vite + React Router |
+| Backend | Node.js + Express |
+| Base de datos / Auth / Storage | Supabase (PostgreSQL + RLS) |
+| CI/CD | GitHub Actions |
+
+## Requisitos
+
+- Node.js **22** (usar `.nvmrc`)
+- Git
+- Acceso al proyecto Supabase del equipo (pedir las variables al DevOps)
+
+## Estructura del repo
+
+```
+Hovy/
+├── client/           # Frontend React + Vite
+├── server/           # Backend Express (API e integraciones)
+├── docs/             # GITFLOW.md, ARQUITECTURA.md
+└── .github/          # CI, plantilla de PR, dependabot
+```
+
+## Puesta en marcha (primera vez)
+
+```bash
+git clone https://github.com/TiinCortez/Hovy.git
+cd Hovy
+
+# 1. Variables de entorno (pedir valores al equipo)
+cp client/.env.example client/.env
+cp server/.env.example server/.env
+#   → completar con las claves reales de Supabase
+
+# 2. Dependencias
+npm install                # scripts de raíz (concurrently)
+npm run install:all        # instala client/ y server/
+
+# 3. Levantar todo (client + server)
+npm run dev
+
+#   client → http://localhost:5173
+#   server → http://localhost:4000
+```
+
+## Cómo trabajar (resumen)
+
+1. Traer lo último: `git checkout develop && git pull origin develop`
+2. Crear rama de la historia: `git checkout -b feat/US-XXX-nombre-corto`
+3. Trabajar, commitear en pasos pequeños y pushear
+4. Abrir **PR a `develop`** (nunca a `main`) y esperar **CI verde + revisión de un compañero**
+5. El CI corre automáticamente: lint + build (client) y chequeo de sintaxis (server)
+
+Reglas completas en [`docs/GITFLOW.md`](docs/GITFLOW.md).
+
+## Documentación del proyecto
+
+La documentación académica (estudio inicial, plan de proyecto, definición del producto, seguimiento) vive en la carpeta `documentacion/` del equipo.
+</file>
+
+<file path="client/src/components/layout/DashboardLayout.jsx">
+import Header from './Header';
+import Sidebar from './SideBar';
+
+export default function DashboardLayout({ children }) {
+  return (
+    // Wrapper general ocupando el 100% del viewport
+    <div className="d-flex flex-column vh-100 overflow-hidden">
+      <Header />
+      <div className="d-flex flex-grow-1 overflow-hidden">
+        <Sidebar />
+        
+        {/* Área central donde se renderizan las páginas */}
+        <main className="hovy-content-wrapper flex-grow-1 overflow-auto p-4 p-md-5">
+          <div className="container-fluid max-w-1280 mx-auto px-0">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="server/src/controllers/inmueblesController.js">
+import { supabaseAdmin } from "../config/supabase.js";
+
+// Función auxiliar para geocodificar con Nominatim
+const geocodificarDireccion = async (direccion, provincia, barrio) => {
+  try {
+    // Armamos la consulta combinando calle/número, barrio y ciudad
+    const busqueda = `${direccion}, ${provincia || ''},${barrio || ''}, Argentina`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(busqueda)}&limit=1`;
+
+    const respuesta = await fetch(url, {
+      headers: {
+        // Nominatim requiere obligatoriamente un User-Agent identificatorio
+        'User-Agent': 'ValleArmoniaBackend/1.0 (contacto@vallearmonia.com)'
+      }
+    });
+
+    const data = await respuesta.json();
+
+    if (data && data.length > 0) {
+      return {
+        latitud: parseFloat(data[0].lat),
+        longitud: parseFloat(data[0].lon)
+      };
+    }
+
+    // Si no encontró resultados exactos, retornamos null
+    return { latitud: null, longitud: null };
+  } catch (error) {
+    console.error("Error al consultar Nominatim:", error.message);
+    return { latitud: null, longitud: null };
+  }
+};
+
+export const getInmuebles = async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('inmuebles')
+      .select('*')
+      .eq('activo', true); // Solo traer inmuebles activos
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    res.status(200).json({ ok: true, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// POST /api/inmuebles
+export const createInmueble = async (req, res) => {
+  try {
+    const {
+      id_cliente,
+      provincia,
+      barrio,
+      manzana,
+      lote,
+      direccion,
+      tipo_inmueble,
+      superficie_total,
+      superficie_construida,
+      superficie_mantenible,
+      estado_vegetacion,
+      altura_cesped_cm,
+      tiempo_promedio_min,
+      // Si el frontend ya manda lat/long las usamos 
+      latitud: latManual,
+      longitud: lonManual
+    } = req.body;
+    // Validación lógica de superficies
+    if (
+      superficie_construida !== undefined &&
+      superficie_total !== undefined &&
+      Number(superficie_construida) > Number(superficie_total)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "La superficie construida no puede ser mayor a la superficie total"
+      });
+    }
+    // Validación básica de campos obligatorios
+    if (!id_cliente || !direccion || !tipo_inmueble || !provincia || !barrio) {
+      return res.status(400).json({
+        ok: false,
+        error: "id_cliente, direccion, tipo_inmueble, provincia y barrio son campos obligatorios"
+      });
+    }
+
+    let latitud = latManual;
+    let longitud = lonManual;
+
+    // Si el frontend no mandó coordenadas manuales, consultamos a Nominatim
+    if (!latitud || !longitud) {
+      const coords = await geocodificarDireccion(direccion, provincia, barrio);
+      latitud = coords.latitud;
+      longitud = coords.longitud;
+    }
+
+    // Insertar el nuevo inmueble en Supabase
+    const { data, error } = await supabaseAdmin
+      .from('inmuebles')
+      .insert([
+        {
+          id_cliente,
+          provincia,
+          barrio,
+          manzana,
+          lote,
+          direccion,
+          tipo_inmueble,
+          superficie_total,
+          superficie_construida,
+          superficie_mantenible,
+          estado_vegetacion,
+          altura_cesped_cm,
+          tiempo_promedio_min,
+          latitud,
+          longitud
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    return res.status(201).json({
+      ok: true,
+      data,
+      coordenadasObtenidas: Boolean(latitud && longitud)
+    });
+
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+};
+
+// PATCH o DELETE /api/inmuebles/:id/baja
+export const darDeBajaInmueble = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabaseAdmin
+      .from('inmuebles')
+      .update({ activo: false })
+      .eq('id_inmueble', id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ ok: false, error: "Inmueble no encontrado" });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      mensaje: "Inmueble dado de baja correctamente",
+      data
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+};
+</file>
+
+<file path="server/src/routes/clientes.routes.js">
+import { Router } from 'express';
+import { getClientes, createCliente, updateCliente } from '../controllers/clientesController.js';
+
+const router = Router();
+
+// GET /api/clientes
+router.get('/', getClientes);
+
+// POST /api/clientes
+router.post('/', createCliente);
+
+// PUT /api/clientes/:telefono
+// Puse el telefono para actualizar los datos ya que es el campo unico e irrepetible
+// que en teoria vamos a tomar parseando y normalizando el dato desde el chatbox
+router.put('/:telefono', updateCliente);
+
+export default router;
+</file>
+
+<file path="server/package.json">
+{
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@google-cloud/vision": "^6.0.0",
+    "@supabase/supabase-js": "^2.112.4",
+    "axios": "^1.19.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "express-rate-limit": "^8.7.0",
+    "mercadopago": "^3.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
+</file>
+
+<file path="server/src/controllers/clientesController.js">
+import { supabaseAdmin } from "../config/supabase.js";
+import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from "../utils/telefono.js";
+
+const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
+
+// GET /api/clientes
+export const getClientes = async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .select('*');
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    res.status(200).json({ ok: true, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
+// POST /api/clientes [Creacion y Validacion de cliente]
+export const createCliente = async (req, res) => {
+  const {
+    nombre,
+    apellido,
+    telefono,
+    tipo_cliente,
+    email,
+    domicilio_fiscal,
+    cuit_cuil,
+    razon_social,
+  } = req.body ?? {};
+
+  const camposFaltantes = [];
+  if (!nombre) camposFaltantes.push('nombre');
+  if (!apellido) camposFaltantes.push('apellido');
+  if (!telefono) camposFaltantes.push('telefono');
+  if (!tipo_cliente) camposFaltantes.push('tipo_cliente');
+
+  if (camposFaltantes.length > 0) {
+    return res.status(400).json({
+      ok: false,
+      error: `Faltan campos obligatorios: ${camposFaltantes.join(', ')}`,
+    });
+  }
+
+  if (!TIPOS_CLIENTE_VALIDOS.includes(tipo_cliente)) {
+    return res.status(400).json({
+      ok: false,
+      error: `tipo_cliente inválido: "${tipo_cliente}". Valores permitidos: ${TIPOS_CLIENTE_VALIDOS.join(', ')}`,
+    });
+  }
+
+  // El teléfono se guarda siempre en formato canónico: es la clave natural y es
+  // UNIQUE, así que dos formatos del mismo número serían dos clientes.
+  const telefonoNormalizado = normalizarTelefono(telefono);
+  if (!telefonoNormalizado) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .insert({
+        nombre,
+        apellido,
+        telefono: telefonoNormalizado,
+        tipo_cliente,
+        email: email ?? null,
+        domicilio_fiscal: domicilio_fiscal ?? null,
+        cuit_cuil: cuit_cuil ?? null,
+        razon_social: razon_social ?? null,
+        calificacion_promedio: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({
+          ok: false,
+          error: 'Ya existe un cliente registrado con ese teléfono.',
+        });
+      }
+      if (error.code === '23502') {
+        return res.status(400).json({
+          ok: false,
+          error: `Falta un campo obligatorio: ${error.message}`,
+        });
+      }
+      console.error('Error al crear cliente:', error);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo registrar el cliente. Intentá de nuevo más tarde.',
+      });
+    }
+
+    return res.status(201).json({ ok: true, data });
+  } catch (err) {
+    console.error('Error inesperado al crear cliente:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al registrar el cliente.',
+    });
+  }
+};
+
+// PUT /api/clientes/:telefono [Actualizacion de cliente]
+export const updateCliente = async (req, res) => {
+  const { telefono: telefonoParam } = req.params;
+
+  if (!telefonoParam) {
+    return res.status(400).json({
+      ok: false,
+      error: 'El teléfono del cliente a actualizar es obligatorio.',
+    });
+  }
+
+  // Normalizamos el identificador antes de buscarlo: si el caller manda
+  // "3514330429" tiene que encontrar al cliente guardado como "5493514330429".
+  const telefonoActual = normalizarTelefono(telefonoParam);
+  if (!telefonoActual) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+  }
+
+  const {
+    nombre,
+    apellido,
+    telefono,
+    tipo_cliente,
+    email,
+    domicilio_fiscal,
+    cuit_cuil,
+    razon_social,
+  } = req.body ?? {};
+
+  const camposInvalidos = [];
+  if (nombre !== undefined && !nombre) camposInvalidos.push('nombre');
+  if (apellido !== undefined && !apellido) camposInvalidos.push('apellido');
+  if (telefono !== undefined && !telefono) camposInvalidos.push('telefono');
+  if (tipo_cliente !== undefined && !tipo_cliente) camposInvalidos.push('tipo_cliente');
+
+  if (camposInvalidos.length > 0) {
+    return res.status(400).json({
+      ok: false,
+      error: `Los siguientes campos no pueden quedar vacíos: ${camposInvalidos.join(', ')}`,
+    });
+  }
+
+  if (tipo_cliente !== undefined && !TIPOS_CLIENTE_VALIDOS.includes(tipo_cliente)) {
+    return res.status(400).json({
+      ok: false,
+      error: `tipo_cliente inválido: "${tipo_cliente}". Valores permitidos: ${TIPOS_CLIENTE_VALIDOS.join(', ')}`,
+    });
+  }
+
+  // El teléfono nuevo (cambio de número) también va normalizado, por el mismo
+  // motivo que en createCliente.
+  let telefonoNuevo;
+  if (telefono !== undefined) {
+    telefonoNuevo = normalizarTelefono(telefono);
+    if (!telefonoNuevo) {
+      return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+    }
+  }
+
+  const camposParaActualizar = {};
+  if (nombre !== undefined) camposParaActualizar.nombre = nombre;
+  if (apellido !== undefined) camposParaActualizar.apellido = apellido;
+  if (telefono !== undefined) camposParaActualizar.telefono = telefonoNuevo;
+  if (tipo_cliente !== undefined) camposParaActualizar.tipo_cliente = tipo_cliente;
+  if (email !== undefined) camposParaActualizar.email = email;
+  if (domicilio_fiscal !== undefined) camposParaActualizar.domicilio_fiscal = domicilio_fiscal;
+  if (cuit_cuil !== undefined) camposParaActualizar.cuit_cuil = cuit_cuil;
+  if (razon_social !== undefined) camposParaActualizar.razon_social = razon_social;
+
+  if (Object.keys(camposParaActualizar).length === 0) {
+    return res.status(400).json({
+      ok: false,
+      error: 'No se envió ningún campo para actualizar.',
+    });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .update(camposParaActualizar)
+      .eq('telefono', telefonoActual)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({
+          ok: false,
+          error: 'Ya existe un cliente registrado con ese teléfono.',
+        });
+      }
+      if (error.code === '23502') {
+        return res.status(400).json({
+          ok: false,
+          error: `Falta un campo obligatorio: ${error.message}`,
+        });
+      }
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({
+          ok: false,
+          error: `No existe un cliente con el teléfono ${telefonoActual}.`,
+        });
+      }
+      console.error('Error al actualizar cliente:', error);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo actualizar el cliente. Intentá de nuevo más tarde.',
+      });
+    }
+
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    console.error('Error inesperado al actualizar cliente:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al actualizar el cliente.',
+    });
+  }
+};
+</file>
+
+<file path="server/src/app.js">
+import express from 'express';
+import cors from 'cors';
+import clientesRoutes from './routes/clientes.routes.js';
+import inmueblesRoutes from './routes/inmuebles.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
+import botRoutes from './routes/bot.routes.js';
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use('/auth', authRoutes);
+
+// Canal del bot de WhatsApp (n8n): autenticación propia por API key
+// (verificarApiKeyBot), sin pasar por el JWT de usuarios.
+app.use('/api/bot', botRoutes);
+
+
+// Cambie el orden de la peticion del token especifico por rutas, eliminando el global
+// ya que tambien las pediria en el bot, cuando este solamente necesito el header con el api-key.
+// tener en cuenta para nuevas rutas.
+app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
+app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
+
+export default app;
+</file>
+
+</files>
