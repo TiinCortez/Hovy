@@ -12,23 +12,24 @@ const generarToken = (usuario) => jwt.sign(
     sub: usuario.id,
     usuario: usuario.usuario,
     rol: usuario.rol,
+    email: usuario.email
   },
   JWT_SECRET,
   { expiresIn: JWT_EXPIRES_IN }
 );
 
 router.post('/login', async (req, res) => {
-  const { usuario, password } = req.body ?? {};
+  const { email, password } = req.body ?? {};
 
-  if (!usuario || !password) {
-    return res.status(400).json({ ok: false, error: 'usuario y password son obligatorios' });
+  if (!email || !password) {
+    return res.status(400).json({ ok: false, error: 'email y password son obligatorios' });
   }
 
   try {
     const { data, error } = await supabaseAdmin
       .from('usuarios')
       .select('*')
-      .eq('usuario', usuario)
+      .eq('email', email)
       .single();
 
     if (error || !data) {
@@ -50,6 +51,7 @@ router.post('/login', async (req, res) => {
         id: data.id,
         usuario: data.usuario,
         rol: data.rol,
+        email: data.email,
       },
     });
   } catch (err) {
@@ -58,7 +60,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { usuario, password, rol = 'user' } = req.body ?? {};
+  const { usuario, password, rol , email= 'user' } = req.body ?? {};
 
   const rolesPermitidos = ['admin', 'user', 'viewer'];
 
@@ -79,8 +81,9 @@ router.post('/register', async (req, res) => {
         usuario,
         password_hash: passwordHash,
         rol,
+        email
       })
-      .select('id, usuario, rol, created_at')
+      .select('id, usuario, rol, created_at, email')
       .single();
 
     if (error) {

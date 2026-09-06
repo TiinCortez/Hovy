@@ -40,11 +40,11 @@ export default function AppRoutes() {
         <Route 
           path="/clients" 
           element={
-            <RequireAuth>
+            //<RequireAuth>
               <DashboardLayout>
                 <Clients />
               </DashboardLayout>
-            </RequireAuth>
+            //</RequireAuth>
           } 
         />
         
