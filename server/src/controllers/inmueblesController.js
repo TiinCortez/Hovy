@@ -168,3 +168,97 @@ export const darDeBajaInmueble = async (req, res) => {
   }
 };
 
+// PUT o PATCH /api/inmuebles/:id
+export const updateInmueble = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const camposAActualizar = { ...req.body };
+
+    // 1. Verificar si el inmueble existe actualmente en la base de datos
+    const { data: inmuebleActual, error: errorBusqueda } = await supabaseAdmin
+      .from('inmuebles')
+      .select('*')
+      .eq('id_inmueble', id)
+      .single();
+
+    if (errorBusqueda || !inmuebleActual) {
+      return res.status(404).json({
+        ok: false,
+        error: "Inmueble no encontrado"
+      });
+    }
+
+    // 2. Validación de superficies (evaluando valores nuevos o los ya existentes)
+    const supTotalFinal = camposAActualizar.superficie_total !== undefined 
+      ? Number(camposAActualizar.superficie_total) 
+      : Number(inmuebleActual.superficie_total);
+
+    const supConstruidaFinal = camposAActualizar.superficie_construida !== undefined 
+      ? Number(camposAActualizar.superficie_construida) 
+      : Number(inmuebleActual.superficie_construida);
+
+    if (supConstruidaFinal > supTotalFinal) {
+      return res.status(400).json({
+        ok: false,
+        error: "La superficie construida no puede ser mayor a la superficie total"
+      });
+    }
+
+    // 3. Evaluar si cambiaron los datos de dirección para re-geocodificar
+    const cambioDireccion = 
+      (camposAActualizar.direccion && camposAActualizar.direccion !== inmuebleActual.direccion) ||
+      (camposAActualizar.barrio && camposAActualizar.barrio !== inmuebleActual.barrio) ||
+      (camposAActualizar.provincia && camposAActualizar.provincia !== inmuebleActual.provincia);
+
+    // Si cambió la dirección y el usuario NO mandó coordenadas manuales fijas
+    if (cambioDireccion && !camposAActualizar.latitud && !camposAActualizar.longitud) {
+      const direccionConsulta = camposAActualizar.direccion || inmuebleActual.direccion;
+      const barrioConsulta = camposAActualizar.barrio || inmuebleActual.barrio;
+      const provinciaConsulta = camposAActualizar.provincia || inmuebleActual.provincia;
+
+      const coords = await geocodificarDireccion(direccionConsulta, barrioConsulta, provinciaConsulta);
+      camposAActualizar.latitud = coords.latitud;
+      camposAActualizar.longitud = coords.longitud;
+    }
+
+    // 4. Si el trigger en Supabase recalcula superficie_mantenible:
+    // Si mandan superficie_mantenible en 0 o vacía, la seteamos en null para que el trigger actúe
+    // 4. Manejo de superficie_mantenible y recálculo automático
+    const cambiaronSuperficies = 
+      camposAActualizar.superficie_total !== undefined || 
+      camposAActualizar.superficie_construida !== undefined;
+
+    if (camposAActualizar.superficie_mantenible !== undefined) {
+      // Si mandaron un valor explícito en el body, lo respetamos (si es > 0), si no, null
+      camposAActualizar.superficie_mantenible = 
+        (camposAActualizar.superficie_mantenible && Number(camposAActualizar.superficie_mantenible) > 0)
+          ? camposAActualizar.superficie_mantenible
+          : null;
+    } else if (cambiaronSuperficies) {
+      // Si cambiaron las medidas de la casa/lote y NO mandaron superficie_mantenible explícita,
+      // la seteamos en null para obligar al trigger de Postgres a recalcular: (total - construida)
+      camposAActualizar.superficie_mantenible = null;
+    }
+
+    // 5. Ejecutar la actualización en Supabase
+    const { data, error } = await supabaseAdmin
+      .from('inmuebles')
+      .update(camposAActualizar)
+      .eq('id_inmueble', id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      mensaje: "Inmueble actualizado correctamente",
+      data
+    });
+
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+};
