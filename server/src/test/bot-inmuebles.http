@@ -1,0 +1,514 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+
+@baseUrl = http://localhost:4000
+
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Cliente que ya esta cargado en la bd, usado como caso real. Tiene inmuebles.
+@telefono = 5493514330429
+
+# Segundo cliente (id_cliente 13), sin inmuebles cargados. Sirve para dos cosas:
+# la rama "todavia no tiene ninguno" y los test de propiedad.
+@telefonoOtroCliente = 1122334455
+
+# Numero que NO es cliente: la rama donde n8n manda a crear el cliente primero.
+@telefonoNoCliente = 3519999999
+
+# Un id_inmueble que sea REALMENTE de {{telefono}}. Sacarlo del listado de mas
+# abajo: si se pone uno que no es suyo (o que no existe) la respuesta es 404,
+# que es el comportamiento correcto, no una falla.
+# Postgres genera el id solo (autoincremental), nunca se manda en el body.
+@idInmueble = 4
+
+# Completar con el id que devuelve el alta hecha para {{telefonoOtroCliente}}
+# (esta mas abajo, en el bloque de propiedad).
+@idInmuebleAjeno = 36
+
+# Plaza San Martin, Cordoba. Simula el pin que comparte el cliente por WhatsApp.
+@latitud = -31.4201
+@longitud = -64.1888
+
+
+// TEST DE AUTENTICACION CON X-API-KEY
+
+### Test de Autenticacion sin X-API-KEY  -  [Espera 401]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+
+### Test de Autenticacion con X-API-KEY Incorrecta  -  [Espera 403]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: esta-key-no-es-la-correcta
+
+### Test de Autenticacion con X-API-KEY Correcta  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+
+
+// TEST DE RESOLUCION DEL CLIENTE POR TELEFONO
+
+// El dueño de los inmuebles sale del telefono de la URL, no del body.
+// Los cuatro formatos son el mismo cliente: tienen que devolver la MISMA lista.
+// Si alguno devuelve 404 o una lista distinta, esta fallando la normalizacion.
+
+### TEST DE RESOLUCION Formato 549 + 10 digitos  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/5493514330429/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Formato sin pais ni 9  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/3514330429/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Formato con pais pero sin el 9 (asi llega el wa_id)  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/543514330429/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Formato con prefijo nacional 0  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/03514330429/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Formato con el viejo prefijo 15  -  [Espera 400]
+GET {{baseUrl}}/api/bot/clientes/0351154330429/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Telefono con letras  -  [Espera 400]
+GET {{baseUrl}}/api/bot/clientes/abc123/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE RESOLUCION Telefono que no es cliente  -  [Espera 404]
+// Antes de cargar un inmueble hay que ser cliente: esta seria la rama del n8n
+// que manda a crear el cliente primero.
+// Ojo al elegir el numero: tiene que ser uno que NO este en la tabla clientes.
+GET {{baseUrl}}/api/bot/clientes/{{telefonoNoCliente}}/inmuebles
+x-api-key: {{apiKey}}
+
+
+// TEST DE LISTADO DE INMUEBLES
+
+### TEST DE LISTADO Cliente sin inmuebles cargados  -  [Espera 200 con data vacia]
+// NO es un 404: "todavia no tiene ninguno" es la rama del n8n que arranca el
+// alta del primer inmueble, no un error. El 404 queda reservado para cuando el
+// numero ni siquiera es cliente.
+// Correr ANTES del bloque de propiedad, que le carga un inmueble a este numero.
+GET {{baseUrl}}/api/bot/clientes/{{telefonoOtroCliente}}/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE LISTADO Detalle de un inmueble  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+
+### TEST DE LISTADO Detalle con id inexistente  -  [Espera 404]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/999999
+x-api-key: {{apiKey}}
+
+### TEST DE LISTADO Detalle con id que no es un numero  -  [Espera 400]
+// Se corta antes de llegar a Postgres, que devolveria un 22P02 y terminaria en 500.
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/abc
+x-api-key: {{apiKey}}
+
+
+// TEST DE ALTA CON PIN DE WHATSAPP
+
+### TEST DE ALTA Con pin de ubicacion  -  [Espera 201 con origen_coordenadas: "whatsapp"]
+// El cliente estaba parado en el inmueble y compartio la ubicacion.
+// Las coordenadas se guardan tal cual: NO se consulta Nominatim.
+// Verificar en Supabase que latitud/longitud quedaron en -31.4201 / -64.1888.
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "barrio": "Alberdi",
+  "superficie_total": 400,
+  "superficie_construida": 120,
+  "latitud": {{latitud}},
+  "longitud": {{longitud}}
+}
+
+### TEST DE ALTA Solo con direccion, sin pin  -  [Espera 201 con origen_coordenadas: "nominatim"]
+// El cliente no estaba en el domicilio: se geocodifica la direccion.
+// Si Nominatim no encuentra nada devuelve 201 igual, con "ninguna".
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Velez Sarsfield 500",
+  "tipo_inmueble": "Lote Vacio",
+  "provincia": "Cordoba",
+  "superficie_total": 250
+}
+
+### TEST DE ALTA Sin barrio  -  [Espera 201]
+// barrio es nullable: por WhatsApp preguntarlo es un paso mas de conversacion
+// y con el pin ya sabemos donde queda.
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Ruta 5 km 12",
+  "tipo_inmueble": "Lote Vacio",
+  "provincia": "Cordoba",
+  "superficie_total": 5000,
+  "latitud": {{latitud}},
+  "longitud": {{longitud}}
+}
+
+
+// TEST DE VALIDACIONES DEL ALTA
+
+### TEST DE VALIDACION Faltan campos obligatorios  -  [Espera 400]
+// Tiene que listar los cuatro que faltan de una, no cortar en el primero:
+// si el bot repregunta de a un campo por vez la conversacion es eterna.
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "manzana": "12"
+}
+
+### TEST DE VALIDACION Falta superficie_total (NOT NULL)  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba"
+}
+
+### TEST DE VALIDACION tipo_inmueble fuera de la lista  -  [Espera 400 listando los permitidos]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Mansion",
+  "provincia": "Cordoba",
+  "superficie_total": 400
+}
+
+### TEST DE VALIDACION estado_vegetacion fuera de la lista  -  [Espera 400 listando los permitidos]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 400,
+  "estado_vegetacion": "Selvatico"
+}
+
+### TEST DE VALIDACION Construida mayor que total  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 100,
+  "superficie_construida": 300
+}
+
+### TEST DE VALIDACION superficie_total en cero  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 0
+}
+
+### TEST DE VALIDACION superficie que no es un numero  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": "grande"
+}
+
+### TEST DE VALIDACION Coordenadas invertidas  -  [Espera 400]
+// (-64.18, -31.42) es una coordenada valida pero cae en el Atlantico.
+// Es el error tipico de n8n mapeando mal el pin de WhatsApp.
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 400,
+  "latitud": -64.1888,
+  "longitud": -31.4201
+}
+
+### TEST DE VALIDACION Coordenadas de otro pais  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "5th Avenue 100",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 400,
+  "latitud": 40.7128,
+  "longitud": -74.006
+}
+
+### TEST DE VALIDACION Solo latitud, sin longitud  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Colon 1234",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 400,
+  "latitud": {{latitud}}
+}
+
+
+// TEST DE PROPIEDAD DEL INMUEBLE
+
+// Lo mas importante de todo el archivo: el dueño sale del telefono, nunca del
+// body, y un inmueble ajeno tiene que responder 404 (para este telefono ese
+// inmueble no existe) y no 403.
+
+### TEST DE PROPIEDAD Alta con id_cliente ajeno en el body  -  [Espera 201, ignorando el id_cliente]
+// Verificar en la respuesta que id_cliente es el del telefono de la URL,
+// NO el 999 que mandamos. Si quedo en 999, el body esta pisando al dueño.
+POST {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "id_cliente": 999,
+  "direccion": "Calle Falsa 123",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 200
+}
+
+### TEST DE PROPIEDAD Preparacion: alta de un inmueble para el OTRO cliente  -  [Espera 201]
+// Correr este primero y copiar el id_inmueble de la respuesta en la variable
+// @idInmuebleAjeno de arriba. Los tres test que siguen usan ese id.
+POST {{baseUrl}}/api/bot/clientes/{{telefonoOtroCliente}}/inmuebles
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Bv. San Juan 800",
+  "tipo_inmueble": "Casa Habitada",
+  "provincia": "Cordoba",
+  "superficie_total": 90
+}
+
+### TEST DE PROPIEDAD Ver un inmueble de otro cliente  -  [Espera 404]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmuebleAjeno}}
+x-api-key: {{apiKey}}
+
+### TEST DE PROPIEDAD Modificar un inmueble de otro cliente  -  [Espera 404, NO modifica nada]
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmuebleAjeno}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Direccion pisada por otro cliente"
+}
+
+### TEST DE PROPIEDAD Dar de baja un inmueble de otro cliente  -  [Espera 404, NO da de baja nada]
+DELETE {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmuebleAjeno}}/baja
+x-api-key: {{apiKey}}
+
+
+// TEST DE MODIFICACION
+
+### TEST DE MODIFICACION Cambio parcial  -  [Espera 200]
+// Lo que no viene no se toca: el resto de los campos queda igual.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "estado_vegetacion": "Alto",
+  "altura_cesped_cm": 25
+}
+
+### TEST DE MODIFICACION Cambio de direccion  -  [Espera 200 con origen_coordenadas: "nominatim"]
+// Al cambiar la direccion se vuelve a geocodificar: las coordenadas viejas
+// apuntaban a otro lado. Si Nominatim falla NO se pisan con null.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": "Av. Rafael Nuñez 4500"
+}
+
+### TEST DE MODIFICACION Correccion del pin  -  [Espera 200 con origen_coordenadas: "whatsapp"]
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "latitud": -31.3891,
+  "longitud": -64.2273
+}
+
+### TEST DE MODIFICACION Intento de cambiar el dueño  -  [Espera 200, id_cliente sin cambios]
+// id_cliente no esta en la lista blanca de campos editables: se descarta en
+// silencio. Verificar en la respuesta que el id_cliente sigue siendo el mismo.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "id_cliente": 999,
+  "manzana": "42"
+}
+
+### TEST DE MODIFICACION Intento de revivir una baja  -  [Espera 400]
+// activo tampoco es editable, asi que el body queda sin ningun campo valido.
+// Revivir un inmueble no se puede hacer desde el bot.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### TEST DE MODIFICACION Body vacio  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{}
+
+### TEST DE MODIFICACION Vaciar un campo obligatorio  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "direccion": ""
+}
+
+### TEST DE MODIFICACION Construida mayor que la total ya guardada  -  [Espera 400]
+// Solo viene la construida: la total sale de la fila que ya esta en la bd.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "superficie_construida": 999999
+}
+
+### TEST DE MODIFICACION Recalculo de superficie_mantenible  -  [Espera 200]
+// Al cambiar las superficies sin mandar la mantenible, se manda null para que
+// el trigger de Postgres la recalcule (total - construida).
+// Verificar en la respuesta que quedo en 300.
+PUT {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "superficie_total": 500,
+  "superficie_construida": 200
+}
+
+
+// TEST DE BAJA
+
+### TEST DE BAJA Inmueble propio  -  [Espera 200]
+DELETE {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/{{idInmueble}}/baja
+x-api-key: {{apiKey}}
+
+### TEST DE BAJA Verificar que ya no aparece en el listado  -  [Espera 200 sin ese id]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+
+### TEST DE BAJA Id inexistente  -  [Espera 404]
+// Con .single() esto seria un 500 (PGRST116). Por eso se usa maybeSingle.
+DELETE {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles/999999/baja
+x-api-key: {{apiKey}}
+
+
+// TEST DE UBICACION INVERSA
+
+// Auxiliar del alta: el cliente manda el pin y el bot le propone la direccion
+// para que confirme, en vez de preguntarle calle, barrio y provincia sueltos.
+// No escribe nada en la base.
+
+### TEST DE UBICACION INVERSA Pin en Cordoba  -  [Espera 200 con la direccion sugerida]
+POST {{baseUrl}}/api/bot/ubicacion/reversa
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "latitud": {{latitud}},
+  "longitud": {{longitud}}
+}
+
+### TEST DE UBICACION INVERSA Coordenadas invertidas  -  [Espera 400]
+POST {{baseUrl}}/api/bot/ubicacion/reversa
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "latitud": -64.1888,
+  "longitud": -31.4201
+}
+
+### TEST DE UBICACION INVERSA Sin coordenadas  -  [Espera 400]
+POST {{baseUrl}}/api/bot/ubicacion/reversa
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{}
+
+### TEST DE UBICACION INVERSA Sin X-API-KEY  -  [Espera 401]
+POST {{baseUrl}}/api/bot/ubicacion/reversa
+Content-Type: application/json
+
+{
+  "latitud": {{latitud}},
+  "longitud": {{longitud}}
+}
+
+
+// VALIDACION DEL RATE LIMIT [PARA QUE NO ROMPAN EL BOT A MENSAJES :( ]
+
+// El cupo es GLOBAL del router /api/bot: los endpoints de inmuebles comparten
+// el mismo presupuesto que los de clientes, no tienen uno propio.
+// Para probarlo primero hay que bajar el valor del .env : BOT_RATE_LIMIT_MAX=5
+// Luego de cinco request tendria que devolver un 429 con msj de error.
+// VOLVER A DEJAR EL VALOR ORIGINAL DEL .ENV :P
+
+### VALIDACION DEL RATE LIMIT Repetir hasta superar el limite  -  [Espera 429]
+GET {{baseUrl}}/api/bot/clientes/{{telefono}}/inmuebles
+x-api-key: {{apiKey}}
+
+### VALIDACION DEL RATE LIMIT Comprobar que no rompe el canal web  -  [Espera 401, NO 429]
+// El canal web pide JWT, asi que sin token responde 401. Lo que importa acá es
+// que NO sea un 429: eso probaria que el cupo del bot se le esta aplicando.
+GET {{baseUrl}}/api/inmuebles
