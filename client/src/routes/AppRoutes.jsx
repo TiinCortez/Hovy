@@ -7,6 +7,7 @@ import RequireAuth from '../components/layout/RequireAuth.jsx';
 // Vistas Públicas
 import Home from '../pages/Home.jsx';
 import Login from '../pages/Auth/Login.jsx';
+import Register from '../pages/Auth/Register.jsx';
 
 // Vistas Privadas Reales
 import Dashboard from '../pages/Dashboard.jsx';
@@ -24,6 +25,7 @@ export default function AppRoutes() {
         {/* Rutas Públicas */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Rutas Privadas */}
         <Route 

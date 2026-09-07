@@ -123,13 +123,18 @@ export default function Login() {
 
                 <hr className="text-secondary mb-4 opacity-25" />
 
-                {/* Crear Cuenta */}
-                <div className="text-center">
-                  <p className="text-secondary small mb-2">¿No tienes una cuenta?</p>
-                  <Button variant="outline-primary" className="w-100 py-2 rounded-pill bg-transparent border-secondary text-dark fw-semibold">
-                    Crear Cuenta <UserPlus size={18} className="ms-1" />
-                  </Button>
-                </div>
+               {/* Crear Cuenta */}
+              <div className="text-center">
+                <p className="text-secondary small mb-2">¿No tienes una cuenta?</p>
+                <Button 
+                  variant="outline-primary" 
+                  className="w-100 py-2 rounded-pill bg-transparent border-secondary text-dark fw-semibold"
+                  onClick={() => navigate('/register')}
+                >
+                  Crear Cuenta <UserPlus size={18} className="ms-1" />
+                </Button>
+              </div>
+                
 
               </form>
             </div>
