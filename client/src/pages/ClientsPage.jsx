@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building2, CheckCircle2, Search, SlidersHorizontal, 
   Download, UserPlus, Phone, Mail, Star, ChevronRight, MoreVertical,
-  Calendar, Briefcase, User, LayoutGrid
+  Calendar, Briefcase, User, LayoutGrid, Trash2
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -18,6 +18,10 @@ export default function ClientsPage() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Estados para el menú de opciones y eliminación
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [clientToDelete, setClientToDelete] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -46,6 +50,22 @@ export default function ClientsPage() {
 
   const handleClientCreated = (newClient) => {
     setClients(prev => [newClient, ...prev]);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return;
+    try {
+      // Llamada al backend
+      await ClienteService.delete(clientToDelete.telefono);
+      // Actualizamos la tabla visualmente removiendo al cliente
+      setClients(prev => prev.filter(c => c.telefono !== clientToDelete.telefono));
+    } catch (error) {
+      console.error('Error al eliminar el cliente:', error);
+      alert('No se pudo eliminar el cliente. Verifique la consola para más detalles.');
+    } finally {
+      // Cerramos el mensaje sin importar si falló o fue un éxito
+      setClientToDelete(null);
+    }
   };
 
   const getClientIcon = (tipo) => {
@@ -80,8 +100,47 @@ export default function ClientsPage() {
   });
 
   return (
-    <div className="d-flex flex-column gap-4 pb-5">
+    <div className="d-flex flex-column gap-4 pb-5 position-relative">
       
+      {/* MENSAJE DE CONFIRMACIÓN POR ARRIBA DE LA PANTALLA */}
+      {clientToDelete && (
+        <>
+          <div 
+            className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25" 
+            style={{ zIndex: 1060 }} 
+            onClick={() => setClientToDelete(null)}
+          ></div>
+          <div 
+            className="position-fixed top-0 start-50 translate-middle-x mt-4 p-4 bg-white border-0 rounded-4 shadow-lg d-flex flex-column align-items-center gap-3" 
+            style={{ minWidth: '340px', zIndex: 1070 }}
+          >
+            <div className="text-center">
+              <div className="bg-danger-subtle text-danger rounded-circle d-inline-flex p-3 mb-2">
+                <Trash2 size={28} />
+              </div>
+              <h5 className="fw-bold m-0 text-dark mb-1">¿Eliminar Cliente?</h5>
+              <p className="text-secondary small m-0 px-2">
+                Estás a punto de eliminar a <strong>{clientToDelete.nombre} {clientToDelete.apellido}</strong>. Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="d-flex gap-2 w-100 mt-2">
+              <button 
+                className="btn btn-light border flex-grow-1 rounded-pill fw-semibold text-secondary" 
+                onClick={() => setClientToDelete(null)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn btn-danger flex-grow-1 rounded-pill fw-semibold shadow-sm" 
+                onClick={handleDeleteClient}
+              >
+                Sí, Eliminar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
         <div>
           <div className="d-flex align-items-center gap-2 mb-1">
@@ -234,12 +293,41 @@ export default function ClientsPage() {
                          style={{ width: '48px', height: '48px', backgroundColor: cardBgColor }}>
                       {initials}
                     </div>
+                    
+                    {/* Contenedor de textos (mantiene el overflow-hidden para los truncates) */}
                     <div className="flex-grow-1 overflow-hidden mt-1">
-                      <div className="d-flex justify-content-between align-items-start">
-                        <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={fullName}>{fullName}</h5>
-                        <button className="btn btn-sm btn-link text-secondary p-0 m-0"><MoreVertical size={18} /></button>
-                      </div>
+                      <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={fullName}>{fullName}</h5>
                       <p className="text-secondary small m-0 text-truncate">{client.razon_social || 'Cliente Estándar'}</p>
+                    </div>
+
+                    {/* MENÚ DESPLEGABLE (Movido fuera del contenedor de texto y con ms-auto) */}
+                    <div className="position-relative ms-auto">
+                      <button 
+                        className="btn btn-sm btn-link text-secondary p-0 m-0"
+                        onClick={() => setMenuOpenId(menuOpenId === client.telefono ? null : client.telefono)}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+                      
+                      {menuOpenId === client.telefono && (
+                        <div 
+                          className="position-absolute end-0 mt-1 bg-white border rounded-3 shadow p-1" 
+                          style={{ minWidth: '160px', zIndex: 1050 }}
+                        >
+                          <button 
+                            className="btn btn-sm w-100 text-start text-danger d-flex align-items-center gap-2 px-3 py-2 fw-medium rounded-2"
+                            style={{ transition: 'background-color 0.2s' }}
+                            onMouseEnter={(e) => e.currentTarget.classList.add('bg-light')}
+                            onMouseLeave={(e) => e.currentTarget.classList.remove('bg-light')}
+                            onClick={() => {
+                              setClientToDelete(client);
+                              setMenuOpenId(null);
+                            }}
+                          >
+                            <Trash2 size={16} /> Eliminar cliente
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
