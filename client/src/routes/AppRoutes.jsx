@@ -31,22 +31,22 @@ export default function AppRoutes() {
         <Route 
           path="/dashboard" 
           element={
-            //<RequireAuth>
+            <RequireAuth>
               <DashboardLayout>
                 <Dashboard />
               </DashboardLayout>
-            //</RequireAuth>
+            </RequireAuth>
           } 
         />
         
         <Route 
           path="/clients" 
           element={
-            //<RequireAuth>
+            <RequireAuth>
               <DashboardLayout>
                 <ClientsPage />
               </DashboardLayout>
-            //</RequireAuth>
+            </RequireAuth>
           } 
         />
 
@@ -54,11 +54,11 @@ export default function AppRoutes() {
         <Route 
           path="/clients/:id/inmuebles" 
           element={
-            //<RequireAuth>
+            <RequireAuth>
               <DashboardLayout>
                 <ClientInmueblesPage />
               </DashboardLayout>
-            //</RequireAuth>
+            </RequireAuth>
           } 
         />
         

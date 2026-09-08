@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
 import Button from './Button';
-import { supabase } from '../../services/supaBaseClient';
+import ClienteService from '../../services/api/cliente.service';
 
 export default function EditClientModal({ isOpen, onClose, clientData, onClientUpdated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,58 +28,43 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
 
   if (!isOpen) return null;
 
-  const normalizarTelefonoLocal = (val) => {
-    let digitos = String(val).replace(/\D/g, '');
-    if (digitos.startsWith('00')) digitos = digitos.slice(2);
-    if (digitos.startsWith('54')) {
-      digitos = digitos.slice(2);
-      if (digitos.startsWith('9')) digitos = digitos.slice(1);
-    }
-    if (digitos.startsWith('0')) digitos = digitos.slice(1);
-    return digitos.length === 10 ? `549${digitos}` : digitos; 
-    // Para simplificar la edición, si no es de 10 dígitos lo dejamos pasar al backend y que él decida, o si es mock lo aceptamos.
-  };
-
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const telefonoNormalizado = normalizarTelefonoLocal(data.telefono);
-
-      // 1. SI ES EL CLIENTE MOCK (Simulamos la edición)
+      // 1. SI ES EL CLIENTE MOCK (Simulamos la edición solo visual)
       if (clientData.isMock) {
         setTimeout(() => {
-          onClientUpdated({ ...clientData, ...data, telefono: telefonoNormalizado });
+          onClientUpdated({ ...clientData, ...data });
           onClose();
           setIsSubmitting(false);
         }, 600);
         return;
       }
 
-      // 2. SI ES UN CLIENTE REAL (Actualizamos en Supabase)
-      const { data: updatedClient, error } = await supabase
-        .from('clientes')
-        .update({
-          nombre: data.nombre.trim(),
-          apellido: data.apellido.trim(),
-          telefono: telefonoNormalizado,
-          tipo_cliente: data.tipo_cliente,
-          email: data.email ? data.email.trim() : null,
-          domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
-          cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
-          razon_social: data.razon_social ? data.razon_social.trim() : null
-        })
-        .eq('id', clientData.id) // Actualizamos usando el ID real
-        .select()
-        .single();
+      // 2. SI ES UN CLIENTE REAL (Actualizamos mediante la API del backend)
+      const updatePayload = {
+        nombre: data.nombre.trim(),
+        apellido: data.apellido.trim(),
+        telefono: data.telefono.trim(),
+        tipo_cliente: data.tipo_cliente,
+        email: data.email ? data.email.trim() : null,
+        domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
+        cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
+        razon_social: data.razon_social ? data.razon_social.trim() : null
+      };
 
-      if (error) throw new Error(error.message || 'Ocurrió un error al actualizar el cliente.');
+      // El backend requiere el número actual (original) en la URL para actualizar.
+      const response = await ClienteService.update(clientData.telefono, updatePayload);
 
-      onClientUpdated(updatedClient);
+      // El backend devuelve los datos actualizados dentro de response.data
+      onClientUpdated(response.data);
       onClose();
     } catch (err) {
-      setErrorMessage(err.message);
+      // Capturamos el error desde el backend interceptor
+      const errorMsg = err.response?.data?.error || err.message || 'Ocurrió un error al actualizar el cliente.';
+      setErrorMessage(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
