@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Configuración base de Axios siguiendo el patrón de interceptores para manejo global
 const httpService = axios.create({
-  // Si tienes un backend propio aparte de Supabase, define la URL aquí.
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  // CORRECCIÓN: Apuntamos al puerto 4000 donde corre tu backend
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json',
   },

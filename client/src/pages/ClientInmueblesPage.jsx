@@ -8,18 +8,24 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import EditClientModal from '../components/ui/EditClientModal'; // <-- IMPORTAMOS EL MODAL
-import { supabase } from '../services/supaBaseClient';
+import EditClientModal from '../components/ui/EditClientModal'; 
+import InmuebleModal from '../components/ui/InmuebleModal';
+import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
+import ClienteService from '../services/api/cliente.service';
+import InmuebleService from '../services/api/inmueble.service';
 
 export default function ClientInmueblesPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Estados de interfaz
   const [showFichaMobile, setShowFichaMobile] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // <-- ESTADO DEL MODAL
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
-  // Estados de datos
+  // Estados para los modales de Inmuebles
+  const [isInmuebleModalOpen, setIsInmuebleModalOpen] = useState(false);
+  const [isDetalleModalOpen, setIsDetalleModalOpen] = useState(false);
+  const [selectedInmueble, setSelectedInmueble] = useState(null);
+  
   const [cliente, setCliente] = useState(null);
   const [inmuebles, setInmuebles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,60 +33,27 @@ export default function ClientInmueblesPage() {
   useEffect(() => {
     let isMounted = true;
 
-    if (id === 'mock-jardines') {
-      setTimeout(() => {
-        if (isMounted) {
-          setCliente({
-            isMock: true,
-            id: 'mock-jardines',
-            nombre: "Jardines Gómez S.L.",
-            apellido: "",
-            contacto: "Martín Gómez",
-            tipo_cliente: "EMPRESA",
-            estado: "Al día",
-            telefono: "34 600 123 456",
-            email: "contacto@jardinesgomez.es",
-            cuit_cuil: "B-84920194",
-            domicilio_fiscal: "Av. San Martín 1240",
-            calificacion_promedio: 4.9,
-            saldo: 0
-          });
-          setInmuebles([
-            { id_inmueble: 1, direccion: "Av. Paseo del Buen Pastor 450", provincia: "Córdoba", superficie_total: "650", tipo_inmueble: "Residencial", estado_txt: "Mantenimiento Activo", img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400" },
-            { id_inmueble: 2, direccion: "Ruta 5 km 12", provincia: "Luján", superficie_total: "1800", tipo_inmueble: "Agro / Campo", estado_txt: "Al día", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=400" },
-            { id_inmueble: 3, direccion: "Boulevard San Juan 890", provincia: "Córdoba", superficie_total: "420", tipo_inmueble: "Comercial", estado_txt: "Pendiente Poda", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=400" }
-          ]);
-          setLoading(false);
-        }
-      }, 500);
-      return () => { isMounted = false; };
-    }
-
     const loadClientData = async () => {
       setLoading(true);
       try {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clientes')
-          .select('*')
-          .or(`id.eq.${id},telefono.eq.${id}`)
-          .single();
+        const clientesResp = await ClienteService.getAll();
+        
+        if (clientesResp.data) {
+          const currentClient = clientesResp.data.find(
+            c => String(c.telefono) === String(id) || String(c.id_cliente) === String(id)
+          );
 
-        if (clientError) throw clientError;
+          if (currentClient) {
+            if (isMounted) setCliente(currentClient);
 
-        if (clientData) {
-          const { data: inmueblesData, error: inmueblesError } = await supabase
-            .from('inmuebles')
-            .select('*')
-            .eq('id_cliente', clientData.id)
-            .eq('activo', true);
-
-          if (!inmueblesError && isMounted) {
-            setInmuebles(inmueblesData || []);
+            const inmueblesResp = await InmuebleService.getByCliente(currentClient.id_cliente);
+            if (isMounted) setInmuebles(inmueblesResp.data || []);
+          } else {
+             if (isMounted) setCliente(null);
           }
         }
-        if (isMounted) setCliente(clientData);
       } catch (error) {
-        console.error('Error al cargar datos reales:', error.message);
+        console.error('Error al cargar datos del cliente:', error);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -90,33 +63,73 @@ export default function ClientInmueblesPage() {
     return () => { isMounted = false; };
   }, [id]);
 
-  // <-- FUNCIÓN PARA ACTUALIZAR EL ESTADO LOCAL CUANDO SE EDITA
   const handleClientUpdated = (updatedClientData) => {
     setCliente(prev => ({ ...prev, ...updatedClientData }));
+  };
+
+  // Funciones controladoras de Modales de Inmuebles
+  const openInmuebleModal = (inmueble = null) => {
+    setSelectedInmueble(inmueble);
+    setIsInmuebleModalOpen(true);
+  };
+
+  const openDetalleModal = (inmueble) => {
+    setSelectedInmueble(inmueble);
+    setIsDetalleModalOpen(true);
+  };
+
+  const handleInmuebleSaved = (savedInmueble) => {
+    setInmuebles(prev => {
+      const index = prev.findIndex(i => i.id_inmueble === savedInmueble.id_inmueble);
+      if (index !== -1) {
+        const newInmuebles = [...prev];
+        newInmuebles[index] = savedInmueble;
+        return newInmuebles;
+      }
+      return [...prev, savedInmueble];
+    });
+    // Si guardó y el modal de detalles estaba abierto (ej. desde una edición rápida), lo actualizamos
+    if (isDetalleModalOpen) {
+      setSelectedInmueble(savedInmueble);
+    }
+  };
+
+  const handleInmuebleDeleted = async (inmuebleData) => {
+    if (!window.confirm('¿Está seguro de que desea dar de baja este inmueble? Esta acción no se puede deshacer.')) return;
+    
+    try {
+      await InmuebleService.delete(inmuebleData.id_inmueble);
+      setInmuebles(prev => prev.filter(i => i.id_inmueble !== inmuebleData.id_inmueble));
+    } catch (error) {
+      console.error('Error al eliminar inmueble:', error);
+      alert(error.response?.data?.error || 'Ocurrió un error al intentar eliminar el inmueble.');
+    }
   };
 
   if (loading) {
     return (
       <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: '#F8F9FA' }}>
-        <div className="spinner-border text-success" role="status"></div>
+        <div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div>
       </div>
     );
   }
 
   if (!cliente) {
     return (
-      <div className="p-5 text-center">
+      <div className="p-5 text-center mt-5">
         <AlertTriangle size={48} className="text-warning mb-3 mx-auto" />
-        <h3>Cliente no encontrado</h3>
-        <Button onClick={() => navigate('/clients')} variant="outline-primary" className="mt-3 bg-white text-dark">Volver a Clientes</Button>
+        <h3 className="fw-bold text-dark">Cliente no encontrado</h3>
+        <p className="text-secondary">Es posible que el cliente haya sido eliminado o el enlace sea incorrecto.</p>
+        <Button onClick={() => navigate('/clients')} variant="outline-primary" className="mt-3 bg-white text-dark border-secondary">
+          Volver a Clientes
+        </Button>
       </div>
     );
   }
 
-  const nombreMostrar = cliente.razon_social || cliente.nombre || 'Sin Nombre';
-  const contactoMostrar = cliente.contacto || `${cliente.nombre || ''} ${cliente.apellido || ''}`.trim();
+  const nombreMostrar = cliente.razon_social || `${cliente.nombre || ''} ${cliente.apellido || ''}`.trim() || 'Sin Nombre';
+  const contactoMostrar = `${cliente.nombre || ''} ${cliente.apellido || ''}`.trim();
   const iniciales = nombreMostrar.substring(0, 2).toUpperCase();
-  const esMock = cliente.isMock;
 
   return (
     <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', margin: '-1.5rem', padding: '1.5rem' }}>
@@ -132,7 +145,7 @@ export default function ClientInmueblesPage() {
         </div>
         <div className="d-flex align-items-center gap-3">
           <Bell size={20} className="text-secondary" />
-          <img src="https://i.pravatar.cc/150?img=11" alt="User" className="rounded-circle border" width="32" height="32" />
+          <img src={`https://ui-avatars.com/api/?name=${iniciales}&background=random`} alt="User" className="rounded-circle border" width="32" height="32" />
         </div>
       </div>
 
@@ -151,7 +164,7 @@ export default function ClientInmueblesPage() {
         </div>
         <div className="d-flex align-items-center gap-3">
           <span className="d-flex align-items-center gap-2 text-secondary small fw-medium">
-             <div className="rounded-circle bg-dark" style={{width: 6, height: 6}}></div> Sincronizado hace 4 min
+             <div className="rounded-circle bg-dark" style={{width: 6, height: 6}}></div> Sincronizado recientemente
           </span>
           <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><Download size={16}/></button>
           <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><MoreVertical size={16}/></button>
@@ -184,7 +197,7 @@ export default function ClientInmueblesPage() {
               <div className="d-inline-flex align-items-center gap-2 bg-light rounded-3 px-3 py-2 mt-2 mt-md-1 border w-100 w-md-auto">
                 <Shield size={16} className="text-secondary flex-shrink-0" />
                 <span className="text-dark small fw-medium" style={{ fontSize: '0.8rem' }}>
-                  {esMock ? 'Cuenta Corporativa Prioritaria • Contrato Anual' : 'Cuenta Estándar Registrada'}
+                  Cuenta Registrada en Sistema
                 </span>
               </div>
             </div>
@@ -194,7 +207,6 @@ export default function ClientInmueblesPage() {
             <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2"><Mail size={16} /> Contactar</Button>
             <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2"><FileText size={16} /> Facturación</Button>
             
-            {/* <-- ACÁ CONECTAMOS EL BOTÓN EDITAR --> */}
             <Button 
               variant="light" 
               className="btn-sm border shadow-sm bg-white text-dark fw-semibold px-4 py-2 flex-grow-1 flex-xl-grow-0"
@@ -248,7 +260,6 @@ export default function ClientInmueblesPage() {
           </div>
         </div>
 
-        {/* KPIs */}
         <div className="row g-3">
           <div className="col-6 col-lg-3">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
@@ -263,7 +274,7 @@ export default function ClientInmueblesPage() {
               <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
                 Turnos <Calendar size={16} className="text-secondary"/>
               </div>
-              <div className="fs-3 fw-bold text-dark">{esMock ? '12' : '0'} <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">activos</span></div>
+              <div className="fs-3 fw-bold text-dark">0 <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">activos</span></div>
             </div>
           </div>
           <div className="col-6 col-lg-3">
@@ -271,7 +282,7 @@ export default function ClientInmueblesPage() {
               <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
                 Estado de Cuenta <FileText size={16} className="text-secondary"/>
               </div>
-              <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Al día'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.75rem'}}>${cliente.saldo || 0} pend.</span></div>
+              <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Activo'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.75rem'}}>$0 pend.</span></div>
             </div>
           </div>
           <div className="col-6 col-lg-3">
@@ -280,7 +291,7 @@ export default function ClientInmueblesPage() {
                 Satisfacción <Star size={16} className="text-secondary"/>
               </div>
               <div className="d-flex align-items-center flex-wrap gap-1 text-warning mt-1">
-                <span className="fs-3 fw-bold text-dark me-1">{(cliente.calificacion_promedio || 0).toFixed(1)}</span>
+                <span className="fs-3 fw-bold text-dark me-1">{Number(cliente.calificacion_promedio || 0).toFixed(1)}</span>
                 <div className="d-flex"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
               </div>
             </div>
@@ -288,7 +299,6 @@ export default function ClientInmueblesPage() {
         </div>
       </Card>
 
-      {/* SECCIÓN INMUEBLES ASOCIADOS */}
       <div className="mt-2">
         <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-3 mb-4">
           <div className="w-100">
@@ -297,7 +307,11 @@ export default function ClientInmueblesPage() {
               <span className="badge bg-dark rounded-circle ms-2 p-2 d-none d-md-flex align-items-center justify-content-center" style={{fontSize: '0.8rem', width: '28px', height: '28px'}}>{inmuebles.length}</span>
             </h3>
             <p className="text-secondary small m-0 d-none d-md-block">Gestión integral de parcelas vinculadas y estados operativos.</p>
-            <Button className="d-flex d-md-none w-100 align-items-center justify-content-center gap-2 py-3 rounded-pill shadow-sm mt-3" style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>
+            <Button 
+              className="d-flex d-md-none w-100 align-items-center justify-content-center gap-2 py-3 rounded-pill shadow-sm mt-3" 
+              style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}
+              onClick={() => openInmuebleModal()}
+            >
               <Plus size={18} /> Agregar Nuevo Inmueble
             </Button>
           </div>
@@ -308,19 +322,23 @@ export default function ClientInmueblesPage() {
                 <Search size={18} className="text-secondary"/>
                 <input type="text" className="form-control border-0 bg-transparent shadow-none small p-0" placeholder="Buscar por predio o calle..."/>
               </div>
-              <Button className="d-none d-md-flex text-nowrap align-items-center gap-2 px-4 shadow-sm rounded-pill" style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>
+              <Button 
+                className="d-none d-md-flex text-nowrap align-items-center gap-2 px-4 shadow-sm rounded-pill" 
+                style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}
+                onClick={() => openInmuebleModal()}
+              >
                 <Building2 size={18} /> Agregar Nuevo Inmueble
               </Button>
             </div>
           </div>
         </div>
 
-        {/* LISTA DE INMUEBLES */}
         <div className="d-flex flex-column gap-3">
           {inmuebles.length === 0 ? (
             <Card className="p-5 text-center shadow-sm border-0 rounded-4">
               <Building2 size={48} className="text-secondary opacity-50 mb-3 mx-auto" />
               <h5 className="fw-bold text-dark">Sin inmuebles registrados</h5>
+              <p className="text-secondary small">Este cliente aún no tiene predios asociados.</p>
             </Card>
           ) : (
             inmuebles.map((inmueble) => (
@@ -333,7 +351,7 @@ export default function ClientInmueblesPage() {
                        <div className="w-100 h-100 position-absolute d-flex align-items-center justify-content-center text-secondary opacity-50"><Building2 size={40} /></div>
                     )}
                     <span className="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white fw-medium px-2 py-1">
-                      {inmueble.tipo_inmueble}
+                      {inmueble.tipo_inmueble || 'General'}
                     </span>
                   </div>
                   
@@ -342,8 +360,8 @@ export default function ClientInmueblesPage() {
                       <div className="w-100">
                         <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
                           <h5 className="fw-bold text-dark m-0 fs-5">{inmueble.direccion}</h5>
-                          <span className={`badge ${inmueble.estado_txt?.includes('Pendiente') ? 'bg-warning-subtle text-warning border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'} rounded-pill px-2 py-1 d-flex align-items-center gap-1 border`}>
-                            {inmueble.estado_txt || 'Activo'}
+                          <span className={`badge ${inmueble.estado_vegetacion?.includes('Alto') ? 'bg-danger-subtle text-danger border-danger-subtle' : inmueble.estado_vegetacion?.includes('Medio') ? 'bg-warning-subtle text-warning border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'} rounded-pill px-2 py-1 d-flex align-items-center gap-1 border`}>
+                            {inmueble.estado_vegetacion || 'Controlado'}
                           </span>
                         </div>
                         
@@ -356,7 +374,7 @@ export default function ClientInmueblesPage() {
                           </div>
                           <div className="d-flex align-items-center gap-2 mt-1">
                             <Clock size={16} className="text-secondary" />
-                            <span>Próximo turno: <span className="fw-medium text-dark">{esMock ? 'Mañana' : 'Sin agendar'}</span></span>
+                            <span>Tiempo de trabajo estimado: <span className="fw-medium text-dark">{inmueble.tiempo_promedio_min ? `${inmueble.tiempo_promedio_min} min` : 'Sin estimar'}</span></span>
                           </div>
                         </div>
 
@@ -367,13 +385,31 @@ export default function ClientInmueblesPage() {
                       </div>
                       
                       <div className="d-none d-md-flex gap-2 ms-3">
-                        <Button variant="light" className="btn-sm bg-white border shadow-sm text-dark px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"><RotateCcw size={14}/> Ver Detalles</Button>
-                        <Button variant="light" className="btn-sm bg-white border shadow-sm text-secondary px-2"><Edit2 size={16} /></Button>
+                        <Button 
+                          variant="light" 
+                          className="btn-sm bg-white border shadow-sm text-dark px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
+                          onClick={() => openDetalleModal(inmueble)}
+                        >
+                          <RotateCcw size={14}/> Ver Detalles
+                        </Button>
+                        <Button 
+                          variant="light" 
+                          className="btn-sm bg-white border shadow-sm text-secondary px-2"
+                          onClick={() => openInmuebleModal(inmueble)}
+                        >
+                          <Edit2 size={16} />
+                        </Button>
                       </div>
                     </div>
 
                     <div className="d-flex d-md-none gap-2 w-100 mt-3 pt-3 border-top">
-                      <Button variant="light" className="btn-sm bg-light border text-dark flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2">Ver Detalles <ArrowLeft size={16} style={{transform: 'rotate(180deg)'}}/></Button>
+                      <Button 
+                        variant="light" 
+                        className="btn-sm bg-light border text-dark flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                        onClick={() => openDetalleModal(inmueble)}
+                      >
+                        Ver Detalles <ArrowLeft size={16} style={{transform: 'rotate(180deg)'}}/>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -383,12 +419,33 @@ export default function ClientInmueblesPage() {
         </div>
       </div>
 
-      {/* RENDERIZADO DEL MODAL DE EDICIÓN */}
+      {/* MODAL DE EDICIÓN DEL CLIENTE */}
       <EditClientModal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
         clientData={cliente}
         onClientUpdated={handleClientUpdated}
+      />
+
+      {/* MODAL DE DETALLES DEL INMUEBLE (SOLO LECTURA) */}
+      <InmuebleDetalleModal
+        isOpen={isDetalleModalOpen}
+        onClose={() => setIsDetalleModalOpen(false)}
+        inmuebleData={selectedInmueble}
+        onEdit={(inmueble) => {
+          setIsDetalleModalOpen(false);
+          openInmuebleModal(inmueble);
+        }}
+        onDelete={handleInmuebleDeleted}
+      />
+
+      {/* MODAL DE CREACIÓN/EDICIÓN DEL INMUEBLE */}
+      <InmuebleModal
+        isOpen={isInmuebleModalOpen}
+        onClose={() => setIsInmuebleModalOpen(false)}
+        inmuebleData={selectedInmueble}
+        idCliente={cliente.id_cliente} 
+        onSaved={handleInmuebleSaved}
       />
       
     </div>
