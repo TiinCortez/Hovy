@@ -72,7 +72,7 @@ PUT {{baseUrl}}/api/clientes/3514330429
 Content-Type: application/json
 
 {
-  "telefono": "5493514330429"
+  "tipo_cliente": "Empresa"
 }
 
 ### Test de Actualizacion de cliente - [Actualizar varios campos]

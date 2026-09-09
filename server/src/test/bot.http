@@ -85,9 +85,9 @@ x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-  "nombre": "Juan",
+  "nombre": "Agustin",
   "apellido": "Prueba",
-  "telefono": "11 5566-7788",
+  "telefono": "2804321996",
   "tipo_cliente": "Casual"
 }
 
@@ -135,12 +135,12 @@ Content-Type: application/json
 }
 
 ### ACTUALIZACION DE CLIENTE Cambio de Telefono [Luego lo cambiamos por un token enviado al email] - [Espera 200]
-PUT {{baseUrl}}/api/bot/clientes/1155667788
+PUT {{baseUrl}}/api/bot/clientes/2804321996
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-  "telefono": "011 5566-7799"
+  "telefono": "2804321997"
 }
 
 ### ACTUALIZACION DE CLIENTE Numero invalido - [Espera 400]
