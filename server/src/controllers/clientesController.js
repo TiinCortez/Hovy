@@ -30,6 +30,7 @@ export const createCliente = async (req, res) => {
     domicilio_fiscal,
     cuit_cuil,
     razon_social,
+    estado,
   } = req.body ?? {};
 
   const camposFaltantes = [];
@@ -133,6 +134,7 @@ export const updateCliente = async (req, res) => {
     domicilio_fiscal,
     cuit_cuil,
     razon_social,
+    estado,
   } = req.body ?? {};
 
   const camposInvalidos = [];
@@ -174,6 +176,7 @@ export const updateCliente = async (req, res) => {
   if (domicilio_fiscal !== undefined) camposParaActualizar.domicilio_fiscal = domicilio_fiscal;
   if (cuit_cuil !== undefined) camposParaActualizar.cuit_cuil = cuit_cuil;
   if (razon_social !== undefined) camposParaActualizar.razon_social = razon_social;
+  if (estado !== undefined) camposParaActualizar.estado = estado;
 
   if (Object.keys(camposParaActualizar).length === 0) {
     return res.status(400).json({

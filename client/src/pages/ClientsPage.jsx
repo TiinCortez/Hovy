@@ -14,6 +14,8 @@ export default function ClientsPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [ordenarAz, setOrdenarAz] = useState(false);
   
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,20 @@ export default function ClientsPage() {
     setClients(prev => [newClient, ...prev]);
   };
 
+  const handleEstadoChange = async (cliente, nuevoEstado) => {
+    try {
+      // Usamos el servicio existente para hacer el PUT al backend
+      await ClienteService.update(cliente.telefono, { estado: nuevoEstado });
+      // Actualizamos el estado local de React para reflejar el cambio al instante
+      setClients(prev => prev.map(c => 
+        c.telefono === cliente.telefono ? { ...c, estado: nuevoEstado } : c
+      ));
+    } catch (error) {
+      console.error('Error al cambiar el estado del cliente:', error);
+      alert('Hubo un error al actualizar el estado.');
+    }
+  };
+
   const getClientIcon = (tipo) => {
     if (tipo === 'Empresa' || tipo === 'EMPRESA') return Briefcase;
     if (tipo === 'Fijo') return LayoutGrid;
@@ -70,15 +86,34 @@ export default function ClientsPage() {
     const fullName = `${client.nombre || ''} ${client.apellido || ''}`.toLowerCase();
     const search = searchTerm.toLowerCase();
     const matchesSearch = fullName.includes(search) || (client.telefono || '').includes(search) || (client.razon_social || '').toLowerCase().includes(search);
-
-    if (activeFilter === 'Todos') return matchesSearch;
-    if (activeFilter === 'Empresas') return matchesSearch && (client.tipo_cliente === 'Empresa' || client.tipo_cliente === 'EMPRESA');
-    if (activeFilter === 'Particulares' || activeFilter === 'Casual') return matchesSearch && (client.tipo_cliente === 'Casual' || client.tipo_cliente === 'Particular');
-    if (activeFilter === 'Fijo') return matchesSearch && client.tipo_cliente === 'Fijo';
     
-    return matchesSearch;
-  });
+    // Si no coincide con la búsqueda de texto, lo descartamos
+    if (!matchesSearch) return false;
 
+    const estadoActual = client.estado === 'Inactivo' ? 'Inactivo' : 'Activo';
+
+    if (activeFilter === 'Todos') return true;
+    if (activeFilter === 'Inactivos') return estadoActual === 'Inactivo';
+    
+    // Si el filtro no es "Todos" ni "Inactivos", no mostramos los clientes inactivos
+    if (estadoActual === 'Inactivo') return false;
+
+    if (activeFilter === 'Empresas') return (client.tipo_cliente === 'Empresa' || client.tipo_cliente === 'EMPRESA');
+    if (activeFilter === 'Particulares' || activeFilter === 'Casual') return (client.tipo_cliente === 'Casual' || client.tipo_cliente === 'Particular');
+    if (activeFilter === 'Fijo') return client.tipo_cliente === 'Fijo';
+
+    return true;}).sort((a, b) => {
+    // NUEVA LÓGICA DE ORDENAMIENTO
+    if (ordenarAz) {
+      const nombreA = `${a.nombre || ''} ${a.apellido || ''}`.trim().toLowerCase() || (a.razon_social || '').toLowerCase();
+      const nombreB = `${b.nombre || ''} ${b.apellido || ''}`.trim().toLowerCase() || (b.razon_social || '').toLowerCase();
+      return nombreA.localeCompare(nombreB);
+    }
+    
+    // Fallback: ordenar por los más recientes
+    return new Date(b.fecha_alta) - new Date(a.fecha_alta);
+  });
+  
   return (
     <div className="d-flex flex-column gap-4 pb-5">
       
@@ -177,12 +212,15 @@ export default function ClientsPage() {
         </div>
 
         <div className="d-flex align-items-center gap-2 overflow-x-auto pb-1 pb-lg-0 scrollbar-none w-100 w-lg-auto flex-grow-1">
-          {['Todos', 'Empresas', 'Fijo', 'Casual'].map((filter) => {
+          {['Todos', 'Empresas', 'Fijo', 'Casual', 'Inactivos'].map((filter) => {
             let count = 0;
             if (filter === 'Todos') count = clients.length;
             if (filter === 'Empresas') count = clients.filter(c => c.tipo_cliente === 'Empresa' || c.tipo_cliente === 'EMPRESA').length;
             if (filter === 'Fijo') count = clients.filter(c => c.tipo_cliente === 'Fijo').length;
             if (filter === 'Casual') count = clients.filter(c => c.tipo_cliente === 'Casual').length;
+            if (filter === 'Inactivos') count = clients.filter(c => c.estado === 'Inactivo').length;
+
+          
 
             return (
               <button
@@ -197,14 +235,20 @@ export default function ClientsPage() {
               >
                 {filter} ({count})
               </button>
+              
             )
           })}
         </div>
         
-        <select className="form-select bg-white rounded-pill border shadow-sm text-secondary small py-2 w-auto flex-shrink-0">
-          <option>Ordenar: Más recientes</option>
-          <option>Ordenar: Alfabético</option>
+        <select 
+          className="form-select bg-white rounded-pill border shadow-sm text-secondary small py-2 w-auto flex-shrink-0"
+          value={ordenarAz ? 'az' : 'recientes'}
+          onChange={(e) => setOrdenarAz(e.target.value === 'az')}
+        >
+          <option value="recientes">Ordenar: Más recientes</option>
+          <option value="az">Ordenar: Alfabético</option>
         </select>
+
       </div>
 
       {loading ? (
@@ -217,10 +261,10 @@ export default function ClientsPage() {
             const initials = `${client.nombre?.[0] || ''}${client.apellido?.[0] || ''}`.toUpperCase() || 'CL';
             const fullName = `${client.nombre || ''} ${client.apellido || ''}`.trim() || client.razon_social;
             
-            const statusText = client.estado || 'Activo';
-            const statusBadge = statusText.includes('Pendiente') ? 'bg-danger-subtle text-danger border-danger-subtle' : 'bg-success-subtle text-success border-success-subtle';
-            const statusDot = statusText.includes('Pendiente') ? 'bg-danger' : 'bg-success';
-            
+            const statusText = client.estado === 'Inactivo' ? 'Inactivo' : 'Activo';
+            const statusBadge = statusText === 'Inactivo' ? 'bg-warning-subtle text-warning border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle';
+            const selectTextColor = statusText === 'Inactivo' ? '#856404' : '#155724'; // Colores oscuros para el texto del select
+                      
             const ClientIcon = getClientIcon(client.tipo_cliente);
             const cardBgColor = getClientColor(client.tipo_cliente);
             const cardTextColor = getClientTextColor(client.tipo_cliente);
@@ -247,9 +291,21 @@ export default function ClientsPage() {
                     <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-medium d-flex align-items-center gap-1">
                       <ClientIcon size={12}/> {client.tipo_cliente}
                     </span>
-                    <span className={`badge rounded-pill px-2 py-1 small border ${statusBadge} d-flex align-items-center gap-1`}>
-                      <div className={`rounded-circle ${statusDot}`} style={{width: 6, height: 6}}></div> {statusText}
-                    </span>
+                    
+                    <select 
+                    className={`badge rounded-pill px-2 py-1 small border ${statusBadge} fw-bold`}
+                    style={{ appearance: 'none', cursor: 'pointer', color: selectTextColor, outline: 'none' }}
+                    value={statusText}
+                    onChange={(e) => handleEstadoChange(client, e.target.value)}
+                    >
+                    <option value="Activo" className="text-success">● Activo</option>
+                    <option value="Inactivo" className="text-warning">● Inactivo</option>
+                  </select>
+
+
+
+                
+                    
                     <div className="ms-auto d-flex align-items-center gap-1 text-warning small fw-bold">
                       <Star size={14} fill="currentColor" />
                       <span className="text-dark">{Number(client.calificacion_promedio || 0).toFixed(1)}</span>
