@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import {User, Phone, Mail, FileText, Building, MapPin, AlertCircle} from 'lucide-react';
+import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
 import Button from './Button';
-import { supabase } from '../../services/supaBaseClient';
+import ClienteService from '../../services/api/cliente.service';
 
 export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,62 +16,34 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
 
   if (!isOpen) return null;
 
-  // Función para normalizar teléfono según la lógica del sistema
-  const normalizarTelefonoLocal = (val) => {
-    let digitos = String(val).replace(/\D/g, '');
-    if (digitos.startsWith('00')) digitos = digitos.slice(2);
-    if (digitos.startsWith('54')) {
-      digitos = digitos.slice(2);
-      if (digitos.startsWith('9')) digitos = digitos.slice(1);
-    }
-    if (digitos.startsWith('0')) digitos = digitos.slice(1);
-    
-    if (digitos.length !== 10) return null;
-    return `549${digitos}`;
-  };
-
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const telefonoNormalizado = normalizarTelefonoLocal(data.telefono);
+      // Formateamos los datos quitando espacios en blanco extra
+      const clienteData = {
+        nombre: data.nombre.trim(),
+        apellido: data.apellido.trim(),
+        telefono: data.telefono.trim(),
+        tipo_cliente: data.tipo_cliente,
+        email: data.email ? data.email.trim() : null,
+        domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
+        cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
+        razon_social: data.razon_social ? data.razon_social.trim() : null
+      };
 
-      if (!telefonoNormalizado) {
-        setErrorMessage('Teléfono inválido. Ingrese características + número sin 0 ni 15 (ej: 3514330429).');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Inserción directa en la tabla 'clientes' de Supabase
-      const { data: createdClient, error } = await supabase
-        .from('clientes')
-        .insert([{
-          nombre: data.nombre.trim(),
-          apellido: data.apellido.trim(),
-          telefono: telefonoNormalizado,
-          tipo_cliente: data.tipo_cliente,
-          email: data.email ? data.email.trim() : null,
-          domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
-          cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
-          razon_social: data.razon_social ? data.razon_social.trim() : null,
-          calificacion_promedio: 0
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('Ya existe un cliente registrado con ese número de teléfono.');
-        }
-        throw new Error(error.message || 'Ocurrió un error al guardar el cliente.');
-      }
+      // Llamada al backend a través de nuestro servicio (Axios interceptará e inyectará el Bearer Token)
+      const response = await ClienteService.create(clienteData);
 
       reset();
-      onClientCreated(createdClient);
+      // El backend devuelve el registro creado dentro de response.data
+      onClientCreated(response.data);
       onClose();
     } catch (err) {
-      setErrorMessage(err.message);
+      // Capturamos los errores que vienen del backend (interceptados por http.service.js)
+      const errorMsg = err.response?.data?.error || err.message || 'Ocurrió un error al guardar el cliente.';
+      setErrorMessage(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
