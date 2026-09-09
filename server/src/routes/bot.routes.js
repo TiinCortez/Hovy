@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { botRateLimit } from '../middleware/botRateLimit.js';
 import { verificarApiKeyBot } from '../middleware/botAuth.js';
 import { resolverClientePorTelefono } from '../middleware/botCliente.js';
+import { resolverDomicilioFiscal } from '../middleware/botDomicilio.js';
 import { getClienteByTelefono } from '../controllers/botClientesController.js';
 import { createCliente, updateCliente } from '../controllers/clientesController.js';
 import {
@@ -24,10 +25,16 @@ router.get('/clientes/:telefono', resolverClientePorTelefono, getClienteByTelefo
 
 
 // Los endpoints de creacion y modificacion reusan los controllres del cliente normal
+//
+// resolverDomicilioFiscal va antes para que puedan seguir reusandose tal cual:
+// si el body trae la ubicacion exacta que compartio el cliente por WhatsApp, el
+// middleware la convierte en el string "Calle, Barrio, Provincia" y lo deja en
+// domicilio_fiscal. Los controllers reciben el body ya resuelto y no se enteran
+// de que existieron coordenadas.
 // POST /api/bot/clientes
-router.post('/clientes', createCliente);
+router.post('/clientes', resolverDomicilioFiscal, createCliente);
 // PUT  /api/bot/clientes/:telefono
-router.put('/clientes/:telefono', updateCliente);
+router.put('/clientes/:telefono', resolverDomicilioFiscal, updateCliente);
 
 
 // Inmuebles del cliente.

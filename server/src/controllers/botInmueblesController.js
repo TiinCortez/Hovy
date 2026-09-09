@@ -47,6 +47,7 @@ const buscarInmuebleDelCliente = (idInmueble, idCliente) =>
     .select('*')
     .eq('id_inmueble', idInmueble)
     .eq('id_cliente', idCliente)
+    .eq('activo', true) 
     .maybeSingle();
 
 // GET /api/bot/clientes/:telefono/inmuebles
@@ -328,6 +329,7 @@ export const updateInmuebleBot = async (req, res) => {
       .update(datos)
       .eq('id_inmueble', idInmueble)
       .eq('id_cliente', req.cliente.id_cliente)
+      .eq('activo', true)
       .select()
       .single();
 
