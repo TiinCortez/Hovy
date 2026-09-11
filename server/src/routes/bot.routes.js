@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { botRateLimit } from '../middleware/botRateLimit.js';
 import { verificarApiKeyBot } from '../middleware/botAuth.js';
 import { resolverClientePorTelefono } from '../middleware/botCliente.js';
+import { resolverUsuarioPorTelefono } from '../middleware/botUsuario.js';
 import { resolverDomicilioFiscal } from '../middleware/botDomicilio.js';
 import { getClienteByTelefono } from '../controllers/botClientesController.js';
+import { getUsuarioByTelefono } from '../controllers/botUsuariosController.js';
 import { createCliente, updateCliente } from '../controllers/clientesController.js';
 import {
   getInmueblesDelCliente,
@@ -20,6 +22,12 @@ const router = Router();
 router.use(botRateLimit);
 router.use(verificarApiKeyBot);
 
+// Identidad del numero que escribe. n8n las consulta en este orden: si el
+// numero es del equipo va al flujo interno, si no es cliente va al alta.
+// Las dos tablas son excluyentes por trigger, asi que el orden no cambia el
+// resultado; usuarios va primero porque es la tabla chica.
+// GET /api/bot/usuarios/:telefono
+router.get('/usuarios/:telefono', resolverUsuarioPorTelefono, getUsuarioByTelefono);
 // GET /api/bot/clientes/:telefono
 router.get('/clientes/:telefono', resolverClientePorTelefono, getClienteByTelefono);
 

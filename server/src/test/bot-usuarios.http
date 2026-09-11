@@ -1,0 +1,363 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+#
+# ANTES DE CORRER ESTO:
+#   1. Ejecutar docs/supabase-usuarios-telefono.sql en el SQL Editor de Supabase.
+#      La columna usuarios.telefono ya existia, pero ese script es el que agrega
+#      el UNIQUE, el CHECK y los dos triggers de exclusion. Sin correrlo, todos
+#      los test de la seccion "EXCLUSION" van a dar 201/200 en vez de 409.
+#   2. Asignarle un telefono a un usuario de staff, con un numero que NO este en
+#      clientes (si lo esta, el trigger lo rechaza, que es justo lo que probamos
+#      mas abajo):
+#      UPDATE public.usuarios SET telefono = '5493511111111' WHERE usuario = 'hovy';
+
+@baseUrl = http://localhost:4000
+
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Usuario de staff con telefono cargado (ver paso 2 de arriba).
+@telefonoUsuario = 5493511111111
+
+# Cliente ya cargado en la bd, el mismo que usa bot.http.
+@telefonoCliente = 5493514330429
+
+
+// TEST DE AUTENTICACION CON X-API-KEY
+
+### Test de Autenticacion sin X-API-KEY  -  [Espera 401]
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+
+### Test de Autenticacion con X-API-KEY Incorrecta  -  [Espera 403]
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+x-api-key: esta-key-no-es-la-correcta
+
+### Test de Autenticacion con X-API-KEY Correcta  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+x-api-key: {{apiKey}}
+
+
+// TEST DE SEGURIDAD - EL HASH DE LA PASSWORD NO PUEDE SALIR POR LA API
+
+### TEST DE SEGURIDAD Revisar la respuesta a ojo  -  [Espera 200 SIN password_hash]
+// La tabla usuarios guarda password_hash. El middleware pide una lista
+// explicita de columnas justamente para que no salga. En la respuesta de este
+// request tienen que estar solo: id, usuario, rol, email, telefono, created_at.
+// Si aparece password_hash, alguien cambio el select por un '*'.
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+x-api-key: {{apiKey}}
+
+
+// TEST DE NORMALIZACION DE TELEFONO
+
+// Los primeros cuatro test son el mismo usuario escrito en distintos formatos.
+// Los cuatro tendrian que devolver 200 y el MISMO id.
+// Si alguno da 404 esta fallando la normalizacion.
+
+### NORMALIZACION Formato 549 + 10 digitos  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/5493511111111
+x-api-key: {{apiKey}}
+
+### NORMALIZACION Formato sin pais ni 9  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/3511111111
+x-api-key: {{apiKey}}
+
+### NORMALIZACION Formato con pais pero sin el 9 (asi suele llegar el wa_id)  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/543511111111
+x-api-key: {{apiKey}}
+
+### NORMALIZACION Formato con prefijo nacional 0  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/03511111111
+x-api-key: {{apiKey}}
+
+### NORMALIZACION Formato con el viejo prefijo 15  -  [Espera 400]
+GET {{baseUrl}}/api/bot/usuarios/0351151111111
+x-api-key: {{apiKey}}
+
+### NORMALIZACION Formato con letras y numeros  -  [Espera 400]
+GET {{baseUrl}}/api/bot/usuarios/abc123
+x-api-key: {{apiKey}}
+
+
+// TEST DE BIFURCACION - LAS TRES RAMAS DEL BOT
+
+### BIFURCACION Numero que es del equipo  -  [Espera 200]
+// Rama staff: n8n corta aca y no consulta clientes.
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+x-api-key: {{apiKey}}
+
+### BIFURCACION Numero que es cliente, no usuario  -  [Espera 404]
+// Rama cliente: n8n sigue de largo al endpoint de clientes, que da 200.
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoCliente}}
+x-api-key: {{apiKey}}
+
+### BIFURCACION Confirmar que ese mismo numero SI es cliente  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefonoCliente}}
+x-api-key: {{apiKey}}
+
+### BIFURCACION Numero que no es nada  -  [Espera 404]
+// Rama alta: n8n da 404 en los dos endpoints y arranca el registro.
+GET {{baseUrl}}/api/bot/usuarios/1155667788
+x-api-key: {{apiKey}}
+
+
+// TEST DE EXCLUSION USUARIO / CLIENTE (los triggers de la base)
+
+### EXCLUSION Registrar un usuario con el telefono de un cliente  -  [Espera 409]
+// Lo rechaza trg_usuario_telefono_libre. Mensaje: "Ese telefono ya pertenece a
+// un cliente."
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_solapado",
+  "password": "test1234",
+  "rol": "user",
+  "email": "test.solapado@example.com",
+  "telefono": "{{telefonoCliente}}"
+}
+
+### EXCLUSION Crear un cliente con el telefono de un usuario  -  [Espera 409]
+// Lo rechaza trg_cliente_telefono_libre. Mensaje: "Ese telefono ya pertenece a
+// un usuario del sistema."
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "apellido": "Solapado",
+  "telefono": "{{telefonoUsuario}}",
+  "tipo_cliente": "Casual"
+}
+
+### EXCLUSION Mover un cliente existente al telefono de un usuario  -  [Espera 409]
+// El mismo trigger, pero en el UPDATE (cambio de numero).
+PUT {{baseUrl}}/api/bot/clientes/{{telefonoCliente}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "telefono": "{{telefonoUsuario}}"
+}
+
+
+// TEST DE REGISTRO CON TELEFONO
+
+### REGISTRO Usuario nuevo con telefono valido  -  [Espera 201]
+// Se guarda normalizado: mandamos "3512222222" y la respuesta trae
+// "5493512222222". Tampoco tiene que traer password_hash.
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_staff",
+  "password": "test1234",
+  "rol": "user",
+  "email": "test.staff@example.com",
+  "telefono": "3512222222"
+}
+
+### REGISTRO Ese usuario nuevo ya lo encuentra el bot  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/3512222222
+x-api-key: {{apiKey}}
+
+### REGISTRO Usuario con telefono invalido  -  [Espera 400]
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_tel_malo",
+  "password": "test1234",
+  "rol": "user",
+  "email": "test.malo@example.com",
+  "telefono": "123"
+}
+
+### REGISTRO Usuario SIN telefono (el campo es opcional)  -  [Espera 201]
+// El staff que no usa WhatsApp queda con telefono null.
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_sin_tel",
+  "password": "test1234",
+  "rol": "viewer",
+  "email": "test.sintel@example.com"
+}
+
+### REGISTRO Segundo usuario sin telefono  -  [Espera 201]
+// UNIQUE en Postgres admite varios NULL, asi que este no choca con el anterior.
+// Si diera 409 el UNIQUE del telefono estaria mal definido.
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_sin_tel_2",
+  "password": "test1234",
+  "rol": "viewer",
+  "email": "test.sintel2@example.com"
+}
+
+### REGISTRO Telefono repetido entre dos usuarios  -  [Espera 409]
+// Mensaje: "Ya existe un usuario registrado con ese telefono" (NO "El usuario
+// ya existe", que seria la pista falsa).
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "test_staff_bis",
+  "password": "test1234",
+  "rol": "user",
+  "email": "test.staffbis@example.com",
+  "telefono": "3512222222"
+}
+
+
+// EDICION DE USUARIO - PUT /auth/usuarios/:id
+//
+// Este endpoint va con JWT de admin, NO con la x-api-key del bot: es el canal
+// web y deja cambiar el rol.
+//
+// OJO: hoy no se puede sacar el token con /auth/login porque login busca por
+// email y todos los usuarios de la base tienen email NULL. Hasta que alguno
+// tenga email cargado, generar el token a mano:
+//   node -e "console.log(require('jsonwebtoken').sign({sub:1,usuario:'hovy',rol:'admin'}, process.env.JWT_SECRET || 'hovy-dev-secret-change-me', {expiresIn:'1h'}))"
+// y pegarlo abajo.
+
+@token = PEGAR_TOKEN_DE_ADMIN_ACA
+
+# @name login
+### EDICION Sacar el token por login (cuando el admin tenga email cargado)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@hovy.com",
+  "password": "PEGAR_PASSWORD"
+}
+
+### EDICION Sin token  -  [Espera 401]
+PUT {{baseUrl}}/auth/usuarios/1
+Content-Type: application/json
+
+{
+  "telefono": "3514331111"
+}
+
+### EDICION Con token de rol user  -  [Espera 403]
+// Generar uno con rol:'user' para probar esto.
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "3514331111"
+}
+
+### EDICION Asignar telefono en formato sucio  -  [Espera 200 con telefono 5493514331111]
+// Este es el punto del endpoint: entra "0351 433-1111" y sale normalizado, igual
+// que en el alta. Si guardara el string tal cual, el bot nunca lo encontraria.
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "0351 433-1111"
+}
+
+### EDICION El bot lo encuentra escrito de OTRA forma  -  [Espera 200]
+GET {{baseUrl}}/api/bot/usuarios/3514331111
+x-api-key: {{apiKey}}
+
+### EDICION Telefono invalido  -  [Espera 400]
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "123"
+}
+
+### EDICION Borrar el telefono mandandolo vacio  -  [Espera 200 con telefono null]
+// Asi se le saca a alguien el acceso por WhatsApp.
+// Si esto da 500 diciendo "usuarios.telefono todavia es NOT NULL", falta correr
+// docs/supabase-usuarios-telefono.sql.
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": ""
+}
+
+### EDICION Rol invalido  -  [Espera 400]
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rol": "jefe"
+}
+
+### EDICION Body sin ningun campo  -  [Espera 400]
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### EDICION id inexistente  -  [Espera 404]
+PUT {{baseUrl}}/auth/usuarios/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "3512222222"
+}
+
+### EDICION id no numerico  -  [Espera 400]
+PUT {{baseUrl}}/auth/usuarios/abc
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "3512222222"
+}
+
+### EDICION Telefono que ya es de un cliente  -  [Espera 409]
+// Lo rechaza trg_usuario_telefono_libre, igual que en el alta.
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "telefono": "{{telefonoCliente}}"
+}
+
+### EDICION La respuesta nunca trae password_hash  -  [Espera 200 sin el hash]
+// Aun cambiando la password, la respuesta solo trae CAMPOS_PUBLICOS.
+PUT {{baseUrl}}/auth/usuarios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "hovy@example.com"
+}
+
+
+// LIMPIEZA
+// Los usuarios de prueba se borran a mano desde Supabase:
+//   DELETE FROM public.usuarios WHERE usuario LIKE 'test_%';
+// Y el telefono del usuario 1 se deja como estaba:
+//   UPDATE public.usuarios SET telefono = NULL WHERE id = 1;
+
+
+// VALIDACION DEL RATE LIMIT
+
+// El rate limit es global para todo /api/bot (keyGenerator fijo), asi que este
+// endpoint comparte cupo con el de clientes.
+// Para probarlo hay que bajar BOT_RATE_LIMIT_MAX=5 en el .env y despues
+// VOLVER A DEJAR EL VALOR ORIGINAL :P
+
+### RATE LIMIT Repetir hasta superar el limite  -  [Espera 429]
+GET {{baseUrl}}/api/bot/usuarios/{{telefonoUsuario}}
+x-api-key: {{apiKey}}

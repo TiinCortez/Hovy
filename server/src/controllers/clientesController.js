@@ -89,6 +89,12 @@ export const createCliente = async (req, res) => {
           error: `Falta un campo obligatorio: ${error.message}`,
         });
       }
+      // P0001 = el trigger trg_cliente_telefono_libre: ese teléfono ya está
+      // cargado como usuario del sistema. Sin este mapeo saldría como un 500
+      // genérico y el bot no podría explicar por qué no puede darlo de alta.
+      if (error.code === 'P0001') {
+        return res.status(409).json({ ok: false, error: error.message });
+      }
       console.error('Error al crear cliente:', error);
       return res.status(500).json({
         ok: false,
@@ -208,6 +214,11 @@ export const updateCliente = async (req, res) => {
           ok: false,
           error: `No existe un cliente con el teléfono ${telefonoActual}.`,
         });
+      }
+      // P0001 = el trigger trg_cliente_telefono_libre, acá en el caso del
+      // cambio de número: el teléfono nuevo ya es de un usuario del sistema.
+      if (error.code === 'P0001') {
+        return res.status(409).json({ ok: false, error: error.message });
       }
       console.error('Error al actualizar cliente:', error);
       return res.status(500).json({
