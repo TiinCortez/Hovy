@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Building2, MapPin, Map, Maximize, Clock, Leaf, AlertCircle, Navigation } from 'lucide-react';
+import { useForm, useWatch } from 'react-hook-form';
+import { Building2, MapPin, Map, Maximize, Clock, Leaf, AlertCircle, Navigation, Search } from 'lucide-react';
 import Button from './Button';
 import InmuebleService from '../../services/api/inmueble.service';
 
+const PROVINCIAS_ARG = [
+  "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Ciudad Autónoma de Buenos Aires", 
+  "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", 
+  "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", 
+  "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"
+];
+
 export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente, onSaved }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   const isEditMode = !!inmuebleData;
 
-  const { register, handleSubmit, reset, formState: { errors, isValid, isSubmitted } } = useForm({
+  // Extraemos 'control' en lugar de 'watch'
+  const { register, handleSubmit, reset, formState: { errors, isValid, isSubmitted }, setValue, getValues, control } = useForm({
     defaultValues: {
       tipo_inmueble: 'Casa Habitada',
-      provincia: 'Córdoba'
+      provincia: 'Córdoba',
+      localidad: 'Córdoba Capital'
     }
   });
+
+  // Usamos el hook useWatch (recomendado por React Hook Form para evitar problemas de memoización)
+  const supTotal = useWatch({ control, name: 'superficie_total' }) || 0;
+  const supConstruida = useWatch({ control, name: 'superficie_construida' }) || 0;
+  const supMantenibleCalculada = Math.max(0, parseFloat(supTotal) - parseFloat(supConstruida)).toFixed(2);
 
   useEffect(() => {
     if (isOpen) {
@@ -23,13 +38,13 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
         reset({
           direccion: inmuebleData.direccion || '',
           provincia: inmuebleData.provincia || 'Córdoba',
+          localidad: 'Córdoba Capital',
           barrio: inmuebleData.barrio || '',
           manzana: inmuebleData.manzana || '',
           lote: inmuebleData.lote || '',
           tipo_inmueble: inmuebleData.tipo_inmueble || 'Casa Habitada',
           superficie_total: inmuebleData.superficie_total || '',
           superficie_construida: inmuebleData.superficie_construida || '',
-          superficie_mantenible: inmuebleData.superficie_mantenible || '',
           estado_vegetacion: inmuebleData.estado_vegetacion || '',
           altura_cesped_cm: inmuebleData.altura_cesped_cm || '',
           tiempo_promedio_min: inmuebleData.tiempo_promedio_min || '',
@@ -40,13 +55,13 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
         reset({
           direccion: '',
           provincia: 'Córdoba',
+          localidad: 'Córdoba Capital',
           barrio: '',
           manzana: '',
           lote: '',
           tipo_inmueble: 'Casa Habitada',
           superficie_total: '',
           superficie_construida: '',
-          superficie_mantenible: '',
           estado_vegetacion: '',
           altura_cesped_cm: '',
           tiempo_promedio_min: '',
@@ -59,6 +74,35 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
   if (!isOpen) return null;
 
+  const handleGeocode = async () => {
+    const dir = getValues('direccion');
+    const loc = getValues('localidad');
+    const prov = getValues('provincia');
+    
+    if (!dir) {
+      return alert('Por favor, ingresa una dirección primero.');
+    }
+
+    setIsGeocoding(true);
+    try {
+      const query = `${dir}, ${loc ? loc + ', ' : ''}${prov}, Argentina`;
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        setValue('latitud', data[0].lat, { shouldDirty: true });
+        setValue('longitud', data[0].lon, { shouldDirty: true });
+      } else {
+        alert('No pudimos encontrar coordenadas exactas para esta dirección. Intenta detallar más la localidad o el barrio.');
+      }
+    } catch (e) {
+      console.error(e); // Se imprime el error para dar uso a la variable 'e'
+      alert('Hubo un error de conexión al buscar las coordenadas.');
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -69,12 +113,15 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
         id_cliente: idCliente,
         superficie_total: data.superficie_total ? Number(data.superficie_total) : null,
         superficie_construida: data.superficie_construida ? Number(data.superficie_construida) : null,
-        superficie_mantenible: data.superficie_mantenible ? Number(data.superficie_mantenible) : null,
+        superficie_mantenible: Number(supMantenibleCalculada),
         altura_cesped_cm: data.altura_cesped_cm ? Number(data.altura_cesped_cm) : null,
         tiempo_promedio_min: data.tiempo_promedio_min ? Number(data.tiempo_promedio_min) : null,
         latitud: data.latitud ? String(data.latitud) : null,
         longitud: data.longitud ? String(data.longitud) : null,
       };
+
+      // Eliminamos el campo para no generar variable sin uso y evitar mandarlo al back
+      delete payload.localidad;
 
       let response;
       if (isEditMode) {
@@ -94,11 +141,11 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg my-4">
+    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060 }}>
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
+          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 flex-shrink-0">
             <h5 className="modal-title fw-bold text-dark fs-4">
               {isEditMode ? 'Editar Inmueble' : 'Registrar Nuevo Inmueble'}
             </h5>
@@ -122,13 +169,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
             <form onSubmit={handleSubmit(onSubmit)} id="inmueble-form">
               
-              {/* UBICACIÓN */}
               <p className="text-secondary fw-semibold small text-uppercase mb-3" style={{ letterSpacing: '0.05em' }}>
                 Ubicación Principal
               </p>
 
               <div className="row g-3 mb-3">
-                <div className="col-12 col-md-8">
+                <div className="col-12">
                   <label className="form-label small fw-bold text-secondary">Dirección / Calle y Número *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><MapPin size={16} /></span>
@@ -141,15 +187,32 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   </div>
                   {errors.direccion && <div className="text-danger small mt-1">{errors.direccion.message}</div>}
                 </div>
+              </div>
 
-                <div className="col-12 col-md-4">
+              <div className="row g-3 mb-3">
+                <div className="col-12 col-md-6">
                   <label className="form-label small fw-bold text-secondary">Provincia *</label>
+                  <select 
+                    className={`form-select bg-light small ${errors.provincia ? 'is-invalid' : ''}`}
+                    {...register('provincia', { required: 'Provincia obligatoria' })}
+                  >
+                    <option value="">Seleccione...</option>
+                    {PROVINCIAS_ARG.map(prov => (
+                      <option key={prov} value={prov}>{prov}</option>
+                    ))}
+                  </select>
+                  {errors.provincia && <div className="text-danger small mt-1">{errors.provincia.message}</div>}
+                </div>
+
+                <div className="col-12 col-md-6">
+                  <label className="form-label small fw-bold text-secondary">Ciudad/Localidad</label>
                   <input 
                     type="text" 
-                    className={`form-control bg-light small ${errors.provincia ? 'is-invalid' : ''}`}
-                    {...register('provincia', { required: 'Provincia obligatoria' })}
+                    className="form-control bg-light small border-primary-subtle"
+                    placeholder="Ej: Córdoba Capital, San Francisco..."
+                    {...register('localidad')}
                   />
-                  {errors.provincia && <div className="text-danger small mt-1">{errors.provincia.message}</div>}
+                  <div className="form-text" style={{fontSize: '0.7rem'}}>Dato usado solo para ayudar al GPS.</div>
                 </div>
               </div>
 
@@ -178,11 +241,21 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
               </div>
 
-              {/* COORDENADAS GPS */}
               <div className="row g-3 mb-4 p-3 bg-light rounded-3 border">
-                <p className="text-secondary fw-semibold small text-uppercase m-0 mb-2" style={{ letterSpacing: '0.05em' }}>
-                  <Navigation size={14} className="me-1 d-inline" /> Coordenadas GPS (Opcional)
-                </p>
+                <div className="col-12 d-flex justify-content-between align-items-center mb-2">
+                  <p className="text-secondary fw-semibold small text-uppercase m-0" style={{ letterSpacing: '0.05em' }}>
+                    <Navigation size={14} className="me-1 d-inline" /> Coordenadas GPS (Opcional)
+                  </p>
+                  <button 
+                    type="button" 
+                    className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                    onClick={handleGeocode}
+                    disabled={isGeocoding}
+                  >
+                    {isGeocoding ? 'Buscando...' : <><Search size={14} /> Buscar Automáticamente</>}
+                  </button>
+                </div>
+                
                 <div className="col-6">
                   <label className="form-label small fw-bold text-secondary">Latitud</label>
                   <input type="text" className="form-control bg-white small" placeholder="-31.41910110" {...register('latitud')} />
@@ -191,10 +264,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   <label className="form-label small fw-bold text-secondary">Longitud</label>
                   <input type="text" className="form-control bg-white small" placeholder="-64.20893510" {...register('longitud')} />
                 </div>
-                <div className="col-12 text-muted" style={{fontSize: '0.75rem'}}>Si se deja en blanco, el sistema intentará autocompletar utilizando la dirección ingresada.</div>
               </div>
 
-              {/* CARACTERÍSTICAS Y MEDIDAS */}
               <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
                 Características y Medidas
               </p>
@@ -245,18 +316,13 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
 
                 <div className="col-6 col-md-4">
-                  <label className="form-label small fw-bold text-success">Sup. Mantenible</label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    className="form-control bg-success-subtle border-success-subtle text-success small" 
-                    placeholder="Auto (Calculado)"
-                    {...register('superficie_mantenible')} 
-                  />
+                  <label className="form-label small fw-bold text-success">Sup. Mantenible (Verde)</label>
+                  <div className="form-control bg-success-subtle border-success-subtle d-flex align-items-center" style={{ height: '38px' }}>
+                    <span className="fw-bold text-success w-100">{supMantenibleCalculada} m²</span>
+                  </div>
                 </div>
               </div>
 
-              {/* CONDICIONES OPERATIVAS */}
               <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
                 Condiciones Operativas
               </p>
@@ -304,7 +370,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
             </form>
           </div>
 
-          <div className="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex justify-content-end">
+          <div className="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex justify-content-end flex-shrink-0">
             <div className="d-flex gap-2">
               <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary border" onClick={onClose} disabled={isSubmitting}>
                 Cancelar

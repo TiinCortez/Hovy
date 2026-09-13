@@ -5,13 +5,21 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
   if (!isOpen || !inmuebleData) return null;
 
   // Imagen por defecto si el inmueble no tiene una cargada
-  const bgImage = inmuebleData.img || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1000';
+  const defaultImg = inmuebleData.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
+  const bgImage = inmuebleData.img || defaultImg;
 
   const handleOpenMap = () => {
     if (inmuebleData.latitud && inmuebleData.longitud) {
       window.open(`https://www.google.com/maps/search/?api=1&query=${inmuebleData.latitud},${inmuebleData.longitud}`, '_blank');
     }
   };
+
+  // Color de punto de Estado Vegetación
+  const estadoVeg = inmuebleData.estado_vegetacion || 'Sin Dato';
+  const dotClass = estadoVeg === 'Alto' ? 'bg-danger' : 
+                   estadoVeg === 'Medio' ? 'bg-warning' : 
+                   estadoVeg === 'Bajo' || estadoVeg === 'Controlado' ? 'bg-success' : 
+                   'bg-secondary';
 
   return (
     <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
@@ -35,10 +43,7 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               className="position-relative w-100 rounded-4 overflow-hidden mb-4 shadow-sm" 
               style={{ height: '220px', backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             >
-              {/* Overlay oscuro sutil para legibilidad */}
               <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25"></div>
-
-              {/* Insignias Superpuestas */}
               <div className="position-absolute top-0 start-0 p-3">
                 <span className="badge bg-dark bg-opacity-75 text-white rounded-pill px-3 py-2 d-flex align-items-center gap-2 border border-secondary border-opacity-25" style={{ backdropFilter: 'blur(4px)' }}>
                   <Home size={14} /> {inmuebleData.tipo_inmueble || 'Sin tipo'}
@@ -123,11 +128,8 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
                   <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                     <span className="text-secondary d-block small mb-1">Estado de Vegetación</span>
                     <div className="fw-bold text-dark d-flex align-items-center gap-2 mt-2">
-                      <div 
-                        className={`rounded-circle ${inmuebleData.estado_vegetacion === 'Alto' ? 'bg-danger' : inmuebleData.estado_vegetacion === 'Medio' ? 'bg-warning' : 'bg-success'}`} 
-                        style={{width: 10, height: 10}}
-                      ></div>
-                      {inmuebleData.estado_vegetacion || 'Sin registro'}
+                      <div className={`rounded-circle ${dotClass}`} style={{width: 10, height: 10}}></div>
+                      {estadoVeg}
                     </div>
                   </div>
                 </div>
