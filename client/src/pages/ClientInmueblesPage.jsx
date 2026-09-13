@@ -4,7 +4,7 @@ import {
   ArrowLeft, Download, MoreVertical, CheckCircle2, Shield, 
   Mail, FileText, Edit2, Phone, MapPin, Building2, Calendar,
   Star, Search, Plus, Clock, User, RotateCcw,
-  ChevronDown, ChevronUp, Bell, AlertTriangle
+  ChevronDown, ChevronUp, Bell, AlertTriangle, MessageCircle, Filter
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -21,7 +21,6 @@ export default function ClientInmueblesPage() {
   const [showFichaMobile, setShowFichaMobile] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
-  // Estados para los modales de Inmuebles
   const [isInmuebleModalOpen, setIsInmuebleModalOpen] = useState(false);
   const [isDetalleModalOpen, setIsDetalleModalOpen] = useState(false);
   const [selectedInmueble, setSelectedInmueble] = useState(null);
@@ -29,6 +28,11 @@ export default function ClientInmueblesPage() {
   const [cliente, setCliente] = useState(null);
   const [inmuebles, setInmuebles] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // NUEVOS ESTADOS PARA BUSCADOR Y FILTROS
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('Todos'); 
+  const [sortBy, setSortBy] = useState('recientes');
 
   useEffect(() => {
     let isMounted = true;
@@ -45,7 +49,6 @@ export default function ClientInmueblesPage() {
 
           if (currentClient) {
             if (isMounted) setCliente(currentClient);
-
             const inmueblesResp = await InmuebleService.getByCliente(currentClient.id_cliente);
             if (isMounted) setInmuebles(inmueblesResp.data || []);
           } else {
@@ -67,7 +70,6 @@ export default function ClientInmueblesPage() {
     setCliente(prev => ({ ...prev, ...updatedClientData }));
   };
 
-  // Funciones controladoras de Modales de Inmuebles
   const openInmuebleModal = (inmueble = null) => {
     setSelectedInmueble(inmueble);
     setIsInmuebleModalOpen(true);
@@ -88,15 +90,11 @@ export default function ClientInmueblesPage() {
       }
       return [...prev, savedInmueble];
     });
-    // Si guardó y el modal de detalles estaba abierto (ej. desde una edición rápida), lo actualizamos
-    if (isDetalleModalOpen) {
-      setSelectedInmueble(savedInmueble);
-    }
+    if (isDetalleModalOpen) setSelectedInmueble(savedInmueble);
   };
 
   const handleInmuebleDeleted = async (inmuebleData) => {
     if (!window.confirm('¿Está seguro de que desea dar de baja este inmueble? Esta acción no se puede deshacer.')) return;
-    
     try {
       await InmuebleService.delete(inmuebleData.id_inmueble);
       setInmuebles(prev => prev.filter(i => i.id_inmueble !== inmuebleData.id_inmueble));
@@ -105,6 +103,31 @@ export default function ClientInmueblesPage() {
       alert(error.response?.data?.error || 'Ocurrió un error al intentar eliminar el inmueble.');
     }
   };
+
+  // LÓGICA DE FILTRADO Y ORDENAMIENTO DE INMUEBLES
+  const filteredInmuebles = inmuebles.filter(inmueble => {
+    const search = searchTerm.toLowerCase();
+    const dir = (inmueble.direccion || '').toLowerCase();
+    const barrio = (inmueble.barrio || '').toLowerCase();
+    
+    // Filtro por texto
+    const matchesSearch = !search || dir.includes(search) || barrio.includes(search);
+    
+    // Filtro por tipo (Habitada / Lote)
+    const matchesType = filterType === 'Todos' || inmueble.tipo_inmueble === filterType;
+    
+    return matchesSearch && matchesType;
+  }).sort((a, b) => {
+    if (sortBy === 'az') {
+      return (a.direccion || '').localeCompare(b.direccion || '');
+    } else if (sortBy === 'antiguos') {
+      // Usamos el ID como proxy de antigüedad (menor ID = más antiguo)
+      return (a.id_inmueble || 0) - (b.id_inmueble || 0);
+    } else {
+      // Recientes por defecto (mayor ID = más reciente)
+      return (b.id_inmueble || 0) - (a.id_inmueble || 0);
+    }
+  });
 
   if (loading) {
     return (
@@ -163,9 +186,6 @@ export default function ClientInmueblesPage() {
           <span className="text-dark fw-bold">Ficha e Inmuebles</span>
         </div>
         <div className="d-flex align-items-center gap-3">
-          <span className="d-flex align-items-center gap-2 text-secondary small fw-medium">
-             <div className="rounded-circle bg-dark" style={{width: 6, height: 6}}></div> Sincronizado recientemente
-          </span>
           <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><Download size={16}/></button>
           <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><MoreVertical size={16}/></button>
         </div>
@@ -183,7 +203,6 @@ export default function ClientInmueblesPage() {
             <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <h2 className="fw-bold text-dark m-0 fs-4">{nombreMostrar}</h2>
-                {contactoMostrar && <span className="d-none d-md-inline fw-normal text-secondary fs-5">— {contactoMostrar}</span>}
                 <span className="badge bg-light text-secondary border text-uppercase" style={{ fontSize: '0.65rem' }}>{cliente.tipo_cliente}</span>
                 <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill d-flex align-items-center gap-1">
                   <CheckCircle2 size={12} /> {cliente.estado || 'Activo'}
@@ -193,19 +212,31 @@ export default function ClientInmueblesPage() {
               <div className="d-block d-md-none text-secondary small mb-2 d-flex align-items-center gap-1">
                 <User size={14} /> Contacto: {contactoMostrar || 'Sin contacto'}
               </div>
-
-              <div className="d-inline-flex align-items-center gap-2 bg-light rounded-3 px-3 py-2 mt-2 mt-md-1 border w-100 w-md-auto">
-                <Shield size={16} className="text-secondary flex-shrink-0" />
-                <span className="text-dark small fw-medium" style={{ fontSize: '0.8rem' }}>
-                  Cuenta Registrada en Sistema
-                </span>
-              </div>
             </div>
           </div>
           
-          <div className="d-flex flex-row gap-2 w-100 w-xl-auto">
-            <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2"><Mail size={16} /> Contactar</Button>
-            <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2"><FileText size={16} /> Facturación</Button>
+          <div className="d-flex flex-row gap-2 w-100 w-xl-auto flex-wrap">
+            <Button 
+              variant="light" 
+              className="btn-sm border shadow-sm flex-grow-1 bg-white text-success fw-semibold px-4 py-2"
+              onClick={() => window.open(`https://wa.me/${String(cliente.telefono).replace(/\D/g,'')}`, '_blank')}
+            >
+              <MessageCircle size={16} /> WhatsApp
+            </Button>
+
+            {cliente.email && (
+              <Button 
+                variant="light" 
+                className="btn-sm border shadow-sm flex-grow-1 bg-white text-primary fw-semibold px-4 py-2"
+                onClick={() => window.open(`mailto:${cliente.email}`, '_blank')}
+              >
+                <Mail size={16} /> Correo
+              </Button>
+            )}
+
+            <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2">
+              <FileText size={16} /> Facturación
+            </Button>
             
             <Button 
               variant="light" 
@@ -304,7 +335,7 @@ export default function ClientInmueblesPage() {
           <div className="w-100">
             <h3 className="fw-bold fs-4 text-dark mb-1 d-flex align-items-center">
               Inmuebles Asociados
-              <span className="badge bg-dark rounded-circle ms-2 p-2 d-none d-md-flex align-items-center justify-content-center" style={{fontSize: '0.8rem', width: '28px', height: '28px'}}>{inmuebles.length}</span>
+              <span className="badge bg-dark rounded-circle ms-2 p-2 d-none d-md-flex align-items-center justify-content-center" style={{fontSize: '1.2rem', width: '28px', height: '28px', color: 'white'}}>{inmuebles.length}</span>
             </h3>
             <p className="text-secondary small m-0 d-none d-md-block">Gestión integral de parcelas vinculadas y estados operativos.</p>
             <Button 
@@ -317,10 +348,17 @@ export default function ClientInmueblesPage() {
           </div>
 
           <div className="d-flex flex-column align-items-stretch align-items-lg-end w-100 w-lg-auto gap-3">
+            {/* SECCIÓN DE BÚSQUEDA Y FILTROS */}
             <div className="d-flex w-100 gap-2">
               <div className="d-flex align-items-center gap-2 bg-white rounded-pill px-3 py-2 shadow-sm border w-100">
                 <Search size={18} className="text-secondary"/>
-                <input type="text" className="form-control border-0 bg-transparent shadow-none small p-0" placeholder="Buscar por predio o calle..."/>
+                <input 
+                  type="text" 
+                  className="form-control border-0 bg-transparent shadow-none small p-0" 
+                  placeholder="Buscar por predio o calle..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
               <Button 
                 className="d-none d-md-flex text-nowrap align-items-center gap-2 px-4 shadow-sm rounded-pill" 
@@ -330,6 +368,34 @@ export default function ClientInmueblesPage() {
                 <Building2 size={18} /> Agregar Nuevo Inmueble
               </Button>
             </div>
+            
+            {/* FILTROS TIPO Y ORDEN */}
+            <div className="d-flex gap-2 w-100 justify-content-start justify-content-lg-end overflow-x-auto pb-1 pb-md-0 scrollbar-none">
+              <div className="d-flex align-items-center gap-1">
+                <Filter size={16} className="text-secondary me-1" />
+                <select 
+                  className="form-select bg-white rounded-pill border shadow-sm text-secondary py-1 px-3 w-auto flex-shrink-0"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  style={{ fontSize: '0.80rem' }}
+                >
+                  <option value="Todos">Tipo: Todos</option>
+                  <option value="Casa Habitada">Casa Habitada</option>
+                  <option value="Lote Vacio">Lote Vacío</option>
+                </select>
+                <select 
+                  className="form-select bg-white rounded-pill border shadow-sm text-secondary py-1 px-3 w-auto flex-shrink-0"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  style={{ fontSize: '0.80rem' }}
+                >
+                  <option value="recientes">Más recientes</option>
+                  <option value="antiguos">Más antiguos</option>
+                  <option value="az">Alfabético (A-Z)</option>
+                </select>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -340,86 +406,132 @@ export default function ClientInmueblesPage() {
               <h5 className="fw-bold text-dark">Sin inmuebles registrados</h5>
               <p className="text-secondary small">Este cliente aún no tiene predios asociados.</p>
             </Card>
+          ) : filteredInmuebles.length === 0 ? (
+            // ESTADO: NO SE ENCONTRARON RESULTADOS EN LA BÚSQUEDA
+            <Card className="p-5 text-center shadow-sm border-0 rounded-4">
+              <Search size={40} className="text-secondary opacity-50 mb-3 mx-auto" />
+              <h5 className="fw-bold text-dark">No hay resultados</h5>
+              <p className="text-secondary small">Ningún inmueble coincide con tu búsqueda o filtro actual.</p>
+              <Button 
+                variant="light" 
+                className="btn-sm border bg-white shadow-sm mt-2" 
+                onClick={() => { setSearchTerm(''); setFilterType('Todos'); }}
+              >
+                Limpiar Filtros
+              </Button>
+            </Card>
           ) : (
-            inmuebles.map((inmueble) => (
-              <Card key={inmueble.id_inmueble} className="border-0 shadow-sm rounded-4 overflow-hidden p-0">
-                <div className="row g-0 h-100">
-                  <div className="col-12 col-md-3 col-xl-2 position-relative" style={{ minHeight: '160px', backgroundColor: '#e9ecef' }}>
-                    {inmueble.img ? (
-                       <img src={inmueble.img} alt="Inmueble" className="w-100 h-100 object-fit-cover position-absolute" />
-                    ) : (
-                       <div className="w-100 h-100 position-absolute d-flex align-items-center justify-content-center text-secondary opacity-50"><Building2 size={40} /></div>
-                    )}
-                    <span className="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white fw-medium px-2 py-1">
-                      {inmueble.tipo_inmueble || 'General'}
-                    </span>
-                  </div>
-                  
-                  <div className="col-12 col-md-9 col-xl-10 p-3 p-md-4 d-flex flex-column justify-content-center bg-white">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div className="w-100">
-                        <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
-                          <h5 className="fw-bold text-dark m-0 fs-5">{inmueble.direccion}</h5>
-                          <span className={`badge ${inmueble.estado_vegetacion?.includes('Alto') ? 'bg-danger-subtle text-danger border-danger-subtle' : inmueble.estado_vegetacion?.includes('Medio') ? 'bg-warning-subtle text-warning border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'} rounded-pill px-2 py-1 d-flex align-items-center gap-1 border`}>
-                            {inmueble.estado_vegetacion || 'Controlado'}
-                          </span>
+            filteredInmuebles.map((inmueble) => {
+              const defaultImg = inmueble.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
+              const imgToRender = inmueble.img || defaultImg;
+
+              const estadoVeg = inmueble.estado_vegetacion || 'Sin Dato';
+              const badgeClass = estadoVeg === 'Alto' ? 'bg-danger-subtle text-danger border-danger-subtle' :
+                                 estadoVeg === 'Medio' ? 'bg-warning-subtle text-warning border-warning-subtle' :
+                                 estadoVeg === 'Bajo' || estadoVeg === 'Controlado' ? 'bg-success-subtle text-success border-success-subtle' :
+                                 'bg-secondary-subtle text-secondary border-secondary-subtle';
+
+              return (
+                <Card key={inmueble.id_inmueble} className="border-0 shadow-sm rounded-4 overflow-hidden p-0">
+                  <div className="row g-0 h-100">
+                    <div className="col-12 col-md-3 col-xl-2 position-relative" style={{ minHeight: '160px', backgroundColor: '#e9ecef' }}>
+                      <img src={imgToRender} alt="Inmueble" className="w-100 h-100 object-fit-cover position-absolute" />
+                      <span className="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white fw-medium px-2 py-1">
+                        {inmueble.tipo_inmueble || 'General'}
+                      </span>
+                    </div>
+                    
+                    <div className="col-12 col-md-9 col-xl-10 p-3 p-md-4 d-flex flex-column justify-content-center bg-white">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div className="w-100">
+                          <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <h5 className="fw-bold text-dark m-0 fs-5">{inmueble.direccion}</h5>
+                            <span className={`badge ${badgeClass} rounded-pill px-2 py-1 d-flex align-items-center gap-1 border`}>
+                              {estadoVeg}
+                            </span>
+                          </div>
+                          
+                          <div className="d-none d-md-flex flex-column gap-1 text-secondary small">
+                            <div className="d-flex align-items-center gap-2">
+                              <MapPin size={16} className="text-secondary" />
+                              <span>{inmueble.barrio || 'Sin barrio'}, {inmueble.provincia}</span>
+                              <span className="text-muted px-1">•</span>
+                              <span className="fw-medium text-dark">{inmueble.superficie_total} m²</span>
+                            </div>
+                            <div className="d-flex align-items-center gap-2 mt-1">
+                              <Clock size={16} className="text-secondary" />
+                              <span>Tiempo de trabajo estimado: <span className="fw-medium text-dark">{inmueble.tiempo_promedio_min ? `${inmueble.tiempo_promedio_min} min` : 'Sin estimar'}</span></span>
+                            </div>
+                          </div>
+
+                          <div className="d-flex d-md-none flex-column gap-2 text-secondary small mt-3">
+                            <div className="d-flex align-items-start gap-2"><MapPin size={16} className="text-secondary mt-1" /><span>{inmueble.direccion}</span></div>
+                            <div className="d-flex align-items-start gap-2"><Building2 size={16} className="text-secondary mt-1" /><span>{inmueble.superficie_total} m²</span></div>
+                          </div>
                         </div>
                         
-                        <div className="d-none d-md-flex flex-column gap-1 text-secondary small">
-                          <div className="d-flex align-items-center gap-2">
-                            <MapPin size={16} className="text-secondary" />
-                            <span>{inmueble.barrio || 'Sin barrio'}, {inmueble.provincia}</span>
-                            <span className="text-muted px-1">•</span>
-                            <span className="fw-medium text-dark">{inmueble.superficie_total} m²</span>
-                          </div>
-                          <div className="d-flex align-items-center gap-2 mt-1">
-                            <Clock size={16} className="text-secondary" />
-                            <span>Tiempo de trabajo estimado: <span className="fw-medium text-dark">{inmueble.tiempo_promedio_min ? `${inmueble.tiempo_promedio_min} min` : 'Sin estimar'}</span></span>
-                          </div>
-                        </div>
-
-                        <div className="d-flex d-md-none flex-column gap-2 text-secondary small mt-3">
-                          <div className="d-flex align-items-start gap-2"><MapPin size={16} className="text-secondary mt-1" /><span>{inmueble.direccion}</span></div>
-                          <div className="d-flex align-items-start gap-2"><Building2 size={16} className="text-secondary mt-1" /><span>{inmueble.superficie_total} m²</span></div>
+                        <div className="d-none d-md-flex gap-2 ms-3">
+                          <Button 
+                            variant="light" 
+                            className="btn-sm bg-white border shadow-sm text-primary px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
+                            onClick={() => {
+                              if (inmueble.latitud && inmueble.longitud) {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
+                              } else {
+                                alert('Este inmueble no tiene coordenadas registradas.');
+                              }
+                            }}
+                          >
+                            <MapPin size={14}/> Ver en Maps
+                          </Button>
+                          <Button 
+                            variant="light" 
+                            className="btn-sm bg-white border shadow-sm text-dark px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
+                            onClick={() => openDetalleModal(inmueble)}
+                          >
+                            <RotateCcw size={14}/> Detalles
+                          </Button>
+                          <Button 
+                            variant="light" 
+                            className="btn-sm bg-white border shadow-sm text-secondary px-2"
+                            onClick={() => openInmuebleModal(inmueble)}
+                          >
+                            <Edit2 size={16} />
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="d-none d-md-flex gap-2 ms-3">
+
+                      <div className="d-flex d-md-none gap-2 w-100 mt-3 pt-3 border-top flex-wrap">
                         <Button 
                           variant="light" 
-                          className="btn-sm bg-white border shadow-sm text-dark px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
+                          className="btn-sm bg-white border text-primary flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                          onClick={() => {
+                            if (inmueble.latitud && inmueble.longitud) {
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
+                            } else {
+                              alert('No hay coordenadas.');
+                            }
+                          }}
+                        >
+                          <MapPin size={16}/> Maps
+                        </Button>
+                        <Button 
+                          variant="light" 
+                          className="btn-sm bg-light border text-dark flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
                           onClick={() => openDetalleModal(inmueble)}
                         >
-                          <RotateCcw size={14}/> Ver Detalles
-                        </Button>
-                        <Button 
-                          variant="light" 
-                          className="btn-sm bg-white border shadow-sm text-secondary px-2"
-                          onClick={() => openInmuebleModal(inmueble)}
-                        >
-                          <Edit2 size={16} />
+                          Detalles <ArrowLeft size={16} style={{transform: 'rotate(180deg)'}}/>
                         </Button>
                       </div>
                     </div>
-
-                    <div className="d-flex d-md-none gap-2 w-100 mt-3 pt-3 border-top">
-                      <Button 
-                        variant="light" 
-                        className="btn-sm bg-light border text-dark flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
-                        onClick={() => openDetalleModal(inmueble)}
-                      >
-                        Ver Detalles <ArrowLeft size={16} style={{transform: 'rotate(180deg)'}}/>
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* MODAL DE EDICIÓN DEL CLIENTE */}
       <EditClientModal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
@@ -427,7 +539,6 @@ export default function ClientInmueblesPage() {
         onClientUpdated={handleClientUpdated}
       />
 
-      {/* MODAL DE DETALLES DEL INMUEBLE (SOLO LECTURA) */}
       <InmuebleDetalleModal
         isOpen={isDetalleModalOpen}
         onClose={() => setIsDetalleModalOpen(false)}
@@ -439,7 +550,6 @@ export default function ClientInmueblesPage() {
         onDelete={handleInmuebleDeleted}
       />
 
-      {/* MODAL DE CREACIÓN/EDICIÓN DEL INMUEBLE */}
       <InmuebleModal
         isOpen={isInmuebleModalOpen}
         onClose={() => setIsInmuebleModalOpen(false)}
