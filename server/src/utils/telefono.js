@@ -56,3 +56,26 @@ export const normalizarTelefono = (valor) => {
 // explican lo mismo.
 export const ERROR_TELEFONO_INVALIDO =
   'Teléfono inválido. Se espera un celular argentino con código de área y sin el prefijo 15 (ej: 3514330429 o 5493514330429).';
+
+// Para los campos `telefono` que son opcionales (hoy: los de `usuarios`, donde
+// el staff que no usa WhatsApp no tiene ninguno).
+//
+// Resuelve las dos formas de decir "sin teléfono" —que no venga el campo, o que
+// venga vacío— a NULL, y normaliza el resto. Devolver NULL y no '' importa:
+// para Postgres el string vacío es un valor como cualquier otro, así que dos
+// usuarios sin teléfono en '' chocarían contra el UNIQUE de la columna (es
+// exactamente el estado que limpia docs/supabase-usuarios-telefono.sql).
+//
+// Devuelve { valido, telefono } en vez de solo el teléfono porque null es una
+// respuesta legítima ("dejalo vacío") y no se puede distinguir de un error si
+// es el único valor de retorno.
+export const interpretarTelefonoOpcional = (valor) => {
+  if (valor === undefined || valor === null || String(valor).trim() === '') {
+    return { valido: true, telefono: null };
+  }
+
+  const telefono = normalizarTelefono(valor);
+  if (!telefono) return { valido: false, telefono: null };
+
+  return { valido: true, telefono };
+};
