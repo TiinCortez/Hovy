@@ -4,9 +4,17 @@ import { verificarApiKeyBot } from '../middleware/botAuth.js';
 import { resolverClientePorTelefono } from '../middleware/botCliente.js';
 import { resolverUsuarioPorTelefono } from '../middleware/botUsuario.js';
 import { resolverDomicilioFiscal } from '../middleware/botDomicilio.js';
-import { getClienteByTelefono } from '../controllers/botClientesController.js';
+import { clienteEmailRateLimit } from '../middleware/clienteEmailRateLimit.js';
+import { bloquearCambioTelefonoBot } from '../middleware/bloquearCambioTelefonoBot.js';
+import {
+  getClienteByTelefono,
+  crearClienteBot,
+  verificarEmailCliente,
+  recuperarCliente,
+  confirmarRecuperacionCliente,
+} from '../controllers/botClientesController.js';
 import { getUsuarioByTelefono } from '../controllers/botUsuariosController.js';
-import { createCliente, updateCliente } from '../controllers/clientesController.js';
+import { updateCliente } from '../controllers/clientesController.js';
 import {
   getInmueblesDelCliente,
   getInmuebleDelCliente,
@@ -32,17 +40,36 @@ router.get('/usuarios/:telefono', resolverUsuarioPorTelefono, getUsuarioByTelefo
 router.get('/clientes/:telefono', resolverClientePorTelefono, getClienteByTelefono);
 
 
-// Los endpoints de creacion y modificacion reusan los controllres del cliente normal
+// resolverDomicilioFiscal va antes de crear/editar para que sigan
+// funcionando igual si el body trae la ubicacion exacta que compartio el
+// cliente por WhatsApp: el middleware la convierte en el string
+// "Calle, Barrio, Provincia" y lo deja en domicilio_fiscal. Los controllers
+// reciben el body ya resuelto y no se enteran de que existieron coordenadas.
 //
-// resolverDomicilioFiscal va antes para que puedan seguir reusandose tal cual:
-// si el body trae la ubicacion exacta que compartio el cliente por WhatsApp, el
-// middleware la convierte en el string "Calle, Barrio, Provincia" y lo deja en
-// domicilio_fiscal. Los controllers reciben el body ya resuelto y no se enteran
-// de que existieron coordenadas.
+// El alta (POST) ya no reusa createCliente del canal admin: acá el email es
+// obligatorio y dispara el código de verificación (ver crearClienteBot).
+// clienteEmailRateLimit va antes: sin límite, alguien podría hacer que la
+// casilla de Gmail mande cientos de mails de verificación en loop.
 // POST /api/bot/clientes
-router.post('/clientes', resolverDomicilioFiscal, createCliente);
+router.post('/clientes', clienteEmailRateLimit, resolverDomicilioFiscal, crearClienteBot);
+
+// La edición (PUT) sigue reusando updateCliente del canal admin para todo
+// menos el teléfono: bloquearCambioTelefonoBot corta ese campo puntual antes
+// de llegar al controller, porque cambiarlo ahora requiere el código de
+// /clientes/recuperar + /clientes/confirmar-recuperacion.
 // PUT  /api/bot/clientes/:telefono
-router.put('/clientes/:telefono', resolverDomicilioFiscal, updateCliente);
+router.put('/clientes/:telefono', bloquearCambioTelefonoBot, resolverDomicilioFiscal, updateCliente);
+
+// POST /api/bot/clientes/:telefono/verificar-email
+router.post('/clientes/:telefono/verificar-email', resolverClientePorTelefono, verificarEmailCliente);
+
+// Recuperación de cuenta: el cliente ya no es ubicable por su teléfono actual
+// (por eso no cuelga de /clientes/:telefono como el resto), así que se
+// identifica con su email o su teléfono anterior en el body.
+// POST /api/bot/clientes/recuperar
+router.post('/clientes/recuperar', clienteEmailRateLimit, recuperarCliente);
+// POST /api/bot/clientes/confirmar-recuperacion
+router.post('/clientes/confirmar-recuperacion', confirmarRecuperacionCliente);
 
 
 // Inmuebles del cliente.

@@ -1,7 +1,40 @@
 import { supabaseAdmin } from "../config/supabase.js";
 import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from "../utils/telefono.js";
 
-const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
+export const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
+
+// Mapeo de errores de Postgres compartido entre createCliente, updateCliente
+// y el alta/recuperación por bot: los tres escriben sobre `clientes` y pueden
+// pisar el mismo UNIQUE de teléfono o el trigger que lo cruza contra
+// `usuarios`. Devuelve true si ya respondió, para que el caller corte.
+export const responderErrorCliente = (error, res) => {
+  if (error.code === '23505') {
+    res.status(409).json({
+      ok: false,
+      error: 'Ya existe un cliente registrado con ese teléfono.',
+    });
+    return true;
+  }
+  if (error.code === '23502') {
+    res.status(400).json({
+      ok: false,
+      error: `Falta un campo obligatorio: ${error.message}`,
+    });
+    return true;
+  }
+  // P0001 = el trigger trg_cliente_telefono_libre: ese teléfono ya está
+  // cargado como usuario del sistema. Sin este mapeo saldría como un 500
+  // genérico y el bot no podría explicar por qué no puede darlo de alta.
+  if (error.code === 'P0001') {
+    res.status(409).json({ ok: false, error: error.message });
+    return true;
+  }
+  if (error.code === 'PGRST116') {
+    res.status(404).json({ ok: false, error: 'No existe un cliente con ese teléfono.' });
+    return true;
+  }
+  return false;
+};
 
 // GET /api/clientes
 export const getClientes = async (req, res) => {
@@ -78,24 +111,7 @@ export const createCliente = async (req, res) => {
       .single();
 
     if (error) {
-      if (error.code === '23505') {
-        return res.status(409).json({
-          ok: false,
-          error: 'Ya existe un cliente registrado con ese teléfono.',
-        });
-      }
-      if (error.code === '23502') {
-        return res.status(400).json({
-          ok: false,
-          error: `Falta un campo obligatorio: ${error.message}`,
-        });
-      }
-      // P0001 = el trigger trg_cliente_telefono_libre: ese teléfono ya está
-      // cargado como usuario del sistema. Sin este mapeo saldría como un 500
-      // genérico y el bot no podría explicar por qué no puede darlo de alta.
-      if (error.code === 'P0001') {
-        return res.status(409).json({ ok: false, error: error.message });
-      }
+      if (responderErrorCliente(error, res)) return;
       console.error('Error al crear cliente:', error);
       return res.status(500).json({
         ok: false,
@@ -200,29 +216,7 @@ export const updateCliente = async (req, res) => {
       .single();
 
     if (error) {
-      if (error.code === '23505') {
-        return res.status(409).json({
-          ok: false,
-          error: 'Ya existe un cliente registrado con ese teléfono.',
-        });
-      }
-      if (error.code === '23502') {
-        return res.status(400).json({
-          ok: false,
-          error: `Falta un campo obligatorio: ${error.message}`,
-        });
-      }
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({
-          ok: false,
-          error: `No existe un cliente con el teléfono ${telefonoActual}.`,
-        });
-      }
-      // P0001 = el trigger trg_cliente_telefono_libre, acá en el caso del
-      // cambio de número: el teléfono nuevo ya es de un usuario del sistema.
-      if (error.code === 'P0001') {
-        return res.status(409).json({ ok: false, error: error.message });
-      }
+      if (responderErrorCliente(error, res)) return;
       console.error('Error al actualizar cliente:', error);
       return res.status(500).json({
         ok: false,

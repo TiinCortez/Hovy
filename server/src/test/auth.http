@@ -1,0 +1,125 @@
+@baseUrl = http://localhost:4000
+@adminToken = pegar-aca-un-token-de-admin
+@id = 1
+
+// FLUJO COMPLETO: registro -> verificación -> login -> recuperación
+
+### 1) Registro (queda sin verificar, dispara el mail con el código).
+### email y telefono son obligatorios (usuarios.email/telefono son NOT NULL).
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "AgustinPruebaEmail",
+  "password": "clave12345",
+  "rol": "user",
+  "email": "agustin10boca@hotmail.com",
+  "telefono": "3514330429"
+}
+
+### 1b) Registro sin teléfono -> debe dar 400
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "usuario": "prueba1b",
+  "password": "clave12345",
+  "rol": "user",
+  "email": "prueba1b@example.com"
+}
+
+### 2) Login antes de verificar -> debe dar 403
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "password": "clave12345"
+}
+
+### 3) Verificar email con el código recibido por mail
+POST {{baseUrl}}/auth/verificar-email
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "codigo": "000000"
+}
+
+### 4) Login después de verificar -> debe dar token
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "password": "clave12345"
+}
+
+### 5) Reenviar código de verificación (por si venció o no llegó)
+POST {{baseUrl}}/auth/reenviar-codigo
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "tipo": "verificacion_email"
+}
+
+// FLUJO DE RECUPERACIÓN DE CONTRASEÑA
+
+### 6) Pedir recuperación (misma respuesta exista o no el email)
+POST {{baseUrl}}/auth/olvide-password
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com"
+}
+
+### 7) Restablecer contraseña con el código recibido
+POST {{baseUrl}}/auth/restablecer-password
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "codigo": "000000",
+  "nuevaPassword": "claveNueva123"
+}
+
+### 8) Login con la nueva contraseña
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "password": "claveNueva123"
+}
+
+// CASOS DE ERROR
+
+### Código incorrecto
+POST {{baseUrl}}/auth/verificar-email
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com",
+  "codigo": "999999"
+}
+
+### Rate limit: repetir esta petición más de EMAIL_RATE_LIMIT_MAX veces seguidas -> 429
+POST {{baseUrl}}/auth/olvide-password
+Content-Type: application/json
+
+{
+  "email": "prueba1@example.com"
+}
+
+// PUT /auth/usuarios/:id (sin relación con lo de arriba, ya existía en esta
+// rama - requiere un token de admin, reemplazar {{adminToken}} y {{id}})
+
+### Cambiar el teléfono de un usuario existente
+PUT {{baseUrl}}/auth/usuarios/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "telefono": "3514330430"
+}
