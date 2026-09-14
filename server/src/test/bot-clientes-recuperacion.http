@@ -1,0 +1,170 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+#
+# ANTES DE CORRER ESTO:
+#   1. Ejecutar docs/supabase-clientes-verificacion.sql en el SQL Editor de
+#      Supabase (agrega clientes.email_verificado, el UNIQUE de clientes.email
+#      y la columna cliente_id en codigos_verificacion).
+#   2. Completar SMTP_USER/SMTP_PASS en server/.env para que los mails
+#      realmente salgan (sin eso, el alta y la recuperacion van a dar 500 al
+#      intentar mandar el mail).
+#   3. Los codigos hay que leerlos de la casilla configurada en EMAIL_FROM: no
+#      hay forma de sacarlos por la API a proposito.
+
+@baseUrl = http://localhost:4000
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+@telefonoOriginal = 3513330001
+@telefonoNuevo = 3513330002
+@emailCliente = test.recuperacion@example.com
+
+
+// ALTA POR WHATSAPP - EMAIL PASA A SER OBLIGATORIO
+
+### ALTA Sin email  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "apellido": "Recuperacion",
+  "telefono": "{{telefonoOriginal}}",
+  "tipo_cliente": "Casual"
+}
+
+### ALTA Con email  -  [Espera 201, dispara el mail con el codigo]
+POST {{baseUrl}}/api/bot/clientes
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "apellido": "Recuperacion",
+  "telefono": "{{telefonoOriginal}}",
+  "tipo_cliente": "Casual",
+  "email": "{{emailCliente}}"
+}
+
+### ALTA Confirmar que queda sin verificar  -  [Espera 200 con email_verificado: false]
+GET {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}
+x-api-key: {{apiKey}}
+
+
+// VERIFICACION DE EMAIL (reemplazar 000000 por el codigo recibido)
+
+### VERIFICAR Codigo incorrecto  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}/verificar-email
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "codigo": "999999"
+}
+
+### VERIFICAR Codigo correcto  -  [Espera 200 con email_verificado: true]
+POST {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}/verificar-email
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "codigo": "000000"
+}
+
+
+// CAMBIO DE NUMERO - EL PUT DEL BOT YA NO LO PERMITE
+
+### PUT Intentar cambiar el telefono por la via vieja  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "telefono": "{{telefonoNuevo}}"
+}
+
+### PUT Otros campos siguen funcionando igual  -  [Espera 200]
+PUT {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "razon_social": "Test SRL"
+}
+
+
+// SIMULAR EL CAMBIO DE CELULAR: el numero nuevo todavia no es cliente
+
+### Numero nuevo, todavia no reconocido  -  [Espera 404]
+GET {{baseUrl}}/api/bot/clientes/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+
+
+// RECUPERACION POR EMAIL
+
+### RECUPERAR Identificador que no existe  -  [Espera 404]
+POST {{baseUrl}}/api/bot/clientes/recuperar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "identificador": "no.existe@example.com"
+}
+
+### RECUPERAR Con el email  -  [Espera 200, dispara el mail con el codigo]
+POST {{baseUrl}}/api/bot/clientes/recuperar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "identificador": "{{emailCliente}}"
+}
+
+### CONFIRMAR Codigo incorrecto  -  [Espera 400]
+POST {{baseUrl}}/api/bot/clientes/confirmar-recuperacion
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "identificador": "{{emailCliente}}",
+  "codigo": "999999",
+  "telefonoNuevo": "{{telefonoNuevo}}"
+}
+
+### CONFIRMAR Codigo correcto  -  [Espera 200]
+POST {{baseUrl}}/api/bot/clientes/confirmar-recuperacion
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "identificador": "{{emailCliente}}",
+  "codigo": "000000",
+  "telefonoNuevo": "{{telefonoNuevo}}"
+}
+
+### CONFIRMAR El numero nuevo ya es el cliente  -  [Espera 200]
+GET {{baseUrl}}/api/bot/clientes/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+
+### CONFIRMAR El numero viejo ya no es nadie  -  [Espera 404]
+GET {{baseUrl}}/api/bot/clientes/{{telefonoOriginal}}
+x-api-key: {{apiKey}}
+
+
+// RECUPERACION POR TELEFONO ANTERIOR (en vez de email)
+//
+// Repetir el alta con otro numero/email y, en vez de recuperar con el email,
+// usar el telefono anterior como identificador:
+
+### RECUPERAR Con el telefono anterior en vez del email  -  [Espera 200]
+POST {{baseUrl}}/api/bot/clientes/recuperar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "identificador": "{{telefonoNuevo}}"
+}
+
+
+// LIMPIEZA
+// Los clientes de prueba se borran a mano desde Supabase:
+//   DELETE FROM public.clientes WHERE email LIKE 'test.%@example.com';
