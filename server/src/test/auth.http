@@ -1,68 +1,93 @@
 @baseUrl = http://localhost:4000
 @adminToken = pegar-aca-un-token-de-admin
+@viewerToken = pegar-aca-un-token-de-viewer
 @id = 1
+@email = prueba1@example.com
 
-// FLUJO COMPLETO: registro -> verificación -> login -> recuperación
+// FLUJO COMPLETO: alta por admin -> contraseña temporal por mail -> primer
+// ingreso con cambio de contraseña -> login -> recuperación
+//
+// ANTES: correr docs/supabase-password-temporal.sql en Supabase.
 
-### 1) Registro (queda sin verificar, dispara el mail con el código).
-### email y telefono son obligatorios (usuarios.email/telefono son NOT NULL).
+### 0a) Alta sin token -> 401
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "usuario": "AgustinPruebaEmail",
-  "password": "clave12345",
+  "usuario": "prueba1",
   "rol": "user",
-  "email": "agustin10boca@hotmail.com",
+  "email": "{{email}}",
   "telefono": "3514330429"
 }
 
-### 1b) Registro sin teléfono -> debe dar 400
+### 0b) Alta con token de no-admin -> 403
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
+Authorization: Bearer {{viewerToken}}
+
+{
+  "usuario": "prueba1",
+  "rol": "user",
+  "email": "{{email}}",
+  "telefono": "3514330429"
+}
+
+### 1) Alta por admin -> 201. Crea el usuario y le manda la contraseña
+### temporal por mail. No lleva password: la genera el backend.
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "usuario": "prueba1",
+  "rol": "user",
+  "email": "{{email}}",
+  "telefono": "3514330429"
+}
+
+### 1b) Alta sin teléfono -> 400
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
 
 {
   "usuario": "prueba1b",
-  "password": "clave12345",
   "rol": "user",
   "email": "prueba1b@example.com"
 }
 
-### 2) Login antes de verificar -> debe dar 403
+### 2) Login con la contraseña temporal -> 403 con requiereCambioPassword: true
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
-  "password": "clave12345"
+  "email": "{{email}}",
+  "password": "pegar-la-contraseña-temporal-del-mail"
 }
 
-### 3) Verificar email con el código recibido por mail
-POST {{baseUrl}}/auth/verificar-email
+### 3) Primer ingreso: elegir contraseña nueva -> 200 con token
+POST {{baseUrl}}/auth/cambiar-password-inicial
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
-  "codigo": "000000"
+  "email": "{{email}}",
+  "passwordTemporal": "pegar-la-contraseña-temporal-del-mail",
+  "nuevaPassword": "clave12345"
 }
 
-### 4) Login después de verificar -> debe dar token
+### 4) Login con la contraseña nueva -> 200 con token
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
+  "email": "{{email}}",
   "password": "clave12345"
 }
 
-### 5) Reenviar código de verificación (por si venció o no llegó)
-POST {{baseUrl}}/auth/reenviar-codigo
-Content-Type: application/json
-
-{
-  "email": "prueba1@example.com",
-  "tipo": "verificacion_email"
-}
+### 5) Admin: enviar otra contraseña temporal (vencida, no llegó o usuario
+### viejo sin activar) -> 200. La contraseña actual deja de servir.
+POST {{baseUrl}}/auth/usuarios/{{id}}/password-temporal
+Authorization: Bearer {{adminToken}}
 
 // FLUJO DE RECUPERACIÓN DE CONTRASEÑA
 
@@ -71,7 +96,16 @@ POST {{baseUrl}}/auth/olvide-password
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com"
+  "email": "{{email}}"
+}
+
+### 6b) Reenviar el código de recuperación
+POST {{baseUrl}}/auth/reenviar-codigo
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "tipo": "recuperacion_password"
 }
 
 ### 7) Restablecer contraseña con el código recibido
@@ -79,7 +113,7 @@ POST {{baseUrl}}/auth/restablecer-password
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
+  "email": "{{email}}",
   "codigo": "000000",
   "nuevaPassword": "claveNueva123"
 }
@@ -89,19 +123,20 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
+  "email": "{{email}}",
   "password": "claveNueva123"
 }
 
 // CASOS DE ERROR
 
-### Código incorrecto
-POST {{baseUrl}}/auth/verificar-email
+### Contraseña nueva igual a la temporal -> 400
+POST {{baseUrl}}/auth/cambiar-password-inicial
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com",
-  "codigo": "999999"
+  "email": "{{email}}",
+  "passwordTemporal": "misma12345",
+  "nuevaPassword": "misma12345"
 }
 
 ### Rate limit: repetir esta petición más de EMAIL_RATE_LIMIT_MAX veces seguidas -> 429
@@ -109,11 +144,10 @@ POST {{baseUrl}}/auth/olvide-password
 Content-Type: application/json
 
 {
-  "email": "prueba1@example.com"
+  "email": "{{email}}"
 }
 
-// PUT /auth/usuarios/:id (sin relación con lo de arriba, ya existía en esta
-// rama - requiere un token de admin, reemplazar {{adminToken}} y {{id}})
+// PUT /auth/usuarios/:id - requiere un token de admin
 
 ### Cambiar el teléfono de un usuario existente
 PUT {{baseUrl}}/auth/usuarios/{{id}}
