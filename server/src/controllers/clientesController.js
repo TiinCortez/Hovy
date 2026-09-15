@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../config/supabase.js";
 import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from "../utils/telefono.js";
+import { normalizarEmail } from "../utils/email.js";
 
 export const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
 
@@ -9,6 +10,13 @@ export const TIPOS_CLIENTE_VALIDOS = ['Fijo', 'Casual', 'Empresa'];
 // `usuarios`. Devuelve true si ya respondió, para que el caller corte.
 export const responderErrorCliente = (error, res) => {
   if (error.code === '23505') {
+    // clientes tiene UNIQUE en telefono y en email: el detalle de Postgres
+    // nombra la columna en conflicto.
+    const detalle = `${error.message ?? ''} ${error.details ?? ''}`;
+    if (detalle.includes('email')) {
+      res.status(409).json({ ok: false, error: 'Ya existe un cliente registrado con ese email.' });
+      return true;
+    }
     res.status(409).json({
       ok: false,
       error: 'Ya existe un cliente registrado con ese teléfono.',
@@ -101,7 +109,7 @@ export const createCliente = async (req, res) => {
         apellido,
         telefono: telefonoNormalizado,
         tipo_cliente,
-        email: email ?? null,
+        email: normalizarEmail(email) || null,
         domicilio_fiscal: domicilio_fiscal ?? null,
         cuit_cuil: cuit_cuil ?? null,
         razon_social: razon_social ?? null,
@@ -194,7 +202,7 @@ export const updateCliente = async (req, res) => {
   if (apellido !== undefined) camposParaActualizar.apellido = apellido;
   if (telefono !== undefined) camposParaActualizar.telefono = telefonoNuevo;
   if (tipo_cliente !== undefined) camposParaActualizar.tipo_cliente = tipo_cliente;
-  if (email !== undefined) camposParaActualizar.email = email;
+  if (email !== undefined) camposParaActualizar.email = normalizarEmail(email) || null;
   if (domicilio_fiscal !== undefined) camposParaActualizar.domicilio_fiscal = domicilio_fiscal;
   if (cuit_cuil !== undefined) camposParaActualizar.cuit_cuil = cuit_cuil;
   if (razon_social !== undefined) camposParaActualizar.razon_social = razon_social;

@@ -10,11 +10,10 @@ import { normalizarCoordenadas, ERROR_COORDENADAS_INVALIDAS } from '../utils/coo
 // el formato que espera la columna (es texto libre, no tres campos como en
 // inmuebles).
 //
-// Va como middleware y no adentro de un controller propio del bot justamente
-// para no tener uno: las rutas /api/bot/clientes reusan createCliente y
-// updateCliente del canal web tal cual, y esos controllers siguen sin saber que
-// existen las coordenadas. La latitud y la longitud que quedan en el body no
-// molestan porque ambos destructuran solo los campos que conocen.
+// Va como middleware para que los controllers del alta y la edición por bot
+// (crearClienteBot, updateClienteBot) no sepan que existen las coordenadas.
+// La latitud y la longitud que quedan en el body no molestan: el alta
+// destructura solo los campos que conoce y la edición las ignora.
 //
 // A diferencia del pin en inmuebles, acá las coordenadas NO se guardan: la tabla
 // clientes no tiene columnas para ellas y lo que interesa es la dirección.
