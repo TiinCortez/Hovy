@@ -8,7 +8,8 @@ export const createTurno = async (req, res) => {
             id_inmueble,
             id_presupuesto,
             fecha_programada,
-            franja_horaria,
+            franja_horaria_desde,
+            franja_horaria_hasta,
             prioridad,
             estado,
             motivo_cancelacion
@@ -51,6 +52,21 @@ export const createTurno = async (req, res) => {
             .select('id_inmueble, activo')
             .eq('id_inmueble', id_inmueble)
             .maybeSingle();
+        
+        if ((franja_horaria_desde && !franja_horaria_hasta) || (!franja_horaria_desde && franja_horaria_hasta)) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Debe especificar tanto la hora de inicio como la de fin de la franja horaria'
+            });
+        }
+
+        // Validación lógica: desde < hasta
+        if (franja_horaria_desde && franja_horaria_hasta && franja_horaria_desde >= franja_horaria_hasta) {
+            return res.status(400).json({
+                ok: false,
+                error: 'La hora de inicio (desde) debe ser menor a la hora de fin (hasta)'
+            });
+        }
 
         // Validar presupuesto SOLO si fue proporcionado en el body
         if (id_presupuesto) {
@@ -100,7 +116,8 @@ export const createTurno = async (req, res) => {
             id_inmueble: Number(id_inmueble),
             id_presupuesto: id_presupuesto ? Number(id_presupuesto) : null,
             fecha_programada,
-            franja_horaria: franja_horaria || null,
+            franja_horaria_desde: franja_horaria_desde || null,
+            franja_horaria_hasta: franja_horaria_hasta || null,
             prioridad,
             estado: estado || 'Coordinado',
             motivo_cancelacion: motivo_cancelacion || null
