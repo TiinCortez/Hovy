@@ -59,12 +59,19 @@ export const createTurno = async (req, res) => {
                 error: 'Debe especificar tanto la hora de inicio como la de fin de la franja horaria'
             });
         }
-
+        
         // Validación lógica: desde < hasta
         if (franja_horaria_desde && franja_horaria_hasta && franja_horaria_desde >= franja_horaria_hasta) {
             return res.status(400).json({
                 ok: false,
                 error: 'La hora de inicio (desde) debe ser menor a la hora de fin (hasta)'
+            });
+        }
+        // Validación de fecha_programada
+        if (!fecha_programada || isNaN(Date.parse(fecha_programada))) {
+            return res.status(400).json({
+                ok: false,
+                error: 'La fecha_programada es obligatoria y debe tener un formato válido (YYYY-MM-DD)'
             });
         }
 
@@ -80,17 +87,13 @@ export const createTurno = async (req, res) => {
                 return res.status(500).json({ ok: false, error: 'Error al verificar el presupuesto' });
             }
 
-            // 1. Verificar si existe
+            // Verificar si existe
             if (!presupuesto) {
                 return res.status(404).json({ ok: false, error: 'El presupuesto especificado no existe' });
             }
 
-            // 2. Verificar que esté activo
-            if (!presupuesto.activo) {
-                return res.status(400).json({ ok: false, error: 'El presupuesto especificado no está activo' });
-            }
 
-            // 3. Si la tabla maneja estados ('Aceptado', 'Pendiente', etc.)
+            // Si la tabla maneja estados ('Aceptado', 'Pendiente', etc.)
             if (presupuesto.estado && presupuesto.estado !== 'Aceptado') {
                 return res.status(400).json({
                     ok: false,
