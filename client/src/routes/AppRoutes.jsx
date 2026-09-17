@@ -12,10 +12,10 @@ import Register from '../pages/Auth/Register.jsx';
 // Vistas Privadas Reales
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
-import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx'; // <--- Importar la nueva página
+import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
+import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
 
 // Componentes temporales (Mocks)
-const Calendar = () => <h1>Agenda Semanal</h1>;
 const Analytics = () => <h1>Estadísticas</h1>;
 
 export default function AppRoutes() {
@@ -50,7 +50,6 @@ export default function AppRoutes() {
           } 
         />
 
-        {/* Ruta a Inmuebles de Cliente Especifico */}
         <Route 
           path="/clients/:id/inmuebles" 
           element={
@@ -62,12 +61,13 @@ export default function AppRoutes() {
           } 
         />
         
+        {/* RUTA DE AGENDA ACTUALIZADA */}
         <Route 
           path="/calendar" 
           element={
             <RequireAuth>
               <DashboardLayout>
-                <Calendar />
+                <TurnosPage />
               </DashboardLayout>
             </RequireAuth>
           } 

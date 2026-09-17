@@ -33,13 +33,26 @@ const PALETA = {
 const FONT_STACK = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 // Arma el email completo a partir del contenido específico de cada caso.
-// Las 4 plantillas comparten exactamente esta estructura (header de marca,
+// Todas las plantillas comparten exactamente esta estructura (header de marca,
 // bloque del código, aviso de seguridad, footer) y solo cambian el ícono, el
 // título, el texto de intro y el de la instrucción final — por eso el molde
-// vive en un solo lugar en vez de repetirse 4 veces.
-const armarEmail = ({ icono, titulo, intro, codigo, instruccion, seguridadTitulo, seguridadTexto }) => {
-  const ttl = process.env.CODIGO_VERIFICACION_TTL_MIN || 15;
-
+// vive en un solo lugar en vez de repetirse en cada una.
+//
+// `etiqueta` y `vencimiento` existen para la contraseña temporal de staff, que
+// usa el mismo bloque pero no es un código de 6 dígitos ni vence en minutos.
+const armarEmail = ({
+  icono,
+  titulo,
+  intro,
+  codigo,
+  instruccion,
+  seguridadTitulo,
+  seguridadTexto,
+  etiqueta = 'Tu código',
+  vencimiento = `${process.env.CODIGO_VERIFICACION_TTL_MIN || 15} minutos`,
+  tamanoCodigo = '28px',
+  espaciadoCodigo = '10px',
+}) => {
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -76,11 +89,11 @@ const armarEmail = ({ icono, titulo, intro, codigo, instruccion, seguridadTitulo
           <tr>
             <td style="padding:24px; text-align:center;">
               <span style="display:block; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:${PALETA.primary}; margin-bottom:14px;">
-                Tu código
+                ${etiqueta}
               </span>
-              <div style="display:inline-block; background:#ffffff; border:2px solid ${PALETA.primary}; border-radius:10px; padding:14px 10px 14px 20px; font-size:28px; font-weight:700; letter-spacing:10px; color:${PALETA.primary}; font-family:${FONT_STACK};">${codigo}</div>
+              <div style="display:inline-block; background:#ffffff; border:2px solid ${PALETA.primary}; border-radius:10px; padding:14px 10px 14px 20px; font-size:${tamanoCodigo}; font-weight:700; letter-spacing:${espaciadoCodigo}; color:${PALETA.primary}; font-family:${FONT_STACK};">${codigo}</div>
               <p style="margin:16px 0 0; font-size:12px; color:#8a684b;">
-                ⏰ Vence en <strong style="color:${PALETA.primary};">${ttl} minutos</strong>
+                ⏰ Vence en <strong style="color:${PALETA.primary};">${vencimiento}</strong>
               </p>
             </td>
           </tr>
@@ -114,16 +127,24 @@ const armarEmail = ({ icono, titulo, intro, codigo, instruccion, seguridadTitulo
 </html>`.trim();
 };
 
-export const plantillaVerificacionEmail = (codigo) => ({
-  subject: 'Verificá tu cuenta de Hovy',
+// El usuario lo carga un admin: se escapa por las dudas, porque va dentro del HTML.
+const escaparHtml = (texto) =>
+  String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+export const plantillaPasswordTemporal = ({ usuario, password, ttlHoras }) => ({
+  subject: 'Tu cuenta de staff en Hovy',
   html: armarEmail({
-    icono: '📧',
-    titulo: 'Verificá tu cuenta',
-    intro: 'Usá este código para confirmar tu email y activar tu cuenta de staff.',
-    codigo,
-    instruccion: 'Ingresá este código en la pantalla de verificación de la aplicación de Hovy.',
-    seguridadTitulo: '¿No creaste esta cuenta?',
-    seguridadTexto: 'Si no diste de alta un usuario en Hovy, ignorá este correo.',
+    icono: '🔐',
+    titulo: 'Tu cuenta de staff en Hovy',
+    intro: `Te crearon una cuenta con el usuario <strong>${escaparHtml(usuario)}</strong>. Ingresá con tu email y esta contraseña temporal.`,
+    codigo: password,
+    etiqueta: 'Contraseña temporal',
+    vencimiento: `${ttlHoras} horas`,
+    tamanoCodigo: '22px',
+    espaciadoCodigo: '2px',
+    instruccion: 'Al ingresar por primera vez vas a tener que elegir una contraseña nueva.',
+    seguridadTitulo: '¿No esperabas este correo?',
+    seguridadTexto: 'Si no trabajás con Hovy, ignorá este correo y no compartas esta contraseña con nadie.',
   }),
 });
 
@@ -150,6 +171,19 @@ export const plantillaVerificacionEmailCliente = (codigo) => ({
     instruccion: 'Respondé este código por WhatsApp para confirmar tu cuenta.',
     seguridadTitulo: '¿No pediste registrarte?',
     seguridadTexto: 'Si no iniciaste un registro en Hovy por WhatsApp, ignorá este correo.',
+  }),
+});
+
+export const plantillaCambioEmail = (codigo) => ({
+  subject: 'Confirmá tu nuevo email en Hovy',
+  html: armarEmail({
+    icono: '✉️',
+    titulo: 'Confirmá tu nuevo email',
+    intro: 'Pediste usar esta casilla en tu cuenta de Hovy. Usá este código para confirmarla.',
+    codigo,
+    instruccion: 'Respondé este código por WhatsApp para completar el cambio de email.',
+    seguridadTitulo: '¿No pediste este cambio?',
+    seguridadTexto: 'Si no reconocés este pedido, ignorá este correo: tu email no se va a modificar.',
   }),
 });
 

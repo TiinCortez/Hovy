@@ -5,16 +5,16 @@ import { resolverClientePorTelefono } from '../middleware/botCliente.js';
 import { resolverUsuarioPorTelefono } from '../middleware/botUsuario.js';
 import { resolverDomicilioFiscal } from '../middleware/botDomicilio.js';
 import { clienteEmailRateLimit } from '../middleware/clienteEmailRateLimit.js';
-import { bloquearCambioTelefonoBot } from '../middleware/bloquearCambioTelefonoBot.js';
 import {
   getClienteByTelefono,
   crearClienteBot,
   verificarEmailCliente,
-  recuperarCliente,
-  confirmarRecuperacionCliente,
+  updateClienteBot,
+  solicitarCambioEmailCliente,
+  confirmarCambioEmailCliente,
 } from '../controllers/botClientesController.js';
+import { recuperarCuenta, confirmarRecuperacionCuenta } from '../controllers/botRecuperacionController.js';
 import { getUsuarioByTelefono } from '../controllers/botUsuariosController.js';
-import { updateCliente } from '../controllers/clientesController.js';
 import {
   getInmueblesDelCliente,
   getInmuebleDelCliente,
@@ -46,30 +46,36 @@ router.get('/clientes/:telefono', resolverClientePorTelefono, getClienteByTelefo
 // "Calle, Barrio, Provincia" y lo deja en domicilio_fiscal. Los controllers
 // reciben el body ya resuelto y no se enteran de que existieron coordenadas.
 //
-// El alta (POST) ya no reusa createCliente del canal admin: acá el email es
-// obligatorio y dispara el código de verificación (ver crearClienteBot).
-// clienteEmailRateLimit va antes: sin límite, alguien podría hacer que la
-// casilla de Gmail mande cientos de mails de verificación en loop.
+// El alta (POST) no inserta el cliente: manda un código al email y el
+// cliente se crea recién en /verificar-email (ver crearClienteBot). Volver a
+// llamarlo reenvía el código. clienteEmailRateLimit va antes: sin límite,
+// alguien podría hacer que la casilla de Gmail mande cientos de mails en loop.
 // POST /api/bot/clientes
 router.post('/clientes', clienteEmailRateLimit, resolverDomicilioFiscal, crearClienteBot);
 
-// La edición (PUT) sigue reusando updateCliente del canal admin para todo
-// menos el teléfono: bloquearCambioTelefonoBot corta ese campo puntual antes
-// de llegar al controller, porque cambiarlo ahora requiere el código de
-// /clientes/recuperar + /clientes/confirmar-recuperacion.
-// PUT  /api/bot/clientes/:telefono
-router.put('/clientes/:telefono', bloquearCambioTelefonoBot, resolverDomicilioFiscal, updateCliente);
-
+// Sin resolverClientePorTelefono: el cliente todavía no existe.
 // POST /api/bot/clientes/:telefono/verificar-email
-router.post('/clientes/:telefono/verificar-email', resolverClientePorTelefono, verificarEmailCliente);
+router.post('/clientes/:telefono/verificar-email', verificarEmailCliente);
 
-// Recuperación de cuenta: el cliente ya no es ubicable por su teléfono actual
-// (por eso no cuelga de /clientes/:telefono como el resto), así que se
-// identifica con su email o su teléfono anterior en el body.
-// POST /api/bot/clientes/recuperar
-router.post('/clientes/recuperar', clienteEmailRateLimit, recuperarCliente);
-// POST /api/bot/clientes/confirmar-recuperacion
-router.post('/clientes/confirmar-recuperacion', confirmarRecuperacionCliente);
+// La edición no reusa updateCliente del canal admin: updateClienteBot tiene
+// una lista blanca de campos y opera solo sobre el cliente del número que
+// escribe. Teléfono y email tienen su propio flujo con código.
+// PUT  /api/bot/clientes/:telefono
+router.put('/clientes/:telefono', resolverClientePorTelefono, resolverDomicilioFiscal, updateClienteBot);
+
+// Cambio de email: código a la casilla nueva, y el cambio se aplica al confirmar.
+// POST /api/bot/clientes/:telefono/cambiar-email
+router.post('/clientes/:telefono/cambiar-email', clienteEmailRateLimit, resolverClientePorTelefono, solicitarCambioEmailCliente);
+// POST /api/bot/clientes/:telefono/confirmar-cambio-email
+router.post('/clientes/:telefono/confirmar-cambio-email', resolverClientePorTelefono, confirmarCambioEmailCliente);
+
+// Recuperación de cuenta (clientes y staff): quien escribe ya no es ubicable
+// por su teléfono actual, así que se identifica con su email o su teléfono
+// anterior en el body. Por eso no cuelga de /clientes/:telefono.
+// POST /api/bot/recuperar
+router.post('/recuperar', clienteEmailRateLimit, recuperarCuenta);
+// POST /api/bot/confirmar-recuperacion
+router.post('/confirmar-recuperacion', confirmarRecuperacionCuenta);
 
 
 // Inmuebles del cliente.
