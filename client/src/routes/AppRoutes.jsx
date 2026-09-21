@@ -13,11 +13,8 @@ import Register from '../pages/Auth/Register.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
-<<<<<<< HEAD
-import Calendar from '../pages/Calendar.jsx';
-=======
+
 import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
->>>>>>> 8264493703fc556176738c2fc0ad8d852733bbc8
 
 // Componentes temporales (Mocks)
 const Analytics = () => <h1>Estadísticas</h1>;
@@ -71,7 +68,7 @@ export default function AppRoutes() {
           element={
             <RequireAuth>
               <DashboardLayout>
-                <TurnosPage />
+                <TurnosPage/>
               </DashboardLayout>
             </RequireAuth>
           } 
