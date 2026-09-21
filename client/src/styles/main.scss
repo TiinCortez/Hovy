@@ -186,7 +186,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     border-top: 1px solid $hovy-border;
     z-index: 1050;
     box-shadow: 0px -4px 20px rgba(27, 48, 6, 0.05);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
     
     .nav-link {
       flex: 1; color: $hovy-gray; font-size: 0.75rem; border-radius: 12px;
@@ -196,7 +196,13 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
       }
     }
   }
-  .hovy-content-wrapper { padding-bottom: 80px; }
+  .hovy-content-wrapper {
+    // Las utilidades p-4/p-md-5 de Bootstrap usan !important.
+    // Reservamos espacio real dentro del contenedor que hace scroll para que
+    // la navegación fija no tape la última tarjeta en web móvil ni Capacitor.
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
 }
 
 .hovy-header {
@@ -385,5 +391,353 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     padding: 0.75rem 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(28, 58, 19, 0.25);
     &:hover { background-color: #162F0F; }
+  }
+}
+
+/* --- AGENDA DE TURNOS --- */
+.scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.turnos-date-control {
+  min-height: 38px;
+  max-width: 100%;
+}
+
+.turnos-date-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 280px;
+}
+
+.turnos-view-switcher {
+  max-width: 100%;
+}
+
+.turnos-view-actions {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.turnos-search-wrapper {
+  max-width: 400px;
+}
+
+.turnos-priority-filters {
+  min-width: 0;
+}
+
+// Semanal y Mensual ya administran su propio espaciado interno. Card agrega
+// p-4 por defecto, lo que comprimía las tarjetas especialmente en teléfonos.
+.turnos-calendar-card > .card-body {
+  min-width: 0;
+  padding: 0 !important;
+}
+
+.turnos-week-grid {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@keyframes turnoEnCursoPulse {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+.turno-en-curso-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+  animation: turnoEnCursoPulse 1.6s ease-in-out infinite;
+}
+
+.turno-en-curso-dot--light {
+  background-color: #b8d2ff;
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.16);
+}
+
+.turno-en-curso-card {
+  border-color: #60a5fa !important;
+  border-left-color: #2563eb !important;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 0.35rem 0.9rem rgba(37, 99, 235, 0.12) !important;
+}
+
+.turno-en-curso-bg {
+  background-color: #2563eb !important;
+}
+
+.turno-en-curso-text {
+  color: #2563eb !important;
+}
+
+.turno-en-curso-border {
+  border-color: #2563eb !important;
+}
+
+.turno-en-curso-subtle {
+  color: #1d4ed8 !important;
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+.turno-en-curso-solid {
+  color: #ffffff !important;
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turno-en-curso-dot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- MODAL: COORDINAR NUEVO TURNO --- */
+.min-w-0 { min-width: 0; }
+.min-h-0 { min-height: 0; }
+
+.nuevo-turno-modal {
+  padding: 1rem;
+
+  .modal-dialog { max-width: 1180px; }
+
+  .modal-content {
+    max-height: calc(100dvh - 2rem);
+    background-color: #ffffff;
+  }
+
+  .modal-content > form {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .modal-body { overflow-y: auto; }
+}
+
+.nuevo-turno-header {
+  background-color: #ffffff;
+
+  .modal-title {
+    font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+    letter-spacing: -0.025em;
+  }
+}
+
+.nuevo-turno-close {
+  color: #7b8178;
+  background-color: #f4f4ef;
+
+  &:hover { background-color: #e9eadf; color: #1B3006; }
+}
+
+.nuevo-turno-status {
+  color: #8a5b00;
+  background-color: #fff9e8;
+  border: 1px solid #f4d77b;
+}
+
+.nuevo-turno-label {
+  display: block;
+  color: #454a43;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.nuevo-turno-select-group {
+  .input-group-text,
+  .form-select {
+    min-height: 46px;
+    border-color: #d8d9d1;
+  }
+
+  .input-group-text {
+    color: #70766d;
+    border-radius: 0.8rem 0 0 0.8rem;
+  }
+
+  .form-select { border-radius: 0 0.8rem 0.8rem 0; }
+}
+
+.nuevo-turno-budget-card {
+  background-color: #fbfaf7;
+  border-color: #dedfd7 !important;
+  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+}
+
+.nuevo-turno-approved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #08775b;
+  background-color: #eafff6;
+  border: 1px solid #8ee5c6;
+}
+
+.nuevo-turno-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  color: #747a72;
+  background-color: #f1f1ec;
+  border-radius: 50%;
+}
+
+.nuevo-turno-property { background-color: #ffffff; border-color: #e1e2da !important; }
+
+.nuevo-turno-surface {
+  color: #294b15;
+  background-color: #f0f8e9;
+  border: 1px solid #d5e9c6;
+}
+
+.nuevo-turno-priority,
+.nuevo-turno-slot {
+  color: #343934;
+  background-color: #ffffff;
+  border: 1px solid #dfe1dc;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+
+  &:not(:disabled):hover {
+    border-color: #9eab96;
+    transform: translateY(-1px);
+  }
+
+  &.is-selected {
+    background-color: #f4f9ef;
+    border-color: #1B3006;
+    box-shadow: inset 0 0 0 1px #1B3006, 0 3px 9px rgba(27, 48, 6, 0.08);
+  }
+}
+
+.nuevo-turno-rule,
+.nuevo-turno-weather {
+  color: #62675f;
+  background-color: #f6f5f0;
+  border: 1px solid #e5e3da;
+}
+
+.nuevo-turno-date {
+  position: relative;
+  min-height: 46px;
+  color: #535a52;
+  background-color: #ffffff;
+  border-color: #d8d9d1 !important;
+}
+
+.nuevo-turno-date-input {
+  position: absolute;
+  inset: 0 47px;
+  width: calc(100% - 94px);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.nuevo-turno-slot {
+  min-height: 88px;
+
+  &.is-occupied {
+    color: #9ba09a;
+    background-color: #f5f5f5;
+    border-style: dashed;
+    cursor: not-allowed;
+    text-decoration-color: #b4b8b3;
+  }
+}
+
+.nuevo-turno-empty { background-color: #fafaf7; border-color: #dedfd7 !important; }
+
+.nuevo-turno-footer {
+  flex: 0 0 auto;
+  background-color: #ffffff;
+  box-shadow: 0 -6px 18px rgba(27, 48, 6, 0.035);
+}
+
+@media (max-width: 767.98px) {
+  .nuevo-turno-modal { padding: 0; }
+
+  .nuevo-turno-modal .modal-dialog {
+    width: 100%;
+    max-width: none;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  .nuevo-turno-modal .modal-content {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0 !important;
+  }
+
+  .nuevo-turno-header { flex: 0 0 auto; }
+
+  .nuevo-turno-footer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+
+    .btn {
+      min-width: 0;
+      padding-inline: 1rem !important;
+    }
+
+    .nuevo-turno-submit { flex: 1 1 auto; }
+  }
+}
+
+@media (max-width: 420px) {
+  .nuevo-turno-footer .btn { font-size: 0.78rem; }
+  .nuevo-turno-footer .btn:first-child { padding-inline: 0.8rem !important; }
+}
+
+@media (max-width: 1199.98px) {
+  .turnos-navigation {
+    align-items: stretch !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .turnos-date-control,
+  .turnos-view-actions,
+  .turnos-view-switcher,
+  .turnos-search-wrapper {
+    width: 100%;
+    max-width: none;
+  }
+
+  .turnos-date-label {
+    flex: 1;
+    max-width: none;
+  }
+
+  .turnos-view-switcher .btn {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding-inline: 0.75rem !important;
+  }
+
+  .turnos-shared-filters {
+    padding: 0.75rem !important;
+  }
+
+  .turnos-kanban-card > .card-body {
+    padding: 1rem !important;
   }
 }

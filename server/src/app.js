@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import clientesRoutes from './routes/clientes.routes.js';
 import inmueblesRoutes from './routes/inmuebles.routes.js';
+import turnosRoutes from './routes/turnos.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
@@ -23,7 +24,7 @@ app.use('/api/bot', botRoutes);
 // tener en cuenta para nuevas rutas.
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
-app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
+app.use('/api/turnos', turnosRoutes);
 
 
 export default app;

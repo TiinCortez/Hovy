@@ -13,10 +13,13 @@ import Register from '../pages/Auth/Register.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
+<<<<<<< HEAD
 import Calendar from '../pages/Calendar.jsx';
+=======
+import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
+>>>>>>> 8264493703fc556176738c2fc0ad8d852733bbc8
 
 // Componentes temporales (Mocks)
-const Calendar = () => <h1>Agenda Semanal</h1>;
 const Analytics = () => <h1>Estadísticas</h1>;
 
 export default function AppRoutes() {
@@ -51,7 +54,6 @@ export default function AppRoutes() {
           } 
         />
 
-        {/* Ruta a Inmuebles de Cliente Especifico */}
         <Route 
           path="/clients/:id/inmuebles" 
           element={
@@ -63,12 +65,13 @@ export default function AppRoutes() {
           } 
         />
         
+        {/* RUTA DE AGENDA ACTUALIZADA */}
         <Route 
           path="/calendar" 
           element={
             <RequireAuth>
               <DashboardLayout>
-                <Calendar />
+                <TurnosPage />
               </DashboardLayout>
             </RequireAuth>
           } 

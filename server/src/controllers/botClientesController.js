@@ -1,7 +1,8 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { normalizarTelefono, ERROR_TELEFONO_INVALIDO } from '../utils/telefono.js';
-import { crearYEnviarCodigo, validarCodigo } from '../services/codigosVerificacionService.js';
-import { plantillaVerificacionEmailCliente, plantillaRecuperacionTelefono } from '../services/emailTemplates.js';
+import { normalizarEmail } from '../utils/email.js';
+import { crearYEnviarCodigo, validarCodigo, eliminarCodigo } from '../services/codigosVerificacionService.js';
+import { plantillaVerificacionEmailCliente, plantillaCambioEmail } from '../services/emailTemplates.js';
 import { TIPOS_CLIENTE_VALIDOS, responderErrorCliente } from './clientesController.js';
 
 // GET /api/bot/clientes/:telefono
@@ -20,23 +21,45 @@ export const getClienteByTelefono = (req, res) => {
   return res.status(200).json({ ok: true, data: req.cliente });
 };
 
+// Chequeos de duplicado previos al envío del código: si el teléfono o el email
+// ya están tomados, conviene decirlo ahora y no después de que el cliente fue
+// a buscar el código a su casilla. El INSERT final igual puede chocar (dos
+// altas en carrera) y eso lo mapea responderErrorCliente.
+const conflictoAltaCliente = async ({ telefono, email }) => {
+  const [clientePorTelefono, usuarioPorTelefono, clientePorEmail] = await Promise.all([
+    supabaseAdmin.from('clientes').select('id_cliente').eq('telefono', telefono).maybeSingle(),
+    supabaseAdmin.from('usuarios').select('id').eq('telefono', telefono).maybeSingle(),
+    supabaseAdmin.from('clientes').select('id_cliente').eq('email', email).maybeSingle(),
+  ]);
+
+  const error = clientePorTelefono.error || usuarioPorTelefono.error || clientePorEmail.error;
+  if (error) throw new Error(error.message);
+
+  if (clientePorTelefono.data) return 'Ya existe un cliente registrado con ese teléfono.';
+  if (usuarioPorTelefono.data) return 'Ese teléfono ya está registrado como usuario del sistema.';
+  if (clientePorEmail.data) return 'Ya existe un cliente registrado con ese email.';
+  return null;
+};
+
 // POST /api/bot/clientes (alta por WhatsApp)
 //
-// A diferencia de createCliente (canal admin), acá `email` es obligatorio: sin
-// email no hay a dónde mandar el código, y el punto de este endpoint es que el
-// cliente quede con `email_verificado` en verdadero antes de poder recuperarse
-// más adelante si cambia de celular.
+// No inserta en `clientes`: guarda el alta junto al código en
+// codigos_verificacion y manda el mail. El cliente recién se crea cuando
+// confirma el código en /clientes/:telefono/verificar-email, así la tabla solo
+// tiene cuentas con email verificado. Volver a llamar este endpoint con el
+// mismo teléfono reemplaza el alta anterior, que es la forma de reenviar el
+// código.
 export const crearClienteBot = async (req, res) => {
   const {
     nombre,
     apellido,
     telefono,
     tipo_cliente,
-    email,
     domicilio_fiscal,
     cuit_cuil,
     razon_social,
   } = req.body ?? {};
+  const email = normalizarEmail(req.body?.email);
 
   const camposFaltantes = [];
   if (!nombre) camposFaltantes.push('nombre');
@@ -65,9 +88,16 @@ export const crearClienteBot = async (req, res) => {
   }
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('clientes')
-      .insert({
+    const conflicto = await conflictoAltaCliente({ telefono: telefonoNormalizado, email });
+    if (conflicto) {
+      return res.status(409).json({ ok: false, error: conflicto });
+    }
+
+    await crearYEnviarCodigo({
+      tipo: 'alta_cliente',
+      email,
+      telefono: telefonoNormalizado,
+      datos: {
         nombre,
         apellido,
         telefono: telefonoNormalizado,
@@ -76,44 +106,207 @@ export const crearClienteBot = async (req, res) => {
         domicilio_fiscal: domicilio_fiscal ?? null,
         cuit_cuil: cuit_cuil ?? null,
         razon_social: razon_social ?? null,
-        calificacion_promedio: 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      if (responderErrorCliente(error, res)) return;
-      console.error('Error al crear cliente por bot:', error);
-      return res.status(500).json({
-        ok: false,
-        error: 'No se pudo registrar el cliente. Intentá de nuevo más tarde.',
-      });
-    }
-
-    await crearYEnviarCodigo({
-      entidadColumna: 'cliente_id',
-      entidadId: data.id_cliente,
-      tipo: 'verificacion_email_cliente',
-      email: data.email,
+      },
       plantilla: plantillaVerificacionEmailCliente,
     });
 
-    return res.status(201).json({
+    return res.status(202).json({
       ok: true,
-      mensaje: 'Cuenta creada. Revisá tu email para verificar la cuenta.',
-      data,
+      mensaje: 'Te enviamos un código a tu email. Respondelo para terminar el registro.',
     });
   } catch (err) {
-    console.error('Error inesperado al crear cliente por bot:', err);
+    console.error('Error al iniciar alta de cliente por bot:', err);
     return res.status(500).json({
       ok: false,
-      error: 'Ocurrió un error inesperado al registrar el cliente.',
+      error: 'No pudimos enviarte el código. Intentá de nuevo más tarde.',
     });
   }
 };
 
 // POST /api/bot/clientes/:telefono/verificar-email
+//
+// Cierra el alta: valida el código y recién ahí inserta el cliente con los
+// datos que quedaron guardados en el código. No monta
+// resolverClientePorTelefono porque el cliente todavía no existe.
 export const verificarEmailCliente = async (req, res) => {
+  const { codigo } = req.body ?? {};
+
+  if (!codigo) {
+    return res.status(400).json({ ok: false, error: 'codigo es obligatorio' });
+  }
+
+  const telefono = normalizarTelefono(req.params.telefono);
+  if (!telefono) {
+    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
+  }
+
+  try {
+    const resultado = await validarCodigo({
+      tipo: 'alta_cliente',
+      filtro: { telefono },
+      codigoIngresado: codigo,
+    });
+
+    if (!resultado.ok) {
+      return res.status(400).json({ ok: false, error: resultado.error });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .insert({
+        ...resultado.registro.datos,
+        email_verificado: true,
+        calificacion_promedio: 0,
+      })
+      .select()
+      .single();
+
+    // El código ya quedó consumido: se borra salga bien o mal el INSERT, así
+    // no queda la copia de los datos del alta en codigos_verificacion.
+    await eliminarCodigo(resultado.registro.id);
+
+    if (error) {
+      if (responderErrorCliente(error, res)) return;
+      console.error('Error al crear cliente verificado:', error);
+      return res.status(500).json({ ok: false, error: 'No se pudo registrar el cliente.' });
+    }
+
+    return res.status(201).json({ ok: true, mensaje: 'Listo, tu cuenta quedó creada.', data });
+  } catch (err) {
+    console.error('Error inesperado al verificar alta de cliente:', err);
+    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al verificar el email.' });
+  }
+};
+
+// Lo único que un cliente puede editar de sí mismo por WhatsApp. Lo que queda
+// afuera o es de gestión interna (estado, calificacion_promedio) o es
+// identidad y tiene su propio flujo con código (telefono, email).
+const CAMPOS_EDITABLES_BOT = ['nombre', 'apellido', 'tipo_cliente', 'domicilio_fiscal', 'cuit_cuil', 'razon_social'];
+const CAMPOS_OBLIGATORIOS_BOT = ['nombre', 'apellido', 'tipo_cliente'];
+// El pin de ubicación: resolverDomicilioFiscal ya lo convirtió en
+// domicilio_fiscal y deja las coordenadas en el body; no se guardan.
+const CAMPOS_IGNORADOS_BOT = ['latitud', 'longitud'];
+
+// PUT /api/bot/clientes/:telefono
+//
+// No reusa updateCliente del canal admin: ese acepta cualquier campo, y acá el
+// que manda es el propio cliente. El cliente sale de resolverClientePorTelefono
+// (el número que escribe), así que solo puede tocarse a sí mismo.
+export const updateClienteBot = async (req, res) => {
+  const body = Object.fromEntries(
+    Object.entries(req.body ?? {}).filter(([campo]) => !CAMPOS_IGNORADOS_BOT.includes(campo))
+  );
+  const cliente = req.cliente;
+
+  if (body.telefono !== undefined) {
+    return res.status(400).json({
+      ok: false,
+      error: 'El teléfono no se cambia por acá. Usá /recuperar y /confirmar-recuperacion.',
+    });
+  }
+
+  if (body.email !== undefined) {
+    return res.status(400).json({
+      ok: false,
+      error: 'El email no se cambia por acá. Usá /clientes/:telefono/cambiar-email.',
+    });
+  }
+
+  const noPermitidos = Object.keys(body).filter((campo) => !CAMPOS_EDITABLES_BOT.includes(campo));
+  if (noPermitidos.length > 0) {
+    return res.status(400).json({
+      ok: false,
+      error: `Estos campos no se pueden modificar por WhatsApp: ${noPermitidos.join(', ')}`,
+    });
+  }
+
+  const vacios = CAMPOS_OBLIGATORIOS_BOT.filter((campo) => body[campo] !== undefined && !body[campo]);
+  if (vacios.length > 0) {
+    return res.status(400).json({
+      ok: false,
+      error: `Los siguientes campos no pueden quedar vacíos: ${vacios.join(', ')}`,
+    });
+  }
+
+  if (body.tipo_cliente !== undefined && !TIPOS_CLIENTE_VALIDOS.includes(body.tipo_cliente)) {
+    return res.status(400).json({
+      ok: false,
+      error: `tipo_cliente inválido: "${body.tipo_cliente}". Valores permitidos: ${TIPOS_CLIENTE_VALIDOS.join(', ')}`,
+    });
+  }
+
+  if (Object.keys(body).length === 0) {
+    return res.status(400).json({ ok: false, error: 'No se envió ningún campo para actualizar.' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .update(body)
+      .eq('id_cliente', cliente.id_cliente)
+      .select()
+      .single();
+
+    if (error) {
+      if (responderErrorCliente(error, res)) return;
+      console.error('Error al actualizar cliente por bot:', error);
+      return res.status(500).json({ ok: false, error: 'No se pudo actualizar el cliente.' });
+    }
+
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    console.error('Error inesperado al actualizar cliente por bot:', err);
+    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al actualizar el cliente.' });
+  }
+};
+
+// POST /api/bot/clientes/:telefono/cambiar-email
+//
+// El email no se pisa acá: se manda un código a la casilla nueva y el cambio
+// se aplica en /confirmar-cambio-email. Sin eso, cualquiera con el celular
+// podría redirigir la recuperación de la cuenta a una casilla que no probó.
+export const solicitarCambioEmailCliente = async (req, res) => {
+  const emailNuevo = normalizarEmail(req.body?.emailNuevo);
+  const cliente = req.cliente;
+
+  if (!emailNuevo) {
+    return res.status(400).json({ ok: false, error: 'emailNuevo es obligatorio' });
+  }
+
+  if (emailNuevo === normalizarEmail(cliente.email)) {
+    return res.status(400).json({ ok: false, error: 'Ese ya es tu email actual.' });
+  }
+
+  try {
+    const { data: otroCliente, error } = await supabaseAdmin
+      .from('clientes')
+      .select('id_cliente')
+      .eq('email', emailNuevo)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+
+    if (otroCliente) {
+      return res.status(409).json({ ok: false, error: 'Ya existe un cliente registrado con ese email.' });
+    }
+
+    await crearYEnviarCodigo({
+      entidadColumna: 'cliente_id',
+      entidadId: cliente.id_cliente,
+      tipo: 'cambio_email_cliente',
+      email: emailNuevo,
+      plantilla: plantillaCambioEmail,
+    });
+
+    return res.status(200).json({ ok: true, mensaje: 'Te enviamos un código al email nuevo.' });
+  } catch (err) {
+    console.error('Error al solicitar cambio de email de cliente:', err);
+    return res.status(500).json({ ok: false, error: 'No pudimos enviarte el código. Intentá de nuevo más tarde.' });
+  }
+};
+
+// POST /api/bot/clientes/:telefono/confirmar-cambio-email
+export const confirmarCambioEmailCliente = async (req, res) => {
   const { codigo } = req.body ?? {};
   const cliente = req.cliente;
 
@@ -121,15 +314,10 @@ export const verificarEmailCliente = async (req, res) => {
     return res.status(400).json({ ok: false, error: 'codigo es obligatorio' });
   }
 
-  if (cliente.email_verificado) {
-    return res.status(200).json({ ok: true, mensaje: 'El email ya estaba verificado' });
-  }
-
   try {
     const resultado = await validarCodigo({
-      entidadColumna: 'cliente_id',
-      entidadId: cliente.id_cliente,
-      tipo: 'verificacion_email_cliente',
+      tipo: 'cambio_email_cliente',
+      filtro: { cliente_id: cliente.id_cliente },
       codigoIngresado: codigo,
     });
 
@@ -139,135 +327,20 @@ export const verificarEmailCliente = async (req, res) => {
 
     const { data, error } = await supabaseAdmin
       .from('clientes')
-      .update({ email_verificado: true })
-      .eq('id_cliente', cliente.id_cliente)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error al marcar email de cliente como verificado:', error);
-      return res.status(500).json({ ok: false, error: 'No se pudo verificar el email.' });
-    }
-
-    return res.status(200).json({ ok: true, data });
-  } catch (err) {
-    console.error('Error inesperado al verificar email de cliente:', err);
-    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al verificar el email.' });
-  }
-};
-
-// Encuentra al cliente que está pidiendo recuperar su cuenta a partir de un
-// identificador que puede ser su email o su teléfono anterior: se prueba
-// primero como teléfono (normalizarTelefono es estricto, así que un email
-// simplemente no matchea el formato y devuelve null) y si no, como email.
-// La comparten recuperarCliente y confirmarRecuperacionCliente para no
-// duplicar esta resolución.
-const resolverClienteRecuperable = async (identificador) => {
-  const telefono = normalizarTelefono(identificador);
-
-  const { data, error } = telefono
-    ? await supabaseAdmin.from('clientes').select('*').eq('telefono', telefono).maybeSingle()
-    : await supabaseAdmin.from('clientes').select('*').eq('email', identificador).maybeSingle();
-
-  if (error) throw new Error(error.message);
-
-  return data;
-};
-
-// POST /api/bot/clientes/recuperar
-//
-// Responde 404 explícito (no una respuesta genérica siempre-200 como en
-// olvide-password de usuarios) porque esto es una conversación privada 1 a 1
-// por WhatsApp: n8n necesita saber si no encontró nada para poder ofrecerle al
-// cliente la opción de crear una cuenta nueva.
-export const recuperarCliente = async (req, res) => {
-  const { identificador } = req.body ?? {};
-
-  if (!identificador) {
-    return res.status(400).json({ ok: false, error: 'identificador es obligatorio' });
-  }
-
-  try {
-    const cliente = await resolverClienteRecuperable(identificador);
-
-    if (!cliente) {
-      return res.status(404).json({ ok: false, error: 'No encontramos ninguna cuenta con ese dato.' });
-    }
-
-    if (!cliente.email) {
-      return res.status(409).json({
-        ok: false,
-        error: 'Esta cuenta no tiene un email cargado, así que no se puede recuperar por este medio.',
-      });
-    }
-
-    await crearYEnviarCodigo({
-      entidadColumna: 'cliente_id',
-      entidadId: cliente.id_cliente,
-      tipo: 'recuperacion_telefono_cliente',
-      email: cliente.email,
-      plantilla: plantillaRecuperacionTelefono,
-    });
-
-    return res.status(200).json({ ok: true, mensaje: 'Te enviamos un código a tu email.' });
-  } catch (err) {
-    console.error('Error al iniciar recuperación de cliente:', err);
-    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al procesar la solicitud.' });
-  }
-};
-
-// POST /api/bot/clientes/confirmar-recuperacion
-export const confirmarRecuperacionCliente = async (req, res) => {
-  const { identificador, codigo, telefonoNuevo } = req.body ?? {};
-
-  if (!identificador || !codigo || !telefonoNuevo) {
-    return res.status(400).json({
-      ok: false,
-      error: 'identificador, codigo y telefonoNuevo son obligatorios',
-    });
-  }
-
-  const telefonoNormalizado = normalizarTelefono(telefonoNuevo);
-  if (!telefonoNormalizado) {
-    return res.status(400).json({ ok: false, error: ERROR_TELEFONO_INVALIDO });
-  }
-
-  try {
-    const cliente = await resolverClienteRecuperable(identificador);
-
-    if (!cliente) {
-      return res.status(404).json({ ok: false, error: 'No encontramos ninguna cuenta con ese dato.' });
-    }
-
-    const resultado = await validarCodigo({
-      entidadColumna: 'cliente_id',
-      entidadId: cliente.id_cliente,
-      tipo: 'recuperacion_telefono_cliente',
-      codigoIngresado: codigo,
-    });
-
-    if (!resultado.ok) {
-      return res.status(400).json({ ok: false, error: resultado.error });
-    }
-
-    // De paso confirma el email: para llegar hasta acá tuvo que recibir el
-    // código en esa casilla y reenviarlo, así que quedó probado que es suya.
-    const { data, error } = await supabaseAdmin
-      .from('clientes')
-      .update({ telefono: telefonoNormalizado, email_verificado: true })
+      .update({ email: resultado.registro.email, email_verificado: true })
       .eq('id_cliente', cliente.id_cliente)
       .select()
       .single();
 
     if (error) {
       if (responderErrorCliente(error, res)) return;
-      console.error('Error al confirmar recuperación de cliente:', error);
-      return res.status(500).json({ ok: false, error: 'No se pudo actualizar el teléfono.' });
+      console.error('Error al confirmar cambio de email de cliente:', error);
+      return res.status(500).json({ ok: false, error: 'No se pudo actualizar el email.' });
     }
 
-    return res.status(200).json({ ok: true, mensaje: 'Listo, tu cuenta ya está asociada a este número.', data });
+    return res.status(200).json({ ok: true, mensaje: 'Listo, tu email quedó actualizado.', data });
   } catch (err) {
-    console.error('Error inesperado al confirmar recuperación de cliente:', err);
-    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al confirmar la recuperación.' });
+    console.error('Error inesperado al confirmar cambio de email de cliente:', err);
+    return res.status(500).json({ ok: false, error: 'Ocurrió un error inesperado al confirmar el cambio de email.' });
   }
 };
