@@ -12,7 +12,8 @@ import Register from '../pages/Auth/Register.jsx';
 // Vistas Privadas Reales
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
-import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx'; // <--- Importar la nueva página
+import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
+import Calendar from '../pages/Calendar.jsx';
 
 // Componentes temporales (Mocks)
 const Calendar = () => <h1>Agenda Semanal</h1>;
