@@ -13,6 +13,7 @@ import Register from '../pages/Auth/Register.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
+
 import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
 
 // Componentes temporales (Mocks)
@@ -67,7 +68,7 @@ export default function AppRoutes() {
           element={
             <RequireAuth>
               <DashboardLayout>
-                <TurnosPage />
+                <TurnosPage/>
               </DashboardLayout>
             </RequireAuth>
           } 

@@ -5,6 +5,7 @@ import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
 import TurnosMensual from '../components/turnos/TurnosMensual';
 import NuevoTurnoModal from '../components/turnos/NuevoTurnoModal';
+import PanelClima from '../components/clima/PanelClima';
 
 const PRIORIDADES_CONFIG = {
   P1_REASIGNADO: { label: 'P1 Reasignado', color: 'danger' },
@@ -404,11 +405,21 @@ export default function TurnosPage() {
       </div>
 
       {/* ÁREA DE CONTENIDO */}
-      <div className="w-100">
-        {vistaActual === 'diaria' && <TurnosKanban turnos={turnosDiarios} onSelectTurno={handleSelectTurno} />}
-        {vistaActual === 'semanal' && <TurnosSemanal turnos={turnosFiltrados} fechaReferencia={fechaActual} onSelectTurno={handleSelectTurno} onCreateTurno={handleCreateTurno} />}
-        {vistaActual === 'mensual' && <TurnosMensual turnos={turnosFiltrados} fechaReferencia={fechaActual} onSelectTurno={handleSelectTurno} onSwitchToDailyView={handleSwitchToDailyView} />}
+      <div className="row g-4 w-100 m-0">
+        {/* Columna Izquierda: Agenda de Turnos */}
+        <div className="col-12 col-lg-8 col-xl-9 p-0 pe-lg-2">
+          {vistaActual === 'diaria' && <TurnosKanban turnos={turnosDiarios} onSelectTurno={handleSelectTurno} />}
+          {vistaActual === 'semanal' && <TurnosSemanal turnos={turnosFiltrados} fechaReferencia={fechaActual} onSelectTurno={handleSelectTurno} onCreateTurno={handleCreateTurno} />}
+          {vistaActual === 'mensual' && <TurnosMensual turnos={turnosFiltrados} fechaReferencia={fechaActual} onSelectTurno={handleSelectTurno} onSwitchToDailyView={handleSwitchToDailyView} />}
+        </div>
+
+        {/* Columna Derecha: Meteorología Operativa */}
+        <div className="col-12 col-lg-4 col-xl-3 p-0 ps-lg-2">
+          <PanelClima />
+        </div>
+        
       </div>
+     
 
       {nuevoTurnoConfig && (
         <NuevoTurnoModal
