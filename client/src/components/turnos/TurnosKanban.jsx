@@ -128,7 +128,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
       </div>
 
       {/* Grilla Kanban */}
-      <div className="row g-4">
+      <div className="row g-4 flex-nowrap overflow-x-auto pb-3">
         {columnasConfig.map(col => {
           const colTurnos = getTurnosPorEstado(col.id);
           
@@ -137,7 +137,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
           
           return (
             // col-12 en móviles asegura que se apilen una debajo de la otra. col-xl-3 las pone en línea en PC.
-            <div key={col.id} className="col-12 col-xl-3 d-flex flex-column">
+            <div key={col.id} className="col-11 col-md-5 col-xl-3 d-flex flex-column" style={{ minWidth: '260px' }}>
               
               {/* Cabecera de Columna */}
               <div className={`border-top border-2 pt-3 mb-3 d-flex justify-content-between align-items-start ${col.borderColor}`}>
