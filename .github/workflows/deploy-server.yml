@@ -1,0 +1,48 @@
+name: Deploy Server (Azure App Service)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-server.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    name: Build & Deploy to Azure App Service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Validar sintaxis antes de deploy
+        run: |
+          for f in $(find src -name '*.js'); do
+            node --check "$f"
+          done
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME || 'hovy-api' }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./server
