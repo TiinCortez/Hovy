@@ -14,6 +14,7 @@ import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
 import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
+import VisitaDetallePage from '../pages/VisitaDetallePage.jsx';
 
 // Componentes temporales (Mocks)
 const Analytics = () => <h1>Estadísticas</h1>;
@@ -61,6 +62,17 @@ export default function AppRoutes() {
           } 
         />
         
+        <Route
+          path="/visitas/:id"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <VisitaDetallePage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
+        />
+
         {/* RUTA DE AGENDA ACTUALIZADA */}
         <Route 
           path="/calendar" 

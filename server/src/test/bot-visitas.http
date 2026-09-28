@@ -1,0 +1,132 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+# Requiere haber corrido docs/supabase-solicitudes-visita.sql.
+
+@baseUrl = http://localhost:4000
+
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Numero que NO es cliente: la solicitud no requiere registro.
+@telefonoNuevo = 1155667788
+# Cliente ya cargado en la bd: la solicitud queda con id_cliente.
+@telefonoCliente = 5493514330429
+
+
+### Solicitud completa con direccion escrita (no cliente)  -  [Espera 201, es_cliente: false]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234",
+  "barrio": "Alberdi",
+  "provincia": "Córdoba",
+  "servicio": "Corte de césped",
+  "fecha_preferida": "2026-12-01",
+  "franja_preferida": "Mañana",
+  "nota_horario": "Después de las 9"
+}
+
+### Solicitud de un cliente existente, solo con el pin  -  [Espera 201, es_cliente: true, origen_coordenadas: whatsapp]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoCliente}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Agustin",
+  "apellido": "Prueba",
+  "latitud": -31.4135,
+  "longitud": -64.1811
+}
+
+### Sin franja: queda en "Indistinto"  -  [Espera 201]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234"
+}
+
+### Faltan nombre y direccion  -  [Espera 400 con los dos campos en el mismo mensaje]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "apellido": "Prueba"
+}
+
+### Franja invalida y fecha pasada  -  [Espera 400 con los dos errores]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234",
+  "fecha_preferida": "2020-01-01",
+  "franja_preferida": "Noche"
+}
+
+### Con superficie aproximada  -  [Espera 201, superficie_aproximada: 450]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234",
+  "superficie_aproximada": "450"
+}
+
+### Superficie aproximada invalida  -  [Espera 400]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234",
+  "superficie_aproximada": "mucha"
+}
+
+### Fecha inexistente  -  [Espera 400]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234",
+  "fecha_preferida": "2026-02-30"
+}
+
+### Media coordenada  -  [Espera 400]
+POST {{baseUrl}}/api/bot/visitas/{{telefonoNuevo}}
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "latitud": -31.4135
+}
+
+### Telefono invalido  -  [Espera 400]
+POST {{baseUrl}}/api/bot/visitas/123
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Prueba",
+  "direccion": "Av. Colón 1234"
+}

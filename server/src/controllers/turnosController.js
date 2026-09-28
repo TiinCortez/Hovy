@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '../config/supabase.js';
 
-const PRIORIDADES_VALIDAS = ['P1_Reasignado', 'P2_Fijo', 'P3_Casual'];
+// Se exporta para que botStaffController.js valide contra la misma lista, en
+// vez de mantener una copia — ver PRIORIDADES_VALIDAS en ese archivo.
+export const PRIORIDADES_VALIDAS = ['P1_Reasignado', 'P2_Fijo', 'P3_Casual'];
 
 export const createTurno = async (req, res) => {
     try {
@@ -8,8 +10,12 @@ export const createTurno = async (req, res) => {
             id_inmueble,
             id_presupuesto,
             fecha_programada,
-            franja_horaria_desde,
-            franja_horaria_hasta,
+            // La tabla turnos guarda la franja horaria en inicio_desde/hasta
+            // (algoritmoAgenda.js ya las usa así). No franja_horaria_desde/hasta:
+            // ese nombre no existe como columna, así que insertar con él
+            // rompía el INSERT en cualquier llamada a este endpoint.
+            inicio_desde,
+            hasta,
             prioridad,
             estado,
             motivo_cancelacion
@@ -53,15 +59,15 @@ export const createTurno = async (req, res) => {
             .eq('id_inmueble', id_inmueble)
             .maybeSingle();
         
-        if ((franja_horaria_desde && !franja_horaria_hasta) || (!franja_horaria_desde && franja_horaria_hasta)) {
+        if ((inicio_desde && !hasta) || (!inicio_desde && hasta)) {
             return res.status(400).json({
                 ok: false,
                 error: 'Debe especificar tanto la hora de inicio como la de fin de la franja horaria'
             });
         }
-        
+
         // Validación lógica: desde < hasta
-        if (franja_horaria_desde && franja_horaria_hasta && franja_horaria_desde >= franja_horaria_hasta) {
+        if (inicio_desde && hasta && inicio_desde >= hasta) {
             return res.status(400).json({
                 ok: false,
                 error: 'La hora de inicio (desde) debe ser menor a la hora de fin (hasta)'
@@ -119,8 +125,8 @@ export const createTurno = async (req, res) => {
             id_inmueble: Number(id_inmueble),
             id_presupuesto: id_presupuesto ? Number(id_presupuesto) : null,
             fecha_programada,
-            franja_horaria_desde: franja_horaria_desde || null,
-            franja_horaria_hasta: franja_horaria_hasta || null,
+            inicio_desde: inicio_desde || null,
+            hasta: hasta || null,
             prioridad,
             estado: estado || 'Coordinado',
             motivo_cancelacion: motivo_cancelacion || null

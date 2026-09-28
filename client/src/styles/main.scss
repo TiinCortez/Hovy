@@ -221,6 +221,34 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 .max-w-1280 { max-width: 1280px; }
 
+// Popover de notificaciones (campana del Header). En desktop/tablet cuelga
+// del botón como un dropdown normal; en mobile el botón queda lejos del borde
+// derecho real de la pantalla (hay otro ícono al lado), así que se ancla al
+// viewport para no cortarse.
+.visitas-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-width: 340px;
+  background-color: #ffffff;
+  border: 1px solid $hovy-border;
+
+  @media (max-width: 575.98px) {
+    position: fixed;
+    top: 80px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
+.visitas-popover-item {
+  transition: background-color 0.15s ease;
+  &:hover, &:focus-visible { background-color: rgba(27, 48, 6, 0.05); }
+  &:last-child { border-bottom: none !important; }
+}
+
 /* --- REGISTER PAGE --- */
 .register-container {
   min-height: 100vh;

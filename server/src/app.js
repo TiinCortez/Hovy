@@ -6,6 +6,7 @@ import turnosRoutes from './routes/turnos.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
+import visitasRoutes from './routes/visitas.routes.js';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/bot', botRoutes);
 // tener en cuenta para nuevas rutas.
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
+app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);
 app.use('/api/turnos', turnosRoutes);
 
 
