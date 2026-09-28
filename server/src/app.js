@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import clientesRoutes from './routes/clientes.routes.js';
@@ -6,6 +9,9 @@ import turnosRoutes from './routes/turnos.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -58,5 +64,21 @@ app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes)
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/turnos', turnosRoutes);
 
+// Servir frontend compilado de React (en server/public o client/dist)
+const publicDir = path.resolve(__dirname, '../public');
+const clientDistDir = path.resolve(__dirname, '../../client/dist');
+const staticDir = fs.existsSync(publicDir) ? publicDir : (fs.existsSync(clientDistDir) ? clientDistDir : null);
+
+if (staticDir) {
+  app.use(express.static(staticDir));
+
+  // Fallback SPA: cualquier ruta que no sea API/Auth carga index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
+      return next();
+    }
+    res.sendFile(path.join(staticDir, 'index.html'));
+  });
+}
 
 export default app;
