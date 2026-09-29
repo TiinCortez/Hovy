@@ -133,11 +133,3 @@ export const validarCodigo = async ({ tipo, filtro, codigoIngresado }) => {
 
   return { ok: true, registro };
 };
-
-// Borra un código ya consumido. Lo usa el alta de clientes: una vez que el
-// cliente existe, la fila no sirve y `datos` es una copia de sus datos
-// personales que no tiene por qué quedar.
-export const eliminarCodigo = async (id) => {
-  const { error } = await supabaseAdmin.from('codigos_verificacion').delete().eq('id', id);
-  if (error) console.error('No se pudo borrar el código consumido:', error);
-};
