@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/VAL-devops-azure-setup
   workflow_dispatch:
 
 concurrency:
@@ -63,6 +64,6 @@ jobs:
       - name: Desplegar a Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME || 'hovy-api' }}
+          app-name: ${{ vars.AZURE_WEBAPP_NAME || 'hovy-api-fwh5b6jekddh8f3' }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./server
