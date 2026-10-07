@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Building2, MapPin, Map, Maximize, Clock, Leaf, AlertCircle, Navigation, Search } from 'lucide-react';
 import Button from './Button';
+import CloseButton from './CloseButton';
 import InmuebleService from '../../services/api/inmueble.service';
 
 const PROVINCIAS_ARG = [
@@ -149,7 +150,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
             <h5 className="modal-title fw-bold text-dark fs-4">
               {isEditMode ? 'Editar Inmueble' : 'Registrar Nuevo Inmueble'}
             </h5>
-            <button type="button" className="btn-close shadow-none" onClick={onClose} />
+            <CloseButton label="Cerrar formulario de inmueble" onClick={onClose} />
           </div>
 
           <div className="modal-body p-4">

@@ -24,6 +24,8 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 @import "bootstrap/scss/root";
 @import "bootstrap/scss/reboot";
 @import "bootstrap/scss/grid";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/button-group";
 @import "bootstrap/scss/transitions";
 @import "bootstrap/scss/forms";
 @import "bootstrap/scss/modal";
@@ -33,26 +35,6 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 /* ==========================================
    SCSS PROPIO: ESTRUCTURA DE COMPONENTES
    ========================================== */
-
-/* --- BOTONES Y COMPONENTES GENÉRICOS --- */
-.btn-primary {
-  background-color: $hovy-green;
-  border-color: $hovy-green;
-  color: white;
-  &:hover, &:focus {
-    background-color: #122104;
-    border-color: #122104;
-    color: white;
-  }
-}
-.btn-outline-primary {
-  color: $hovy-green;
-  border-color: $hovy-green;
-  &:hover {
-    background-color: $hovy-green;
-    color: white;
-  }
-}
 
 /* --- HOME & HERO SECTION --- */
 .home-navbar {
@@ -390,35 +372,6 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     
     &:focus-within { border-color: #1C3A13; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
     input { font-size: 0.75rem; margin-left: 0.5rem; color: #292524; }
-  }
-}
-
-.register-btn {
-  background-color: #183c13;
-  color: white;
-  border-radius: 9999px;
-  padding: 0.875rem 1.5rem;
-  width: 100%;
-  font-weight: 600;
-  border: none;
-  box-shadow: 0 8px 18px -4px rgba(22, 53, 18, 0.45);
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    background-color: #112b0e;
-    box-shadow: 0 12px 24px -4px rgba(22, 53, 18, 0.5);
-  }
-  &:active { transform: scale(0.99); }
-
-  @media (max-width: 576px) {
-    background-color: #1C3A13;
-    font-size: 0.875rem;
-    padding: 0.75rem 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(28, 58, 19, 0.25);
-    &:hover { background-color: #162F0F; }
   }
 }
 
@@ -769,3 +722,5 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     padding: 1rem !important;
   }
 }
+
+@import './buttons';

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
 import Button from './Button';
+import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
 
 export default function EditClientModal({ isOpen, onClose, clientData, onClientUpdated }) {
@@ -77,7 +78,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
           
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold text-dark fs-4">Editar Cliente</h5>
-            <button type="button" className="btn-close shadow-none" onClick={() => { setErrorMessage(null); onClose(); }} />
+            <CloseButton label="Cerrar edición de cliente" onClick={() => { setErrorMessage(null); onClose(); }} />
           </div>
 
           <div className="modal-body p-4">

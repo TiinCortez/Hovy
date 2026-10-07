@@ -30,12 +30,8 @@ export default function Home() {
 
         {/* Botón Ingresar */}
         <div>
-          <Link to="/login" className="text-decoration-none">
-            <Button variant="primary" className="d-none d-md-flex">Ingresar</Button>
-            <div className="d-md-none bg-dark text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: '38px', height: '38px' }}>
-              <User size={18} />
-            </div>
-          </Link>
+          <Link to="/login" className="btn btn-primary d-none d-md-inline-flex">Ingresar</Link>
+          <Link to="/login" className="btn btn-primary btn-icon d-md-none" aria-label="Ingresar"><User size={18} /></Link>
         </div>
       </nav>
 

@@ -58,7 +58,7 @@ app.use('/api/bot', botRoutes);
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);
-app.use('/api/turnos', turnosRoutes);
+app.use('/api/turnos', authMiddleware, requireRole(['admin']), turnosRoutes);
 
 
 export default app;

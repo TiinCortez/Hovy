@@ -1,5 +1,6 @@
 import { MapPin, Maximize, Clock, Leaf, Trash2, Edit2, Navigation, Home, Grid } from 'lucide-react';
 import Button from './Button';
+import CloseButton from './CloseButton';
 
 export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, onEdit, onDelete }) {
   if (!isOpen || !inmuebleData) return null;
@@ -34,7 +35,7 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               </div>
               Detalle del Inmueble
             </h5>
-            <button type="button" className="btn-close shadow-none" onClick={onClose} />
+            <CloseButton label="Cerrar detalle del inmueble" onClick={onClose} />
           </div>
 
           <div className="modal-body p-4 pt-0">
