@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   CalendarCheck,
   ClipboardList,
@@ -12,24 +11,13 @@ import {
   PlayCircle
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
-import VisitaService from '../services/api/visita.service';
+import { useVisitasPendientes } from '../context/visitasPendientesContext.js';
 
 export default function Dashboard() {
-  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue mockeado).
-  const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
-
-  useEffect(() => {
-    const fetchSolicitudesPendientes = async () => {
-      try {
-        const response = await VisitaService.getPendientes();
-        setSolicitudesNuevas(response.data?.length ?? 0);
-      } catch (err) {
-        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
-      }
-    };
-
-    fetchSolicitudesPendientes();
-  }, []);
+  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue
+  // mockeado). Sale del mismo estado que la campanita del Header.
+  const { pendientes } = useVisitasPendientes();
+  const solicitudesNuevas = pendientes.length;
 
   // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
   const mockData = {

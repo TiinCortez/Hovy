@@ -249,6 +249,94 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   &:last-child { border-bottom: none !important; }
 }
 
+/* --- TOAST DE SOLICITUD NUEVA (solo md+, ver VisitaNuevaToast.jsx) --- */
+.visita-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1080;
+  width: 360px;
+  animation: visita-toast-entrada 0.3s ease-out;
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+.visita-toast-card {
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid $hovy-border;
+  border-left: 5px solid $hovy-green;
+  border-radius: 1rem;
+
+  // Colita de globo de diálogo abajo a la derecha.
+  &::after {
+    content: '';
+    position: absolute;
+    right: 28px;
+    bottom: -9px;
+    width: 16px;
+    height: 16px;
+    background-color: #ffffff;
+    border-right: 1px solid $hovy-border;
+    border-bottom: 1px solid $hovy-border;
+    transform: rotate(45deg);
+  }
+}
+.visita-toast-cuerpo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 1rem 2.5rem 1rem 1rem;
+  background: transparent;
+  border: 0;
+  border-radius: 1rem;
+  &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
+  &:hover .visita-toast-link { text-decoration: underline; }
+}
+.visita-toast-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: $hovy-cream;
+  color: $hovy-green;
+  border: 2px solid rgba(27, 48, 6, 0.15);
+}
+.visita-toast-link { color: $hovy-green; }
+.visita-toast-cerrar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: flex;
+  padding: 4px;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: $hovy-gray;
+  &:hover, &:focus-visible { background-color: rgba(27, 48, 6, 0.08); }
+}
+@keyframes visita-toast-entrada {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MAPA DECORATIVO EN EL DETALLE DE LA VISITA --- */
+.visita-mapa {
+  height: 220px;
+  pointer-events: none;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+}
+
 /* --- REGISTER PAGE --- */
 .register-container {
   min-height: 100vh;

@@ -1,5 +1,6 @@
 import Header from './Header';
 import Sidebar from './SideBar';
+import VisitaNuevaToast from '../ui/VisitaNuevaToast.jsx';
 
 export default function DashboardLayout({ children }) {
   return (
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }) {
           </div>
         </main>
       </div>
+      <VisitaNuevaToast />
     </div>
   );
 }

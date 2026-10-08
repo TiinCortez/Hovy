@@ -17,6 +17,7 @@ import {
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import VisitaService from '../services/api/visita.service';
+import { useVisitasPendientes } from '../context/visitasPendientesContext.js';
 
 const FRANJA_TEXTO = {
   Mañana: 'por la mañana',
@@ -32,9 +33,23 @@ const formatFecha = (valor) => {
   return new Date(valor).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' });
 };
 
+// URL del mapa embebido (decorativo, sin API key). Con coordenadas el pin cae
+// exacto; si la solicitud quedó sin ellas (Nominatim no encontró la dirección
+// al crearla), Google ubica el pin buscando la dirección escrita.
+const urlMapa = (visita) => {
+  const tieneCoordenadas = visita.latitud != null && visita.longitud != null;
+  const consulta = tieneCoordenadas
+    ? `${visita.latitud},${visita.longitud}`
+    : [visita.direccion, visita.barrio, visita.provincia, 'Argentina'].filter(Boolean).join(', ');
+
+  if (!tieneCoordenadas && !visita.direccion) return null;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(consulta)}&z=16&hl=es&output=embed`;
+};
+
 export default function VisitaDetallePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { refrescar: refrescarPendientes } = useVisitasPendientes();
 
   const [visita, setVisita] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +87,8 @@ export default function VisitaDetallePage() {
 
       const response = await VisitaService.contactar(visita.id_solicitud);
       setVisita(response.data);
+      // Deja de estar Pendiente: que la campanita y el KPI lo reflejen ya.
+      refrescarPendientes();
     } catch (err) {
       console.error('No se pudo marcar la solicitud como contactada:', err);
       alert(err.response?.data?.error || 'No se pudo marcar la solicitud como contactada.');
@@ -103,6 +120,7 @@ export default function VisitaDetallePage() {
 
   const franja = FRANJA_TEXTO[visita.franja_preferida] ?? FRANJA_TEXTO.Indistinto;
   const yaContactada = visita.estado !== 'Pendiente';
+  const mapaSrc = urlMapa(visita);
 
   return (
     <div className="d-flex flex-column gap-4 pb-5">
@@ -164,6 +182,18 @@ export default function VisitaDetallePage() {
                 {visita.barrio && `, ${visita.barrio}`}
                 {visita.provincia && `, ${visita.provincia}`}
               </div>
+              {mapaSrc && (
+                // Decorativo: sin interacción ni foco, solo para ubicar de un vistazo.
+                <div className="visita-mapa mt-3 rounded-4 overflow-hidden border border-light-subtle" aria-hidden="true">
+                  <iframe
+                    title="Mapa de la dirección"
+                    src={mapaSrc}
+                    loading="lazy"
+                    tabIndex={-1}
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              )}
             </div>
           </div>
           {visita.superficie_aproximada && (

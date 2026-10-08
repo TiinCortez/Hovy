@@ -1,33 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, UserCircle } from 'lucide-react';
-import VisitaService from '../../services/api/visita.service';
 import VisitasNotificacionesPopover from '../ui/VisitasNotificacionesPopover.jsx';
-
-const INTERVALO_POLLING_MS = 60000;
+import { useVisitasPendientes } from '../../context/visitasPendientesContext.js';
 
 export default function Header() {
   const navigate = useNavigate();
-  const [visitasPendientes, setVisitasPendientes] = useState([]);
+  // El polling vive en VisitasPendientesProvider: es la misma lista que usa
+  // el KPI "Solicitudes nuevas" del Dashboard, así que siempre coinciden.
+  const { pendientes: visitasPendientes, refrescar } = useVisitasPendientes();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const notificacionesRef = useRef(null);
 
-  // Trae las pendientes al montar y después cada INTERVALO_POLLING_MS: no hay
-  // WebSocket/SSE en el proyecto, así que el panel se refresca por polling.
+  // El Header se monta en cada ruta privada (incluido justo después del
+  // login): refrescamos ahí para no esperar al próximo tick del polling.
   useEffect(() => {
-    const fetchPendientes = async () => {
-      try {
-        const response = await VisitaService.getPendientes();
-        setVisitasPendientes(response.data ?? []);
-      } catch (err) {
-        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
-      }
-    };
-
-    fetchPendientes();
-    const intervalId = setInterval(fetchPendientes, INTERVALO_POLLING_MS);
-    return () => clearInterval(intervalId);
-  }, []);
+    refrescar();
+  }, [refrescar]);
 
   // Cierra el popover al hacer click fuera.
   useEffect(() => {

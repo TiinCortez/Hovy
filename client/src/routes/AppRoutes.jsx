@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 // Layouts y Guardianes
 import DashboardLayout from '../components/layout/DashboardLayout.jsx';
 import RequireAuth from '../components/layout/RequireAuth.jsx';
+import VisitasPendientesProvider from '../context/VisitasPendientesProvider.jsx';
 
 // Vistas Públicas
 import Home from '../pages/Home.jsx';
@@ -22,6 +23,9 @@ const Analytics = () => <h1>Estadísticas</h1>;
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      {/* Arriba de las rutas: cada ruta monta su propio DashboardLayout, y las
+          pendientes (campanita, KPI y toast) tienen que sobrevivir a la navegación. */}
+      <VisitasPendientesProvider>
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/" element={<Home />} />
@@ -98,6 +102,7 @@ export default function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </VisitasPendientesProvider>
     </BrowserRouter>
   );
 }
