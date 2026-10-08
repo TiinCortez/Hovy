@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { MapPin, ChevronRight, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, ChevronRight, Clock, LockKeyhole } from 'lucide-react';
 import Card from '../ui/Card';
+import { fechaAIso, fechaDesdeIso, inicioSemanaTurnos, sumarDiasTurnos, horarioPasadoTurnos, PRIORIDADES_CONFIG as prioridadesConfig, horaAMinutos, minutosAHora, compararHorarioTurnos, tieneHorarioTurno } from './agendaTurnos';
 
-export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, onCreateTurno }) {
-  const [horaActualDecimal, setHoraActualDecimal] = useState(null);
+export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelectTurno, onCreateTurno }) {
+  const horaActualDecimal = ahora.segundos / 3600;
   const [diaSeleccionadoMobile, setDiaSeleccionadoMobile] = useState('');
 
   // Parámetros de la grilla temporal
@@ -11,38 +12,17 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
   const HORA_FIN = 19;
   const ALTURA_HORA_PX = 100;
 
-  // Configuración estandarizada (Heredada del Kanban)
-  const prioridadesConfig = {
-    'P1_REASIGNADO': { label: 'P1 Reasignado', short: 'P1 - REASIGNADO', color: 'danger', weight: 3 },
-    'P2_FIJO': { label: 'P2 Fijo', short: 'P2 - FIJO', color: 'success', weight: 2 },
-    'P3_CASUAL': { label: 'P3 Casual', short: 'P3 - CASUAL', color: 'secondary', weight: 1 }
-  };
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date(2026, 9, 24, 14, 45); // Mock de hora actual
-      setHoraActualDecimal(now.getHours() + now.getMinutes() / 60);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
   const obtenerDiasSemana = (fecha) => {
-    const curr = new Date(fecha);
-    const day = curr.getDay();
-    const diff = curr.getDate() - day + (day === 0 ? -6 : 1); 
-    const startOfWeek = new Date(curr.setDate(diff));
+    const inicio = inicioSemanaTurnos(fechaAIso(fecha));
 
     const dias = [];
     const nombres = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
-    const hoyStr = new Date(2026, 9, 24).toISOString().split('T')[0];
+    const hoyStr = ahora.fecha;
 
     for (let i = 0; i < 7; i++) {
-      const d = new Date(startOfWeek);
-      d.setDate(d.getDate() + i);
-      const isoStr = d.toISOString().split('T')[0];
-      
+      const isoStr = sumarDiasTurnos(inicio, i);
+      const d = fechaDesdeIso(isoStr);
+
       dias.push({
         iso: isoStr,
         nombre: nombres[d.getDay()],
@@ -60,32 +40,23 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
     ? diaSeleccionadoMobile
     : (dias.find((dia) => dia.isToday)?.iso || dias[0].iso);
 
-  const parseTime = (timeStr) => {
-    const [h, m] = timeStr.split(':');
-    return parseInt(h, 10) + parseInt(m, 10) / 60;
-  };
-
-  const formatTime = (dec) => {
-    const h = Math.floor(dec);
-    const m = Math.round((dec - h) * 60);
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  };
+  const formatTime = (dec) => minutosAHora(dec * 60);
 
   const procesarTurnosDia = (diaIso) => {
     return turnos.filter(t => {
       if (t.estado === 'CANCELADO' || t.fechaAsignada !== diaIso) return false;
       return true;
-    }).sort((a, b) => parseTime(a.franjaHoraria.horaInicio) - parseTime(b.franjaHoraria.horaInicio));
+    }).sort(compararHorarioTurnos);
   };
 
   const procesarBloquesGrid = (diaObj) => {
-    const turnosDelDia = procesarTurnosDia(diaObj.iso);
+    const turnosDelDia = procesarTurnosDia(diaObj.iso).filter(tieneHorarioTurno);
     const bloques = [];
     let tiempoActual = HORA_INICIO;
 
     turnosDelDia.forEach(turno => {
-      const start = parseTime(turno.franjaHoraria.horaInicio);
-      const end = parseTime(turno.franjaHoraria.horaFin);
+      const start = horaAMinutos(turno.franjaHoraria.horaInicio) / 60;
+      const end = horaAMinutos(turno.franjaHoraria.horaFin) / 60;
       if (start > tiempoActual) bloques.push({ isHueco: true, start: tiempoActual, end: start });
       bloques.push({ isHueco: false, data: turno, start, end });
       tiempoActual = Math.max(tiempoActual, end);
@@ -96,21 +67,25 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
   };
 
   const horasGrid = Array.from({ length: HORA_FIN - HORA_INICIO + 1 }, (_, i) => HORA_INICIO + i);
+  const sinHorarioSemana = turnos.filter((turno) => turno.estado !== 'CANCELADO'
+    && dias.some((dia) => dia.iso === turno.fechaAsignada) && !tieneHorarioTurno(turno));
 
   return (
     <Card className="turnos-calendar-card p-0 shadow-sm border-0 rounded-4 bg-white overflow-hidden flex-shrink-0">
-      
+
       {/* VISTA MOBILE: Lista Vertical */}
       <div className="d-flex d-lg-none flex-column w-100 bg-light bg-opacity-50">
-        
+
         {/* Selector de Días Horizontales */}
         <div className="d-flex overflow-x-auto border-bottom bg-white shadow-sm scrollbar-none py-2 px-1">
           {dias.map(dia => {
             const isSelected = dia.iso === diaSeleccionadoActivo;
             return (
-              <div 
-                key={dia.iso} 
-                className={`d-flex flex-column align-items-center justify-content-center px-3 py-2 mx-1 rounded-4 flex-shrink-0 ${isSelected ? 'bg-dark text-white shadow-sm' : 'text-secondary hover-opacity'}`}
+              <button type="button"
+                key={dia.iso}
+                aria-pressed={isSelected}
+                aria-current={dia.isToday ? 'date' : undefined}
+                className={`btn hovy-calendar-day border-0 d-flex flex-column align-items-center justify-content-center px-3 py-2 mx-1 rounded-4 flex-shrink-0 ${isSelected ? 'bg-dark text-white shadow-sm' : 'text-secondary hover-opacity'}`}
                 style={{ cursor: 'pointer', minWidth: '70px' }}
                 onClick={() => setDiaSeleccionadoMobile(dia.iso)}
               >
@@ -121,7 +96,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
                 ) : (
                   <span className={`rounded-circle mt-1 ${dia.turnosCount > 0 ? 'bg-success' : 'bg-transparent'}`} style={{width: 6, height: 6}}></span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -134,14 +109,14 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
             procesarTurnosDia(diaSeleccionadoActivo).map(turno => {
               const isEjecucion = turno.estado === 'EN_EJECUCION';
               const pConf = prioridadesConfig[turno.prioridad];
-              
+
               return (
                 <div key={turno.idTurno} className="d-flex align-items-stretch mb-3 gap-2" onClick={() => onSelectTurno(turno.idTurno)}>
-                  
+
                   {/* Hora */}
                   <div className="d-flex flex-column align-items-end justify-content-start pt-2 pe-2 text-end flex-shrink-0" style={{ width: '60px' }}>
-                    <span className={`fw-bold ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`} style={{ fontSize: '0.90rem' }}>{turno.franjaHoraria.horaInicio}</span>
-                    <span className="text-secondary small">{turno.franjaHoraria.horaFin}</span>
+                    <span className={`fw-bold ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`} style={{ fontSize: '0.90rem' }}>{tieneHorarioTurno(turno) ? turno.franjaHoraria.horaInicio : 'Sin horario'}</span>
+                    {tieneHorarioTurno(turno) && <span className="text-secondary small">{turno.franjaHoraria.horaFin}</span>}
                     {isEjecucion && <span className="badge turno-en-curso-solid rounded-pill px-2 mt-1" style={{ fontSize: '0.60rem' }}>AHORA</span>}
                   </div>
 
@@ -150,7 +125,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
                     <div className="row g-0 h-100 position-relative">
                       <div className={`position-absolute top-0 start-0 h-100 ${isEjecucion ? 'turno-en-curso-bg' : `bg-${pConf.color}`}`} style={{ width: '4px' }}></div>
                       <div className="col-12 p-3 ps-4 d-flex flex-column">
-                        
+
                         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                           <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.65rem'}}>
                             {isEjecucion ? `${pConf.short.split(' ')[0]} - EN CURSO` : pConf.short.replace('P1 ', '').replace('P2 ', '').replace('P3 ', '')}
@@ -163,7 +138,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
 
                         <h6 className="fw-bold m-0 mb-1 fs-6 text-dark">{turno.cliente.nombre}</h6>
                         <div className="small d-flex align-items-start gap-1 mb-2 text-secondary">
-                          <MapPin size={14} className="mt-1 flex-shrink-0"/> 
+                          <MapPin size={14} className="mt-1 flex-shrink-0"/>
                           <span className="text-truncate">{turno.inmueble.direccion}</span>
                         </div>
 
@@ -189,9 +164,25 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
         </div>
       </div>
 
+      {sinHorarioSemana.length > 0 && (
+        <div className="d-none d-lg-block p-3 border-bottom bg-white">
+          <p className="small fw-semibold text-secondary mb-2">Turnos sin horario de esta semana</p>
+          <div className="row g-2">
+            {sinHorarioSemana.map((turno) => (
+              <div key={turno.idTurno} className="col-12 col-lg-6 col-xl-4">
+                <button type="button" className="btn btn-light w-100 text-start justify-content-between" onClick={() => onSelectTurno(turno.idTurno)}>
+                  <span className="text-break">{turno.cliente.nombre} · {fechaDesdeIso(turno.fechaAsignada).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} · Sin horario</span>
+                  <ChevronRight size={16} className="flex-shrink-0" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 3. VISTA DESKTOP: Grilla Absoluta */}
-      <div className="turnos-week-grid d-none d-lg-flex flex-column w-100 bg-light bg-opacity-50" style={{ minWidth: '950px' }}>
-        
+      <div className="turnos-week-grid d-none d-lg-flex flex-column w-100 bg-light bg-opacity-50">
+
         {/* Header de Días */}
         <div className="d-flex border-bottom text-center bg-white sticky-top z-3 shadow-sm">
           <div className="d-flex align-items-center justify-content-center text-secondary small fw-bold border-end" style={{ width: '70px', minWidth: '70px' }}>
@@ -211,7 +202,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
 
         {/* Cuerpo del Calendario */}
         <div className="d-flex position-relative bg-white" style={{ height: `${(HORA_FIN - HORA_INICIO) * ALTURA_HORA_PX}px` }}>
-          
+
           {/* Eje Horario */}
           <div className="border-end d-flex flex-column position-relative bg-white z-2" style={{ width: '70px', minWidth: '70px' }}>
             {horasGrid.map(hora => (
@@ -243,7 +234,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
 
               return (
                 <div key={dia.iso} className="flex-grow-1 position-relative border-end" style={{ flexBasis: 0 }}>
-                  
+
                   {/* Línea HOY */}
                   {isHoy && horaActualDecimal >= HORA_INICIO && horaActualDecimal <= HORA_FIN && (
                     <div className="position-absolute w-100" style={{ top: `${(horaActualDecimal - HORA_INICIO) * ALTURA_HORA_PX}px`, zIndex: 10 }}>
@@ -258,15 +249,18 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
                     const heightPx = (b.end - b.start) * ALTURA_HORA_PX;
 
                     if (b.isHueco) {
+                      const inicioPasado = horarioPasadoTurnos(dia.iso, formatTime(b.start), ahora);
                       return (
                         <div key={`hueco-${idx}`} className="position-absolute w-100 p-1" style={{ top: `${topPx}px`, height: `${heightPx}px` }}>
-                          <div 
-                            className="h-100 w-100 rounded-3 d-flex align-items-center justify-content-center text-secondary opacity-50 border border-dashed hover-opacity bg-light"
-                            style={{ cursor: 'pointer', fontSize: '0.75rem' }}
+                          <button type="button"
+                            disabled={inicioPasado}
+                            className={`turnos-hueco h-100 w-100 rounded-3 d-flex flex-column align-items-center justify-content-center gap-1 border ${inicioPasado ? 'turnos-hueco-inhabilitado' : 'text-secondary border-dashed hover-opacity bg-light'}`}
+                            style={{ fontSize: '0.75rem' }}
                             onClick={() => onCreateTurno({ fecha: dia.iso, horaInicio: formatTime(b.start) })}
                           >
-                            Hueco disponible
-                          </div>
+                            {inicioPasado && <LockKeyhole size={16} className="flex-shrink-0" aria-hidden="true" />}
+                            <span>{inicioPasado ? 'Horario inhabilitado' : 'Disponible'}</span>
+                          </button>
                         </div>
                       );
                     }
@@ -277,7 +271,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
 
                     return (
                       <div key={`turno-${turno.idTurno}`} className="position-absolute w-100 p-1" style={{ top: `${topPx}px`, height: `${heightPx}px` }}>
-                        <div 
+                        <div
                           className={`h-100 w-100 rounded-3 border d-flex flex-column p-2 overflow-hidden shadow-sm hover-opacity bg-white border-${isEjecucion ? 'primary' : config.color}-subtle ${isEjecucion ? 'turno-en-curso-card' : ''}`}
                           style={{ cursor: 'pointer', borderLeft: `4px solid var(--bs-${isEjecucion ? 'primary' : config.color})` }}
                           onClick={() => onSelectTurno(turno.idTurno)}
@@ -291,7 +285,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, onSelectTurno, 
                               {isEjecucion ? `${config.short.split(' ')[0]} - EN CURSO` : config.short}
                             </span>
                           </div>
-                          
+
                           <div className="flex-grow-1 overflow-hidden d-flex flex-column mt-1">
                             <span className="fw-bold text-truncate text-dark" style={{ fontSize: '0.80rem' }}>{turno.cliente.nombre}</span>
                             <span className={`small text-truncate ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`} style={{ fontSize: '0.70rem' }}>{turno.inmueble.direccion}</span>

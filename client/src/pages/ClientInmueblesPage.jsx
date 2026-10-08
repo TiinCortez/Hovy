@@ -186,8 +186,8 @@ export default function ClientInmueblesPage() {
           <span className="text-dark fw-bold">Ficha e Inmuebles</span>
         </div>
         <div className="d-flex align-items-center gap-3">
-          <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><Download size={16}/></button>
-          <button className="btn btn-sm btn-white border bg-white rounded-2 shadow-sm text-secondary px-2"><MoreVertical size={16}/></button>
+          <Button variant="light" icon aria-label="Descargar ficha"><Download size={16}/></Button>
+          <Button variant="light" icon aria-label="Opciones del cliente"><MoreVertical size={16}/></Button>
         </div>
       </div>
 
