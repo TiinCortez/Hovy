@@ -13,7 +13,7 @@ import Register from '../pages/Auth/Register.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
-import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
+import TurnosPage from '../pages/TurnosPage.jsx';
 import VisitaDetallePage from '../pages/VisitaDetallePage.jsx';
 
 // Componentes temporales (Mocks)
@@ -73,7 +73,6 @@ export default function AppRoutes() {
           }
         />
 
-        {/* RUTA DE AGENDA ACTUALIZADA */}
         <Route 
           path="/calendar" 
           element={

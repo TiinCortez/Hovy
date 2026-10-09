@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
-import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search, Maximize2, Minimize2 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
 import TurnosMensual from '../components/turnos/TurnosMensual';
 import NuevoTurnoModal from '../components/turnos/NuevoTurnoModal';
 import PanelClima from '../components/clima/PanelClima';
+import MapaAgenda from '../components/turnos/MapaAgenda';
 
 const PRIORIDADES_CONFIG = {
   P1_REASIGNADO: { label: 'P1 Reasignado', color: 'danger' },
@@ -87,6 +88,8 @@ export default function TurnosPage() {
   const [fechaActual, setFechaActual] = useState(new Date(2026, 9, 24)); // 24 de Octubre de 2026
   const [searchTerm, setSearchTerm] = useState('');
   const [activePriorities, setActivePriorities] = useState(PRIORIDADES_INICIALES);
+  const mapaRef = useRef(null);
+  const [mapaFullscreen, setMapaFullscreen] = useState(false);
 
   // Modelo de datos centralizado
   const [turnos, setTurnos] = useState([
@@ -171,6 +174,24 @@ export default function TurnosPage() {
   ]);
   const [presupuestosAprobados, setPresupuestosAprobados] = useState(MOCK_PRESUPUESTOS_APROBADOS);
   const [nuevoTurnoConfig, setNuevoTurnoConfig] = useState(null);
+
+  useEffect(() => {
+  const onChange = () => setMapaFullscreen(document.fullscreenElement === mapaRef.current);
+  document.addEventListener('fullscreenchange', onChange);
+  return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  const toggleMapaFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await mapaRef.current?.requestFullscreen();
+      }
+    } catch (err) {
+      console.error('No se pudo cambiar a pantalla completa', err);
+    }
+  }, []);
 
   const handleSelectTurno = (idTurno) => {
     console.log("Abrir detalle del turno ID:", idTurno);
@@ -414,12 +435,32 @@ export default function TurnosPage() {
         </div>
 
         {/* Columna Derecha: Meteorología Operativa */}
-        <div className="col-12 col-lg-4 col-xl-3 p-0 ps-lg-2">
-          <PanelClima />
+       <div className="col-12 col-lg-4 col-xl-3 p-0 ps-lg-2">
+
+        <PanelClima />
+
+       <div className="mt-4">
+          <div
+            ref={mapaRef}
+            className={`position-relative ${mapaFullscreen ? 'mapa-fullscreen bg-white' : ''}`}
+          >
+            <button
+              type="button"
+              onClick={toggleMapaFullscreen}
+              aria-label={mapaFullscreen ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
+              className="btn btn-sm btn-light border shadow-sm rounded-circle position-absolute d-flex align-items-center justify-content-center"
+              style={{ top: 10, right: 10, zIndex: 1000, width: 36, height: 36 }}
+            >
+              {mapaFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+
+            <MapaAgenda turnos={turnos} onSelectTurno={handleSelectTurno} />
+          </div>
+        </div>
+
         </div>
         
       </div>
-     
 
       {nuevoTurnoConfig && (
         <NuevoTurnoModal
