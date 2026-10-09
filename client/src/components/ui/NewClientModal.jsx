@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
 import Button from './Button';
+import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
 
 export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
@@ -57,11 +58,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
           {/* Header */}
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold text-dark fs-4">Registrar Nuevo Cliente</h5>
-            <button 
-              type="button" 
-              className="btn-close shadow-none" 
-              onClick={() => { reset(); setErrorMessage(null); onClose(); }} 
-            />
+            <CloseButton label="Cerrar nuevo cliente" onClick={() => { reset(); setErrorMessage(null); onClose(); }} />
           </div>
 
           {/* Body */}

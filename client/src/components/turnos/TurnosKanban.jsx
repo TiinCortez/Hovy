@@ -1,21 +1,16 @@
 import { useState } from 'react';
 import { MapPin, Clock, ChevronRight } from 'lucide-react';
 import Card from '../ui/Card';
+import { PRIORIDADES_CONFIG as prioridadesConfig, compararHorarioTurnos, formatearHorarioTurno } from './agendaTurnos';
 
 export default function TurnosKanban({ turnos, onSelectTurno }) {
   const [colFiltro, setColFiltro] = useState('TODOS'); // Filtro de columnas activo restaurado
 
-  const prioridadesConfig = {
-    'P1_REASIGNADO': { label: 'P1 Reasignado', short: 'P1 - REASIGNADO', color: 'danger', weight: 3 },
-    'P2_FIJO': { label: 'P2 Fijo', short: 'P2 - FIJO', color: 'success', weight: 2 },
-    'P3_CASUAL': { label: 'P3 Casual', short: 'P3 - CASUAL', color: 'secondary', weight: 1 }
-  };
-
   const columnasConfig = [
-    { id: 'COORDINADO', title: 'COORDINADOS', subtitle: 'Pendiente validación', dotColor: 'bg-warning', borderColor: 'border-warning' },
-    { id: 'CONFIRMADO', title: 'CONFIRMADOS', subtitle: 'Listos para jornada', dotColor: 'bg-success', borderColor: 'border-success' },
-    { id: 'EN_EJECUCION', title: 'EN EJECUCIÓN', subtitle: 'En curso', dotColor: 'turno-en-curso-bg', borderColor: 'turno-en-curso-border' },
-    { id: 'REALIZADO', title: 'REALIZADOS', subtitle: 'Completados', dotColor: 'bg-secondary', borderColor: 'border-secondary' }
+    { id: 'COORDINADO', title: 'COORDINADOS', dotColor: 'bg-warning', borderColor: 'border-warning' },
+    { id: 'CONFIRMADO', title: 'CONFIRMADOS', dotColor: 'bg-success', borderColor: 'border-success' },
+    { id: 'EN_EJECUCION', title: 'EN EJECUCIÓN', dotColor: 'turno-en-curso-bg', borderColor: 'turno-en-curso-border' },
+    { id: 'REALIZADO', title: 'REALIZADOS', dotColor: 'bg-secondary', borderColor: 'border-secondary' }
   ];
 
   const ordenarTurnos = (turnosArray) => {
@@ -23,7 +18,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
       const weightA = prioridadesConfig[a.prioridad].weight;
       const weightB = prioridadesConfig[b.prioridad].weight;
       if (weightA !== weightB) return weightB - weightA;
-      return a.franjaHoraria.horaInicio.localeCompare(b.franjaHoraria.horaInicio);
+      return compararHorarioTurnos(a, b);
     });
   };
 
@@ -61,7 +56,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
                 {badgeText}
               </span>
               <span className={`small fw-bold d-flex align-items-center gap-1 ${isRealizado ? 'text-success' : isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                {isRealizado && <Clock size={14} />} {turno.franjaHoraria.horaInicio} - {turno.franjaHoraria.horaFin} hs
+                {isRealizado && <Clock size={14} />} {formatearHorarioTurno(turno)}
               </span>
             </div>
 

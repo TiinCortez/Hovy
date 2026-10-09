@@ -231,7 +231,7 @@ export default function Dashboard() {
           <Card>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h4 className="fw-bold text-dark m-0 fs-5">Alertas y Notificaciones</h4>
-              <button className="btn btn-sm btn-light rounded-circle p-2 text-secondary"><MoreVertical size={20}/></button>
+              <button type="button" className="btn btn-light btn-icon" aria-label="Opciones"><MoreVertical size={20}/></button>
             </div>
             
             <div className="table-responsive">

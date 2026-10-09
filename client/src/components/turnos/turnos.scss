@@ -1,0 +1,176 @@
+// Estilos exclusivos del ABMC de turnos.
+.turnos-page {
+  min-width: 0;
+
+  .turnos-page-actions { width: auto; max-width: 100%; min-width: 0; align-items: center; }
+
+  .turnos-view-switcher {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex: 0 1 21rem;
+    width: 21rem;
+    min-width: 0;
+    gap: 0.25rem;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #dadcd4;
+    border-radius: 11px;
+    box-shadow: 0 1px 3px rgba(27, 48, 6, 0.06);
+  }
+
+  .turnos-view-option {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .turnos-create-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .turnos-calendar-card,
+  .turnos-kanban-card { min-width: 0; max-width: 100%; }
+  .card { min-width: 0; }
+  .turnos-calendar-card > .card-body { overflow: hidden; }
+  .turnos-week-grid { min-width: 0; }
+  .turnos-week-grid > div { min-width: 950px; }
+  .turnos-kanban-card .row.flex-nowrap { margin-inline: 0; }
+}
+
+.turnos-periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+
+  .turnos-periodo-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 22rem;
+    min-width: 0;
+  }
+  .turnos-periodo-title { flex: 1; min-width: 0; font-size: 0.9rem; }
+  .turnos-nav-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .turnos-periodo-picker { display: flex; align-items: center; gap: 0.75rem; }
+  .turnos-periodo-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+  }
+  input { min-height: 44px; width: 10rem; min-width: 0; }
+}
+
+.nuevo-turno-modal,
+.modificar-turno-modal {
+  form { min-height: 0; overflow: hidden; }
+  form > .modal-body { overflow-y: auto; }
+  .modal-footer { flex-shrink: 0; }
+}
+
+.turnos-cliente-busqueda {
+  input { min-width: 0; min-height: 44px; }
+}
+
+.turnos-fecha-selector {
+  min-width: 0;
+  min-height: 48px;
+
+  > .btn { flex-shrink: 0; min-width: 44px; }
+
+  .turnos-fecha-control {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+
+    span { overflow-wrap: anywhere; }
+    &:focus-within { outline: 2px solid #1b3006; outline-offset: -2px; }
+
+    input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      opacity: 0;
+      cursor: pointer;
+
+      // Hace clickeable toda la superficie también en WebViews sin showPicker.
+      &::-webkit-calendar-picker-indicator {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.turnos-page .turnos-hueco {
+  line-height: 1.3;
+  overflow: hidden;
+  padding: 0.25rem;
+
+  &.turnos-hueco-inhabilitado {
+    color: #343a40;
+    background: repeating-linear-gradient(135deg, #d4d8dc, #d4d8dc 8px, #c6cbd0 8px, #c6cbd0 16px);
+    border-color: #8b949e !important;
+    cursor: not-allowed;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .modificar-turno-modal {
+    .modal-dialog { width: 100%; max-width: none; min-height: 100dvh; margin: 0; }
+    .modal-content { height: 100dvh; max-height: 100dvh; border-radius: 0 !important; }
+    .modal-footer { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important; }
+    .modal-footer .btn { min-width: 0; padding-inline: 1rem !important; }
+  }
+  .turnos-page .turnos-page-actions { width: 100%; }
+  .turnos-page .turnos-view-switcher { flex-grow: 1; }
+  .turnos-periodo {
+    .turnos-periodo-controls { flex-basis: 100%; }
+    .turnos-periodo-picker { width: 100%; }
+    .turnos-periodo-input { flex: 1; flex-wrap: wrap; }
+    input { width: 100%; flex: 1 1 9rem; }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .turnos-page .turnos-view-switcher { flex-basis: 100%; width: 100%; }
+  .turnos-page .turnos-create-button { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .turnos-page .turnos-view-option {
+    gap: 0.3rem;
+    padding-inline: 0.4rem !important;
+  }
+  .turnos-periodo .turnos-periodo-title { font-size: 0.8rem; }
+}
+
+@media (max-width: 359.98px) {
+  .turnos-page .turnos-view-option {
+    font-size: 0.75rem !important;
+    padding-inline: 0.2rem !important;
+    svg { width: 14px; height: 14px; }
+  }
+}

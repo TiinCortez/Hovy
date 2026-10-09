@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { User, MapPin, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import AuthService from '../../services/auth.service.js';
+import Button from '../../components/ui/Button';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -137,7 +138,7 @@ export default function Register() {
                       minLength: { value: 6, message: "Debe tener al menos 6 caracteres" }
                     })} 
                   />
-                  <button type="button" className="btn btn-link p-0 text-secondary ms-2 flex-shrink-0" onClick={() => setShowPassword(!showPassword)}>
+                  <button type="button" className="btn btn-link btn-icon text-secondary ms-2" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -156,7 +157,7 @@ export default function Register() {
                         validate: value => value === getValues('password') || "Las contraseñas no coinciden" 
                     })}
                   />
-                  <button type="button" className="btn btn-link p-0 text-secondary ms-2 flex-shrink-0" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <button type="button" className="btn btn-link btn-icon text-secondary ms-2" aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -166,9 +167,9 @@ export default function Register() {
 
             <div className="pt-3">
               {/* Deshabilitamos el botón si está cargando O si ya fue exitoso */}
-              <button type="submit" className="register-btn" disabled={isLoading || successMessage}>
+              <Button type="submit" variant="primary" className="w-100" disabled={Boolean(isLoading || successMessage)}>
                 {isLoading ? 'Registrando...' : <>Crear Cuenta <ArrowRight size={18} className="ms-1 d-inline" /></>}
-              </button>
+              </Button>
             </div>
           </form>
 

@@ -8,8 +8,20 @@
 const ZONA_HORARIA = 'America/Argentina/Cordoba';
 
 // en-CA formatea como YYYY-MM-DD, que es lo que se compara como string.
-export const hoyEnArgentina = () =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(new Date());
+export const hoyEnArgentina = (ahora = new Date()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(ahora);
+
+// Hora argentina para la agenda. No cambia la validación de los consumidores existentes.
+export const ahoraEnArgentina = (ahora = new Date()) => {
+  const partes = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: ZONA_HORARIA,
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+  }).formatToParts(ahora).map(({ type, value }) => [type, value]));
+  return {
+    fecha: hoyEnArgentina(ahora),
+    segundos: Number(partes.hour) * 3600 + Number(partes.minute) * 60 + Number(partes.second)
+  };
+};
 
 // Suma (o resta, con n negativo) días a una fecha YYYY-MM-DD. Se opera en UTC
 // a propósito: como fechaISO no tiene hora, sumar días calendario en UTC no
@@ -24,7 +36,7 @@ export const sumarDias = (fechaISO, n) => {
 // Devuelve el mensaje de error o null. Chequea el formato y que la fecha
 // exista (2026-02-30 pasa la regex pero no es una fecha), y que no sea
 // anterior a hoy.
-export const validarFechaNoPasada = (fecha, nombreCampo = 'fecha') => {
+export const validarFechaNoPasada = (fecha, nombreCampo = 'fecha', ahora = new Date()) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return `${nombreCampo} tiene que tener el formato YYYY-MM-DD. Se recibió: "${fecha}"`;
   }
@@ -35,7 +47,7 @@ export const validarFechaNoPasada = (fecha, nombreCampo = 'fecha') => {
     return `${nombreCampo} no es una fecha válida: "${fecha}"`;
   }
 
-  if (fecha < hoyEnArgentina()) {
+  if (fecha < hoyEnArgentina(ahora)) {
     return `${nombreCampo} no puede ser anterior a hoy.`;
   }
 
