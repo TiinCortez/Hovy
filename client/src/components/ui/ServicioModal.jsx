@@ -14,17 +14,17 @@ const nonNegative = (value) => {
 
 /**
  * Create (servicio = null) or edit (servicio = row) modal.
- * tipos: global catalog already filtered to types the user can still add.
- * reactivable: map id_servicio -> existing inactive row (re-add = reactivate).
+ * tipos: global catalog of service types, used only as name suggestions.
  */
-export default function ServicioModal({ isOpen, onClose, servicio, tipos, reactivable, onSaved }) {
+export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSaved }) {
   const isEdit = Boolean(servicio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   // The parent mounts this modal only while open, so defaultValues are fresh each time
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
-      id_servicio: '',
+      nombre: '',
+      descripcion: '',
       precio_base: isEdit ? String(servicio.precio_base ?? '') : '',
       limite_operativo: isEdit && servicio.limite_operativo != null ? String(servicio.limite_operativo) : '',
     },
@@ -42,14 +42,13 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, reacti
       if (isEdit) {
         await ServicioService.update(servicio.id_usuario_servicio, { precio_base, limite_operativo });
       } else {
-        const idServicio = Number(data.id_servicio);
-        const inactive = reactivable?.[idServicio];
-        if (inactive) {
-          // Unique (user, type) constraint: a removed service is reactivated instead of re-created
-          await ServicioService.update(inactive.id_usuario_servicio, { precio_base, limite_operativo, activo: true });
-        } else {
-          await ServicioService.create({ id_servicio: idServicio, precio_base, limite_operativo });
-        }
+        // The server finds-or-creates the type by name and reactivates removed links
+        await ServicioService.create({
+          nombre: data.nombre.trim(),
+          descripcion: data.descripcion.trim() || undefined,
+          precio_base,
+          limite_operativo,
+        });
       }
       await onSaved();
       onClose();
@@ -86,23 +85,41 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, reacti
                   <input id="servicio-tipo" type="text" className="form-control bg-light rounded-3" value={servicio.servicio?.nombre || ''} readOnly disabled />
                 ) : (
                   <>
-                    <select
+                    <input
                       id="servicio-tipo"
-                      className={`form-select bg-light rounded-3 ${errors.id_servicio ? 'is-invalid' : ''}`}
-                      {...register('id_servicio', { required: 'Seleccioná un servicio' })}
-                    >
-                      <option value="">Seleccionar...</option>
+                      type="text"
+                      list="servicio-sugerencias"
+                      autoComplete="off"
+                      className={`form-control bg-light rounded-3 ${errors.nombre ? 'is-invalid' : ''}`}
+                      {...register('nombre', {
+                        required: 'El nombre es obligatorio',
+                        validate: (v) => {
+                          const len = v.trim().length;
+                          return (len >= 2 && len <= 100) || 'El nombre debe tener entre 2 y 100 caracteres';
+                        },
+                      })}
+                    />
+                    <datalist id="servicio-sugerencias">
                       {tipos.map((t) => (
-                        <option key={t.id_servicio} value={t.id_servicio}>{t.nombre}</option>
+                        <option key={t.id_servicio} value={t.nombre} />
                       ))}
-                    </select>
-                    {errors.id_servicio && <span className="text-danger small mt-1 d-block">{errors.id_servicio.message}</span>}
-                    {tipos.length === 0 && (
-                      <span className="text-secondary small mt-1 d-block">Ya agregaste todos los servicios disponibles.</span>
-                    )}
+                    </datalist>
+                    {errors.nombre && <span className="text-danger small mt-1 d-block">{errors.nombre.message}</span>}
                   </>
                 )}
               </div>
+
+              {!isEdit && (
+                <div className="mb-3">
+                  <label className="form-label small fw-bold text-secondary" htmlFor="servicio-descripcion">Descripción</label>
+                  <textarea
+                    id="servicio-descripcion"
+                    rows={2}
+                    className="form-control bg-light rounded-3"
+                    {...register('descripcion')}
+                  />
+                </div>
+              )}
 
               <div className="mb-3">
                 <label className="form-label small fw-bold text-secondary" htmlFor="servicio-precio">Precio base *</label>
@@ -143,7 +160,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, reacti
             <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={onClose} disabled={isSubmitting}>
               Cancelar
             </button>
-            <Button type="submit" form={formId} variant="primary" disabled={isSubmitting || (!isEdit && tipos.length === 0)}>
+            <Button type="submit" form={formId} variant="primary" disabled={isSubmitting}>
               {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Agregar'}
             </Button>
           </div>

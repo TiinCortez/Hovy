@@ -13,7 +13,7 @@ const formatPrice = (value) => `$${Number(value || 0).toLocaleString('es-AR')}`;
 
 export default function ServiciosPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [mios, setMios] = useState([]); // includes inactive rows (needed for reactivation)
+  const [mios, setMios] = useState([]); // may include inactive rows; only active ones are listed
   const [tipos, setTipos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -59,18 +59,6 @@ export default function ServiciosPage() {
     const search = normalize(searchTerm.trim());
     return search ? activos.filter((s) => normalize(s.servicio?.nombre).includes(search)) : activos;
   }, [activos, searchTerm]);
-
-  // Types not active in the user's catalog yet
-  const tiposDisponibles = useMemo(() => {
-    const activeIds = new Set(activos.map((s) => s.id_servicio));
-    return tipos.filter((t) => !activeIds.has(t.id_servicio));
-  }, [tipos, activos]);
-
-  // Removed services keep the UNIQUE(user, type) row: adding them again reactivates it
-  const reactivable = useMemo(
-    () => Object.fromEntries(mios.filter((s) => !s.activo).map((s) => [s.id_servicio, s])),
-    [mios]
-  );
 
   const handleRetry = () => {
     setLoading(true);
@@ -201,8 +189,7 @@ export default function ServiciosPage() {
         <ServicioModal
           isOpen
           servicio={modal.mode === 'edit' ? modal.servicio : null}
-          tipos={tiposDisponibles}
-          reactivable={reactivable}
+          tipos={tipos}
           onClose={closeModal}
           onSaved={loadServicios}
         />
