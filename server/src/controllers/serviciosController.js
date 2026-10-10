@@ -39,8 +39,8 @@ export const getCatalogo = async (req, res) => {
   }
 };
 
-// GET /api/servicios/mios
-export const getMisServicios = async (req, res) => {
+// GET /api/servicios/catalogo
+export const getServicios = async (req, res) => {
   try {
     const idUsuario = idUsuarioDelToken(req);
 
@@ -50,16 +50,16 @@ export const getMisServicios = async (req, res) => {
       .eq('id_usuario', idUsuario)
       .order('id_usuario_servicio', { ascending: true });
 
-    if (error) return errorInterno(res, error, 'getMisServicios');
+    if (error) return errorInterno(res, error, 'getServicios');
 
     return res.status(200).json({ ok: true, data });
   } catch (err) {
-    return errorInterno(res, err, 'getMisServicios');
+    return errorInterno(res, err, 'getServicios');
   }
 };
 
-// POST /api/servicios/mios
-export const createMiServicio = async (req, res) => {
+// POST /api/servicios/catalogo
+export const createServicio = async (req, res) => {
   try {
     const idUsuario = idUsuarioDelToken(req);
     const { id_servicio, precio_base, limite_operativo } = req.body || {};
@@ -88,7 +88,7 @@ export const createMiServicio = async (req, res) => {
       .eq('id_servicio', Number(id_servicio))
       .maybeSingle();
 
-    if (errorServicio) return errorInterno(res, errorServicio, 'createMiServicio/catalogo');
+    if (errorServicio) return errorInterno(res, errorServicio, 'createServicio/catalogo');
     if (!servicio) {
       return res.status(404).json({ ok: false, error: "Servicio no encontrado en el catálogo" });
     }
@@ -109,17 +109,17 @@ export const createMiServicio = async (req, res) => {
       if (error.code === '23505') {
         return res.status(409).json({ ok: false, error: "Ya tenés este servicio en tu catálogo" });
       }
-      return errorInterno(res, error, 'createMiServicio');
+      return errorInterno(res, error, 'createServicio');
     }
 
     return res.status(201).json({ ok: true, data });
   } catch (err) {
-    return errorInterno(res, err, 'createMiServicio');
+    return errorInterno(res, err, 'createServicio');
   }
 };
 
-// PUT /api/servicios/mios/:id
-export const updateMiServicio = async (req, res) => {
+// PUT /api/servicios/catalogo/:id
+export const updateServicio = async (req, res) => {
   try {
     const idUsuario = idUsuarioDelToken(req);
     const { id } = req.params;
@@ -166,7 +166,7 @@ export const updateMiServicio = async (req, res) => {
       .select(SELECT_MIO)
       .maybeSingle();
 
-    if (error) return errorInterno(res, error, 'updateMiServicio');
+    if (error) return errorInterno(res, error, 'updateServicio');
     if (!data) {
       return res.status(404).json({ ok: false, error: "Servicio no encontrado" });
     }
@@ -177,12 +177,12 @@ export const updateMiServicio = async (req, res) => {
       data
     });
   } catch (err) {
-    return errorInterno(res, err, 'updateMiServicio');
+    return errorInterno(res, err, 'updateServicio');
   }
 };
 
-// DELETE /api/servicios/mios/:id (soft delete)
-export const deleteMiServicio = async (req, res) => {
+// DELETE /api/servicios/catalogo/:id (soft delete)
+export const deleteServicio = async (req, res) => {
   try {
     const idUsuario = idUsuarioDelToken(req);
     const { id } = req.params;
@@ -199,7 +199,7 @@ export const deleteMiServicio = async (req, res) => {
       .select(SELECT_MIO)
       .maybeSingle();
 
-    if (error) return errorInterno(res, error, 'deleteMiServicio');
+    if (error) return errorInterno(res, error, 'deleteServicio');
     if (!data) {
       return res.status(404).json({ ok: false, error: "Servicio no encontrado" });
     }
@@ -210,6 +210,6 @@ export const deleteMiServicio = async (req, res) => {
       data
     });
   } catch (err) {
-    return errorInterno(res, err, 'deleteMiServicio');
+    return errorInterno(res, err, 'deleteServicio');
   }
 };

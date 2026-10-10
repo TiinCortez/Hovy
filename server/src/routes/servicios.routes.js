@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import {
   getCatalogo,
-  getMisServicios,
-  createMiServicio,
-  updateMiServicio,
-  deleteMiServicio
+  getServicios,
+  createServicio,
+  updateServicio,
+  deleteServicio
 } from '../controllers/serviciosController.js';
 
 const router = Router();
@@ -12,16 +12,16 @@ const router = Router();
 // GET /api/servicios (global catalog of service types)
 router.get('/', getCatalogo);
 
-// GET /api/servicios/mios
-router.get('/mios', getMisServicios);
+// GET /api/servicios/catalogo
+router.get('/catalogo', getServicios);
 
-// POST /api/servicios/mios
-router.post('/mios', createMiServicio);
+// POST /api/servicios/catalogo
+router.post('/catalogo', createServicio);
 
-// PUT /api/servicios/mios/:id
-router.put('/mios/:id', updateMiServicio);
+// PUT /api/servicios/catalogo/:id
+router.put('/catalogo/:id', updateServicio);
 
-// DELETE /api/servicios/mios/:id (soft delete: activo = false)
-router.delete('/mios/:id', deleteMiServicio);
+// DELETE /api/servicios/catalogo/:id (soft delete: activo = false)
+router.delete('/catalogo/:id', deleteServicio);
 
 export default router;

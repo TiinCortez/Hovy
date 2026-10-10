@@ -12,11 +12,11 @@ GET {{baseUrl}}/api/servicios
 
 // TEST DE MIS SERVICIOS
 ### Listado de mis servicios
-GET {{baseUrl}}/api/servicios/mios
+GET {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 
 ### Alta de servicio - [Atributos completos]
-POST {{baseUrl}}/api/servicios/mios
+POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### Alta de servicio - [Duplicado: repetir la anterior, espera 409]
-POST {{baseUrl}}/api/servicios/mios
+POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -37,7 +37,7 @@ Content-Type: application/json
 }
 
 ### Alta de servicio - [Falta precio_base, espera 400]
-POST {{baseUrl}}/api/servicios/mios
+POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -46,7 +46,7 @@ Content-Type: application/json
 }
 
 ### Alta de servicio - [Precio negativo, espera 400]
-POST {{baseUrl}}/api/servicios/mios
+POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -56,7 +56,7 @@ Content-Type: application/json
 }
 
 ### Alta de servicio - [Servicio inexistente, espera 404]
-POST {{baseUrl}}/api/servicios/mios
+POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -67,7 +67,7 @@ Content-Type: application/json
 
 // TEST DE ACTUALIZACION
 ### Actualizar precio y limite
-PUT {{baseUrl}}/api/servicios/mios/1
+PUT {{baseUrl}}/api/servicios/catalogo/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -77,7 +77,7 @@ Content-Type: application/json
 }
 
 ### Reactivar servicio
-PUT {{baseUrl}}/api/servicios/mios/1
+PUT {{baseUrl}}/api/servicios/catalogo/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -86,7 +86,7 @@ Content-Type: application/json
 }
 
 ### Actualizar - [activo no booleano, espera 400]
-PUT {{baseUrl}}/api/servicios/mios/1
+PUT {{baseUrl}}/api/servicios/catalogo/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -95,14 +95,14 @@ Content-Type: application/json
 }
 
 ### Actualizar - [Sin campos, espera 400]
-PUT {{baseUrl}}/api/servicios/mios/1
+PUT {{baseUrl}}/api/servicios/catalogo/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {}
 
 ### Actualizar - [Id ajeno o inexistente, espera 404]
-PUT {{baseUrl}}/api/servicios/mios/99999
+PUT {{baseUrl}}/api/servicios/catalogo/99999
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -112,9 +112,9 @@ Content-Type: application/json
 
 // TEST DE BAJA (soft delete)
 ### Baja de servicio
-DELETE {{baseUrl}}/api/servicios/mios/1
+DELETE {{baseUrl}}/api/servicios/catalogo/1
 Authorization: Bearer {{token}}
 
 ### Baja - [Id ajeno o inexistente, espera 404]
-DELETE {{baseUrl}}/api/servicios/mios/99999
+DELETE {{baseUrl}}/api/servicios/catalogo/99999
 Authorization: Bearer {{token}}
