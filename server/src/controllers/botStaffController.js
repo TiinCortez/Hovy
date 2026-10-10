@@ -6,7 +6,6 @@ import {
   validarSolapamientoTurno,
   horaAMinutos,
 } from '../utils/algoritmoAgenda.js';
-import { normalizarTelefono } from '../utils/telefono.js';
 import { hoyEnArgentina, sumarDias, validarFechaNoPasada } from '../utils/fechaArgentina.js';
 import { PRIORIDADES_VALIDAS } from './turnosController.js';
 
@@ -32,6 +31,64 @@ const parsearIdSolicitud = (valor) => {
 
 const estaVacio = (valor) =>
   valor === undefined || valor === null || String(valor).trim() === '';
+
+const redondear2 = (numero) => Math.round((numero + Number.EPSILON) * 100) / 100;
+
+// Lines of the internal estimate for a visit: one per solicitud_servicio row,
+// priced with the staff user's CURRENT usuario_servicio (precio_base = price
+// per m2). A service the user no longer offers (or deactivated) comes back with
+// precio_m2 and subtotal null. Shared by the estimate (GET .../estimado) and by
+// the final-price acceptance (POST .../presupuesto) so both compute the same
+// numbers. Returns { lineas } or { errorConsulta } (message already in
+// Spanish, for a 500).
+const calcularLineasEstimado = async (idSolicitud, idUsuario) => {
+  const { data: cargados, error: errorCargados } = await supabaseAdmin
+    .from('solicitud_servicio')
+    .select('id_servicio, superficie_m2, servicio:servicios_catalogo(nombre)')
+    .eq('id_solicitud', idSolicitud)
+    .order('id_solicitud_servicio', { ascending: true });
+
+  if (errorCargados) {
+    console.error('Error al consultar los servicios de la visita:', errorCargados);
+    return { errorConsulta: 'No se pudieron consultar los servicios de la visita. Intentá de nuevo más tarde.' };
+  }
+
+  if (!cargados || cargados.length === 0) return { lineas: [] };
+
+  const { data: precios, error: errorPrecios } = await supabaseAdmin
+    .from('usuario_servicio')
+    .select('id_servicio, precio_base, activo')
+    .eq('id_usuario', idUsuario)
+    .in('id_servicio', cargados.map((fila) => fila.id_servicio));
+
+  if (errorPrecios) {
+    console.error('Error al consultar los precios del usuario staff:', errorPrecios);
+    return { errorConsulta: 'No se pudieron consultar los precios. Intentá de nuevo más tarde.' };
+  }
+
+  const preciosPorId = new Map((precios ?? []).map((fila) => [Number(fila.id_servicio), fila]));
+
+  const lineas = cargados.map((fila) => {
+    const nombre = fila.servicio?.nombre ?? null;
+    const superficie = Number(fila.superficie_m2);
+    const precio = preciosPorId.get(Number(fila.id_servicio));
+
+    if (!precio || precio.activo !== true) {
+      return { id_servicio: fila.id_servicio, nombre, superficie_m2: superficie, precio_m2: null, subtotal: null };
+    }
+
+    const precioM2 = Number(precio.precio_base);
+    return {
+      id_servicio: fila.id_servicio,
+      nombre,
+      superficie_m2: superficie,
+      precio_m2: precioM2,
+      subtotal: redondear2(precioM2 * superficie),
+    };
+  });
+
+  return { lineas };
+};
 
 // GET /api/bot/staff/:telefono/visitas?nombre=Juan&estado=Contactada
 //
@@ -202,6 +259,12 @@ export const consultarDisponibilidadStaff = async (req, res) => {
 // cliente apruebe aparte, el admin que lo dicta ya está aceptándolo. Eso es lo
 // que POST .../turnos va a exigir para poder agendar.
 //
+// Si la visita tiene servicios cargados (PUT .../servicios), el presupuesto se
+// arma con ellos: monto_estimado = suma de precio por m2 x m2, monto_total = el
+// precio final del admin, y detalle_presupuesto con un snapshot por servicio
+// (ver calcularLineasEstimado). Sin servicios se mantiene el monto suelto de
+// siempre, para no romper el flujo actual del bot.
+//
 // Si la solicitud ya tenía un presupuesto cargado, este endpoint lo
 // actualiza en vez de crear uno nuevo: el admin puede haberse equivocado con
 // el monto y corregirlo con una segunda llamada, sin dejar una fila
@@ -261,17 +324,41 @@ export const cargarPresupuestoStaff = async (req, res) => {
       });
     }
 
-    // Sin descuento ni recargo logístico todavía: subtotal y total son el
-    // mismo número. El día que exista la base de precios, esto se arma con
-    // detalle_presupuesto en vez de escribirse a mano acá.
+    // Servicios cargados en la visita (PUT .../servicios): si hay, el
+    // presupuesto se arma con ellos. Se valida TODO antes de escribir nada.
+    const { lineas, errorConsulta } = await calcularLineasEstimado(idSolicitud, req.usuario.id);
+
+    if (errorConsulta) {
+      return res.status(500).json({ ok: false, error: errorConsulta });
+    }
+
+    const conServicios = lineas.length > 0;
+    const sinPrecio = lineas.filter((linea) => linea.precio_m2 === null);
+
+    if (sinPrecio.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        error: `No se puede aceptar el presupuesto: estos servicios no tienen precio activo en tu catálogo: ${sinPrecio
+          .map((linea) => linea.nombre ?? `id ${linea.id_servicio}`)
+          .join(', ')}. Activalos o recargá los servicios de la visita.`,
+      });
+    }
+
+    const estimadoTotal = redondear2(lineas.reduce((acumulado, linea) => acumulado + linea.subtotal, 0));
+
+    // Con servicios: monto_estimado y monto_subtotal son la suma de las líneas
+    // y monto_total es el precio final que dictó el admin (puede ser mayor o
+    // menor). Sin servicios (flujo legacy del bot): monto suelto, subtotal y
+    // total son el mismo número y monto_estimado no se toca (queda null).
     const camposPresupuesto = {
       id_cliente: solicitud.id_cliente,
       id_inmueble: solicitud.id_inmueble,
-      monto_subtotal: montoTotal,
+      monto_subtotal: conServicios ? estimadoTotal : montoTotal,
       monto_total: montoTotal,
       estado: 'Aceptado',
       nota,
     };
+    if (conServicios) camposPresupuesto.monto_estimado = estimadoTotal;
 
     let presupuesto;
 
@@ -317,10 +404,64 @@ export const cargarPresupuestoStaff = async (req, res) => {
       }
     }
 
+    if (!conServicios) {
+      return res.status(200).json({
+        ok: true,
+        mensaje: `Presupuesto de $${montoTotal} registrado para ${solicitud.nombre} ${solicitud.apellido}.`,
+        data: presupuesto,
+      });
+    }
+
+    // Detalle: una fila por servicio con el precio por m2 de HOY (snapshot), así
+    // el presupuesto no cambia si el admin modifica sus precios después. Sin
+    // transacción disponible: ya se validó todo arriba y acá se hace delete +
+    // insert; si el insert fallara tras el delete, el presupuesto queda sin
+    // detalle y el mensaje pide reintentar (aceptar de nuevo reemplaza el
+    // detalle completo, así que reintentar es seguro).
+    const { error: errorBorrado } = await supabaseAdmin
+      .from('detalle_presupuesto')
+      .delete()
+      .eq('id_presupuesto', presupuesto.id_presupuesto);
+
+    if (errorBorrado) {
+      console.error('Error al borrar el detalle previo del presupuesto:', errorBorrado);
+      return res.status(500).json({
+        ok: false,
+        error: 'El presupuesto se registró, pero no se pudo actualizar su detalle. Reintentá la carga.',
+      });
+    }
+
+    const filasDetalle = lineas.map((linea) => ({
+      id_presupuesto: presupuesto.id_presupuesto,
+      id_servicio: linea.id_servicio,
+      cantidad: linea.superficie_m2,
+      precio_unitario: linea.precio_m2,
+      subtotal: linea.subtotal,
+    }));
+
+    const { error: errorDetalle } = await supabaseAdmin.from('detalle_presupuesto').insert(filasDetalle);
+
+    if (errorDetalle) {
+      console.error('Error al guardar el detalle del presupuesto:', errorDetalle);
+      return res.status(500).json({
+        ok: false,
+        error: 'El presupuesto se registró, pero no se pudo guardar su detalle. Reintentá la carga.',
+      });
+    }
+
+    // Respuesta INTERNA (solo admin): incluye el estimado y la diferencia con
+    // el precio final; nada de esto se le comunica al cliente.
     return res.status(200).json({
       ok: true,
-      mensaje: `Presupuesto de $${montoTotal} registrado para ${solicitud.nombre} ${solicitud.apellido}.`,
-      data: presupuesto,
+      mensaje: `Presupuesto de $${montoTotal} registrado para ${solicitud.nombre} ${solicitud.apellido} (estimado interno: $${estimadoTotal}).`,
+      data: {
+        ...presupuesto,
+        estimado_total: estimadoTotal,
+        precio_final: montoTotal,
+        diferencia: redondear2(montoTotal - estimadoTotal),
+        lineas,
+        aviso: AVISO_ESTIMADO_INTERNO,
+      },
     });
   } catch (err) {
     console.error('Error inesperado al cargar el presupuesto:', err);
@@ -607,6 +748,36 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
       });
     }
 
+    // El turno solo se agenda con un presupuesto que el cliente ya aceptó
+    // (el admin lo registra como Aceptado en cargarPresupuestoStaff).
+    const { data: presupuesto, error: errorPresupuesto } = await supabaseAdmin
+      .from('presupuestos')
+      .select('id_presupuesto, estado')
+      .eq('id_presupuesto', solicitud.id_presupuesto)
+      .maybeSingle();
+
+    if (errorPresupuesto) {
+      console.error('Error al buscar el presupuesto para agendar el turno:', errorPresupuesto);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo consultar el presupuesto. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!presupuesto) {
+      return res.status(409).json({
+        ok: false,
+        error: 'El presupuesto enlazado a la solicitud no existe. Volvé a cargarlo antes de agendar el turno.',
+      });
+    }
+
+    if (presupuesto.estado !== 'Aceptado') {
+      return res.status(409).json({
+        ok: false,
+        error: `El presupuesto tiene que estar Aceptado para agendar el turno (estado actual: ${presupuesto.estado}).`,
+      });
+    }
+
     if (vinoInicio) {
       const hayChoque = await validarSolapamientoTurno({
         fecha_programada: body.fecha_programada,
@@ -684,28 +855,12 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
   }
 };
 
-// wa_id variants under which n8n may have stored the client's session in
-// sesiones_wa. n8n keys it with the raw Meta `from` (Argentine mobiles arrive
-// as 54 + 10 digits, WITHOUT the 9), while the backend canonical form is
-// 549 + 10 digits. Both are returned so the delete cannot miss the session.
-const variantesWaId = (telefono) => {
-  const canonico = normalizarTelefono(telefono);
-  const variantes = new Set();
-  if (canonico) {
-    variantes.add(canonico); // 549XXXXXXXXXX
-    variantes.add(`54${canonico.slice(3)}`); // 54XXXXXXXXXX (Meta wa_id)
-  }
-  if (!estaVacio(telefono)) variantes.add(String(telefono).trim());
-  return [...variantes];
-};
-
 // POST /api/bot/staff/:telefono/visitas/:id/cancelar
 //
 // Cancels a Confirmada visit: only solicitudes_visita.estado changes. Services
 // (solicitud_servicio), presupuestos and turnos are NOT touched and the row is
-// not deleted. Then the client's WhatsApp session is cleared so a future
-// request starts clean; if that fails the cancellation still stands and the
-// response carries an `aviso`.
+// not deleted. WhatsApp session cleanup is deliberately NOT done here (deferred
+// to a bot branch).
 export const cancelarSolicitudVisita = async (req, res) => {
   const idSolicitud = parsearIdSolicitud(req.params.id);
   if (!idSolicitud) {
@@ -762,29 +917,11 @@ export const cancelarSolicitudVisita = async (req, res) => {
       });
     }
 
-    let aviso;
-    const waIds = variantesWaId(solicitud.telefono);
-
-    if (waIds.length > 0) {
-      const { error: errorSesion } = await supabaseAdmin
-        .from('sesiones_wa')
-        .delete()
-        .in('wa_id', waIds);
-
-      if (errorSesion) {
-        console.error('Error al borrar la sesión de WhatsApp del cliente:', errorSesion);
-        aviso = 'La solicitud se canceló, pero no se pudo limpiar la sesión de WhatsApp del cliente.';
-      }
-    }
-
-    const respuesta = {
+    return res.status(200).json({
       ok: true,
       mensaje: `La solicitud de ${solicitud.nombre} ${solicitud.apellido} quedó cancelada.`,
       data: cancelada,
-    };
-    if (aviso) respuesta.aviso = aviso;
-
-    return res.status(200).json(respuesta);
+    });
   } catch (err) {
     console.error('Error inesperado al cancelar la solicitud de visita:', err);
     return res.status(500).json({
@@ -805,8 +942,6 @@ export const cancelarSolicitudVisita = async (req, res) => {
 // ---------------------------------------------------------------------------
 
 const AVISO_ESTIMADO_INTERNO = 'Estimado interno: no comunicar al cliente.';
-
-const redondear2 = (numero) => Math.round((numero + Number.EPSILON) * 100) / 100;
 
 // PUT /api/bot/staff/:telefono/visitas/:id/servicios
 // body: { servicios: [ { id_servicio, superficie_m2? } ] }
@@ -1032,63 +1167,26 @@ export const obtenerEstimadoVisitaStaff = async (req, res) => {
       });
     }
 
-    const { data: cargados, error: errorCargados } = await supabaseAdmin
-      .from('solicitud_servicio')
-      .select('id_servicio, superficie_m2, servicio:servicios_catalogo(nombre)')
-      .eq('id_solicitud', idSolicitud)
-      .order('id_solicitud_servicio', { ascending: true });
+    const { lineas, errorConsulta } = await calcularLineasEstimado(idSolicitud, req.usuario.id);
 
-    if (errorCargados) {
-      console.error('Error al consultar los servicios de la visita:', errorCargados);
-      return res.status(500).json({
-        ok: false,
-        error: 'No se pudieron consultar los servicios de la visita. Intentá de nuevo más tarde.',
-      });
+    if (errorConsulta) {
+      return res.status(500).json({ ok: false, error: errorConsulta });
     }
 
-    if (!cargados || cargados.length === 0) {
+    if (lineas.length === 0) {
       return res.status(409).json({
         ok: false,
         error: 'La visita todavía no tiene servicios cargados. Cargalos antes de pedir el estimado.',
       });
     }
 
-    const { data: precios, error: errorPrecios } = await supabaseAdmin
-      .from('usuario_servicio')
-      .select('id_servicio, precio_base, activo')
-      .eq('id_usuario', req.usuario.id)
-      .in('id_servicio', cargados.map((fila) => fila.id_servicio));
-
-    if (errorPrecios) {
-      console.error('Error al consultar los precios del usuario staff:', errorPrecios);
-      return res.status(500).json({
-        ok: false,
-        error: 'No se pudieron consultar los precios. Intentá de nuevo más tarde.',
-      });
-    }
-
-    const preciosPorId = new Map((precios ?? []).map((fila) => [Number(fila.id_servicio), fila]));
-    const advertencias = [];
-    let total = 0;
-
-    const lineas = cargados.map((fila) => {
-      const nombre = fila.servicio?.nombre ?? null;
-      const superficie = Number(fila.superficie_m2);
-      const precio = preciosPorId.get(Number(fila.id_servicio));
-
-      if (!precio || precio.activo !== true) {
-        advertencias.push(
-          `El servicio "${nombre ?? fila.id_servicio}" ya no está activo en tu catálogo: no se incluyó en el total.`
-        );
-        return { id_servicio: fila.id_servicio, nombre, superficie_m2: superficie, precio_m2: null, subtotal: null };
-      }
-
-      const precioM2 = Number(precio.precio_base);
-      const subtotal = redondear2(precioM2 * superficie);
-      total += subtotal;
-
-      return { id_servicio: fila.id_servicio, nombre, superficie_m2: superficie, precio_m2: precioM2, subtotal };
-    });
+    const advertencias = lineas
+      .filter((linea) => linea.precio_m2 === null)
+      .map(
+        (linea) =>
+          `El servicio "${linea.nombre ?? linea.id_servicio}" ya no está activo en tu catálogo: no se incluyó en el total.`
+      );
+    const total = lineas.reduce((acumulado, linea) => acumulado + (linea.subtotal ?? 0), 0);
 
     const data = {
       id_solicitud: idSolicitud,

@@ -13,6 +13,12 @@
 @solicitudSinSuperficie = 2
 # Solicitud Confirmada que se puede cancelar (consume la solicitud: pasa a Cancelada).
 @solicitudParaCancelar = 5
+# Solicitud Confirmada con servicios cargados, para aceptar precio final.
+@solicitudConServicios = 1
+# Solicitud Confirmada con un servicio que el staff desactivo (sin precio activo).
+@solicitudServicioSinPrecio = 6
+# Solicitud Confirmada con presupuesto NO Aceptado (ej. estado Borrador puesto a mano en la base).
+@solicitudPresupuestoNoAceptado = 7
 # Solicitud que NO esta Confirmada (ej. Pendiente / Contactada).
 @solicitudNoConfirmada = 3
 # Solicitud Confirmada a la que nunca se le cargaron servicios.
@@ -132,7 +138,7 @@ GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie
 x-api-key: {{apiKey}}
 
 
-### 13) Cancelar visita Confirmada  -  [Espera 200, data.estado = Cancelada; sesiones_wa del cliente borrada; solicitud_servicio intacta]
+### 13) Cancelar visita Confirmada  -  [Espera 200, data.estado = Cancelada; solicitud_servicio intacta, sin cambios de WhatsApp]
 POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudParaCancelar}}/cancelar
 x-api-key: {{apiKey}}
 
@@ -147,3 +153,70 @@ x-api-key: {{apiKey}}
 ### 16) Cancelar con id invalido  -  [Espera 400]
 POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/abc/cancelar
 x-api-key: {{apiKey}}
+
+
+### 17) Aceptar precio final MAYOR al estimado  -  [Espera 200, data.estimado_total, precio_final, diferencia > 0, lineas; monto_estimado guardado]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConServicios}}/presupuesto
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "monto_total": 999999,
+  "nota": "Terreno con acceso dificil"
+}
+
+### 18) Re-aceptar con precio final MENOR  -  [Espera 200, diferencia < 0; mismo id_presupuesto; detalle_presupuesto reemplazado, no duplicado]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConServicios}}/presupuesto
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "monto_total": 1
+}
+
+### 19) Servicio sin precio activo  -  [Espera 409 listando el servicio, no crea ni modifica el presupuesto]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudServicioSinPrecio}}/presupuesto
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "monto_total": 50000
+}
+
+### 20) Flujo legacy: visita SIN servicios cargados  -  [Espera 200, data = presupuesto con monto_estimado null y sin detalle]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudSinServicios}}/presupuesto
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "monto_total": 50000
+}
+
+### 21) monto_total invalido  -  [Espera 400]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConServicios}}/presupuesto
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "monto_total": 0
+}
+
+### 22) Turno con presupuesto NO Aceptado  -  [Espera 409 "tiene que estar Aceptado"]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudPresupuestoNoAceptado}}/turno
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "fecha_programada": "2030-01-15",
+  "prioridad": "Normal"
+}
+
+### 23) Turno con presupuesto Aceptado  -  [Espera 201]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConServicios}}/turno
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "fecha_programada": "2030-01-15",
+  "prioridad": "Normal"
+}
