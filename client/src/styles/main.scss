@@ -146,7 +146,10 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     color: $hovy-gray;
     border-radius: 24px;
     font-weight: 600;
+    text-decoration: none;
     transition: all 0.2s ease;
+    &:hover,
+    &:focus { text-decoration: none; }
     &:hover { background-color: rgba(27, 48, 6, 0.05); }
     &.active {
       background-color: $hovy-green;
@@ -229,6 +232,17 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   transition: background-color 0.15s ease;
   &:hover, &:focus-visible { background-color: rgba(27, 48, 6, 0.05); }
   &:last-child { border-bottom: none !important; }
+}
+
+// Menú de usuario (ícono de perfil del Header). Mismo anclaje que el popover
+// de notificaciones, pero más angosto.
+.user-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background-color: #ffffff;
+  border: 1px solid $hovy-border;
 }
 
 /* --- REGISTER PAGE --- */
