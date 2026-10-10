@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
-import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
+import Button from './Button';
+import CloseButton from './CloseButton';
 import ServicioService from '../../services/api/servicio.service';
 
 // Mirrors server rule: finite number >= 0
