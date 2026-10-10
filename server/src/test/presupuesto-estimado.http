@@ -1,0 +1,130 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+# Requiere haber corrido docs/supabase-presupuesto-estimado.sql.
+# El estimado es INTERNO: nunca se le comunica al cliente.
+
+@baseUrl = http://localhost:4000
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+# Telefono de un usuario admin del equipo con servicios ACTIVOS en usuario_servicio.
+@telefonoStaff = 5493510000000
+# Solicitud en estado Confirmada, CON superficie_aproximada cargada.
+@solicitudConSuperficie = 1
+# Solicitud en estado Confirmada, SIN superficie_aproximada.
+@solicitudSinSuperficie = 2
+# Solicitud que NO esta Confirmada (ej. Pendiente / Contactada).
+@solicitudNoConfirmada = 3
+# Solicitud Confirmada a la que nunca se le cargaron servicios.
+@solicitudSinServicios = 4
+# ids de servicios_catalogo ACTIVOS en usuario_servicio del staff.
+@servicioA = 1
+@servicioB = 2
+# id de servicio que no existe o no esta activo para el staff.
+@servicioInvalido = 99999
+
+
+### 1) Camino feliz: dos servicios con m2 verificados  -  [Espera 200, data con 2 filas]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 300 },
+    { "id_servicio": {{servicioB}}, "superficie_m2": 120.5 }
+  ]
+}
+
+### 2) Estimado con servicios cargados  -  [Espera 200, lineas + total_estimado + aviso]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/estimado
+x-api-key: {{apiKey}}
+
+### 3) Sin superficie_m2: usa superficie_aproximada de la solicitud  -  [Espera 200, superficie_m2 = aproximada]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}} }
+  ]
+}
+
+### 4) Sin superficie_m2 y la solicitud no tiene aproximada  -  [Espera 400 nombrando el servicio]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudSinSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}} }
+  ]
+}
+
+### 5) Servicio inexistente / no activo del staff  -  [Espera 400 listando el id invalido]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 100 },
+    { "id_servicio": {{servicioInvalido}}, "superficie_m2": 50 }
+  ]
+}
+
+### 6) Solicitud que no esta Confirmada  -  [Espera 409]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudNoConfirmada}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 100 }
+  ]
+}
+
+### 7) Lista vacia  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": []
+}
+
+### 8) Servicios duplicados  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 100 },
+    { "id_servicio": {{servicioA}}, "superficie_m2": 200 }
+  ]
+}
+
+### 9) superficie_m2 invalida (0)  -  [Espera 400]
+PUT {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/servicios
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 0 }
+  ]
+}
+
+### 10) Estimado de una visita sin servicios cargados  -  [Espera 409]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudSinServicios}}/estimado
+x-api-key: {{apiKey}}
+
+### 11) Estimado de una visita inexistente  -  [Espera 404]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/999999/estimado
+x-api-key: {{apiKey}}
+
+### 12) Servicio desactivado despues de cargarlo  -  [Espera 200, esa linea con precio_m2 null, fuera del total, advertencias]
+# Primero cargar el servicio (request 1), desactivarlo en usuario_servicio
+# (activo=false, ver server/src/test/servicios.http) y repetir:
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/estimado
+x-api-key: {{apiKey}}

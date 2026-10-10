@@ -682,3 +682,317 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
     });
   }
 };
+
+// ---------------------------------------------------------------------------
+// Estimado interno por visita (slice 1)
+//
+// Una visita puede incluir varios servicios y los m2 se guardan POR servicio
+// (solicitud_servicio, ver docs/supabase-presupuesto-estimado.sql). El estimado
+// es la suma de precio_base (precio por m2) x superficie_m2, con los precios del
+// propio usuario staff (usuario_servicio). Es INTERNO: estos dos handlers solo
+// cuelgan de rutas de staff y nada de esto se expone a clientes.
+// ---------------------------------------------------------------------------
+
+const AVISO_ESTIMADO_INTERNO = 'Estimado interno: no comunicar al cliente.';
+
+const redondear2 = (numero) => Math.round((numero + Number.EPSILON) * 100) / 100;
+
+// PUT /api/bot/staff/:telefono/visitas/:id/servicios
+// body: { servicios: [ { id_servicio, superficie_m2? } ] }
+//
+// REEMPLAZA el conjunto de servicios de la visita. superficie_m2 es opcional
+// por ítem: si falta, usa solicitudes_visita.superficie_aproximada (el dato sin
+// verificar que dio el cliente); si tampoco hay, es un 400 que nombra el
+// servicio. Solo se aceptan servicios ACTIVOS del propio usuario staff.
+export const cargarServiciosVisitaStaff = async (req, res) => {
+  const idSolicitud = parsearIdSolicitud(req.params.id);
+  if (!idSolicitud) {
+    return res.status(400).json({ ok: false, error: ERROR_ID_SOLICITUD_INVALIDO });
+  }
+
+  const servicios = req.body?.servicios;
+
+  if (!Array.isArray(servicios) || servicios.length === 0) {
+    return res.status(400).json({
+      ok: false,
+      error: 'servicios tiene que ser una lista con al menos un servicio.',
+    });
+  }
+
+  // Validación de forma (sin tocar la base): se juntan todos los errores.
+  const errores = [];
+  const items = [];
+  const vistos = new Set();
+  const repetidos = new Set();
+
+  servicios.forEach((item, indice) => {
+    const posicion = indice + 1;
+    const idServicio = parsearIdSolicitud(item?.id_servicio);
+
+    if (!idServicio) {
+      errores.push(`El servicio #${posicion} tiene un id_servicio inválido: tiene que ser un número entero positivo.`);
+      return;
+    }
+
+    if (vistos.has(idServicio)) {
+      repetidos.add(idServicio);
+      return;
+    }
+    vistos.add(idServicio);
+
+    let superficie = null;
+    if (!estaVacio(item.superficie_m2)) {
+      superficie = Number(item.superficie_m2);
+      if (!Number.isFinite(superficie) || superficie <= 0) {
+        errores.push(
+          `superficie_m2 del servicio ${idServicio} tiene que ser un número mayor a 0. Se recibió: "${item.superficie_m2}"`
+        );
+        return;
+      }
+    }
+
+    items.push({ id_servicio: idServicio, superficie_m2: superficie });
+  });
+
+  if (repetidos.size > 0) {
+    errores.push(`Hay servicios repetidos en la lista (id_servicio: ${[...repetidos].join(', ')}).`);
+  }
+
+  if (errores.length > 0) {
+    return res.status(400).json({ ok: false, error: errores.join(' ') });
+  }
+
+  try {
+    const { data: solicitud, error: errorBusqueda } = await supabaseAdmin
+      .from('solicitudes_visita')
+      .select('*')
+      .eq('id_solicitud', idSolicitud)
+      .maybeSingle();
+
+    if (errorBusqueda) {
+      console.error('Error al buscar la solicitud para cargar servicios:', errorBusqueda);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo consultar la solicitud. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!solicitud) {
+      return res.status(404).json({
+        ok: false,
+        error: `No existe una solicitud de visita con el id ${idSolicitud}.`,
+      });
+    }
+
+    if (solicitud.estado !== 'Confirmada') {
+      return res.status(409).json({
+        ok: false,
+        error: `La solicitud tiene que estar Confirmada para cargarle servicios (estado actual: ${solicitud.estado}). Confirmá la visita primero.`,
+      });
+    }
+
+    const ids = items.map((item) => item.id_servicio);
+
+    const { data: ofrecidos, error: errorOfrecidos } = await supabaseAdmin
+      .from('usuario_servicio')
+      .select('id_servicio, precio_base, servicio:servicios_catalogo(nombre)')
+      .eq('id_usuario', req.usuario.id)
+      .eq('activo', true)
+      .in('id_servicio', ids);
+
+    if (errorOfrecidos) {
+      console.error('Error al consultar los servicios del usuario staff:', errorOfrecidos);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudieron consultar los servicios. Intentá de nuevo más tarde.',
+      });
+    }
+
+    const ofrecidosPorId = new Map((ofrecidos ?? []).map((fila) => [Number(fila.id_servicio), fila]));
+    const invalidos = ids.filter((id) => !ofrecidosPorId.has(id));
+
+    if (invalidos.length > 0) {
+      return res.status(400).json({
+        ok: false,
+        error: `Estos servicios no existen o no están activos en tu catálogo (id_servicio: ${invalidos.join(', ')}).`,
+      });
+    }
+
+    // Superficie por ítem: la del body o, si no vino, la aproximada de la
+    // solicitud. Se valida TODO antes de borrar nada.
+    const aproximada = estaVacio(solicitud.superficie_aproximada)
+      ? null
+      : Number(solicitud.superficie_aproximada);
+    const aproximadaValida = Number.isFinite(aproximada) && aproximada > 0 ? aproximada : null;
+
+    const filas = [];
+    const sinSuperficie = [];
+
+    for (const item of items) {
+      const superficie = item.superficie_m2 ?? aproximadaValida;
+      if (superficie === null) {
+        sinSuperficie.push(ofrecidosPorId.get(item.id_servicio).servicio?.nombre ?? `id ${item.id_servicio}`);
+        continue;
+      }
+      filas.push({ id_solicitud: idSolicitud, id_servicio: item.id_servicio, superficie_m2: superficie });
+    }
+
+    if (sinSuperficie.length > 0) {
+      return res.status(400).json({
+        ok: false,
+        error: `Falta superficie_m2 para: ${sinSuperficie.join(', ')}. La solicitud no tiene una superficie aproximada para usar por defecto.`,
+      });
+    }
+
+    // Sin transacción disponible con supabase-js: ya se validó todo arriba y
+    // acá se hace delete + insert. Si el insert fallara después del delete, la
+    // visita queda sin servicios (nunca con un conjunto mezclado); el mensaje
+    // pide reintentar, y como el PUT reemplaza el conjunto entero, reintentar
+    // es seguro.
+    const { error: errorBorrado } = await supabaseAdmin
+      .from('solicitud_servicio')
+      .delete()
+      .eq('id_solicitud', idSolicitud);
+
+    if (errorBorrado) {
+      console.error('Error al borrar los servicios previos de la visita:', errorBorrado);
+      return res.status(500).json({ ok: false, error: 'No se pudieron actualizar los servicios de la visita.' });
+    }
+
+    const { data: guardados, error: errorInsert } = await supabaseAdmin
+      .from('solicitud_servicio')
+      .insert(filas)
+      .select();
+
+    if (errorInsert) {
+      console.error('Error al guardar los servicios de la visita:', errorInsert);
+      return res.status(500).json({
+        ok: false,
+        error: 'Se borraron los servicios anteriores pero no se pudieron guardar los nuevos. Reintentá la carga.',
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      mensaje: `Servicios de la visita de ${solicitud.nombre} ${solicitud.apellido} actualizados (${guardados.length}).`,
+      data: guardados,
+    });
+  } catch (err) {
+    console.error('Error inesperado al cargar los servicios de la visita:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al cargar los servicios de la visita.',
+    });
+  }
+};
+
+// GET /api/bot/staff/:telefono/visitas/:id/estimado
+//
+// Estimado INTERNO: suma de precio_base x superficie_m2 con los precios
+// vigentes del usuario staff, leídos al momento del pedido (no hay snapshot en
+// este slice). Si un servicio se desactivó (o dejó de estar en el catálogo del
+// usuario) desde que se cargó, la línea sale con precio_m2 y subtotal null, no
+// suma al total y se informa en `advertencias`.
+export const obtenerEstimadoVisitaStaff = async (req, res) => {
+  const idSolicitud = parsearIdSolicitud(req.params.id);
+  if (!idSolicitud) {
+    return res.status(400).json({ ok: false, error: ERROR_ID_SOLICITUD_INVALIDO });
+  }
+
+  try {
+    const { data: solicitud, error: errorBusqueda } = await supabaseAdmin
+      .from('solicitudes_visita')
+      .select('id_solicitud')
+      .eq('id_solicitud', idSolicitud)
+      .maybeSingle();
+
+    if (errorBusqueda) {
+      console.error('Error al buscar la solicitud para el estimado:', errorBusqueda);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo consultar la solicitud. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!solicitud) {
+      return res.status(404).json({
+        ok: false,
+        error: `No existe una solicitud de visita con el id ${idSolicitud}.`,
+      });
+    }
+
+    const { data: cargados, error: errorCargados } = await supabaseAdmin
+      .from('solicitud_servicio')
+      .select('id_servicio, superficie_m2, servicio:servicios_catalogo(nombre)')
+      .eq('id_solicitud', idSolicitud)
+      .order('id_solicitud_servicio', { ascending: true });
+
+    if (errorCargados) {
+      console.error('Error al consultar los servicios de la visita:', errorCargados);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudieron consultar los servicios de la visita. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!cargados || cargados.length === 0) {
+      return res.status(409).json({
+        ok: false,
+        error: 'La visita todavía no tiene servicios cargados. Cargalos antes de pedir el estimado.',
+      });
+    }
+
+    const { data: precios, error: errorPrecios } = await supabaseAdmin
+      .from('usuario_servicio')
+      .select('id_servicio, precio_base, activo')
+      .eq('id_usuario', req.usuario.id)
+      .in('id_servicio', cargados.map((fila) => fila.id_servicio));
+
+    if (errorPrecios) {
+      console.error('Error al consultar los precios del usuario staff:', errorPrecios);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudieron consultar los precios. Intentá de nuevo más tarde.',
+      });
+    }
+
+    const preciosPorId = new Map((precios ?? []).map((fila) => [Number(fila.id_servicio), fila]));
+    const advertencias = [];
+    let total = 0;
+
+    const lineas = cargados.map((fila) => {
+      const nombre = fila.servicio?.nombre ?? null;
+      const superficie = Number(fila.superficie_m2);
+      const precio = preciosPorId.get(Number(fila.id_servicio));
+
+      if (!precio || precio.activo !== true) {
+        advertencias.push(
+          `El servicio "${nombre ?? fila.id_servicio}" ya no está activo en tu catálogo: no se incluyó en el total.`
+        );
+        return { id_servicio: fila.id_servicio, nombre, superficie_m2: superficie, precio_m2: null, subtotal: null };
+      }
+
+      const precioM2 = Number(precio.precio_base);
+      const subtotal = redondear2(precioM2 * superficie);
+      total += subtotal;
+
+      return { id_servicio: fila.id_servicio, nombre, superficie_m2: superficie, precio_m2: precioM2, subtotal };
+    });
+
+    const data = {
+      id_solicitud: idSolicitud,
+      lineas,
+      total_estimado: redondear2(total),
+      aviso: AVISO_ESTIMADO_INTERNO,
+    };
+    if (advertencias.length > 0) data.advertencias = advertencias;
+
+    return res.status(200).json({ ok: true, data });
+  } catch (err) {
+    console.error('Error inesperado al calcular el estimado de la visita:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al calcular el estimado.',
+    });
+  }
+};

@@ -29,6 +29,8 @@ import {
   consultarDisponibilidadStaff,
   cargarPresupuestoStaff,
   crearTurnoDesdeSolicitud,
+  cargarServiciosVisitaStaff,
+  obtenerEstimadoVisitaStaff,
 } from '../controllers/botStaffController.js';
 
 const router = Router();
@@ -118,6 +120,11 @@ router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consulta
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno
 router.post('/staff/:telefono/visitas/:id/turno', resolverStaffPorTelefono, crearTurnoDesdeSolicitud);
+// Estimado interno (nunca se comunica al cliente): servicios + m2 de la visita y su total.
+// PUT  /api/bot/staff/:telefono/visitas/:id/servicios
+router.put('/staff/:telefono/visitas/:id/servicios', resolverStaffPorTelefono, cargarServiciosVisitaStaff);
+// GET  /api/bot/staff/:telefono/visitas/:id/estimado
+router.get('/staff/:telefono/visitas/:id/estimado', resolverStaffPorTelefono, obtenerEstimadoVisitaStaff);
 
 
 // Auxiliar del alta: convierte el pin de ubicacion en una direccion sugerida.
