@@ -278,7 +278,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                         >
                           <div className="d-flex justify-content-between align-items-start mb-1">
                             <span className="fw-bold text-dark" style={{ fontSize: '0.70rem' }}>
-                              {turno.franjaHoraria.horaInicio} - {turno.franjaHoraria.horaFin}
+                              {turno.franjaHoraria.horaInicio.slice(0, 5)} - {turno.franjaHoraria.horaFin.slice(0, 5)}
                             </span>
                             <span className={`badge bg-${isEjecucion ? 'primary' : config.color}-subtle text-${isEjecucion ? 'primary' : config.color} border border-${isEjecucion ? 'primary' : config.color}-subtle rounded-1 px-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{ fontSize: '0.60rem' }}>
                               {isEjecucion && <span className="turno-en-curso-dot me-1" />}
