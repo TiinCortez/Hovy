@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js';
 import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
 import visitasRoutes from './routes/visitas.routes.js';
+import serviciosRoutes from './routes/servicios.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +66,7 @@ app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes)
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);
 app.use('/api/turnos', authMiddleware, requireRole(['admin']), turnosRoutes);
+app.use('/api/servicios', authMiddleware, requireRole(['admin']), serviciosRoutes);
 
 // Servir frontend compilado de React (en server/public o client/dist)
 const publicDir = path.resolve(__dirname, '../public');

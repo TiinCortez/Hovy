@@ -1,0 +1,120 @@
+@baseUrl = http://localhost:4000
+# Paste a JWT obtained from POST /api/auth/login (see auth.http) of an admin user
+@token = PEGAR_TOKEN_AQUI
+
+// TEST DE CATALOGO GLOBAL
+### Listado del catalogo global
+GET {{baseUrl}}/api/servicios
+Authorization: Bearer {{token}}
+
+### Sin token (espera 401)
+GET {{baseUrl}}/api/servicios
+
+// TEST DE MIS SERVICIOS
+### Listado de mis servicios
+GET {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+
+### Alta de servicio - [Atributos completos]
+POST {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id_servicio": 1,
+  "precio_base": 15000.50,
+  "limite_operativo": 500
+}
+
+### Alta de servicio - [Duplicado: repetir la anterior, espera 409]
+POST {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id_servicio": 1,
+  "precio_base": 15000.50
+}
+
+### Alta de servicio - [Falta precio_base, espera 400]
+POST {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id_servicio": 2
+}
+
+### Alta de servicio - [Precio negativo, espera 400]
+POST {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id_servicio": 2,
+  "precio_base": -10
+}
+
+### Alta de servicio - [Servicio inexistente, espera 404]
+POST {{baseUrl}}/api/servicios/mios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id_servicio": 99999,
+  "precio_base": 100
+}
+
+// TEST DE ACTUALIZACION
+### Actualizar precio y limite
+PUT {{baseUrl}}/api/servicios/mios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 18000,
+  "limite_operativo": 800
+}
+
+### Reactivar servicio
+PUT {{baseUrl}}/api/servicios/mios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### Actualizar - [activo no booleano, espera 400]
+PUT {{baseUrl}}/api/servicios/mios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": "si"
+}
+
+### Actualizar - [Sin campos, espera 400]
+PUT {{baseUrl}}/api/servicios/mios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Actualizar - [Id ajeno o inexistente, espera 404]
+PUT {{baseUrl}}/api/servicios/mios/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 100
+}
+
+// TEST DE BAJA (soft delete)
+### Baja de servicio
+DELETE {{baseUrl}}/api/servicios/mios/1
+Authorization: Bearer {{token}}
+
+### Baja - [Id ajeno o inexistente, espera 404]
+DELETE {{baseUrl}}/api/servicios/mios/99999
+Authorization: Bearer {{token}}
