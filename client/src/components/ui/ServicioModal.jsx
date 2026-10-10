@@ -122,7 +122,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
               )}
 
               <div className="mb-3">
-                <label className="form-label small fw-bold text-secondary" htmlFor="servicio-precio">Precio base *</label>
+                <label className="form-label small fw-bold text-secondary" htmlFor="servicio-precio">Precio por m² *</label>
                 <input
                   id="servicio-precio"
                   type="number"
@@ -131,7 +131,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                   inputMode="decimal"
                   className={`form-control bg-light rounded-3 ${errors.precio_base ? 'is-invalid' : ''}`}
                   {...register('precio_base', {
-                    required: 'El precio base es obligatorio',
+                    required: 'El precio por m² es obligatorio',
                     validate: nonNegative,
                   })}
                 />

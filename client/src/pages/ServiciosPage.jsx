@@ -76,7 +76,7 @@ export default function ServiciosPage() {
             <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Catálogo Operativo</span>
           </div>
           <h2 className="fw-bold fs-2 text-dark m-0">Servicios</h2>
-          <p className="text-secondary small m-0">Servicios que ofrecés, con su precio base y límite operativo.</p>
+          <p className="text-secondary small m-0">Servicios que ofrecés, con su precio por m² y límite operativo.</p>
         </div>
 
         <div className="d-flex align-items-center gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
@@ -144,7 +144,7 @@ export default function ServiciosPage() {
 
                 <div className="row g-0 mb-4 bg-light rounded-3 border overflow-hidden">
                   <div className="col-6 p-2 px-3 border-end">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Precio base</span>
+                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Precio por m²</span>
                     <span className="fw-bold text-dark small">{formatPrice(servicio.precio_base)}</span>
                   </div>
                   <div className="col-6 p-2 px-3">
