@@ -652,6 +652,22 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   box-shadow: 0 -6px 18px rgba(27, 48, 6, 0.035);
 }
 
+.leaflet-container {
+  min-height: 400px; /* Altura mínima vital para visualización en dispositivos móviles */
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.mapa-fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+/* Que el mapa interno ocupe todo el alto en fullscreen */
+.mapa-fullscreen > *:not(button) {
+  height: 100% !important;
+}
+
 @media (max-width: 767.98px) {
   .nuevo-turno-modal { padding: 0; }
 
