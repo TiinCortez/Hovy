@@ -39,7 +39,7 @@ export default function TurnoDetalleModal({ isOpen, onClose, turnoData, onCancel
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 2060, overflowY: 'auto' }}>
+    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg my-4">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           
@@ -96,8 +96,8 @@ export default function TurnoDetalleModal({ isOpen, onClose, turnoData, onCancel
                   <div className="d-flex flex-wrap gap-2 mb-4 mt-auto">
                     <button onClick={handleOpenMaps} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
 
-<Map size={14} />
-Abrir en Maps
+                    <Map size={14} />
+                    Abrir en Maps
                     </button>
                     <button onClick={handleCopyLocation} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
                       <Copy size={14} /> Copiar

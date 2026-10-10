@@ -1,25 +1,20 @@
-name: Deploy Server (Azure App Service)
+name: Deploy Full App (Azure App Service)
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'server/**'
-      - '.github/workflows/deploy-server.yml'
+      - feat/VAL-devops-azure-setup
   workflow_dispatch:
 
 concurrency:
-  group: deploy-server-${{ github.ref }}
+  group: deploy-app-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build_and_deploy:
-    name: Build & Deploy to Azure App Service
+    name: Build Client & Deploy to Azure App Service
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -28,19 +23,45 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: server/package-lock.json
 
-      - name: Instalar dependencias
+      # -------------------------------------------------------------
+      # 1. Compilación del Frontend (React + Vite)
+      # -------------------------------------------------------------
+      - name: Instalar dependencias del Cliente
+        working-directory: client
         run: npm ci
 
-      - name: Validar sintaxis antes de deploy
+      - name: Compilar Frontend para Producción
+        working-directory: client
+        env:
+          VITE_API_URL: '/api'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Integrar Frontend compilado en Backend
+        run: |
+          mkdir -p server/public
+          cp -r client/dist/* server/public/
+
+      # -------------------------------------------------------------
+      # 2. Preparación del Backend (Node.js + Express)
+      # -------------------------------------------------------------
+      - name: Instalar dependencias del Servidor
+        working-directory: server
+        run: npm ci --omit=dev
+
+      - name: Validar sintaxis del Servidor
+        working-directory: server
         run: |
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
 
-      - name: Deploy to Azure Web App
+      # -------------------------------------------------------------
+      # 3. Despliegue Unificado a Azure App Service
+      # -------------------------------------------------------------
+      - name: Desplegar a Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_WEBAPP_NAME || 'hovy-api' }}
