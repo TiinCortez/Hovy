@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import clientesRoutes from './routes/clientes.routes.js';
@@ -8,7 +11,11 @@ import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
 import visitasRoutes from './routes/visitas.routes.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+app.set('trust proxy', 1);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
@@ -16,6 +23,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://localhost:5173',
       'http://localhost:4000',
       'https://hovyapp.com.ar',
+      'https://www.hovyapp.com.ar',
       'https://app.hovyapp.com.ar'
     ];
 
@@ -35,7 +43,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Endpoint de sondeo y verificación de salud para Azure App Service
+// Endpoint de sondeo y verificación de salud
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -46,19 +54,33 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 // Canal del bot de WhatsApp (n8n): autenticación propia por API key
 // (verificarApiKeyBot), sin pasar por el JWT de usuarios.
 app.use('/api/bot', botRoutes);
 
-
-// Cambie el orden de la peticion del token especifico por rutas, eliminando el global
-// ya que tambien las pediria en el bot, cuando este solamente necesito el header con el api-key.
-// tener en cuenta para nuevas rutas.
+// Rutas protegidas con JWT
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);
 app.use('/api/turnos', authMiddleware, requireRole(['admin']), turnosRoutes);
 
+// Servir frontend compilado de React (en server/public o client/dist)
+const publicDir = path.resolve(__dirname, '../public');
+const clientDistDir = path.resolve(__dirname, '../../client/dist');
+const staticDir = fs.existsSync(publicDir) ? publicDir : (fs.existsSync(clientDistDir) ? clientDistDir : null);
+
+if (staticDir) {
+  app.use(express.static(staticDir));
+
+  // Fallback SPA compatible con Express 5: cualquier ruta que no sea API/Auth carga index.html
+  app.use((req, res, next) => {
+    if ((req.method !== 'GET' && req.method !== 'HEAD') || req.path.startsWith('/api') || req.path.startsWith('/auth')) {
+      return next();
+    }
+    res.sendFile(path.join(staticDir, 'index.html'));
+  });
+}
 
 export default app;
