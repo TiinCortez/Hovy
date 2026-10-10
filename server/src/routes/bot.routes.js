@@ -22,6 +22,7 @@ import {
   darDeBajaInmuebleBot,
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
+import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
 import {
   buscarSolicitudesStaff,
@@ -108,6 +109,11 @@ router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefo
 // en la URL, por la misma razón que en el resto del bot.
 // POST /api/bot/visitas/:telefono
 router.post('/visitas/:telefono', crearSolicitudVisita);
+
+// Servicios que ofrece el negocio (solo id, nombre y descripción: nunca precios).
+// Público como la solicitud de visita: solo exige la API key del bot.
+// GET /api/bot/servicios
+router.get('/servicios', listarServiciosBot);
 
 
 // Operaciones de staff (agendar turnos tras una visita). resolverStaffPorTelefono
