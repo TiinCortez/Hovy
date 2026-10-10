@@ -7,7 +7,8 @@ import VisitaService from '../../services/api/visita.service';
 import { TIPOS_INMUEBLE, TIPOS_CLIENTE, getApiError } from './visitaUtils';
 
 // Step of estado Contactada: confirm the physical visit data (creates client/property)
-export default function ConfirmarVisitaForm({ visita, onDone }) {
+// embedded: rendered inside a modal (no Card wrapper nor title)
+export default function ConfirmarVisitaForm({ visita, onDone, embedded = false }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const needsTipoCliente = !visita.id_cliente;
@@ -40,9 +41,12 @@ export default function ConfirmarVisitaForm({ visita, onDone }) {
     }
   };
 
+  const Wrapper = embedded ? 'div' : Card;
+  const wrapperProps = embedded ? {} : { className: 'p-4' };
+
   return (
-    <Card className="p-4">
-      <h5 className="fw-bold text-dark mb-1">Confirmar visita</h5>
+    <Wrapper {...wrapperProps}>
+      {!embedded && <h5 className="fw-bold text-dark mb-1">Confirmar visita</h5>}
       <p className="text-secondary small mb-3">Completá los datos verificados en la visita. Se registrará el cliente y el inmueble.</p>
 
       {errorMessage && (
@@ -103,6 +107,6 @@ export default function ConfirmarVisitaForm({ visita, onDone }) {
           {isSubmitting ? 'Confirmando...' : 'Confirmar visita'}
         </Button>
       </form>
-    </Card>
+    </Wrapper>
   );
 }

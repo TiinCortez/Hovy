@@ -4,6 +4,7 @@ import { Search, AlertCircle, Phone, MapPin, Ruler, Wrench, CalendarDays, Clock,
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import VisitaService from '../services/api/visita.service';
+import ConfirmarVisitaModal from '../components/visitas/ConfirmarVisitaModal';
 
 // Case- and accent-insensitive comparison for the search box
 const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -50,6 +51,8 @@ export default function VisitasPage() {
   const [activeTab, setActiveTab] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first
+  const [confirmando, setConfirmando] = useState(null); // visit being confirmed in the modal
+  const [feedback, setFeedback] = useState(null);
 
   // Fetch once (all states); state is only set inside async callbacks
   useEffect(() => {
@@ -93,6 +96,12 @@ export default function VisitasPage() {
 
   const handleRetry = () => {
     setLoading(true);
+    setReloadKey((k) => k + 1);
+  };
+
+  // After confirming from the modal: reload silently so the visit moves to Confirmada
+  const handleConfirmed = (message) => {
+    setFeedback(message);
     setReloadKey((k) => k + 1);
   };
 
@@ -144,6 +153,13 @@ export default function VisitasPage() {
           <option value="asc">Más antiguas primero</option>
         </select>
       </div>
+
+      {feedback && (
+        <div className="alert alert-success rounded-3 m-0 small fw-medium d-flex justify-content-between align-items-center" role="status">
+          <span>{feedback}</span>
+          <button type="button" className="btn-close" aria-label="Cerrar aviso" onClick={() => setFeedback(null)}></button>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-5"><div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div></div>
@@ -209,13 +225,25 @@ export default function VisitasPage() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="light"
-                    className="mt-auto rounded-pill text-dark fw-bold small py-2 bg-light border shadow-sm"
-                    onClick={() => navigate(`/visitas/${visita.id_solicitud}`)}
-                  >
-                    Ver detalle
-                  </Button>
+                  <div className="d-flex align-items-center gap-2 mt-auto">
+                    <Button
+                      variant="light"
+                      className="flex-grow-1 rounded-pill text-dark fw-bold small py-2 bg-light border shadow-sm"
+                      onClick={() => navigate(`/visitas/${visita.id_solicitud}`)}
+                    >
+                      Ver detalle
+                    </Button>
+                    {visita.estado === 'Contactada' && (
+                      <Button
+                        variant="primary"
+                        className="flex-grow-1 rounded-pill fw-bold small py-2"
+                        style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+                        onClick={() => setConfirmando(visita)}
+                      >
+                        Confirmar
+                      </Button>
+                    )}
+                  </div>
                 </Card>
               </div>
             );
@@ -227,6 +255,14 @@ export default function VisitasPage() {
         <span className="text-secondary small fw-medium">
           Mostrando {filteredVisitas.length} visita(s)
         </span>
+      )}
+
+      {confirmando && (
+        <ConfirmarVisitaModal
+          visita={confirmando}
+          onClose={() => setConfirmando(null)}
+          onConfirmed={handleConfirmed}
+        />
       )}
     </div>
   );
