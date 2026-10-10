@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, CalendarDays, BarChart3 } from 'lucide-react';
+import ServiciosSidebar from '../servicios/ServiciosSidebar';
 
 export default function Sidebar() {
   const navItems = [
@@ -25,6 +26,8 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </div>
+
+        <ServiciosSidebar />
       </aside>
 
       {/* Menú inferior visible solo en móviles (Controlado por SCSS propio) */}

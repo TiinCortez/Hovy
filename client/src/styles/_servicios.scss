@@ -1,0 +1,78 @@
+/* --- SIDEBAR: SERVICIOS --- */
+.servicios-section {
+  border-top: 1px solid $hovy-border;
+  min-height: 0;
+}
+
+.servicios-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $hovy-gray;
+}
+
+.servicios-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: $hovy-gray;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) { background-color: rgba(27, 48, 6, 0.08); color: $hovy-green; }
+  &:disabled { opacity: 0.4; }
+}
+
+.servicios-search {
+  position: relative;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 0.6rem;
+    transform: translateY(-50%);
+    color: #8a8f87;
+    pointer-events: none;
+  }
+
+  .form-control {
+    padding-left: 1.9rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+.servicios-list {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.servicios-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.15rem 0.25rem 0.15rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.8rem;
+
+  &:hover { background-color: rgba(27, 48, 6, 0.05); }
+}
+
+.servicios-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.servicios-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
