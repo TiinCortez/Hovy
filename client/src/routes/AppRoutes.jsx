@@ -15,6 +15,8 @@ import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
 import TurnosPage from '../pages/TurnosPage.jsx'; // <--- IMPORTAMOS LA NUEVA PÁGINA
 import VisitaDetallePage from '../pages/VisitaDetallePage.jsx';
+import ProfilePage from '../pages/ProfilePage.jsx';
+import SettingsPage from '../pages/SettingsPage.jsx';
 
 // Componentes temporales (Mocks)
 const Analytics = () => <h1>Estadísticas</h1>;
@@ -94,6 +96,28 @@ export default function AppRoutes() {
               </DashboardLayout>
             </RequireAuth>
           } 
+        />
+
+        <Route
+          path="/perfil"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <ProfilePage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/configuracion"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <SettingsPage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />

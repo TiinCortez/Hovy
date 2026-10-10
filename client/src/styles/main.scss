@@ -231,6 +231,17 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   &:last-child { border-bottom: none !important; }
 }
 
+// Menú de usuario (ícono de perfil del Header). Mismo anclaje que el popover
+// de notificaciones, pero más angosto.
+.user-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background-color: #ffffff;
+  border: 1px solid $hovy-border;
+}
+
 /* --- REGISTER PAGE --- */
 .register-container {
   min-height: 100vh;
