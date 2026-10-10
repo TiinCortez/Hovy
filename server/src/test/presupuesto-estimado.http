@@ -11,6 +11,8 @@
 @solicitudConSuperficie = 1
 # Solicitud en estado Confirmada, SIN superficie_aproximada.
 @solicitudSinSuperficie = 2
+# Solicitud Confirmada que se puede cancelar (consume la solicitud: pasa a Cancelada).
+@solicitudParaCancelar = 5
 # Solicitud que NO esta Confirmada (ej. Pendiente / Contactada).
 @solicitudNoConfirmada = 3
 # Solicitud Confirmada a la que nunca se le cargaron servicios.
@@ -127,4 +129,21 @@ x-api-key: {{apiKey}}
 # Primero cargar el servicio (request 1), desactivarlo en usuario_servicio
 # (activo=false, ver server/src/test/servicios.http) y repetir:
 GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudConSuperficie}}/estimado
+x-api-key: {{apiKey}}
+
+
+### 13) Cancelar visita Confirmada  -  [Espera 200, data.estado = Cancelada; sesiones_wa del cliente borrada; solicitud_servicio intacta]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudParaCancelar}}/cancelar
+x-api-key: {{apiKey}}
+
+### 14) Cancelar una visita que no esta Confirmada (ej. ya Cancelada)  -  [Espera 409]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/{{solicitudNoConfirmada}}/cancelar
+x-api-key: {{apiKey}}
+
+### 15) Cancelar una visita inexistente  -  [Espera 404]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/999999/cancelar
+x-api-key: {{apiKey}}
+
+### 16) Cancelar con id invalido  -  [Espera 400]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/visitas/abc/cancelar
 x-api-key: {{apiKey}}

@@ -6,6 +6,7 @@ import {
   validarSolapamientoTurno,
   horaAMinutos,
 } from '../utils/algoritmoAgenda.js';
+import { normalizarTelefono } from '../utils/telefono.js';
 import { hoyEnArgentina, sumarDias, validarFechaNoPasada } from '../utils/fechaArgentina.js';
 import { PRIORIDADES_VALIDAS } from './turnosController.js';
 
@@ -679,6 +680,116 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
     return res.status(500).json({
       ok: false,
       error: 'Ocurrió un error inesperado al agendar el turno.',
+    });
+  }
+};
+
+// wa_id variants under which n8n may have stored the client's session in
+// sesiones_wa. n8n keys it with the raw Meta `from` (Argentine mobiles arrive
+// as 54 + 10 digits, WITHOUT the 9), while the backend canonical form is
+// 549 + 10 digits. Both are returned so the delete cannot miss the session.
+const variantesWaId = (telefono) => {
+  const canonico = normalizarTelefono(telefono);
+  const variantes = new Set();
+  if (canonico) {
+    variantes.add(canonico); // 549XXXXXXXXXX
+    variantes.add(`54${canonico.slice(3)}`); // 54XXXXXXXXXX (Meta wa_id)
+  }
+  if (!estaVacio(telefono)) variantes.add(String(telefono).trim());
+  return [...variantes];
+};
+
+// POST /api/bot/staff/:telefono/visitas/:id/cancelar
+//
+// Cancels a Confirmada visit: only solicitudes_visita.estado changes. Services
+// (solicitud_servicio), presupuestos and turnos are NOT touched and the row is
+// not deleted. Then the client's WhatsApp session is cleared so a future
+// request starts clean; if that fails the cancellation still stands and the
+// response carries an `aviso`.
+export const cancelarSolicitudVisita = async (req, res) => {
+  const idSolicitud = parsearIdSolicitud(req.params.id);
+  if (!idSolicitud) {
+    return res.status(400).json({ ok: false, error: ERROR_ID_SOLICITUD_INVALIDO });
+  }
+
+  try {
+    const { data: solicitud, error: errorBusqueda } = await supabaseAdmin
+      .from('solicitudes_visita')
+      .select('*')
+      .eq('id_solicitud', idSolicitud)
+      .maybeSingle();
+
+    if (errorBusqueda) {
+      console.error('Error al buscar la solicitud a cancelar:', errorBusqueda);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudo consultar la solicitud. Intentá de nuevo más tarde.',
+      });
+    }
+
+    if (!solicitud) {
+      return res.status(404).json({
+        ok: false,
+        error: `No existe una solicitud de visita con el id ${idSolicitud}.`,
+      });
+    }
+
+    if (solicitud.estado !== 'Confirmada') {
+      return res.status(409).json({
+        ok: false,
+        error: `Solo se puede cancelar una solicitud Confirmada (estado actual: ${solicitud.estado}).`,
+      });
+    }
+
+    // Race guard, same as the other transitions.
+    const { data: cancelada, error: errorUpdate } = await supabaseAdmin
+      .from('solicitudes_visita')
+      .update({ estado: 'Cancelada' })
+      .eq('id_solicitud', idSolicitud)
+      .eq('estado', 'Confirmada')
+      .select()
+      .maybeSingle();
+
+    if (errorUpdate) {
+      console.error('Error al cancelar la solicitud de visita:', errorUpdate);
+      return res.status(500).json({ ok: false, error: 'No se pudo cancelar la solicitud.' });
+    }
+
+    if (!cancelada) {
+      return res.status(409).json({
+        ok: false,
+        error: 'La solicitud ya fue modificada por otra conversación mientras se cancelaba.',
+      });
+    }
+
+    let aviso;
+    const waIds = variantesWaId(solicitud.telefono);
+
+    if (waIds.length > 0) {
+      const { error: errorSesion } = await supabaseAdmin
+        .from('sesiones_wa')
+        .delete()
+        .in('wa_id', waIds);
+
+      if (errorSesion) {
+        console.error('Error al borrar la sesión de WhatsApp del cliente:', errorSesion);
+        aviso = 'La solicitud se canceló, pero no se pudo limpiar la sesión de WhatsApp del cliente.';
+      }
+    }
+
+    const respuesta = {
+      ok: true,
+      mensaje: `La solicitud de ${solicitud.nombre} ${solicitud.apellido} quedó cancelada.`,
+      data: cancelada,
+    };
+    if (aviso) respuesta.aviso = aviso;
+
+    return res.status(200).json(respuesta);
+  } catch (err) {
+    console.error('Error inesperado al cancelar la solicitud de visita:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al cancelar la solicitud.',
     });
   }
 };

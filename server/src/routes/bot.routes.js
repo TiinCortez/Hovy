@@ -31,6 +31,7 @@ import {
   crearTurnoDesdeSolicitud,
   cargarServiciosVisitaStaff,
   obtenerEstimadoVisitaStaff,
+  cancelarSolicitudVisita,
 } from '../controllers/botStaffController.js';
 
 const router = Router();
@@ -120,6 +121,8 @@ router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consulta
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno
 router.post('/staff/:telefono/visitas/:id/turno', resolverStaffPorTelefono, crearTurnoDesdeSolicitud);
+// POST /api/bot/staff/:telefono/visitas/:id/cancelar
+router.post('/staff/:telefono/visitas/:id/cancelar', resolverStaffPorTelefono, cancelarSolicitudVisita);
 // Estimado interno (nunca se comunica al cliente): servicios + m2 de la visita y su total.
 // PUT  /api/bot/staff/:telefono/visitas/:id/servicios
 router.put('/staff/:telefono/visitas/:id/servicios', resolverStaffPorTelefono, cargarServiciosVisitaStaff);
