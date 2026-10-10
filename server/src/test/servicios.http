@@ -15,34 +15,56 @@ GET {{baseUrl}}/api/servicios
 GET {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 
-### Alta de servicio - [Atributos completos]
+### Alta de servicio - [Atributos completos, espera 201]
 POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "id_servicio": 1,
+  "nombre": "Poda de árboles",
+  "descripcion": "Poda de árboles y arbustos",
+  "variable_cotizacion": "cantidad",
   "precio_base": 15000.50,
   "limite_operativo": 500
 }
 
-### Alta de servicio - [Duplicado: repetir la anterior, espera 409]
+### Alta de servicio - [Solo obligatorios, espera 201]
 POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "id_servicio": 1,
-  "precio_base": 15000.50
+  "nombre": "Limpieza de piletas",
+  "precio_base": 8000
 }
 
-### Alta de servicio - [Falta precio_base, espera 400]
+### Alta de servicio - [Mismo nombre con otras mayusculas/tildes/espacios, mismo usuario, espera 409]
 POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "id_servicio": 2
+  "nombre": "  PODA   DE ARBOLES ",
+  "precio_base": 100
+}
+
+### Alta de servicio - [Nombre invalido (1 caracter), espera 400]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "a",
+  "precio_base": 100
+}
+
+### Alta de servicio - [Falta nombre, espera 400]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 100
 }
 
 ### Alta de servicio - [Precio negativo, espera 400]
@@ -51,18 +73,19 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "id_servicio": 2,
+  "nombre": "Desmalezado",
   "precio_base": -10
 }
 
-### Alta de servicio - [Servicio inexistente, espera 404]
+### Alta de servicio - [Reactivacion: 1) crear, 2) DELETE de abajo, 3) repetir esta alta, espera 200 con activo=true]
 POST {{baseUrl}}/api/servicios/catalogo
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "id_servicio": 99999,
-  "precio_base": 100
+  "nombre": "Limpieza de piletas",
+  "precio_base": 9500,
+  "limite_operativo": 20
 }
 
 // TEST DE ACTUALIZACION

@@ -48,18 +48,25 @@ CREATE TABLE IF NOT EXISTS public.usuario_servicio (
 CREATE INDEX IF NOT EXISTS usuario_servicio_usuario_idx
   ON public.usuario_servicio (id_usuario);
 
--- 3) Seed: the 6 service types ---------------------------------------------
--- descripcion and variable_cotizacion values are PLACEHOLDERS: review and edit
--- them before (or after) running. Re-running does not overwrite edited rows.
-INSERT INTO public.servicios_catalogo (nombre, descripcion, variable_cotizacion)
-VALUES
-  ('Mantenimiento regular de césped', 'Placeholder: corte y mantenimiento periódico del césped', 'superficie_mantenible'),
-  ('Desmalezado',                     'Placeholder: eliminación de malezas y vegetación no deseada', 'superficie_mantenible'),
-  ('Jardinería y cultivo',            'Placeholder: cuidado de canteros, huerta y plantas', 'superficie_mantenible'),
-  ('Plantado de especies',            'Placeholder: plantación de especies vegetales', 'cantidad'),
-  ('Poda de árboles',                 'Placeholder: poda de árboles y arbustos', 'cantidad'),
-  ('Limpieza de espacios',            'Placeholder: limpieza general de espacios exteriores', 'superficie_total')
-ON CONFLICT (nombre) DO NOTHING;
+-- 3) Optional seed (disabled) -----------------------------------------------
+-- Services are now created by users (POST /api/servicios/catalogo finds or
+-- creates the type by name), so seeding the 6 original types is OPTIONAL.
+-- Uncomment only if you want them pre-loaded. Values are PLACEHOLDERS.
+-- INSERT INTO public.servicios_catalogo (nombre, descripcion, variable_cotizacion)
+-- VALUES
+--   ('Mantenimiento regular de césped', 'Placeholder: corte y mantenimiento periódico del césped', 'superficie_mantenible'),
+--   ('Desmalezado',                     'Placeholder: eliminación de malezas y vegetación no deseada', 'superficie_mantenible'),
+--   ('Jardinería y cultivo',            'Placeholder: cuidado de canteros, huerta y plantas', 'superficie_mantenible'),
+--   ('Plantado de especies',            'Placeholder: plantación de especies vegetales', 'cantidad'),
+--   ('Poda de árboles',                 'Placeholder: poda de árboles y arbustos', 'cantidad'),
+--   ('Limpieza de espacios',            'Placeholder: limpieza general de espacios exteriores', 'superficie_total')
+-- ON CONFLICT (nombre) DO NOTHING;
+
+-- Users may omit description and quotation variable when creating a service.
+-- DROP NOT NULL is a no-op if the column is already nullable.
+ALTER TABLE public.servicios_catalogo
+  ALTER COLUMN descripcion DROP NOT NULL,
+  ALTER COLUMN variable_cotizacion DROP NOT NULL;
 
 -- 4) Example (commented out): assign all 6 services to one user -------------
 -- Replace 1 with the target usuarios.id and adjust the price / limit.

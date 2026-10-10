@@ -58,20 +58,48 @@ export const getServicios = async (req, res) => {
   }
 };
 
+// Case-, accent- and whitespace-insensitive key used to match service names.
+const normalizarNombre = (texto) =>
+  String(texto)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// Finds a catalog type by normalized name. The catalog is small, so all names
+// are fetched and compared in memory.
+const buscarTipoPorNombre = async (nombre) => {
+  const { data, error } = await supabaseAdmin
+    .from('servicios_catalogo')
+    .select('id_servicio, nombre');
+  if (error) return { error };
+  const clave = normalizarNombre(nombre);
+  const tipo = (data || []).find((s) => normalizarNombre(s.nombre) === clave);
+  return { tipo: tipo || null };
+};
+
 // POST /api/servicios/catalogo
+// "Find or create by name": the service type is looked up in the shared
+// catalog (ignoring case/accents/extra spaces) and reused if it exists; it is
+// created otherwise. Shared fields of an existing type are never modified.
+// The link in usuario_servicio always belongs to the JWT user. If the user
+// already had that service deactivated (soft delete), it is reactivated here
+// (server-side) instead of the client having to PUT activo=true.
 export const createServicio = async (req, res) => {
   try {
     const idUsuario = idUsuarioDelToken(req);
-    const { id_servicio, precio_base, limite_operativo } = req.body || {};
+    const { nombre, descripcion, variable_cotizacion, precio_base, limite_operativo } = req.body || {};
 
-    if (id_servicio === undefined || precio_base === undefined) {
+    if (typeof nombre !== 'string' || nombre.trim() === '' || precio_base === undefined) {
       return res.status(400).json({
         ok: false,
-        error: "id_servicio y precio_base son campos obligatorios"
+        error: "nombre y precio_base son campos obligatorios"
       });
     }
-    if (!esEnteroPositivo(id_servicio)) {
-      return res.status(400).json({ ok: false, error: "id_servicio debe ser un entero positivo" });
+    const nombreLimpio = nombre.trim().replace(/\s+/g, ' ');
+    if (nombreLimpio.length < 2 || nombreLimpio.length > 100) {
+      return res.status(400).json({ ok: false, error: "nombre debe tener entre 2 y 100 caracteres" });
     }
     if (!esNumeroNoNegativo(precio_base)) {
       return res.status(400).json({ ok: false, error: "precio_base debe ser un número mayor o igual a 0" });
@@ -80,32 +108,82 @@ export const createServicio = async (req, res) => {
     if (hayLimite && !esNumeroNoNegativo(limite_operativo)) {
       return res.status(400).json({ ok: false, error: "limite_operativo debe ser un número mayor o igual a 0" });
     }
+    for (const [campo, valor] of [['descripcion', descripcion], ['variable_cotizacion', variable_cotizacion]]) {
+      if (valor !== undefined && valor !== null && typeof valor !== 'string') {
+        return res.status(400).json({ ok: false, error: `${campo} debe ser texto` });
+      }
+    }
+    const textoOpcional = (valor) => {
+      const limpio = typeof valor === 'string' ? valor.trim() : '';
+      return limpio === '' ? null : limpio;
+    };
 
-    // The service type must exist in the global catalog.
-    const { data: servicio, error: errorServicio } = await supabaseAdmin
-      .from('servicios_catalogo')
-      .select('id_servicio')
-      .eq('id_servicio', Number(id_servicio))
+    // 1) Find the type by normalized name, or create it.
+    const busqueda = await buscarTipoPorNombre(nombreLimpio);
+    if (busqueda.error) return errorInterno(res, busqueda.error, 'createServicio/buscar');
+    let idServicio = busqueda.tipo?.id_servicio;
+
+    if (!idServicio) {
+      const { data: creado, error: errorCrear } = await supabaseAdmin
+        .from('servicios_catalogo')
+        .insert([{
+          nombre: nombreLimpio,
+          descripcion: textoOpcional(descripcion),
+          variable_cotizacion: textoOpcional(variable_cotizacion)
+        }])
+        .select('id_servicio')
+        .single();
+
+      if (errorCrear) {
+        // 23505 = unique_violation: another request created it first; reuse it.
+        if (errorCrear.code !== '23505') return errorInterno(res, errorCrear, 'createServicio/crearTipo');
+        const reintento = await buscarTipoPorNombre(nombreLimpio);
+        if (reintento.error) return errorInterno(res, reintento.error, 'createServicio/reintento');
+        if (!reintento.tipo) return errorInterno(res, errorCrear, 'createServicio/reintento-vacio');
+        idServicio = reintento.tipo.id_servicio;
+      } else {
+        idServicio = creado.id_servicio;
+      }
+    }
+
+    // 2) Link to the user (or reactivate an existing inactive link).
+    const { data: vinculo, error: errorVinculo } = await supabaseAdmin
+      .from('usuario_servicio')
+      .select('id_usuario_servicio, activo')
+      .eq('id_usuario', idUsuario)
+      .eq('id_servicio', idServicio)
       .maybeSingle();
 
-    if (errorServicio) return errorInterno(res, errorServicio, 'createServicio/catalogo');
-    if (!servicio) {
-      return res.status(404).json({ ok: false, error: "Servicio no encontrado en el catálogo" });
+    if (errorVinculo) return errorInterno(res, errorVinculo, 'createServicio/vinculo');
+
+    const valores = {
+      precio_base: Number(precio_base),
+      limite_operativo: hayLimite ? Number(limite_operativo) : null
+    };
+
+    if (vinculo) {
+      if (vinculo.activo) {
+        return res.status(409).json({ ok: false, error: "Ya tenés este servicio en tu catálogo" });
+      }
+      const { data, error } = await supabaseAdmin
+        .from('usuario_servicio')
+        .update({ ...valores, activo: true })
+        .eq('id_usuario_servicio', vinculo.id_usuario_servicio)
+        .eq('id_usuario', idUsuario)
+        .select(SELECT_MIO)
+        .single();
+      if (error) return errorInterno(res, error, 'createServicio/reactivar');
+      return res.status(200).json({ ok: true, data });
     }
 
     const { data, error } = await supabaseAdmin
       .from('usuario_servicio')
-      .insert([{
-        id_usuario: idUsuario,
-        id_servicio: Number(id_servicio),
-        precio_base: Number(precio_base),
-        limite_operativo: hayLimite ? Number(limite_operativo) : null
-      }])
+      .insert([{ id_usuario: idUsuario, id_servicio: idServicio, ...valores }])
       .select(SELECT_MIO)
       .single();
 
     if (error) {
-      // 23505 = unique_violation (id_usuario, id_servicio)
+      // 23505 = unique_violation (id_usuario, id_servicio): concurrent duplicate
       if (error.code === '23505') {
         return res.status(409).json({ ok: false, error: "Ya tenés este servicio en tu catálogo" });
       }
