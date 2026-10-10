@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase.js';
-import { estaVacio, parsearIdSolicitud } from '../utils/solicitudesVisita.js';
+import { estaVacio, parsearIdSolicitud, falla } from '../utils/solicitudesVisita.js';
 
 // Business/data logic of the INTERNAL estimate and the final budget of a visit.
 //
@@ -14,8 +14,6 @@ import { estaVacio, parsearIdSolicitud } from '../utils/solicitudesVisita.js';
 
 export const AVISO_ESTIMADO_INTERNO = 'Estimado interno: no comunicar al cliente.';
 
-const falla = (status, message) => ({ error: { status, message } });
-
 const ERROR_CONSULTA_SOLICITUD = 'No se pudo consultar la solicitud. Intentá de nuevo más tarde.';
 
 export const redondear2 = (numero) => Math.round((numero + Number.EPSILON) * 100) / 100;
@@ -24,7 +22,7 @@ const sumarSubtotales = (lineas) =>
   redondear2(lineas.reduce((acumulado, linea) => acumulado + (linea.subtotal ?? 0), 0));
 
 // Loads a visit by id. `contexto` only shapes the server log line.
-const buscarSolicitud = async (idSolicitud, contexto) => {
+export const buscarSolicitud = async (idSolicitud, contexto) => {
   const { data: solicitud, error } = await supabaseAdmin
     .from('solicitudes_visita')
     .select('*')
@@ -477,4 +475,36 @@ export const exigirPresupuestoAceptado = async (idPresupuesto) => {
   }
 
   return {};
+};
+
+// Extra detail for the web panel's visit page (GET /api/visitas/:id): the
+// services loaded on the visit (the same lines the internal estimate uses,
+// priced with the acting admin's CURRENT prices) and the linked presupuesto.
+// Only Confirmada/Realizada visits can have either, so the other states skip
+// the queries. INTERNAL data: the route is admin-only. Returns
+// { servicios, presupuesto }; a failed lookup is logged and degrades to
+// servicios null / presupuesto null so the detail itself never breaks.
+export const obtenerResumenFlujoVisita = async (solicitud, idUsuario) => {
+  if (!['Confirmada', 'Realizada'].includes(solicitud.estado)) {
+    return { servicios: [], presupuesto: null };
+  }
+
+  const { lineas, error } = await calcularLineasEstimado(solicitud.id_solicitud, idUsuario);
+
+  let presupuesto = null;
+  if (solicitud.id_presupuesto) {
+    const { data, error: errorPresupuesto } = await supabaseAdmin
+      .from('presupuestos')
+      .select('id_presupuesto, monto_estimado, monto_total, estado, nota')
+      .eq('id_presupuesto', solicitud.id_presupuesto)
+      .maybeSingle();
+
+    if (errorPresupuesto) {
+      console.error('Error al consultar el presupuesto de la visita:', errorPresupuesto);
+    } else {
+      presupuesto = data ?? null;
+    }
+  }
+
+  return { servicios: error ? null : lineas, presupuesto };
 };
