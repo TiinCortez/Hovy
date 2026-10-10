@@ -3,12 +3,11 @@ import { botRateLimit } from '../middleware/botRateLimit.js';
 import { verificarApiKeyBot } from '../middleware/botAuth.js';
 import { resolverClientePorTelefono } from '../middleware/botCliente.js';
 import { resolverUsuarioPorTelefono } from '../middleware/botUsuario.js';
+import { resolverStaffPorTelefono } from '../middleware/botStaff.js';
 import { resolverDomicilioFiscal } from '../middleware/botDomicilio.js';
 import { clienteEmailRateLimit } from '../middleware/clienteEmailRateLimit.js';
 import {
   getClienteByTelefono,
-  crearClienteBot,
-  verificarEmailCliente,
   updateClienteBot,
   solicitarCambioEmailCliente,
   confirmarCambioEmailCliente,
@@ -23,6 +22,14 @@ import {
   darDeBajaInmuebleBot,
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
+import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
+import {
+  buscarSolicitudesStaff,
+  confirmarSolicitudVisita,
+  consultarDisponibilidadStaff,
+  cargarPresupuestoStaff,
+  crearTurnoDesdeSolicitud,
+} from '../controllers/botStaffController.js';
 
 const router = Router();
 // Los middlewares usan el "router.use" para que protejan todo lo que salga de /api/bot sin tener que agregarlos a cada ruta.
@@ -40,23 +47,13 @@ router.get('/usuarios/:telefono', resolverUsuarioPorTelefono, getUsuarioByTelefo
 router.get('/clientes/:telefono', resolverClientePorTelefono, getClienteByTelefono);
 
 
-// resolverDomicilioFiscal va antes de crear/editar para que sigan
-// funcionando igual si el body trae la ubicacion exacta que compartio el
-// cliente por WhatsApp: el middleware la convierte en el string
-// "Calle, Barrio, Provincia" y lo deja en domicilio_fiscal. Los controllers
-// reciben el body ya resuelto y no se enteran de que existieron coordenadas.
+// El alta por WhatsApp con código de email (crearClienteBot/verificarEmailCliente)
+// se sacó: nadie se auto-registra más. El semi-registro es
+// POST /api/bot/visitas/:telefono (sin email), y el cliente lo crea el staff
+// al confirmar la visita — ver botStaffController.js. resolverDomicilioFiscal
+// sigue haciendo falta acá arriba de PUT, para la edición de un cliente que sí
+// existe.
 //
-// El alta (POST) no inserta el cliente: manda un código al email y el
-// cliente se crea recién en /verificar-email (ver crearClienteBot). Volver a
-// llamarlo reenvía el código. clienteEmailRateLimit va antes: sin límite,
-// alguien podría hacer que la casilla de Gmail mande cientos de mails en loop.
-// POST /api/bot/clientes
-router.post('/clientes', clienteEmailRateLimit, resolverDomicilioFiscal, crearClienteBot);
-
-// Sin resolverClientePorTelefono: el cliente todavía no existe.
-// POST /api/bot/clientes/:telefono/verificar-email
-router.post('/clientes/:telefono/verificar-email', verificarEmailCliente);
-
 // La edición no reusa updateCliente del canal admin: updateClienteBot tiene
 // una lista blanca de campos y opera solo sobre el cliente del número que
 // escribe. Teléfono y email tienen su propio flujo con código.
@@ -99,6 +96,28 @@ router.post('/clientes/:telefono/inmuebles', resolverClientePorTelefono, createI
 router.put('/clientes/:telefono/inmuebles/:id', resolverClientePorTelefono, updateInmuebleBot);
 // DELETE /api/bot/clientes/:telefono/inmuebles/:id/baja
 router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefono, darDeBajaInmuebleBot);
+
+
+// Solicitud de visita. No requiere registro, así que no monta
+// resolverClientePorTelefono: el número nuevo daría 404. El teléfono igual va
+// en la URL, por la misma razón que en el resto del bot.
+// POST /api/bot/visitas/:telefono
+router.post('/visitas/:telefono', crearSolicitudVisita);
+
+
+// Operaciones de staff (agendar turnos tras una visita). resolverStaffPorTelefono
+// exige que el número sea de un usuario con rol admin; el 404 (no es del
+// equipo) y el 403 (es del equipo pero no admin) los devuelve ese middleware.
+// GET  /api/bot/staff/:telefono/visitas?nombre=&estado=
+router.get('/staff/:telefono/visitas', resolverStaffPorTelefono, buscarSolicitudesStaff);
+// POST /api/bot/staff/:telefono/visitas/:id/confirmar
+router.post('/staff/:telefono/visitas/:id/confirmar', resolverStaffPorTelefono, confirmarSolicitudVisita);
+// GET  /api/bot/staff/:telefono/disponibilidad?fecha=&desde=&hasta=&dias=&limite=
+router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consultarDisponibilidadStaff);
+// POST /api/bot/staff/:telefono/visitas/:id/presupuesto
+router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
+// POST /api/bot/staff/:telefono/visitas/:id/turno
+router.post('/staff/:telefono/visitas/:id/turno', resolverStaffPorTelefono, crearTurnoDesdeSolicitud);
 
 
 // Auxiliar del alta: convierte el pin de ubicacion en una direccion sugerida.

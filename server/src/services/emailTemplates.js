@@ -161,19 +161,6 @@ export const plantillaRecuperacionPassword = (codigo) => ({
   }),
 });
 
-export const plantillaVerificacionEmailCliente = (codigo) => ({
-  subject: 'Confirmá tu cuenta de Hovy',
-  html: armarEmail({
-    icono: '📧',
-    titulo: '¡Bienvenido a Hovy!',
-    intro: 'Estás a un paso de activar tu cuenta. Usá este código para confirmar tu email.',
-    codigo,
-    instruccion: 'Respondé este código por WhatsApp para confirmar tu cuenta.',
-    seguridadTitulo: '¿No pediste registrarte?',
-    seguridadTexto: 'Si no iniciaste un registro en Hovy por WhatsApp, ignorá este correo.',
-  }),
-});
-
 export const plantillaCambioEmail = (codigo) => ({
   subject: 'Confirmá tu nuevo email en Hovy',
   html: armarEmail({

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, Building2, CheckCircle2, Search, SlidersHorizontal, 
+import {
+  Users, Building2, CheckCircle2, Search, SlidersHorizontal,
   Download, UserPlus, Phone, Mail, Star, ChevronRight, MoreVertical,
   Calendar, Briefcase, User, LayoutGrid
 } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [ordenarAz, setOrdenarAz] = useState(false);
-  
+
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function ClientsPage() {
       setLoading(true);
       try {
         const response = await ClienteService.getAll();
-        
+
         if (isMounted && response.data) {
           const sortedClients = response.data.sort((a, b) => new Date(b.fecha_alta) - new Date(a.fecha_alta));
           setClients(sortedClients);
@@ -55,7 +55,7 @@ export default function ClientsPage() {
       // Usamos el servicio existente para hacer el PUT al backend
       await ClienteService.update(cliente.telefono, { estado: nuevoEstado });
       // Actualizamos el estado local de React para reflejar el cambio al instante
-      setClients(prev => prev.map(c => 
+      setClients(prev => prev.map(c =>
         c.telefono === cliente.telefono ? { ...c, estado: nuevoEstado } : c
       ));
     } catch (error) {
@@ -71,9 +71,9 @@ export default function ClientsPage() {
   };
 
   const getClientColor = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return '#E8F5E9'; 
-    if (tipo === 'Fijo') return '#F1F8E9'; 
-    return '#FFEBEE'; 
+    if (tipo === 'Empresa' || tipo === 'EMPRESA') return '#E8F5E9';
+    if (tipo === 'Fijo') return '#F1F8E9';
+    return '#FFEBEE';
   };
 
   const getClientTextColor = (tipo) => {
@@ -86,7 +86,7 @@ export default function ClientsPage() {
     const fullName = `${client.nombre || ''} ${client.apellido || ''}`.toLowerCase();
     const search = searchTerm.toLowerCase();
     const matchesSearch = fullName.includes(search) || (client.telefono || '').includes(search) || (client.razon_social || '').toLowerCase().includes(search);
-    
+
     // Si no coincide con la búsqueda de texto, lo descartamos
     if (!matchesSearch) return false;
 
@@ -94,7 +94,7 @@ export default function ClientsPage() {
 
     if (activeFilter === 'Todos') return true;
     if (activeFilter === 'Inactivos') return estadoActual === 'Inactivo';
-    
+
     // Si el filtro no es "Todos" ni "Inactivos", no mostramos los clientes inactivos
     if (estadoActual === 'Inactivo') return false;
 
@@ -109,14 +109,14 @@ export default function ClientsPage() {
       const nombreB = `${b.nombre || ''} ${b.apellido || ''}`.trim().toLowerCase() || (b.razon_social || '').toLowerCase();
       return nombreA.localeCompare(nombreB);
     }
-    
+
     // Fallback: ordenar por los más recientes
     return new Date(b.fecha_alta) - new Date(a.fecha_alta);
   });
-  
+
   return (
     <div className="d-flex flex-column gap-4 pb-5">
-      
+
       <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
         <div>
           <div className="d-flex align-items-center gap-2 mb-1">
@@ -129,13 +129,13 @@ export default function ClientsPage() {
         </div>
 
         <div className="d-flex align-items-center gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
-          <Button variant="outline-primary" className="btn-sm text-nowrap rounded-3 bg-white shadow-sm border-light-subtle text-dark fw-medium px-3 py-2">
+          <Button variant="light" className="text-nowrap">
             <Download size={16} /> Exportar (.csv)
           </Button>
-          <Button variant="outline-primary" className="btn-sm text-nowrap rounded-3 bg-white shadow-sm border-light-subtle text-dark fw-medium px-3 py-2">
+          <Button variant="light" className="text-nowrap">
             <SlidersHorizontal size={16} /> Filtros Avanzados
           </Button>
-          <Button variant="primary" className="btn-sm text-nowrap rounded-3 ms-auto ms-md-0 shadow-sm fw-medium px-4 py-2" onClick={() => setIsModalOpen(true)} style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>
+          <Button variant="primary" className="text-nowrap ms-auto ms-md-0" onClick={() => setIsModalOpen(true)}>
             <UserPlus size={16} /> + Nuevo Cliente
           </Button>
         </div>
@@ -154,7 +154,7 @@ export default function ClientsPage() {
             </div>
           </Card>
         </div>
-        
+
         <div className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
           <Card className="h-100 p-3 shadow-sm border-0 rounded-4">
             <div className="d-flex align-items-start justify-content-between mb-2">
@@ -202,10 +202,10 @@ export default function ClientsPage() {
       <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mt-2">
         <div className="input-group bg-white rounded-pill px-3 py-2 border shadow-sm flex-grow-1" style={{ maxWidth: '300px' }}>
           <span className="input-group-text bg-transparent border-0 text-secondary p-0 me-2"><Search size={18} /></span>
-          <input 
-            type="text" 
+          <input
+            type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-            placeholder="Buscar por nombre, teléfono..." 
+            placeholder="Buscar por nombre, teléfono..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -220,27 +220,27 @@ export default function ClientsPage() {
             if (filter === 'Casual') count = clients.filter(c => c.tipo_cliente === 'Casual').length;
             if (filter === 'Inactivos') count = clients.filter(c => c.estado === 'Inactivo').length;
 
-          
+
 
             return (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={`btn btn-sm rounded-pill text-nowrap px-3 py-2 fw-medium shadow-sm border ${
-                  activeFilter === filter 
-                    ? 'btn-primary' 
+                  activeFilter === filter
+                    ? 'btn-primary'
                     : 'bg-white text-secondary'
                 }`}
                 style={activeFilter === filter ? {backgroundColor: '#1B3006', borderColor: '#1B3006'} : {}}
               >
                 {filter} ({count})
               </button>
-              
+
             )
           })}
         </div>
-        
-        <select 
+
+        <select
           className="form-select bg-white rounded-pill border shadow-sm text-secondary small py-2 w-auto flex-shrink-0"
           value={ordenarAz ? 'az' : 'recientes'}
           onChange={(e) => setOrdenarAz(e.target.value === 'az')}
@@ -260,11 +260,11 @@ export default function ClientsPage() {
           {filteredClients.map((client) => {
             const initials = `${client.nombre?.[0] || ''}${client.apellido?.[0] || ''}`.toUpperCase() || 'CL';
             const fullName = `${client.nombre || ''} ${client.apellido || ''}`.trim() || client.razon_social;
-            
+
             const statusText = client.estado === 'Inactivo' ? 'Inactivo' : 'Activo';
             const statusBadge = statusText === 'Inactivo' ? 'bg-warning-subtle text-warning border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle';
             const selectTextColor = statusText === 'Inactivo' ? '#856404' : '#155724'; // Colores oscuros para el texto del select
-                      
+
             const ClientIcon = getClientIcon(client.tipo_cliente);
             const cardBgColor = getClientColor(client.tipo_cliente);
             const cardTextColor = getClientTextColor(client.tipo_cliente);
@@ -272,7 +272,7 @@ export default function ClientsPage() {
             return (
               <div key={client.id_cliente || client.telefono} className="col-12 col-md-6 col-xl-4">
                 <Card className="h-100 p-4 shadow-sm border-0 rounded-4 d-flex flex-column justify-between bg-white">
-                  
+
                   <div className="d-flex align-items-start gap-3 mb-3">
                     <div className={`rounded-3 d-flex align-items-center justify-content-center fw-bold fs-5 flex-shrink-0 ${cardTextColor}`}
                          style={{ width: '48px', height: '48px', backgroundColor: cardBgColor }}>
@@ -281,7 +281,7 @@ export default function ClientsPage() {
                     <div className="flex-grow-1 overflow-hidden mt-1">
                       <div className="d-flex justify-content-between align-items-start">
                         <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={fullName}>{fullName}</h5>
-                        <button className="btn btn-sm btn-link text-secondary p-0 m-0"><MoreVertical size={18} /></button>
+                        <Button variant="light" icon aria-label="Opciones del cliente"><MoreVertical size={18} /></Button>
                       </div>
                       <p className="text-secondary small m-0 text-truncate">{client.razon_social || 'Cliente Estándar'}</p>
                     </div>
@@ -291,8 +291,8 @@ export default function ClientsPage() {
                     <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-medium d-flex align-items-center gap-1">
                       <ClientIcon size={12}/> {client.tipo_cliente}
                     </span>
-                    
-                    <select 
+
+                    <select
                     className={`badge rounded-pill px-2 py-1 small border ${statusBadge} fw-bold`}
                     style={{ appearance: 'none', cursor: 'pointer', color: selectTextColor, outline: 'none' }}
                     value={statusText}
@@ -304,8 +304,8 @@ export default function ClientsPage() {
 
 
 
-                
-                    
+
+
                     <div className="ms-auto d-flex align-items-center gap-1 text-warning small fw-bold">
                       <Star size={14} fill="currentColor" />
                       <span className="text-dark">{Number(client.calificacion_promedio || 0).toFixed(1)}</span>
@@ -323,7 +323,7 @@ export default function ClientsPage() {
                     <div className="col-5 p-2 px-3 border-end">
                       <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Inmuebles</span>
                       <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
-                        <Building2 size={14} className="text-secondary" /> - vinculados
+                        <Building2 size={14} className="text-secondary" /> -
                       </span>
                     </div>
                     <div className="col-7 p-2 px-3">
@@ -337,7 +337,7 @@ export default function ClientsPage() {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={() => navigate(`/clients/${client.telefono}/inmuebles`)}
                     variant="light"
                     className="w-100 rounded-pill text-dark fw-bold small d-flex align-items-center justify-content-center gap-2 py-2 bg-light border shadow-sm"

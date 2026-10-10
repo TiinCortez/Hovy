@@ -1,9 +1,10 @@
-import { 
-  CalendarCheck, 
-  ClipboardList, 
-  AlertTriangle, 
-  MapPin, 
-  TrendingUp, 
+import { useEffect, useState } from 'react';
+import {
+  CalendarCheck,
+  ClipboardList,
+  AlertTriangle,
+  MapPin,
+  TrendingUp,
   MoreVertical,
   ArrowRight,
   Clock,
@@ -11,14 +12,30 @@ import {
   PlayCircle
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
+import VisitaService from '../services/api/visita.service';
 
 export default function Dashboard() {
+  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue mockeado).
+  const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
+
+  useEffect(() => {
+    const fetchSolicitudesPendientes = async () => {
+      try {
+        const response = await VisitaService.getPendientes();
+        setSolicitudesNuevas(response.data?.length ?? 0);
+      } catch (err) {
+        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+      }
+    };
+
+    fetchSolicitudesPendientes();
+  }, []);
+
   // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
   const mockData = {
     usuario: "The Boss",
     kpis: {
       turnosHoy: 12,
-      solicitudesNuevas: 5,
       alertasPendientes: 3,
       kilometrosRuta: 48
     },
@@ -100,7 +117,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-secondary small fw-semibold m-0">Solicitudes nuevas</p>
-                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.solicitudesNuevas}</h3>
+                <h3 className="fw-bold m-0 text-dark">{solicitudesNuevas}</h3>
               </div>
             </div>
           </Card>
@@ -214,7 +231,7 @@ export default function Dashboard() {
           <Card>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h4 className="fw-bold text-dark m-0 fs-5">Alertas y Notificaciones</h4>
-              <button className="btn btn-sm btn-light rounded-circle p-2 text-secondary"><MoreVertical size={20}/></button>
+              <button type="button" className="btn btn-light btn-icon" aria-label="Opciones"><MoreVertical size={20}/></button>
             </div>
             
             <div className="table-responsive">
