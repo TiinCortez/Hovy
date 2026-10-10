@@ -14,6 +14,7 @@ import Dashboard from '../pages/Dashboard.jsx';
 import ClientsPage from '../pages/ClientsPage.jsx';
 import ClientInmueblesPage from '../pages/ClientInmueblesPage.jsx';
 import TurnosPage from '../pages/TurnosPage.jsx';
+import VisitasPage from '../pages/VisitasPage.jsx';
 import VisitaDetallePage from '../pages/VisitaDetallePage.jsx';
 import ServiciosPage from '../pages/ServiciosPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
@@ -65,6 +66,17 @@ export default function AppRoutes() {
           } 
         />
         
+        <Route
+          path="/visitas"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <VisitasPage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
+        />
+
         <Route
           path="/visitas/:id"
           element={
