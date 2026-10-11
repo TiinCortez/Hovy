@@ -3,10 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hovy-api
+    container_name: ${CONTAINER_NAME:-hovy-api}
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "${HOST_PORT:-4000}:4000"
     env_file:
       - ./server/.env
     healthcheck:
