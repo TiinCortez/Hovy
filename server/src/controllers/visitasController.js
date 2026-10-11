@@ -1,4 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
+import { ERROR_ID_SOLICITUD_INVALIDO, parsearIdSolicitud } from '../utils/solicitudesVisita.js';
+import { obtenerResumenFlujoVisita } from '../services/presupuestoService.js';
 
 // Solicitudes de visita del canal web (panel). Las crea el bot
 // (botVisitasController.js); acá se leen y se avanzan de estado.
@@ -7,16 +9,6 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 // Copia literal del CHECK de docs/supabase-solicitudes-visita-contactada.sql.
 export const ESTADOS_VISITA_VALIDOS = ['Pendiente', 'Contactada', 'Confirmada', 'Realizada', 'Cancelada'];
-
-const ERROR_ID_SOLICITUD_INVALIDO =
-  'El id de la solicitud tiene que ser un número entero positivo.';
-
-// Filtra acá lo que si no llegaría a Postgres como un 22P02 y volvería como 500.
-const parsearIdSolicitud = (valor) => {
-  const numero = Number(valor);
-  if (!Number.isInteger(numero) || numero <= 0) return null;
-  return numero;
-};
 
 // GET /api/visitas?estado=Pendiente
 //
@@ -92,7 +84,11 @@ export const getSolicitudVisita = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ ok: true, data });
+    // Fields added for the workflow screens (existing ones untouched):
+    // `servicios` (estimate lines, internal) and `presupuesto` (or null).
+    const { servicios, presupuesto } = await obtenerResumenFlujoVisita(data, Number(req.user?.sub));
+
+    return res.status(200).json({ ok: true, data: { ...data, servicios, presupuesto } });
   } catch (err) {
     console.error('Error inesperado al obtener la solicitud de visita:', err);
     return res.status(500).json({

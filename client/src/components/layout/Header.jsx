@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, UserCircle } from 'lucide-react';
 import VisitaService from '../../services/api/visita.service';
+import AuthService from '../../services/auth.service.js';
 import VisitasNotificacionesPopover from '../ui/VisitasNotificacionesPopover.jsx';
+import UserMenuPopover from '../ui/UserMenuPopover.jsx';
 
 const INTERVALO_POLLING_MS = 60000;
 
@@ -10,7 +12,9 @@ export default function Header() {
   const navigate = useNavigate();
   const [visitasPendientes, setVisitasPendientes] = useState([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const notificacionesRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   // Trae las pendientes al montar y después cada INTERVALO_POLLING_MS: no hay
   // WebSocket/SSE en el proyecto, así que el panel se refresca por polling.
@@ -43,7 +47,49 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isPopoverOpen]);
 
-  const handleVerDetalle = (idSolicitud) => {
+  // Cierra el menú de usuario al hacer click fuera o presionar Escape.
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isUserMenuOpen]);
+
+  // Solo un popover abierto a la vez.
+  const handleToggleNotificaciones = () => {
+    setIsUserMenuOpen(false);
+    setIsPopoverOpen((prev) => !prev);
+  };
+
+  const handleToggleUserMenu = () => {
+    setIsPopoverOpen(false);
+    setIsUserMenuOpen((prev) => !prev);
+  };
+
+  const handleNavigateMenu = (path) => {
+    setIsUserMenuOpen(false);
+    navigate(path);
+  };
+
+  const handleCerrarSesion = () => {
+    setIsUserMenuOpen(false);
+    AuthService.logout(() => navigate('/login'));
+  };
+
+  const handleVerDetalle =(idSolicitud) => {
     setIsPopoverOpen(false);
     navigate(`/visitas/${idSolicitud}`);
   };
@@ -59,7 +105,7 @@ export default function Header() {
           <button
             className="icon-button p-2 d-flex align-items-center justify-content-center position-relative"
             aria-label="Notificaciones"
-            onClick={() => setIsPopoverOpen((prev) => !prev)}
+            onClick={handleToggleNotificaciones}
           >
             <Bell size={24} />
             {visitasPendientes.length > 0 && (
@@ -78,9 +124,24 @@ export default function Header() {
             />
           )}
         </div>
-        <button className="icon-button p-2 d-flex align-items-center justify-content-center" aria-label="Perfil de usuario">
-          <UserCircle size={28} color="#1B3006" />
-        </button>
+        <div className="position-relative" ref={userMenuRef}>
+          <button
+            className="icon-button p-2 d-flex align-items-center justify-content-center"
+            aria-label="Perfil de usuario"
+            aria-haspopup="menu"
+            aria-expanded={isUserMenuOpen}
+            onClick={handleToggleUserMenu}
+          >
+            <UserCircle size={28} color="#1B3006" />
+          </button>
+          {isUserMenuOpen && (
+            <UserMenuPopover
+              onPerfil={() => handleNavigateMenu('/perfil')}
+              onConfiguracion={() => handleNavigateMenu('/configuracion')}
+              onCerrarSesion={handleCerrarSesion}
+            />
+          )}
+        </div>
       </div>
     </header>
   );

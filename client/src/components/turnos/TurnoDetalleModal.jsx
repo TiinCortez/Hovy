@@ -96,8 +96,8 @@ export default function TurnoDetalleModal({ isOpen, onClose, turnoData, onCancel
                   <div className="d-flex flex-wrap gap-2 mb-4 mt-auto">
                     <button onClick={handleOpenMaps} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
 
-<Map size={14} />
-Abrir en Maps
+                    <Map size={14} />
+                    Abrir en Maps
                     </button>
                     <button onClick={handleCopyLocation} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
                       <Copy size={14} /> Copiar
