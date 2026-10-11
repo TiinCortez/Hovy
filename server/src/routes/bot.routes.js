@@ -22,14 +22,20 @@ import {
   darDeBajaInmuebleBot,
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
+import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
 import {
   buscarSolicitudesStaff,
   confirmarSolicitudVisita,
   consultarDisponibilidadStaff,
-  cargarPresupuestoStaff,
   crearTurnoDesdeSolicitud,
 } from '../controllers/botStaffController.js';
+import {
+  cargarPresupuestoStaff,
+  cargarServiciosVisitaStaff,
+  obtenerEstimadoVisitaStaff,
+  cancelarSolicitudVisita,
+} from '../controllers/botPresupuestoStaffController.js';
 
 const router = Router();
 // Los middlewares usan el "router.use" para que protejan todo lo que salga de /api/bot sin tener que agregarlos a cada ruta.
@@ -104,6 +110,11 @@ router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefo
 // POST /api/bot/visitas/:telefono
 router.post('/visitas/:telefono', crearSolicitudVisita);
 
+// Servicios que ofrece el negocio (solo id, nombre y descripción: nunca precios).
+// Público como la solicitud de visita: solo exige la API key del bot.
+// GET /api/bot/servicios
+router.get('/servicios', listarServiciosBot);
+
 
 // Operaciones de staff (agendar turnos tras una visita). resolverStaffPorTelefono
 // exige que el número sea de un usuario con rol admin; el 404 (no es del
@@ -118,6 +129,13 @@ router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consulta
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno
 router.post('/staff/:telefono/visitas/:id/turno', resolverStaffPorTelefono, crearTurnoDesdeSolicitud);
+// POST /api/bot/staff/:telefono/visitas/:id/cancelar
+router.post('/staff/:telefono/visitas/:id/cancelar', resolverStaffPorTelefono, cancelarSolicitudVisita);
+// Estimado interno (nunca se comunica al cliente): servicios + m2 de la visita y su total.
+// PUT  /api/bot/staff/:telefono/visitas/:id/servicios
+router.put('/staff/:telefono/visitas/:id/servicios', resolverStaffPorTelefono, cargarServiciosVisitaStaff);
+// GET  /api/bot/staff/:telefono/visitas/:id/estimado
+router.get('/staff/:telefono/visitas/:id/estimado', resolverStaffPorTelefono, obtenerEstimadoVisitaStaff);
 
 
 // Auxiliar del alta: convierte el pin de ubicacion en una direccion sugerida.

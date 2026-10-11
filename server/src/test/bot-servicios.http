@@ -1,0 +1,31 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+# Lista publica de servicios para el bot. Nunca incluye precios.
+
+@baseUrl = http://localhost:4000
+@apiKey = {{$dotenv BOT_API_KEY}}
+
+### 1) Listar servicios  -  [Espera 200, data [{ id_servicio, nombre, descripcion }] ordenada por nombre; SIN precio_base ni limite_operativo]
+GET {{baseUrl}}/api/bot/servicios
+x-api-key: {{apiKey}}
+
+### 2) Solo servicios con algun usuario_servicio activo
+# Desactivar (activo=false) todos los usuario_servicio de un tipo y repetir 1): ese tipo no debe aparecer.
+GET {{baseUrl}}/api/bot/servicios
+x-api-key: {{apiKey}}
+
+### 3) Sin duplicados
+# Con dos admins ofreciendo el mismo tipo, repetir 1): el tipo aparece una sola vez.
+GET {{baseUrl}}/api/bot/servicios
+x-api-key: {{apiKey}}
+
+### 4) Nada activo  -  [Espera 200, data = []]
+# Desactivar todos los usuario_servicio y repetir.
+GET {{baseUrl}}/api/bot/servicios
+x-api-key: {{apiKey}}
+
+### 5) Sin API key  -  [Espera 401]
+GET {{baseUrl}}/api/bot/servicios
+
+### 6) API key invalida  -  [Espera 403]
+GET {{baseUrl}}/api/bot/servicios
+x-api-key: clave-incorrecta

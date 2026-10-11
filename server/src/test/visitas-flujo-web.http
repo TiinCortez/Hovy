@@ -1,0 +1,165 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+# Flujo de la visita desde la WEB (alternativa al bot). Requiere haber corrido
+# docs/supabase-presupuesto-estimado.sql. Las rutas son solo para rol admin.
+# El token sale de POST /auth/login (ver auth.http). El estimado es INTERNO.
+
+@baseUrl = http://localhost:4000
+@adminToken = pegar-aca-un-token-de-admin
+@viewerToken = pegar-aca-un-token-de-viewer
+
+# Visita en Contactada (para confirmar).
+@idContactada = 1
+# Visita Confirmada con servicios activos del admin.
+@idConfirmada = 2
+@servicioA = 1
+@servicioB = 2
+@servicioInvalido = 99999
+# Visita Pendiente (estado incorrecto para casi todo).
+@idPendiente = 3
+
+### 1) Detalle de una visita Confirmada  -  [Espera 200: campos de siempre + servicios[] y presupuesto (o null)]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}
+Authorization: Bearer {{adminToken}}
+
+### 2) Sin token  -  [Espera 401]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}/estimado
+
+### 3) Token de no-admin  -  [Espera 403]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}/estimado
+Authorization: Bearer {{viewerToken}}
+
+### 4) Confirmar visita Contactada  -  [Espera 200, data { solicitud, id_cliente, inmueble }]
+POST {{baseUrl}}/api/visitas/{{idContactada}}/confirmar
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "tipo_inmueble": "Casa",
+  "superficie_total": 400,
+  "provincia": "Córdoba"
+}
+
+### 5) Confirmar una visita que no esta Contactada  -  [Espera 409]
+POST {{baseUrl}}/api/visitas/{{idPendiente}}/confirmar
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "tipo_inmueble": "Casa"
+}
+
+### 6) Confirmar sin tipo_inmueble  -  [Espera 400]
+POST {{baseUrl}}/api/visitas/{{idContactada}}/confirmar
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{}
+
+### 7) Cargar servicios + m2  -  [Espera 200, data con 2 filas]
+PUT {{baseUrl}}/api/visitas/{{idConfirmada}}/servicios
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "servicios": [
+    { "id_servicio": {{servicioA}}, "superficie_m2": 300 },
+    { "id_servicio": {{servicioB}}, "superficie_m2": 120.5 }
+  ]
+}
+
+### 8) Servicio invalido / lista vacia  -  [Espera 400]
+PUT {{baseUrl}}/api/visitas/{{idConfirmada}}/servicios
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "servicios": [ { "id_servicio": {{servicioInvalido}}, "superficie_m2": 10 } ]
+}
+
+### 9) Servicios en visita no Confirmada  -  [Espera 409]
+PUT {{baseUrl}}/api/visitas/{{idPendiente}}/servicios
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "servicios": [ { "id_servicio": {{servicioA}}, "superficie_m2": 10 } ]
+}
+
+### 10) Ver presupuesto propuesto (estimado interno)  -  [Espera 200, lineas + total_estimado + aviso]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}/estimado
+Authorization: Bearer {{adminToken}}
+
+### 11) Estimado de visita inexistente  -  [Espera 404]
+GET {{baseUrl}}/api/visitas/999999/estimado
+Authorization: Bearer {{adminToken}}
+
+### 12) Id invalido  -  [Espera 400]
+GET {{baseUrl}}/api/visitas/abc/estimado
+Authorization: Bearer {{adminToken}}
+
+### 13) Fijar precio final (editable: repetir con otro monto)  -  [Espera 200, data con estimado_total, precio_final, diferencia, lineas]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/presupuesto
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "monto_total": 150000,
+  "nota": "Terreno con acceso dificil"
+}
+
+### 14) Precio final invalido  -  [Espera 400]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/presupuesto
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "monto_total": 0
+}
+
+### 15) Disponibilidad de un dia  -  [Espera 200, data [{ fecha, disponibles }]]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}/disponibilidad?fecha=2030-01-15&desde=15:00&hasta=17:00
+Authorization: Bearer {{adminToken}}
+
+### 16) Disponibilidad con parametros invalidos  -  [Espera 400]
+GET {{baseUrl}}/api/visitas/{{idConfirmada}}/disponibilidad?desde=15:00
+Authorization: Bearer {{adminToken}}
+
+### 17) Agendar turno con franja elegida  -  [Espera 201, data { solicitud (Realizada), turno }]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/turno
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "fecha_programada": "2030-01-15",
+  "inicio_desde": "15:00",
+  "hasta": "17:00",
+  "prioridad": "Normal"
+}
+
+### 18) Turno sin presupuesto cargado  -  [Espera 409]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/turno
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "fecha_programada": "2030-01-15",
+  "prioridad": "Normal"
+}
+
+### 19) Turno con datos invalidos  -  [Espera 400]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/turno
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "inicio_desde": "15:00"
+}
+
+### 20) Cancelar visita Confirmada  -  [Espera 200, data.estado = Cancelada]
+POST {{baseUrl}}/api/visitas/{{idConfirmada}}/cancelar
+Authorization: Bearer {{adminToken}}
+
+### 21) Cancelar una visita que no esta Confirmada  -  [Espera 409]
+POST {{baseUrl}}/api/visitas/{{idPendiente}}/cancelar
+Authorization: Bearer {{adminToken}}
+
