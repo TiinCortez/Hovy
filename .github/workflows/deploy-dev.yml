@@ -1,0 +1,53 @@
+name: Deploy Staging (dev.hovyapp.com.ar)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  test_and_deploy:
+    name: Build & Deploy to Staging VM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validar dependencias y build del Cliente
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Validar sintaxis del Backend
+        working-directory: server
+        run: |
+          npm ci --omit=dev
+          for f in $(find src -name '*.js'); do
+            node --check "$f"
+          done
+
+      - name: Desplegar en Azure VM (Staging - Puerto 4001)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/Hovy-dev
+            git fetch origin develop
+            git reset --hard origin/develop
+            docker compose up -d --build
+            docker image prune -f
+            sleep 5
+            curl -f http://127.0.0.1:4001/api/health || exit 1
