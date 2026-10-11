@@ -19,15 +19,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.set('trust proxy', 1);
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : [
-      'http://localhost:5173',
-      'http://localhost:4000',
-      'https://hovyapp.com.ar',
-      'https://www.hovyapp.com.ar',
-      'https://app.hovyapp.com.ar'
-    ];
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4000',
+  'https://hovyapp.com.ar',
+  'https://www.hovyapp.com.ar',
+  'https://app.hovyapp.com.ar',
+  'https://dev.hovyapp.com.ar'
+];
+
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : [];
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -35,7 +40,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
