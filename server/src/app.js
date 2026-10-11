@@ -11,6 +11,7 @@ import { authMiddleware, requireRole } from './middleware/authMiddleware.js';
 import botRoutes from './routes/bot.routes.js';
 import visitasRoutes from './routes/visitas.routes.js';
 import serviciosRoutes from './routes/servicios.routes.js';
+import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/mercadopago/mercadopago.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +62,13 @@ app.use('/api/auth', authRoutes);
 // (verificarApiKeyBot), sin pasar por el JWT de usuarios.
 app.use('/api/bot', botRoutes);
 
+// Mercado Pago OAuth: el callback lo abre el navegador volviendo de Mercado Pago
+// (sin JWT), por eso se monta ANTES y fuera de las rutas protegidas. El usuario
+// se resuelve solo desde el state persistido.
+app.use('/api/mercadopago', mercadopagoPublicRouter);
+
 // Rutas protegidas con JWT
+app.use('/api/mercadopago', authMiddleware, requireRole(['admin']), mercadopagoAdminRouter);
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);

@@ -1,0 +1,45 @@
+@baseUrl = http://localhost:4000
+# Paste a JWT obtained from POST /api/auth/login (see auth.http) of an admin user
+@token = PEGAR_TOKEN_AQUI
+
+// NOTE: a real authorization needs a browser (seller consent at Mercado Pago)
+// and valid MERCADOPAGO_* credentials in the server environment.
+
+### Estado de la conexion (antes de vincular: conectada=false)
+GET {{baseUrl}}/api/mercadopago/conexion
+Authorization: Bearer {{token}}
+
+### Sin token (espera 401)
+GET {{baseUrl}}/api/mercadopago/conexion
+
+### Iniciar vinculacion - devuelve { data: { url } }; abrir esa URL en el navegador
+POST {{baseUrl}}/api/mercadopago/oauth/iniciar
+Authorization: Bearer {{token}}
+
+### Iniciar sin token (espera 401)
+POST {{baseUrl}}/api/mercadopago/oauth/iniciar
+
+// CALLBACK (publico, responde 302 a MERCADOPAGO_POST_CONNECT_URL)
+
+### Callback sin parametros (espera 302 ?mercadopago=error&motivo=parametros_invalidos)
+GET {{baseUrl}}/api/mercadopago/oauth/callback
+
+### Callback con error del proveedor (espera 302 motivo=autorizacion_rechazada)
+GET {{baseUrl}}/api/mercadopago/oauth/callback?error=access_denied&state=x
+
+### Callback con state inexistente (espera 302 motivo=state_invalido)
+GET {{baseUrl}}/api/mercadopago/oauth/callback?code=TG-FAKE&state=estado-inventado
+
+### Callback sin state (espera 302 motivo=parametros_invalidos)
+GET {{baseUrl}}/api/mercadopago/oauth/callback?code=TG-FAKE
+
+// State vencido / ya usado: tras "iniciar", esperar 10 minutos (vencido) o usar
+// dos veces la misma URL de retorno (segundo intento: motivo=state_invalido).
+
+### Estado de la conexion (despues de vincular: conectada=true, sin tokens)
+GET {{baseUrl}}/api/mercadopago/conexion
+Authorization: Bearer {{token}}
+
+### Desvincular (solo local; no revoca el permiso en Mercado Pago)
+DELETE {{baseUrl}}/api/mercadopago/conexion
+Authorization: Bearer {{token}}
