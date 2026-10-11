@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -17,6 +17,10 @@ import {
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import VisitaService from '../services/api/visita.service';
+import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
+import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
+import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
+import { BADGE_CLASS, getEstadoLabel } from '../components/visitas/visitaUtils';
 
 const FRANJA_TEXTO = {
   Mañana: 'por la mañana',
@@ -40,6 +44,7 @@ export default function VisitaDetallePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contactando, setContactando] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,6 +66,17 @@ export default function VisitaDetallePage() {
 
     fetchVisita();
     return () => { isMounted = false; };
+  }, [id]);
+
+  // Called by the workflow components after each mutation: reload without the full-page spinner
+  const refreshVisita = useCallback(async (message) => {
+    try {
+      const response = await VisitaService.getById(id);
+      setVisita(response.data);
+      setFeedback(message ? { type: 'success', text: message } : null);
+    } catch (err) {
+      setFeedback({ type: 'danger', text: err.response?.data?.error || 'No se pudo actualizar la solicitud.' });
+    }
   }, [id]);
 
   const handleContactar = async () => {
@@ -103,6 +119,7 @@ export default function VisitaDetallePage() {
 
   const franja = FRANJA_TEXTO[visita.franja_preferida] ?? FRANJA_TEXTO.Indistinto;
   const yaContactada = visita.estado !== 'Pendiente';
+  const estadoLabel = getEstadoLabel(visita.estado);
 
   return (
     <div className="d-flex flex-column gap-4 pb-5">
@@ -130,14 +147,19 @@ export default function VisitaDetallePage() {
             </div>
           </div>
 
-          <span
-            className={`badge rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 ${
-              yaContactada ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'
-            }`}
-          >
-            {yaContactada ? <CheckCircle2 size={14} /> : <Clock size={14} />}
-            {visita.estado}
-          </span>
+          <div className="d-flex flex-column align-items-end gap-1">
+            <span
+              className={`badge rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 ${
+                BADGE_CLASS[estadoLabel] || BADGE_CLASS.Pendiente
+              }`}
+            >
+              {yaContactada ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+              {estadoLabel}
+            </span>
+            {visita.estado === 'Realizada' && (
+              <span className="badge rounded-pill px-3 py-2 fw-semibold bg-success text-white">Turno asignado</span>
+            )}
+          </div>
         </div>
 
         <div className="row g-3 mb-4">
@@ -211,22 +233,37 @@ export default function VisitaDetallePage() {
           </div>
         </div>
 
-        <Button
-          variant="primary"
-          className="w-100 w-md-auto justify-content-center"
-          style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
-          onClick={handleContactar}
-          disabled={contactando || yaContactada}
-        >
-          <MessageCircle size={18} />
-          {yaContactada ? 'Ya contactada' : contactando ? 'Abriendo WhatsApp...' : 'Contactar'}
-        </Button>
         {!yaContactada && (
-          <p className="text-secondary text-center mt-2 mb-0" style={{ fontSize: '0.75rem' }}>
-            Al presionar Contactar, la solicitud pasará a "Contactada" automáticamente.
-          </p>
+          <>
+            <Button
+              variant="primary"
+              className="w-100 w-md-auto justify-content-center"
+              style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+              onClick={handleContactar}
+              disabled={contactando}
+            >
+              <MessageCircle size={18} />
+              {contactando ? 'Abriendo WhatsApp...' : 'Contactar'}
+            </Button>
+            <p className="text-secondary text-center mt-2 mb-0" style={{ fontSize: '0.75rem' }}>
+              Al presionar Contactar, la solicitud pasará a "Contactada" automáticamente.
+            </p>
+          </>
         )}
       </Card>
+
+      {feedback && (
+        <div className={`alert alert-${feedback.type} rounded-3 m-0 small fw-medium`} role={feedback.type === 'danger' ? 'alert' : 'status'}>
+          {feedback.text}
+        </div>
+      )}
+
+      {visita.estado === 'Contactada' && <ConfirmarVisitaForm visita={visita} onDone={refreshVisita} />}
+      {visita.estado === 'Confirmada' && <FlujoConfirmada visita={visita} onRefresh={refreshVisita} />}
+      {visita.estado === 'Realizada' && <ResumenVisitaPanel visita={visita} />}
+      {visita.estado === 'Cancelada' && (
+        <p className="text-secondary small m-0">Esta visita fue cancelada. No admite más cambios.</p>
+      )}
     </div>
   );
 }

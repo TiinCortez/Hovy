@@ -1,0 +1,143 @@
+@baseUrl = http://localhost:4000
+# Paste a JWT obtained from POST /api/auth/login (see auth.http) of an admin user
+@token = PEGAR_TOKEN_AQUI
+
+// TEST DE CATALOGO GLOBAL
+### Listado del catalogo global
+GET {{baseUrl}}/api/servicios
+Authorization: Bearer {{token}}
+
+### Sin token (espera 401)
+GET {{baseUrl}}/api/servicios
+
+// TEST DE MIS SERVICIOS
+### Listado de mis servicios
+GET {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+
+### Alta de servicio - [Atributos completos, espera 201]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Poda de árboles",
+  "descripcion": "Poda de árboles y arbustos",
+  "variable_cotizacion": "cantidad",
+  "precio_base": 15000.50,
+  "limite_operativo": 500
+}
+
+### Alta de servicio - [Solo obligatorios, espera 201]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Limpieza de piletas",
+  "precio_base": 8000
+}
+
+### Alta de servicio - [Mismo nombre con otras mayusculas/tildes/espacios, mismo usuario, espera 409]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "  PODA   DE ARBOLES ",
+  "precio_base": 100
+}
+
+### Alta de servicio - [Nombre invalido (1 caracter), espera 400]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "a",
+  "precio_base": 100
+}
+
+### Alta de servicio - [Falta nombre, espera 400]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 100
+}
+
+### Alta de servicio - [Precio negativo, espera 400]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Desmalezado",
+  "precio_base": -10
+}
+
+### Alta de servicio - [Reactivacion: 1) crear, 2) DELETE de abajo, 3) repetir esta alta, espera 200 con activo=true]
+POST {{baseUrl}}/api/servicios/catalogo
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Limpieza de piletas",
+  "precio_base": 9500,
+  "limite_operativo": 20
+}
+
+// TEST DE ACTUALIZACION
+### Actualizar precio y limite
+PUT {{baseUrl}}/api/servicios/catalogo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 18000,
+  "limite_operativo": 800
+}
+
+### Reactivar servicio
+PUT {{baseUrl}}/api/servicios/catalogo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### Actualizar - [activo no booleano, espera 400]
+PUT {{baseUrl}}/api/servicios/catalogo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": "si"
+}
+
+### Actualizar - [Sin campos, espera 400]
+PUT {{baseUrl}}/api/servicios/catalogo/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Actualizar - [Id ajeno o inexistente, espera 404]
+PUT {{baseUrl}}/api/servicios/catalogo/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "precio_base": 100
+}
+
+// TEST DE BAJA (soft delete)
+### Baja de servicio
+DELETE {{baseUrl}}/api/servicios/catalogo/1
+Authorization: Bearer {{token}}
+
+### Baja - [Id ajeno o inexistente, espera 404]
+DELETE {{baseUrl}}/api/servicios/catalogo/99999
+Authorization: Bearer {{token}}

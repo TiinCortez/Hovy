@@ -12,6 +12,7 @@ build/
 
 # Logs
 *.log
+odd
 
 # Sistema y editores
 .DS_Store
