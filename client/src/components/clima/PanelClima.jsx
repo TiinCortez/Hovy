@@ -97,7 +97,7 @@ export default function PanelClima() {
           </div>
           <div className="lh-1 text-truncate">
             <h2 className="m-0 fs-6 fw-bold text-truncate" style={{ color: '#093624' }}>Clima</h2>
-            <span className="small text-secondary text-truncate d-block" style={{ fontSize: '0.7rem' }}>Córdoba Cap.</span>
+            <span className="small text-secondary text-truncate d-block" style={{ fontSize: '0.7rem' }}>San salvador de Jujuy</span>
           </div>
         </div>
         

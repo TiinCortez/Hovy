@@ -52,7 +52,7 @@ const getBadgeStyle = (estado) => {
 
 export default function MapaAgenda({ turnos = [], onSelectTurno }) {
   const turnosConUbicacion = turnos.filter(t => t.inmueble?.latitud && t.inmueble?.longitud);
-  const center = [-31.4201, -64.1888]; // Córdoba Capital por defecto
+  const center = [-24.233563, -65.261317]; 
 
   return (
     <div
