@@ -29,13 +29,14 @@ jobs:
           npm ci
           npm run build
 
-      - name: Validar sintaxis del Backend
+      - name: Validar sintaxis y pruebas del Backend
         working-directory: server
         run: |
           npm ci --omit=dev
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
+          node --test src/test/*.test.mjs
 
       - name: Desplegar en Azure VM (Producción - Puerto 4000)
         uses: appleboy/ssh-action@v1.0.3
