@@ -28,8 +28,26 @@ const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex'
 const authBaseUrl = () =>
   (process.env.MERCADOPAGO_AUTH_BASE_URL || DEFAULT_AUTH_BASE_URL).replace(/\/+$/, '');
 
+// Extracts only the short error code and message from a failed provider response so a
+// rejected exchange can be diagnosed. Never returns the raw body: only `error`, `message`
+// and `status` are kept, token-like strings are masked and the result is truncated.
+const describirErrorProveedor = async (response) => {
+  try {
+    const body = await response.json();
+    const partes = ['error', 'message', 'status']
+      .map((key) => (typeof body?.[key] === 'string' || typeof body?.[key] === 'number' ? `${key}=${body[key]}` : null))
+      .filter(Boolean)
+      .join(' ')
+      .replace(/(APP_USR|TEST)-[\w-]+/g, '[oculto]');
+    return partes.slice(0, 200);
+  } catch {
+    return '';
+  }
+};
+
 // POST /oauth/token with form encoding. Returns the parsed body or null on any failure.
-// Provider bodies are never logged or forwarded: only the HTTP status is logged.
+// Provider bodies are never forwarded; on failure only the HTTP status plus the sanitized
+// error code/message (see describirErrorProveedor) are logged.
 const postToken = async (params) => {
   try {
     const response = await fetch(TOKEN_URL, {
@@ -39,7 +57,8 @@ const postToken = async (params) => {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!response.ok) {
-      console.error(`[mercadopago] oauth/token respondió ${response.status}`);
+      const detalle = await describirErrorProveedor(response);
+      console.error(`[mercadopago] oauth/token respondió ${response.status} (${params.grant_type})${detalle ? ` ${detalle}` : ''}`);
       return null;
     }
     const body = await response.json();
