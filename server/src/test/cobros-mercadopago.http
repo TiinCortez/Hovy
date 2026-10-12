@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:4000
+# Paste a JWT obtained from POST /api/auth/login (see auth.http) of an admin user
+@token = PEGAR_TOKEN_AQUI
+@idCobro = 1
+
+// Requires: migration 007 run, MERCADOPAGO_PUBLIC_BASE_URL (public https) and a
+// Mercado Pago account linked from Configuración (see mercadopago-oauth.http).
+
+### Crear cobro desde una visita (monto = presupuesto Aceptado). Espera 201
+POST {{baseUrl}}/api/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_solicitud": 1 }
+
+### Crear cobro manual. Espera 201
+POST {{baseUrl}}/api/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "monto": 1500.50, "descripcion": "Poda de setos" }
+
+### Monto invalido (3 decimales) - espera 400
+POST {{baseUrl}}/api/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "monto": 10.123, "descripcion": "x" }
+
+### Visita sin presupuesto Aceptado o cuenta no vinculada - espera 409
+POST {{baseUrl}}/api/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_solicitud": 999 }
+
+### Sin token (espera 401)
+POST {{baseUrl}}/api/cobros
+Content-Type: application/json
+
+{ "monto": 100, "descripcion": "x" }
+
+### Listar cobros (opcional ?id_solicitud=)
+GET {{baseUrl}}/api/cobros?id_solicitud=1
+Authorization: Bearer {{token}}
+
+### Detalle
+GET {{baseUrl}}/api/cobros/{{idCobro}}
+Authorization: Bearer {{token}}
+
+### Cobro de otro usuario o inexistente (espera 404)
+GET {{baseUrl}}/api/cobros/99999
+Authorization: Bearer {{token}}
+
+### QR en la plantilla (image/png, solo Pendiente; otro estado -> 409)
+GET {{baseUrl}}/api/cobros/{{idCobro}}/qr
+Authorization: Bearer {{token}}
+
+### Cancelar (solo Pendiente -> Cancelado, local). Segunda vez -> 409
+POST {{baseUrl}}/api/cobros/{{idCobro}}/cancelar
+Authorization: Bearer {{token}}
+
+// WEBHOOK: POST /api/mercadopago/webhook is called by Mercado Pago with an
+// x-signature header (ts=...,v1=HMAC) signed with MERCADOPAGO_WEBHOOK_SECRET, so it
+// cannot be reproduced by hand. Without a valid signature the answer is 401 (503 if
+// the secret is not configured). Test it with a real payment from the Mercado Pago
+// panel (Webhooks > Simular notificación) once the notification URL is set.
+
+### Webhook sin firma (espera 401, o 503 si no hay secreto configurado)
+POST {{baseUrl}}/api/mercadopago/webhook
+Content-Type: application/json
+
+{ "type": "payment", "data": { "id": "123" } }

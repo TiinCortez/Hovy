@@ -27,6 +27,7 @@ Los scripts deben ejecutarse en el **SQL Editor de Supabase** en el orden numér
 4. **`004_servicios_catalogo.sql`**: Reestructuración del catálogo de servicios global y creación de la tabla puente `usuario_servicio` con precios base y límites operativos.
 5. **`005_presupuestos_estimados.sql`**: Soporte de estimación interna de presupuestos (`solicitud_servicio` y columna `monto_estimado` en `presupuestos`).
 6. **`006_mercadopago_oauth.sql`**: Vinculación de cuentas vendedor de Mercado Pago (`mercadopago_oauth_state` y `mercadopago_conexion` cifrada con AES-256).
+7. **`007_cobros_mercadopago.sql`**: Tabla `cobros_mercadopago` (links de pago Checkout Pro del vendedor con QR; el estado lo actualiza el webhook de Mercado Pago).
 
 ---
 

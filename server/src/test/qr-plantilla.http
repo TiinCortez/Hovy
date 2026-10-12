@@ -1,0 +1,75 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+# El QR se compone sobre server/src/assets/plantilla_qr_hovy.png.
+# Para ver la imagen: en REST Client, "Save Response Body" o abrir la respuesta como imagen.
+
+@baseUrl = http://localhost:4000
+# JWT de un usuario admin (ver auth.http para obtenerlo desde el login)
+@token = PEGAR_TOKEN_AQUI
+
+
+### 1) Camino feliz: texto corto  -  [Espera 200 image/png]
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contenido": "https://www.mercadopago.com.ar/qr/prueba-0001"
+}
+
+
+### 2) Camino feliz: payload largo tipo EMV (~300 caracteres)  -  [Espera 200 image/png]
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contenido": "00020101021243650016com.mercadolibre0201306363f1e8d2a0b44c5e8b9a17d3c2f4e5a6b7c8d9e0f152044829530303254060000.015802AR5909Hovy Test6004CBA62070503***6304ABCD00020101021243650016com.mercadolibre0201306363f1e8d2a0b44c5e8b9a17d3c2f4e5a6b7c8d9e0f152044829530303254060000.01"
+}
+
+
+### 3) Contenido vacio  -  [Espera 400 "El contenido del QR es obligatorio..."]
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contenido": "   "
+}
+
+
+### 4) Contenido que no es texto  -  [Espera 400]
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contenido": 12345
+}
+
+
+### 5) Sin contenido en el body  -  [Espera 400]
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+
+### 6) Sin token  -  [Espera 401]
+POST {{baseUrl}}/api/qr/previsualizar
+Content-Type: application/json
+
+{
+  "contenido": "https://www.mercadopago.com.ar/qr/prueba-0001"
+}
+
+
+### 7) Contenido mayor a 1024 caracteres  -  [Espera 400 "no puede superar los 1024 caracteres"]
+# Reemplazar el valor por un texto de mas de 1024 caracteres.
+POST {{baseUrl}}/api/qr/previsualizar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contenido": "PEGAR_AQUI_UN_TEXTO_DE_MAS_DE_1024_CARACTERES"
+}
