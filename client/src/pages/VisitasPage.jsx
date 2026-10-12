@@ -33,11 +33,11 @@ const BADGE_CLASS = {
 };
 
 const EMPTY_TEXT = {
-  Todas: 'Todavía no hay solicitudes de visita.',
-  Pendiente: 'No hay visitas en estado Pendiente.',
-  Contactada: 'No hay visitas en estado Contactada.',
-  Confirmada: 'No hay visitas en estado Confirmada.',
-  Cancelada: 'No hay visitas en estado Cancelada.',
+  Todas: 'Todavía no hay solicitudes de contacto.',
+  Pendiente: 'No hay solicitudes de contacto en estado Pendiente.',
+  Contactada: 'No hay solicitudes de contacto en estado Contactada.',
+  Confirmada: 'No hay solicitudes de contacto en estado Confirmada.',
+  Cancelada: 'No hay solicitudes de contacto en estado Cancelada.',
 };
 
 const time = (visita) => new Date(visita.created_at).getTime() || 0;
@@ -65,7 +65,7 @@ export default function VisitasPage() {
         setErrorMessage(null);
       })
       .catch((error) => {
-        if (isMounted) setErrorMessage(error.response?.data?.error || 'No se pudieron cargar las visitas.');
+        if (isMounted) setErrorMessage(error.response?.data?.error || 'No se pudieron cargar las solicitudes de contacto.');
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -112,8 +112,8 @@ export default function VisitasPage() {
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Solicitudes</span>
         </div>
-        <h2 className="fw-bold fs-2 text-dark m-0">Visitas</h2>
-        <p className="text-secondary small m-0">Todas las solicitudes de visita, en cualquier estado.</p>
+        <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes de contacto</h2>
+        <p className="text-secondary small m-0">Todas las solicitudes de contacto, en cualquier estado.</p>
       </div>
 
       <div className="d-flex align-items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Filtrar por estado">
@@ -138,7 +138,7 @@ export default function VisitasPage() {
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
             placeholder="Buscar por nombre, teléfono o dirección..."
-            aria-label="Buscar visitas"
+            aria-label="Buscar solicitudes de contacto"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -174,7 +174,7 @@ export default function VisitasPage() {
       ) : filteredVisitas.length === 0 ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <p className="text-secondary m-0">
-            {counts[activeTab] === 0 ? EMPTY_TEXT[activeTab] : 'No se encontraron visitas con esa búsqueda.'}
+            {counts[activeTab] === 0 ? EMPTY_TEXT[activeTab] : 'No se encontraron solicitudes de contacto con esa búsqueda.'}
           </p>
         </Card>
       ) : (

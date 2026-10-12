@@ -6,7 +6,7 @@ export default function Sidebar() {
     { path: '/dashboard', label: 'Panel', icon: <LayoutDashboard size={22} /> },
     { path: '/clients', label: 'Clientes', icon: <Users size={22} /> },
     { path: '/calendar', label: 'Agenda', icon: <CalendarDays size={22} /> },
-    { path: '/visitas', label: 'Visitas', icon: <ClipboardList size={22} /> },
+    { path: '/visitas', label: 'Solicitudes de contacto', icon: <ClipboardList size={22} /> },
     { path: '/servicios', label: 'Servicios', icon: <Wrench size={22} /> },
     { path: '/analytics', label: 'Métricas', icon: <BarChart3 size={22} /> },
   ];
