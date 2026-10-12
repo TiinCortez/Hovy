@@ -35,6 +35,11 @@ export function validarVariablesEntorno() {
     advertencias.push('EMAIL_USER o EMAIL_PASS no están configurados. El envío de correos (recuperación de contraseña / bienvenidas) fallará.');
   }
 
+  // Cobros con Mercado Pago (opcionales: solo se advierte). MERCADOPAGO_PAYMENT_RETURN_URL es opcional.
+  if (!process.env.MERCADOPAGO_PUBLIC_BASE_URL || !process.env.MERCADOPAGO_WEBHOOK_SECRET) {
+    advertencias.push('MERCADOPAGO_PUBLIC_BASE_URL o MERCADOPAGO_WEBHOOK_SECRET no están configuradas. No se podrán generar cobros ni confirmar pagos por webhook.');
+  }
+
   // Si faltan variables críticas, detener el arranque con un mensaje claro y educativo
   if (faltantesObligatorias.length > 0) {
     console.error('\n' + '='.repeat(70));
