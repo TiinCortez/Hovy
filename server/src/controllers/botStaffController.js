@@ -6,6 +6,8 @@ import {
   responderErrorServicio,
 } from '../utils/solicitudesVisita.js';
 import { consultarDisponibilidad, confirmarVisita, agendarTurnoVisita } from '../services/visitaFlujoService.js';
+import { armarLinkMaps, resolverTransicionTurno, contenidoQrTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
+import { componerQrEnPlantilla } from '../integrations/qr/qrPlantillaService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
 // visitó una solicitud de visita y el cliente confirmó que quiere el
@@ -75,6 +77,193 @@ export const consultarDisponibilidadStaff = async (req, res) => {
       ok: false,
       error: 'Ocurrió un error inesperado al consultar la disponibilidad.',
     });
+  }
+};
+
+// GET /api/bot/staff/:telefono/turnos?fecha=YYYY-MM-DD&estado=Confirmado
+//
+// Agenda del día para el jefe. Sin `fecha` usa hoy en hora de Córdoba. Sin
+// `estado` trae todo menos los Cancelados. Solo lectura.
+const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
+const hoyEnCordoba = () =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Cordoba',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+
+const ESTADOS_ACCIONABLES = ['Coordinado', 'Confirmado', 'En ejecución'];
+
+export const listarTurnosStaff = async (req, res) => {
+  const todas = req.query.todas === 'true';
+  const fecha = estaVacio(req.query.fecha) ? hoyEnCordoba() : String(req.query.fecha).trim();
+  const desde = estaVacio(req.query.desde) ? null : String(req.query.desde).trim();
+
+  if (!FECHA_ISO.test(fecha)) {
+    return res.status(400).json({ ok: false, error: 'La fecha debe tener formato YYYY-MM-DD.' });
+  }
+  if (desde && !FECHA_ISO.test(desde)) {
+    return res.status(400).json({ ok: false, error: 'El parámetro desde debe tener formato YYYY-MM-DD.' });
+  }
+
+  const estados = parsearEstadosTurno(req.query.estado);
+  if (!estados.ok) return res.status(400).json({ ok: false, error: estados.error });
+
+  try {
+    let query = supabaseAdmin
+      .from('turnos')
+      .select('id_turno, fecha_programada, inicio_desde, hasta, prioridad, estado, inmueble:inmuebles(direccion, barrio, latitud, longitud, cliente:clientes(nombre, apellido))')
+      .order('fecha_programada', { ascending: true })
+      .order('inicio_desde', { ascending: true });
+
+    // todas=true: sin filtro de día (para elegir qué turno iniciar o finalizar sin
+    // importar su fecha), con tope para no inundar el chat.
+    if (todas) {
+      if (desde) query = query.gte('fecha_programada', desde);
+      query = query.limit(10);
+    } else {
+      query = query.eq('fecha_programada', fecha);
+    }
+
+    // Sin estado: el listado del día excluye solo Cancelados; con todas=true (sin tope de
+    // fecha) hay que acotar a lo accionable, o los Realizados viejos llenan el límite de 10.
+    if (estados.estados.length === 0 && todas) query = query.in('estado', ESTADOS_ACCIONABLES);
+    else if (estados.estados.length === 0) query = query.neq('estado', 'Cancelado');
+    else if (estados.estados.length === 1) query = query.eq('estado', estados.estados[0]);
+    else query = query.in('estado', estados.estados);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error al listar turnos para staff:', error);
+      return res.status(500).json({
+        ok: false,
+        error: 'No se pudieron consultar los turnos. Intentá de nuevo más tarde.',
+      });
+    }
+
+    return res.status(200).json({ ok: true, fecha: todas ? null : fecha, data: data.map(resumirTurno) });
+  } catch (err) {
+    console.error('Error inesperado al listar turnos para staff:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al consultar los turnos.',
+    });
+  }
+};
+
+// Lo que ve el jefe de un turno: datos para reconocerlo y el link de Maps.
+// Las coordenadas crudas no salen: el agente solo necesita el link.
+function resumirTurno(t) {
+  const inmueble = t.inmueble ?? {};
+  const cliente = inmueble.cliente ?? {};
+  return {
+    id_turno: t.id_turno,
+    fecha: t.fecha_programada,
+    hora_inicio: t.inicio_desde,
+    hora_fin: t.hasta,
+    estado: t.estado,
+    prioridad: t.prioridad,
+    direccion: inmueble.direccion ?? null,
+    barrio: inmueble.barrio ?? null,
+    cliente: [cliente.nombre, cliente.apellido].filter(Boolean).join(' ') || null,
+    link_maps: armarLinkMaps(inmueble),
+  };
+}
+
+// POST /api/bot/staff/:telefono/turnos/:id/iniciar | /finalizar
+//
+// Dos fases, forzadas acá y no solo en el prompt del agente: sin
+// `confirmado: true` (boolean estricto) NO se modifica nada y se devuelven los
+// datos del turno para que el jefe los confirme. Con `confirmado: true` se
+// aplica la transición. Ver resolverTransicionTurno para los estados válidos.
+const cambiarEstadoTurnoStaff = (accion) => async (req, res) => {
+  const idTurno = Number(req.params.id);
+  if (!Number.isInteger(idTurno) || idTurno <= 0) {
+    return res.status(400).json({ ok: false, error: 'El id del turno no es válido.' });
+  }
+
+  try {
+    const { data: turno, error: errorConsulta } = await supabaseAdmin
+      .from('turnos')
+      .select('id_turno, fecha_programada, inicio_desde, hasta, prioridad, estado, inmueble:inmuebles(direccion, barrio, latitud, longitud, cliente:clientes(nombre, apellido))')
+      .eq('id_turno', idTurno)
+      .maybeSingle();
+
+    if (errorConsulta) throw errorConsulta;
+    if (!turno) return res.status(404).json({ ok: false, error: 'Turno no encontrado.' });
+
+    const transicion = resolverTransicionTurno(turno.estado, accion);
+    if (!transicion.ok) return res.status(409).json({ ok: false, error: transicion.error });
+
+    if (req.body?.confirmado !== true) {
+      return res.status(200).json({
+        ok: true,
+        requiere_confirmacion: true,
+        accion,
+        mensaje: `Mostrá estos datos al jefe y pedile confirmación explícita antes de ${accion} el turno.`,
+        data: resumirTurno(turno),
+      });
+    }
+
+    const { data: actualizado, error } = await supabaseAdmin
+      .from('turnos')
+      .update({ estado: transicion.estadoNuevo })
+      .eq('id_turno', idTurno)
+      .select('id_turno, fecha_programada, inicio_desde, hasta, prioridad, estado, inmueble:inmuebles(direccion, barrio, latitud, longitud, cliente:clientes(nombre, apellido))')
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({ ok: true, data: resumirTurno(actualizado) });
+  } catch (err) {
+    console.error(`Error inesperado al ${accion} turno para staff:`, err);
+    return res.status(500).json({
+      ok: false,
+      error: `Ocurrió un error inesperado al ${accion} el turno.`,
+    });
+  }
+};
+
+export const iniciarTurnoStaff = cambiarEstadoTurnoStaff('iniciar');
+export const finalizarTurnoStaff = cambiarEstadoTurnoStaff('finalizar');
+
+// GET /api/bot/staff/:telefono/turnos/:id/qr -> image/png
+//
+// QR sobre la plantilla de Hovy para mostrarle al cliente cuando se termina el
+// turno. Solo se entrega con el turno ya Realizado: un turno sin terminar no
+// debe poder cobrarse.
+export const qrTurnoStaff = async (req, res) => {
+  const idTurno = Number(req.params.id);
+  if (!Number.isInteger(idTurno) || idTurno <= 0) {
+    return res.status(400).json({ ok: false, error: 'El id del turno no es válido.' });
+  }
+
+  try {
+    const { data: turno, error } = await supabaseAdmin
+      .from('turnos')
+      .select('id_turno, estado')
+      .eq('id_turno', idTurno)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!turno) return res.status(404).json({ ok: false, error: 'Turno no encontrado.' });
+    if (turno.estado !== 'Realizado') {
+      return res.status(409).json({
+        ok: false,
+        error: `El QR solo se genera para turnos realizados (este está "${turno.estado}").`,
+      });
+    }
+
+    const imagen = await componerQrEnPlantilla(contenidoQrTurno(turno.id_turno));
+    if (imagen.error) return responderErrorServicio(res, imagen.error);
+
+    res.set({ 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+    return res.status(200).send(imagen);
+  } catch (err) {
+    console.error('Error inesperado al generar el QR del turno:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo generar el QR del turno.' });
   }
 };
 
