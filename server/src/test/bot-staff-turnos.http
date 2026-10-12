@@ -1,0 +1,86 @@
+# Para implementacion hay que instalar la extension de "REST Client" de VS Code.
+#
+# Turnos del jefe por WhatsApp. Ver bot-usuarios.http para preparar un usuario de
+# staff con telefono. Hace falta un turno de prueba (idTurno) y que el servidor
+# tenga BOT_API_KEY en el .env.
+#
+# Flujo de estados: Coordinado/Confirmado -> (iniciar) -> En ejecución -> (finalizar) -> Realizado.
+# Iniciar y finalizar son de DOS FASES: sin "confirmado": true no modifican nada.
+
+@baseUrl = http://localhost:4000
+@apiKey = {{$dotenv BOT_API_KEY}}
+@telefonoStaff = 5493511111111
+@idTurno = 1
+
+
+### Turnos de hoy  -  [Espera 200 con data[] y link_maps en cada turno]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos
+x-api-key: {{apiKey}}
+
+
+### Turnos de otro dia, solo confirmados  -  [Espera 200]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos?fecha=2026-10-14&estado=Confirmado
+x-api-key: {{apiKey}}
+
+
+### Fecha con formato invalido  -  [Espera 400]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos?fecha=14-10-2026
+x-api-key: {{apiKey}}
+
+
+### Iniciar, fase 1 (sin confirmar)  -  [Espera 200 requiere_confirmacion: true y NO cambia el estado]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/iniciar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{}
+
+
+### Iniciar, fase 2 (confirmado)  -  [Espera 200 y estado "En ejecución"]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/iniciar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{ "confirmado": true }
+
+
+### "confirmado" como string no cuenta  -  [Espera 200 requiere_confirmacion: true]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/iniciar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{ "confirmado": "true" }
+
+
+### Finalizar, fase 2 (confirmado)  -  [Espera 200 y estado "Realizado"]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/finalizar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{ "confirmado": true }
+
+
+### Finalizar un turno que no esta en ejecucion  -  [Espera 409]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/finalizar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{ "confirmado": true }
+
+
+### QR del turno realizado  -  [Espera 200 image/png]
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/{{idTurno}}/qr
+x-api-key: {{apiKey}}
+
+
+### QR de un turno inexistente  -  [Espera 404]. Para el 409, pedir el QR de un turno que no este Realizado
+GET {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/999999/qr
+x-api-key: {{apiKey}}
+
+
+### Id invalido  -  [Espera 400]
+POST {{baseUrl}}/api/bot/staff/{{telefonoStaff}}/turnos/abc/iniciar
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{}

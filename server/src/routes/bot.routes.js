@@ -29,6 +29,10 @@ import {
   confirmarSolicitudVisita,
   consultarDisponibilidadStaff,
   crearTurnoDesdeSolicitud,
+  listarTurnosStaff,
+  iniciarTurnoStaff,
+  finalizarTurnoStaff,
+  qrTurnoStaff,
 } from '../controllers/botStaffController.js';
 import {
   cargarPresupuestoStaff,
@@ -125,6 +129,14 @@ router.get('/staff/:telefono/visitas', resolverStaffPorTelefono, buscarSolicitud
 router.post('/staff/:telefono/visitas/:id/confirmar', resolverStaffPorTelefono, confirmarSolicitudVisita);
 // GET  /api/bot/staff/:telefono/disponibilidad?fecha=&desde=&hasta=&dias=&limite=
 router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consultarDisponibilidadStaff);
+
+router.get('/staff/:telefono/turnos', resolverStaffPorTelefono, listarTurnosStaff);
+
+router.post('/staff/:telefono/turnos/:id/iniciar', resolverStaffPorTelefono, iniciarTurnoStaff);
+
+router.post('/staff/:telefono/turnos/:id/finalizar', resolverStaffPorTelefono, finalizarTurnoStaff);
+
+router.get('/staff/:telefono/turnos/:id/qr', resolverStaffPorTelefono, qrTurnoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/presupuesto
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno
