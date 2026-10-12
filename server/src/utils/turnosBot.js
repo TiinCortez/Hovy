@@ -45,3 +45,21 @@ export const resolverTransicionTurno = (estadoActual, accion) => {
 
   return { ok: true, estadoNuevo: regla.hacia };
 };
+
+// Estados válidos de un turno, tal como los guarda la base.
+const ESTADOS_TURNO = ['Coordinado', 'Confirmado', 'En ejecución', 'Realizado', 'Cancelado'];
+const sinTildes = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+// "Coordinado, en ejecucion" -> ['Coordinado', 'En ejecución']. Vacío = sin filtro.
+export const parsearEstadosTurno = (crudo) => {
+  if (crudo === undefined || crudo === null) return { ok: true, estados: [] };
+
+  const pedidos = String(crudo).split(',').map((s) => s.trim()).filter(Boolean);
+  const estados = [];
+  for (const pedido of pedidos) {
+    const valido = ESTADOS_TURNO.find((e) => sinTildes(e) === sinTildes(pedido));
+    if (!valido) return { ok: false, error: `Estado desconocido: "${pedido}". Válidos: ${ESTADOS_TURNO.join(', ')}.` };
+    if (!estados.includes(valido)) estados.push(valido);
+  }
+  return { ok: true, estados };
+};

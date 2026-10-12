@@ -151,3 +151,80 @@ test('qr de un turno inexistente devuelve 404 y con id inválido 400', async (t)
   await qrTurnoStaff({ params: { id: 'x' } }, r400);
   assert.equal(r400.statusCode, 400);
 });
+
+const { listarTurnosStaff } = await import('../controllers/botStaffController.js');
+
+function prepararListado(t, filas = []) {
+  const filtros = [];
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-12T15:00:00Z').getTime() });
+  t.mock.method(supabaseAdmin, 'from', (tabla) => {
+    assert.equal(tabla, 'turnos');
+    const registrar = (nombre) => function (...args) { filtros.push([nombre, ...args]); return this; };
+    return {
+      select() { return this; },
+      order() { return this; },
+      eq: registrar('eq'),
+      neq: registrar('neq'),
+      in: registrar('in'),
+      gte: registrar('gte'),
+      limit: registrar('limit'),
+      then(resolver) { return resolver({ data: filas, error: null }); },
+    };
+  });
+  return filtros;
+}
+
+test('listar sin parametros trae los de hoy en Córdoba sin cancelados', async (t) => {
+  const filtros = prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: {} }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.ok(filtros.some((f) => f[0] === 'eq' && f[1] === 'fecha_programada' && f[2] === '2026-10-12'));
+  assert.ok(filtros.some((f) => f[0] === 'neq' && f[1] === 'estado' && f[2] === 'Cancelado'));
+});
+
+test('listar con todas=true no filtra por fecha, acepta varios estados y limita a 10', async (t) => {
+  const filtros = prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: { todas: 'true', estado: 'Coordinado,Confirmado', desde: '2026-10-12' } }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.ok(!filtros.some((f) => f[0] === 'eq' && f[1] === 'fecha_programada'), 'sin filtro de fecha exacta');
+  assert.deepEqual(filtros.find((f) => f[0] === 'in'), ['in', 'estado', ['Coordinado', 'Confirmado']]);
+  assert.deepEqual(filtros.find((f) => f[0] === 'gte'), ['gte', 'fecha_programada', '2026-10-12']);
+  assert.deepEqual(filtros.find((f) => f[0] === 'limit'), ['limit', 10]);
+});
+
+test('listar con un solo estado conserva el filtro por igualdad', async (t) => {
+  const filtros = prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: { todas: 'true', estado: 'En ejecución' } }, res);
+
+  assert.ok(filtros.some((f) => f[0] === 'eq' && f[1] === 'estado' && f[2] === 'En ejecución'));
+});
+
+test('listar rechaza un estado desconocido con 400', async (t) => {
+  prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: { estado: 'volando' } }, res);
+  assert.equal(res.statusCode, 400);
+});
+
+test('listar rechaza una fecha desde invalida con 400', async (t) => {
+  prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: { todas: 'true', desde: 'ayer' } }, res);
+  assert.equal(res.statusCode, 400);
+});
+
+test('listar con todas=true y sin estado trae solo los turnos accionables, no los Realizados ni Cancelados', async (t) => {
+  const filtros = prepararListado(t);
+  const res = respuesta();
+  await listarTurnosStaff({ query: { todas: 'true' } }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(filtros.find((f) => f[0] === 'in'), ['in', 'estado', ['Coordinado', 'Confirmado', 'En ejecución']]);
+  assert.ok(!filtros.some((f) => f[0] === 'neq'), 'no depende de excluir solo Cancelado');
+  assert.deepEqual(filtros.find((f) => f[0] === 'limit'), ['limit', 10]);
+});

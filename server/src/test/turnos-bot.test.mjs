@@ -62,3 +62,23 @@ test('contenidoQrTurno devuelve un contenido provisorio y estable por turno', as
   assert.equal(contenidoQrTurno(7), 'HOVY-TURNO-7');
   assert.equal(contenidoQrTurno(7), contenidoQrTurno(7));
 });
+
+test('parsearEstadosTurno acepta una lista separada por comas', async () => {
+  const { parsearEstadosTurno } = await import('../utils/turnosBot.js');
+  assert.deepEqual(parsearEstadosTurno('Coordinado, Confirmado'), { ok: true, estados: ['Coordinado', 'Confirmado'] });
+});
+
+test('parsearEstadosTurno ignora mayusculas y tildes', async () => {
+  const { parsearEstadosTurno } = await import('../utils/turnosBot.js');
+  assert.deepEqual(parsearEstadosTurno('en ejecucion'), { ok: true, estados: ['En ejecución'] });
+  assert.deepEqual(parsearEstadosTurno('REALIZADO'), { ok: true, estados: ['Realizado'] });
+});
+
+test('parsearEstadosTurno devuelve lista vacia sin valor y rechaza estados desconocidos', async () => {
+  const { parsearEstadosTurno } = await import('../utils/turnosBot.js');
+  assert.deepEqual(parsearEstadosTurno(undefined), { ok: true, estados: [] });
+  assert.deepEqual(parsearEstadosTurno('  '), { ok: true, estados: [] });
+  const malo = parsearEstadosTurno('Coordinado,volando');
+  assert.equal(malo.ok, false);
+  assert.match(malo.error, /volando/);
+});

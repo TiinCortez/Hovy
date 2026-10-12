@@ -6,7 +6,7 @@ import {
   responderErrorServicio,
 } from '../utils/solicitudesVisita.js';
 import { consultarDisponibilidad, confirmarVisita, agendarTurnoVisita } from '../services/visitaFlujoService.js';
-import { armarLinkMaps, resolverTransicionTurno, contenidoQrTurno } from '../utils/turnosBot.js';
+import { armarLinkMaps, resolverTransicionTurno, contenidoQrTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
 import { componerQrEnPlantilla } from '../integrations/qr/qrPlantillaService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
@@ -93,22 +93,45 @@ const hoyEnCordoba = () =>
     day: '2-digit',
   }).format(new Date());
 
+const ESTADOS_ACCIONABLES = ['Coordinado', 'Confirmado', 'En ejecución'];
+
 export const listarTurnosStaff = async (req, res) => {
-  const { estado } = req.query;
+  const todas = req.query.todas === 'true';
   const fecha = estaVacio(req.query.fecha) ? hoyEnCordoba() : String(req.query.fecha).trim();
+  const desde = estaVacio(req.query.desde) ? null : String(req.query.desde).trim();
 
   if (!FECHA_ISO.test(fecha)) {
     return res.status(400).json({ ok: false, error: 'La fecha debe tener formato YYYY-MM-DD.' });
   }
+  if (desde && !FECHA_ISO.test(desde)) {
+    return res.status(400).json({ ok: false, error: 'El parámetro desde debe tener formato YYYY-MM-DD.' });
+  }
+
+  const estados = parsearEstadosTurno(req.query.estado);
+  if (!estados.ok) return res.status(400).json({ ok: false, error: estados.error });
 
   try {
     let query = supabaseAdmin
       .from('turnos')
       .select('id_turno, fecha_programada, inicio_desde, hasta, prioridad, estado, inmueble:inmuebles(direccion, barrio, latitud, longitud, cliente:clientes(nombre, apellido))')
-      .eq('fecha_programada', fecha)
+      .order('fecha_programada', { ascending: true })
       .order('inicio_desde', { ascending: true });
 
-    query = estaVacio(estado) ? query.neq('estado', 'Cancelado') : query.eq('estado', String(estado).trim());
+    // todas=true: sin filtro de día (para elegir qué turno iniciar o finalizar sin
+    // importar su fecha), con tope para no inundar el chat.
+    if (todas) {
+      if (desde) query = query.gte('fecha_programada', desde);
+      query = query.limit(10);
+    } else {
+      query = query.eq('fecha_programada', fecha);
+    }
+
+    // Sin estado: el listado del día excluye solo Cancelados; con todas=true (sin tope de
+    // fecha) hay que acotar a lo accionable, o los Realizados viejos llenan el límite de 10.
+    if (estados.estados.length === 0 && todas) query = query.in('estado', ESTADOS_ACCIONABLES);
+    else if (estados.estados.length === 0) query = query.neq('estado', 'Cancelado');
+    else if (estados.estados.length === 1) query = query.eq('estado', estados.estados[0]);
+    else query = query.in('estado', estados.estados);
 
     const { data, error } = await query;
 
@@ -120,7 +143,7 @@ export const listarTurnosStaff = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ ok: true, fecha, data: data.map(resumirTurno) });
+    return res.status(200).json({ ok: true, fecha: todas ? null : fecha, data: data.map(resumirTurno) });
   } catch (err) {
     console.error('Error inesperado al listar turnos para staff:', err);
     return res.status(500).json({
