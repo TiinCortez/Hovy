@@ -51,3 +51,5 @@ jobs:
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
+      - name: Ejecutar pruebas unitarias
+        run: npm test
