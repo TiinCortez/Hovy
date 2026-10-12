@@ -31,7 +31,39 @@ const mapToFrontendEstado = (e) => {
   if (e.toLowerCase() === 'en ejecución' || e.toLowerCase() === 'en ejecucion') return 'EN_EJECUCION';
   return e.toUpperCase();
 };
+const DESCRIPCION_SIN_SERVICIO = 'Servicio programado (Sin presupuesto asociado)';
 
+// Servicios contratados por presupuesto: Map<id_presupuesto, string[]>.
+// Un fallo acá no debe tirar el listado de turnos, así que degrada a vacío.
+const obtenerServiciosPorPresupuesto = async (idsPresupuesto) => {
+  const ids = [...new Set(idsPresupuesto.filter((id) => id !== null && id !== undefined))];
+  const porPresupuesto = new Map();
+  if (ids.length === 0) return porPresupuesto;
+
+  const { data, error } = await supabaseAdmin
+    .from('detalle_presupuesto')
+    .select('id_presupuesto, servicio:servicios_catalogo(nombre)')
+    .in('id_presupuesto', ids);
+
+  if (error) {
+    console.error('Error al consultar los servicios de los turnos:', error);
+    return porPresupuesto;
+  }
+
+  for (const fila of data ?? []) {
+    const nombre = fila.servicio?.nombre;
+    if (!nombre) continue;
+    const nombres = porPresupuesto.get(fila.id_presupuesto) ?? [];
+    if (!nombres.includes(nombre)) nombres.push(nombre);
+    porPresupuesto.set(fila.id_presupuesto, nombres);
+  }
+  return porPresupuesto;
+};
+
+const armarServicio = (nombres = []) => ({
+  nombres,
+  descripcion: nombres.length > 0 ? nombres.join(', ') : DESCRIPCION_SIN_SERVICIO
+});
 
 // GET /api/turnos
 export const getTurnos = async (req, res) => {
@@ -49,6 +81,8 @@ export const getTurnos = async (req, res) => {
 
     if (error) throw error;
 
+    const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto(data.map(t => t.id_presupuesto));
+
     const turnosFormateados = data.map(t => ({
       idTurno: t.id_turno,
       fechaAsignada: t.fecha_programada,
@@ -58,7 +92,7 @@ export const getTurnos = async (req, res) => {
       motivo_cancelacion: t.motivo_cancelacion,
       inmueble: t.inmueble,
       cliente: t.inmueble?.cliente,
-      servicio: { descripcion: 'Servicio programado (Sin presupuesto asociado)' }
+      servicio: armarServicio(serviciosPorPresupuesto.get(t.id_presupuesto))
     }));
 
     res.status(200).json({ ok: true, data: turnosFormateados });
@@ -81,6 +115,8 @@ export const getTurnoById = async (req, res) => {
     if (error) throw error;
     if (!data) return res.status(404).json({ ok: false, error: 'Turno no encontrado.' });
 
+    const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto([data.id_presupuesto]);
+
     const turnoFormateado = {
       idTurno: data.id_turno,
       fechaAsignada: data.fecha_programada,
@@ -90,7 +126,7 @@ export const getTurnoById = async (req, res) => {
       motivo_cancelacion: data.motivo_cancelacion,
       inmueble: data.inmueble,
       cliente: data.inmueble?.cliente,
-      servicio: { descripcion: 'Servicio programado (Sin presupuesto asociado)' }
+      servicio: armarServicio(serviciosPorPresupuesto.get(data.id_presupuesto))
     };
 
     res.status(200).json({ ok: true, data: turnoFormateado });
