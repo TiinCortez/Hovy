@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Leaf, User, Lock, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import AuthService from '../../services/auth.service.js';
 
@@ -43,11 +43,14 @@ export default function Login() {
             
             <div className="login-card p-4">
               <div className="text-center mb-5">
-                <div className="d-inline-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm p-3 mb-3 border">
-                  <Leaf color="#1B3006" size={40} />
+                <div className="mb-4">
+                  <img
+                    src="/hovy.webp"
+                    alt="Hovy Logo"
+                    style={{ maxHeight: '122px', width: 'auto', objectFit: 'contain' }}
+                  />
                 </div>
                 <h1 className="fw-bold" style={{ color: '#1B3006', fontSize: '2.5rem' }}>Bienvenido</h1>
-                <p className="text-secondary fs-5 m-0">Sistema de Valle la Armonía</p>
               </div>
 
               {/* Manejo de error general de autenticación */}
@@ -140,7 +143,7 @@ export default function Login() {
             </div>
             
             <div className="text-center mt-5 text-secondary small fw-medium">
-              Valle La Armonía © 2024
+              Hovy © 2026
             </div>
 
           </div>

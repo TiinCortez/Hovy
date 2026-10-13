@@ -70,11 +70,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
 
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-end gap-2 mt-auto">
               <div className={`small fw-medium w-100 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                {isEjecucion ? (
-                  <span style={{fontSize: '0.75rem'}}>Cuadrilla: Carlos & Lucas · Inicio: 14:10 hs</span>
-                ) : (
-                  turno.servicio.descripcion
-                )}
+                {turno.servicio.descripcion}
               </div>
               
               {isRealizado ? (
@@ -135,13 +131,10 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
             <div key={col.id} className="col-11 col-md-5 col-xl-3 d-flex flex-column" style={{ minWidth: '260px' }}>
               
               {/* Cabecera de Columna */}
-              <div className={`border-top border-2 pt-3 mb-3 d-flex justify-content-between align-items-start ${col.borderColor}`}>
-                <div className="d-flex align-items-center gap-2">
-                  <span className={col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`} style={{width: 10, height: 10}}></span>
-                  <h6 className="m-0 fw-bold text-dark">{col.title}</h6>
-                  <span className="badge bg-warning bg-opacity-25 text-dark rounded-circle px-2 py-1 border border-warning border-opacity-50">{colTurnos.length}</span>
-                </div>
-                <span className="small text-secondary fw-medium text-end ps-2">{col.subtitle}</span>
+              <div className={`border-top border-2 pt-3 mb-3 d-flex align-items-center gap-2 ${col.borderColor}`}>
+                <span className={col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`} style={{width: 10, height: 10}}></span>
+                <h6 className="m-0 fw-bold text-dark">{col.title}</h6>
+                <span className="badge bg-warning bg-opacity-25 text-dark rounded-circle px-2 py-1 border border-warning border-opacity-50">{colTurnos.length}</span>
               </div>
 
               {/* Contenedor de Tarjetas */}

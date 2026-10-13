@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CalendarCheck,
   ClipboardList,
@@ -13,29 +14,48 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
 import VisitaService from '../services/api/visita.service';
+import TurnoService from '../services/api/turno.service';
+import { obtenerAhoraTurnos, compararHorarioTurnos } from '../components/turnos/agendaTurnos';
 
 export default function Dashboard() {
-  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue mockeado).
+  const navigate = useNavigate();
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
+  const [turnosHoy, setTurnosHoy] = useState([]);
 
   useEffect(() => {
-    const fetchSolicitudesPendientes = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await VisitaService.getPendientes();
-        setSolicitudesNuevas(response.data?.length ?? 0);
+        const [visitasResp, turnosResp] = await Promise.all([
+          VisitaService.getPendientes().catch((err) => {
+            console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+            return { data: [] };
+          }),
+          TurnoService.getAll().catch((err) => {
+            console.error('No se pudieron obtener los turnos del día:', err);
+            return { data: [] };
+          })
+        ]);
+
+        setSolicitudesNuevas(visitasResp.data?.length ?? 0);
+
+        const hoyIso = obtenerAhoraTurnos().fecha;
+        const turnosDeHoy = (turnosResp.data || [])
+          .filter((t) => t.estado !== 'CANCELADO' && t.fechaAsignada === hoyIso)
+          .sort(compararHorarioTurnos);
+
+        setTurnosHoy(turnosDeHoy);
       } catch (err) {
-        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+        console.error('Error al cargar datos del dashboard:', err);
       }
     };
 
-    fetchSolicitudesPendientes();
+    fetchDashboardData();
   }, []);
 
-  // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
+  // Objeto JSON de prueba (Mock) para secciones pendientes de integración
   const mockData = {
-    usuario: "The Boss",
+    usuario: "Admin",
     kpis: {
-      turnosHoy: 12,
       alertasPendientes: 3,
       kilometrosRuta: 48
     },
@@ -48,13 +68,6 @@ export default function Dashboard() {
       combustibleEstimado: "15 L",
       zonaPrincipal: "Zona Norte"
     },
-    // Épica 4: Turnos del día con estados específicos
-    agenda: [
-      { id: 1, cliente: "Residencia Lomas", horario: "09:00 AM", servicio: "Mantenimiento", estado: "En ejecución" },
-      { id: 2, cliente: "Torre Norte Terraza", horario: "11:30 AM", servicio: "Riego & Poda", estado: "Coordinado" },
-      { id: 3, cliente: "Country Los Olivos", horario: "14:00 PM", servicio: "Diseño Paisajístico", estado: "Coordinado" },
-      { id: 4, cliente: "Casa Familia Pérez", horario: "16:30 PM", servicio: "Fertilización", estado: "Realizado" }
-    ],
     // Épica 14 y 4: Notificaciones y Alertas del negocio
     alertas: [
       { id: 1, tipo: "Ciclo de corte", mensaje: "Césped en Residencia Lomas excede los 15 días sin corte.", severidad: "alta", fecha: "Hace 1 hora" },
@@ -66,13 +79,15 @@ export default function Dashboard() {
   // Función auxiliar para renderizar los badges de estado de la agenda
   const getEstadoBadge = (estado) => {
     switch (estado) {
-      case 'En ejecución':
+      case 'EN_EJECUCION':
         return <span className="badge rounded-pill bg-warning text-dark px-3 py-2 fw-semibold d-flex align-items-center gap-1"><PlayCircle size={14}/> En curso</span>;
-      case 'Realizado':
+      case 'REALIZADO':
         return <span className="badge rounded-pill bg-success text-white px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Realizado</span>;
-      case 'Coordinado':
+      case 'CONFIRMADO':
+        return <span className="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Confirmado</span>;
+      case 'COORDINADO':
       default:
-        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Pendiente</span>;
+        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Coordinado</span>;
     }
   };
 
@@ -104,7 +119,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-secondary small fw-semibold m-0">Turnos hoy</p>
-                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.turnosHoy}</h3>
+                <h3 className="fw-bold m-0 text-dark">{turnosHoy.length}</h3>
               </div>
             </div>
           </Card>
@@ -193,33 +208,53 @@ export default function Dashboard() {
 
         {/* Columna Derecha: Agenda de hoy */}
         <div className="col-12 col-lg-7">
-          <Card className="h-100">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h4 className="fw-bold text-dark m-0 fs-5">Turnos de hoy</h4>
-              <a href="#todos" className="text-decoration-none small fw-semibold text-secondary">Ver todos</a>
-            </div>
-            
-            <div className="d-flex flex-column gap-3">
-              {mockData.agenda.map((turno) => (
-                <div key={turno.id} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
-                  <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
-                    <CalendarCheck size={24} />
+          <Card className="h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4 className="fw-bold text-dark m-0 fs-5">Turnos de hoy</h4>
+              </div>
+              
+              <div className="d-flex flex-column gap-3">
+                {turnosHoy.length === 0 ? (
+                  <div className="text-center py-4 text-secondary small">
+                    No hay turnos programados para hoy.
                   </div>
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold text-dark m-0 fs-6">{turno.cliente}</h5>
-                    <p className="text-secondary small m-0">{turno.horario} - {turno.servicio}</p>
-                  </div>
-                  <div>
-                    {getEstadoBadge(turno.estado)}
-                  </div>
-                </div>
-              ))}
+                ) : (
+                  turnosHoy.map((turno) => {
+                    const nombreCliente = turno.cliente?.razon_social || `${turno.cliente?.nombre || ''} ${turno.cliente?.apellido || ''}`.trim() || turno.inmueble?.direccion || 'Cliente';
+                    const horarioStr = turno.franjaHoraria?.horaInicio
+                      ? `${turno.franjaHoraria.horaInicio.slice(0, 5)}${turno.franjaHoraria.horaFin ? ` - ${turno.franjaHoraria.horaFin.slice(0, 5)}` : ''} hs`
+                      : 'Sin horario';
+                    const servicioStr = turno.servicio?.descripcion || 'Mantenimiento General';
+
+                    return (
+                      <div key={turno.idTurno} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
+                        <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
+                          <CalendarCheck size={24} />
+                        </div>
+                        <div className="flex-grow-1">
+                          <h5 className="fw-bold text-dark m-0 fs-6">{nombreCliente}</h5>
+                          <p className="text-secondary small m-0">{horarioStr} - {servicioStr}</p>
+                        </div>
+                        <div>
+                          {getEstadoBadge(turno.estado)}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
             
             <div className="text-center mt-4">
-              <a href="#agenda-completa" className="text-decoration-none fw-bold" style={{ color: '#1B3006' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/calendar')}
+                className="btn btn-link text-decoration-none fw-bold p-0"
+                style={{ color: '#1B3006' }}
+              >
                 Ver agenda completa
-              </a>
+              </button>
             </div>
           </Card>
         </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ChevronRight, Clock, LockKeyhole } from 'lucide-react';
+import { MapPin, ChevronRight, LockKeyhole } from 'lucide-react';
 import Card from '../ui/Card';
 import { fechaAIso, fechaDesdeIso, inicioSemanaTurnos, sumarDiasTurnos, horarioPasadoTurnos, PRIORIDADES_CONFIG as prioridadesConfig, horaAMinutos, minutosAHora, compararHorarioTurnos, tieneHorarioTurno } from './agendaTurnos';
 
@@ -146,7 +146,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
 
                         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-end gap-2 mt-auto">
                           <div className={`small fw-medium w-100 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                            {isEjecucion ? <span className="d-flex align-items-center gap-1"><Clock size={12}/> Cuadrilla: Carlos & Lucas</span> : turno.servicio.descripcion}
+                            {turno.servicio.descripcion}
                           </div>
                           <span className={`small fw-bold text-nowrap d-flex align-items-center gap-1 align-self-end flex-shrink-0 ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`}>
                             Detalles <ChevronRight size={14} />
