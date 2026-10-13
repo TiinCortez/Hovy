@@ -20,7 +20,7 @@ export default function VisitasNotificacionesPopover({ visitas, onVerDetalle }) 
         {visitas.length === 0 && (
           <div className="d-flex flex-column align-items-center text-center gap-2 py-5 px-3 text-secondary">
             <Inbox size={28} />
-            <span className="small">No hay solicitudes de visita pendientes.</span>
+            <span className="small">No hay solicitudes de contacto pendientes.</span>
           </div>
         )}
 
@@ -41,7 +41,7 @@ export default function VisitasNotificacionesPopover({ visitas, onVerDetalle }) 
                 <UserPlus size={18} />
               </div>
               <p className="small text-dark m-0 flex-grow-1">
-                <strong>¡Nueva solicitud de visita!</strong> Usuario {visita.nombre} con disponibilidad {franja}.
+                <strong>¡Nueva solicitud de contacto!</strong> Usuario {visita.nombre} con disponibilidad {franja}.
               </p>
               <ChevronRight size={18} className="text-secondary flex-shrink-0" />
             </button>

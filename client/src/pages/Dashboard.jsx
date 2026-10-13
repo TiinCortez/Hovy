@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   CalendarCheck,
   ClipboardList,
@@ -12,47 +11,65 @@ import {
   CheckCircle,
   PlayCircle
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 import VisitaService from '../services/api/visita.service';
 import TurnoService from '../services/api/turno.service';
-import { obtenerAhoraTurnos, compararHorarioTurnos } from '../components/turnos/agendaTurnos';
+import { compararHorarioTurnos, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+
+const MAX_TURNOS_PROXIMOS = 4;
+
+// "09:00:00" -> "9:00 AM"
+const formatearHora = (hora) => {
+  if (!hora) return null;
+  const [h, m] = hora.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+};
+
+// "2026-10-13" -> "13/10"
+const formatearDiaMes = (fechaIso) => {
+  const [, mes, dia] = fechaIso.split('-');
+  return `${dia}/${mes}`;
+};
+
+// Un turno cancelado o ya realizado no es "próximo".
+const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !== 'REALIZADO';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue mockeado).
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
-  const [turnosHoy, setTurnosHoy] = useState([]);
+  const [turnos, setTurnos] = useState([]);
+  const [cargandoTurnos, setCargandoTurnos] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchTurnos = async () => {
       try {
-        const [visitasResp, turnosResp] = await Promise.all([
-          VisitaService.getPendientes().catch((err) => {
-            console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
-            return { data: [] };
-          }),
-          TurnoService.getAll().catch((err) => {
-            console.error('No se pudieron obtener los turnos del día:', err);
-            return { data: [] };
-          })
-        ]);
-
-        setSolicitudesNuevas(visitasResp.data?.length ?? 0);
-
-        const hoyIso = obtenerAhoraTurnos().fecha;
-        const turnosDeHoy = (turnosResp.data || [])
-          .filter((t) => t.estado !== 'CANCELADO' && t.fechaAsignada === hoyIso)
-          .sort(compararHorarioTurnos);
-
-        setTurnosHoy(turnosDeHoy);
+        const response = await TurnoService.getAll();
+        setTurnos(response.data ?? []);
       } catch (err) {
-        console.error('Error al cargar datos del dashboard:', err);
+        console.error('No se pudieron obtener los turnos:', err);
+      } finally {
+        setCargandoTurnos(false);
       }
     };
 
-    fetchDashboardData();
+    fetchTurnos();
   }, []);
 
-  // Objeto JSON de prueba (Mock) para secciones pendientes de integración
+  useEffect(() => {
+    const fetchSolicitudesPendientes = async () => {
+      try {
+        const response = await VisitaService.getPendientes();
+        setSolicitudesNuevas(response.data?.length ?? 0);
+      } catch (err) {
+        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+      }
+    };
+
+    fetchSolicitudesPendientes();
+  }, []);
+
+  // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
   const mockData = {
     usuario: "Admin",
     kpis: {
@@ -76,6 +93,18 @@ export default function Dashboard() {
     ]
   };
 
+  const hoy = obtenerAhoraTurnos().fecha;
+  const turnosVigentes = turnos.filter(esTurnoVigente);
+
+  // Turnos de hoy sin cancelar (los realizados cuentan: ya se hicieron hoy).
+  const turnosHoy = turnos.filter((t) => t.fechaAsignada === hoy && t.estado !== 'CANCELADO').length;
+
+  // Hoy y los días siguientes, en orden cronológico, hasta MAX_TURNOS_PROXIMOS.
+  const proximosTurnos = turnosVigentes
+    .filter((t) => t.fechaAsignada >= hoy)
+    .sort((a, b) => a.fechaAsignada.localeCompare(b.fechaAsignada) || compararHorarioTurnos(a, b))
+    .slice(0, MAX_TURNOS_PROXIMOS);
+
   // Función auxiliar para renderizar los badges de estado de la agenda
   const getEstadoBadge = (estado) => {
     switch (estado) {
@@ -84,10 +113,10 @@ export default function Dashboard() {
       case 'REALIZADO':
         return <span className="badge rounded-pill bg-success text-white px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Realizado</span>;
       case 'CONFIRMADO':
-        return <span className="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Confirmado</span>;
+        return <span className="badge rounded-pill bg-info bg-opacity-10 text-info border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Confirmado</span>;
       case 'COORDINADO':
       default:
-        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Coordinado</span>;
+        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Pendiente</span>;
     }
   };
 
@@ -119,7 +148,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-secondary small fw-semibold m-0">Turnos hoy</p>
-                <h3 className="fw-bold m-0 text-dark">{turnosHoy.length}</h3>
+                <h3 className="fw-bold m-0 text-dark">{turnosHoy}</h3>
               </div>
             </div>
           </Card>
@@ -208,53 +237,43 @@ export default function Dashboard() {
 
         {/* Columna Derecha: Agenda de hoy */}
         <div className="col-12 col-lg-7">
-          <Card className="h-100 d-flex flex-column justify-content-between">
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="fw-bold text-dark m-0 fs-5">Turnos de hoy</h4>
-              </div>
-              
-              <div className="d-flex flex-column gap-3">
-                {turnosHoy.length === 0 ? (
-                  <div className="text-center py-4 text-secondary small">
-                    No hay turnos programados para hoy.
-                  </div>
-                ) : (
-                  turnosHoy.map((turno) => {
-                    const nombreCliente = turno.cliente?.razon_social || `${turno.cliente?.nombre || ''} ${turno.cliente?.apellido || ''}`.trim() || turno.inmueble?.direccion || 'Cliente';
-                    const horarioStr = turno.franjaHoraria?.horaInicio
-                      ? `${turno.franjaHoraria.horaInicio.slice(0, 5)}${turno.franjaHoraria.horaFin ? ` - ${turno.franjaHoraria.horaFin.slice(0, 5)}` : ''} hs`
-                      : 'Sin horario';
-                    const servicioStr = turno.servicio?.descripcion || 'Mantenimiento General';
-
-                    return (
-                      <div key={turno.idTurno} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
-                        <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
-                          <CalendarCheck size={24} />
-                        </div>
-                        <div className="flex-grow-1">
-                          <h5 className="fw-bold text-dark m-0 fs-6">{nombreCliente}</h5>
-                          <p className="text-secondary small m-0">{horarioStr} - {servicioStr}</p>
-                        </div>
-                        <div>
-                          {getEstadoBadge(turno.estado)}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+          <Card className="h-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h4 className="fw-bold text-dark m-0 fs-5">Próximos turnos</h4>
+              <Link to="/calendar" className="text-decoration-none small fw-semibold text-secondary">Ver todos</Link>
             </div>
-            
+
+            <div className="d-flex flex-column gap-3">
+              {cargandoTurnos && <p className="text-secondary small m-0">Cargando turnos...</p>}
+              {!cargandoTurnos && proximosTurnos.length === 0 && (
+                <p className="text-secondary small m-0">No hay turnos próximos.</p>
+              )}
+              {proximosTurnos.map((turno) => {
+                const etiquetaDia = turno.fechaAsignada === hoy ? 'Hoy' : formatearDiaMes(turno.fechaAsignada);
+                const hora = formatearHora(turno.franjaHoraria?.horaInicio) ?? 'Sin horario';
+                const inmueble = turno.inmueble ?? {};
+                const direccion = [inmueble.direccion, inmueble.barrio].filter(Boolean).join(', ') || 'Sin dirección';
+                return (
+                  <div key={turno.idTurno} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
+                    <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
+                      <CalendarCheck size={24} />
+                    </div>
+                    <div className="flex-grow-1">
+                      <h5 className="fw-bold text-dark m-0 fs-6">{etiquetaDia} · {hora} - {turno.servicio?.descripcion}</h5>
+                      <p className="text-secondary small m-0 d-flex align-items-center gap-1"><MapPin size={14} /> {direccion}</p>
+                    </div>
+                    <div>
+                      {getEstadoBadge(turno.estado)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="text-center mt-4">
-              <button
-                type="button"
-                onClick={() => navigate('/calendar')}
-                className="btn btn-link text-decoration-none fw-bold p-0"
-                style={{ color: '#1B3006' }}
-              >
+              <Link to="/calendar" className="text-decoration-none fw-bold" style={{ color: '#1B3006' }}>
                 Ver agenda completa
-              </button>
+              </Link>
             </div>
           </Card>
         </div>

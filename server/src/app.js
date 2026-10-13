@@ -12,6 +12,8 @@ import botRoutes from './routes/bot.routes.js';
 import visitasRoutes from './routes/visitas.routes.js';
 import serviciosRoutes from './routes/servicios.routes.js';
 import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/mercadopago/mercadopago.routes.js';
+import qrRoutes from './integrations/qr/qr.routes.js';
+import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,9 +73,13 @@ app.use('/api/bot', botRoutes);
 // (sin JWT), por eso se monta ANTES y fuera de las rutas protegidas. El usuario
 // se resuelve solo desde el state persistido.
 app.use('/api/mercadopago', mercadopagoPublicRouter);
+// Webhook de pagos de Mercado Pago: público, autenticado solo por x-signature.
+app.use('/api/mercadopago', webhookRouter);
 
 // Rutas protegidas con JWT
 app.use('/api/mercadopago', authMiddleware, requireRole(['admin']), mercadopagoAdminRouter);
+app.use('/api/cobros', authMiddleware, requireRole(['admin']), cobrosRouter);
+app.use('/api/qr', authMiddleware, requireRole(['admin']), qrRoutes);
 app.use('/api/clientes', authMiddleware, requireRole(['admin']), clientesRoutes);
 app.use('/api/inmuebles', authMiddleware, requireRole(['admin']), inmueblesRoutes);
 app.use('/api/visitas', authMiddleware, requireRole(['admin']), visitasRoutes);
