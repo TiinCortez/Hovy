@@ -71,7 +71,7 @@ export default function Dashboard() {
 
   // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
   const mockData = {
-    usuario: "The Boss",
+    usuario: "Admin",
     kpis: {
       alertasPendientes: 3,
       kilometrosRuta: 48

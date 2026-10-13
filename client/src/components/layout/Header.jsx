@@ -96,9 +96,14 @@ export default function Header() {
 
   return (
     // Utilizamos clases utilitarias de Flexbox y Spacing de Bootstrap
-    <header className="hovy-header d-flex align-items-center justify-content-between px-4 flex-shrink-0 sticky-top">
-      <div className="brand">
-        <h1 className="hovy-brand fs-4 m-0">Hovy</h1>
+    <header className="hovy-header d-flex align-items-center justify-content-between flex-shrink-0 sticky-top">
+      <div className="brand d-flex align-items-center">
+        <img
+          src="/hovy.webp"
+          alt="Hovy"
+          className="hovy-logo"
+          style={{ height: '72px', width: 'auto', objectFit: 'contain' }}
+        />
       </div>
       <div className="d-flex align-items-center gap-3">
         <div className="position-relative" ref={notificacionesRef}>

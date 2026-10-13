@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Download, MoreVertical, CheckCircle2, Shield, 
+  ArrowLeft, MoreVertical, CheckCircle2, Shield, 
   Mail, FileText, Edit2, Phone, MapPin, Building2, Calendar,
-  Star, Search, Plus, Clock, User, RotateCcw,
+  Star, Search, Plus, Clock, User, RotateCcw, Trash2,
   ChevronDown, ChevronUp, Bell, AlertTriangle, MessageCircle, Filter
 } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -11,8 +11,11 @@ import Button from '../components/ui/Button';
 import EditClientModal from '../components/ui/EditClientModal'; 
 import InmuebleModal from '../components/ui/InmuebleModal';
 import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
+import TurnoDetalleModal from '../components/turnos/TurnoDetalleModal';
+import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
+import TurnoService from '../services/api/turno.service';
 
 export default function ClientInmueblesPage() {
   const { id } = useParams();
@@ -20,6 +23,7 @@ export default function ClientInmueblesPage() {
   
   const [showFichaMobile, setShowFichaMobile] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isClientMenuOpen, setIsClientMenuOpen] = useState(false);
   
   const [isInmuebleModalOpen, setIsInmuebleModalOpen] = useState(false);
   const [isDetalleModalOpen, setIsDetalleModalOpen] = useState(false);
@@ -27,6 +31,9 @@ export default function ClientInmueblesPage() {
   
   const [cliente, setCliente] = useState(null);
   const [inmuebles, setInmuebles] = useState([]);
+  const [turnos, setTurnos] = useState([]);
+  const [isTurnoDetalleOpen, setIsTurnoDetalleOpen] = useState(false);
+  const [isModificarTurnoOpen, setIsModificarTurnoOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // NUEVOS ESTADOS PARA BUSCADOR Y FILTROS
@@ -35,12 +42,37 @@ export default function ClientInmueblesPage() {
   const [sortBy, setSortBy] = useState('recientes');
 
   useEffect(() => {
+    if (!isClientMenuOpen) return;
+    const handleClickOutside = () => setIsClientMenuOpen(false);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsClientMenuOpen(false);
+    };
+    window.addEventListener('click', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isClientMenuOpen]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const loadClientData = async () => {
       setLoading(true);
       try {
-        const clientesResp = await ClienteService.getAll();
+        const [clientesResp, turnosResp] = await Promise.all([
+          ClienteService.getAll(),
+          TurnoService.getAll().catch((err) => {
+            console.error('Error al cargar turnos:', err);
+            return { data: [] };
+          })
+        ]);
+
+        if (isMounted) {
+          const turnosData = turnosResp.data || [];
+          setTurnos(Array.isArray(turnosData) ? turnosData : []);
+        }
         
         if (clientesResp.data) {
           const currentClient = clientesResp.data.find(
@@ -68,6 +100,50 @@ export default function ClientInmueblesPage() {
 
   const handleClientUpdated = (updatedClientData) => {
     setCliente(prev => ({ ...prev, ...updatedClientData }));
+  };
+
+  const handleEstadoChange = async (nuevoEstado) => {
+    if (!cliente) return;
+    try {
+      await ClienteService.update(cliente.telefono, { estado: nuevoEstado });
+      setCliente(prev => ({ ...prev, estado: nuevoEstado }));
+    } catch (error) {
+      console.error('Error al cambiar el estado del cliente:', error);
+      alert('Hubo un error al actualizar el estado.');
+    }
+  };
+
+  const handleTurnoUpdated = (turnoActualizado) => {
+    setTurnos(prev => prev.map(t => t.idTurno === turnoActualizado.idTurno ? turnoActualizado : t));
+  };
+
+  const handleCancelTurno = async (idTurno) => {
+    try {
+      await TurnoService.cancelar(idTurno);
+      setTurnos(prev => prev.map(t => t.idTurno === idTurno ? { ...t, estado: 'CANCELADO' } : t));
+      setIsTurnoDetalleOpen(false);
+    } catch (error) {
+      console.error('Error al cancelar el turno:', error);
+      alert('Ocurrió un error al intentar cancelar el turno. Verifique su conexión.');
+    }
+  };
+
+  const handleChangeTurnoState = async (idTurno, newState, existingData) => {
+    try {
+      const payload = {
+        fecha_programada: existingData.fechaAsignada,
+        inicio_desde: existingData.franjaHoraria.horaInicio,
+        hasta: existingData.franjaHoraria.horaFin,
+        prioridad: existingData.prioridad,
+        estado: newState
+      };
+
+      const response = await TurnoService.update(idTurno, payload);
+      handleTurnoUpdated(response.data);
+    } catch (error) {
+      console.error(`Error al cambiar el estado a ${newState}:`, error);
+      alert('Ocurrió un error al actualizar el estado del turno.');
+    }
   };
 
   const openInmuebleModal = (inmueble = null) => {
@@ -153,6 +229,25 @@ export default function ClientInmueblesPage() {
   const nombreMostrar = cliente.razon_social || `${cliente.nombre || ''} ${cliente.apellido || ''}`.trim() || 'Sin Nombre';
   const contactoMostrar = `${cliente.nombre || ''} ${cliente.apellido || ''}`.trim();
   const iniciales = nombreMostrar.substring(0, 2).toUpperCase();
+  const isInactivo = cliente.estado === 'Inactivo';
+
+  // Próximo turno/servicio agendado del cliente
+  const hoyStr = new Date().toISOString().split('T')[0];
+  const proximoTurno = turnos
+    .filter((t) => {
+      if (t.estado === 'CANCELADO' || t.estado === 'REALIZADO') return false;
+      const matchId = cliente.id_cliente && t.cliente?.id_cliente && String(t.cliente.id_cliente) === String(cliente.id_cliente);
+      const matchTel = cliente.telefono && t.cliente?.telefono && String(t.cliente.telefono) === String(cliente.telefono);
+      return (matchId || matchTel) && t.fechaAsignada && t.fechaAsignada >= hoyStr;
+    })
+    .sort((a, b) => a.fechaAsignada.localeCompare(b.fechaAsignada))[0];
+
+  const fechaProximoTurno = proximoTurno?.fechaAsignada
+    ? (() => {
+        const [y, m, d] = proximoTurno.fechaAsignada.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+      })()
+    : null;
 
   return (
     <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', margin: '-1.5rem', padding: '1.5rem' }}>
@@ -186,8 +281,60 @@ export default function ClientInmueblesPage() {
           <span className="text-dark fw-bold">Ficha e Inmuebles</span>
         </div>
         <div className="d-flex align-items-center gap-3">
-          <Button variant="light" icon aria-label="Descargar ficha"><Download size={16}/></Button>
-          <Button variant="light" icon aria-label="Opciones del cliente"><MoreVertical size={16}/></Button>
+          <div className="position-relative" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="light"
+              icon
+              aria-label="Opciones del cliente"
+              aria-expanded={isClientMenuOpen}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsClientMenuOpen(!isClientMenuOpen);
+              }}
+            >
+              <MoreVertical size={16}/>
+            </Button>
+
+            {isClientMenuOpen && (
+              <div
+                className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
+                style={{ minWidth: '175px', zIndex: 1050 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="w-100 btn btn-sm text-start px-3 py-2 d-flex align-items-center gap-2 text-dark border-0 rounded-0"
+                  onClick={() => {
+                    setIsClientMenuOpen(false);
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  <Edit2 size={14} className="text-secondary" />
+                  <span>Editar Cliente</span>
+                </button>
+                <button
+                  type="button"
+                  className={`w-100 btn btn-sm text-start px-3 py-2 d-flex align-items-center gap-2 border-0 rounded-0 ${isInactivo ? 'text-success' : 'text-danger'}`}
+                  onClick={() => {
+                    setIsClientMenuOpen(false);
+                    handleEstadoChange(isInactivo ? 'Activo' : 'Inactivo');
+                  }}
+                >
+                  {isInactivo ? (
+                    <>
+                      <RotateCcw size={14} />
+                      <span>Restaurar Cliente</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} />
+                      <span>Eliminar Cliente</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -204,7 +351,7 @@ export default function ClientInmueblesPage() {
               <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <h2 className="fw-bold text-dark m-0 fs-4">{nombreMostrar}</h2>
                 <span className="badge bg-light text-secondary border text-uppercase" style={{ fontSize: '0.65rem' }}>{cliente.tipo_cliente}</span>
-                <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill d-flex align-items-center gap-1">
+                <span className={`badge rounded-pill d-flex align-items-center gap-1 border ${isInactivo ? 'bg-warning-subtle text-warning-emphasis border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'}`}>
                   <CheckCircle2 size={12} /> {cliente.estado || 'Activo'}
                 </span>
               </div>
@@ -301,11 +448,36 @@ export default function ClientInmueblesPage() {
             </div>
           </div>
           <div className="col-6 col-lg-3">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
+            <div
+              className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between"
+              style={proximoTurno ? { cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' } : undefined}
+              onClick={() => {
+                if (proximoTurno) setIsTurnoDetalleOpen(true);
+              }}
+              role={proximoTurno ? 'button' : undefined}
+              tabIndex={proximoTurno ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (proximoTurno && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  setIsTurnoDetalleOpen(true);
+                }
+              }}
+            >
               <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
-                Turnos <Calendar size={16} className="text-secondary"/>
+                Turnos <Calendar size={16} className={proximoTurno ? 'text-success' : 'text-secondary'}/>
               </div>
-              <div className="fs-3 fw-bold text-dark">0 <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">activos</span></div>
+              {proximoTurno ? (
+                <div>
+                  <div className="fs-4 fw-bold text-dark">{fechaProximoTurno}</div>
+                  {proximoTurno.franjaHoraria?.horaInicio && (
+                    <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.85rem'}}>
+                      {proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="fs-3 fw-bold text-dark">-</div>
+              )}
             </div>
           </div>
           <div className="col-6 col-lg-3">
@@ -556,6 +728,29 @@ export default function ClientInmueblesPage() {
         inmuebleData={selectedInmueble}
         idCliente={cliente.id_cliente} 
         onSaved={handleInmuebleSaved}
+      />
+
+      {isModificarTurnoOpen && proximoTurno && (
+        <ModificarTurnoModal
+          key={proximoTurno.idTurno}
+          isOpen={isModificarTurnoOpen}
+          onClose={() => setIsModificarTurnoOpen(false)}
+          turnoData={proximoTurno}
+          onTurnoUpdated={handleTurnoUpdated}
+          turnosExistentes={turnos}
+        />
+      )}
+
+      <TurnoDetalleModal
+        isOpen={isTurnoDetalleOpen}
+        onClose={() => setIsTurnoDetalleOpen(false)}
+        turnoData={proximoTurno}
+        onCancelTurno={handleCancelTurno}
+        onEditTurno={() => {
+          setIsTurnoDetalleOpen(false);
+          setIsModificarTurnoOpen(true);
+        }}
+        onChangeState={handleChangeTurnoState}
       />
       
     </div>

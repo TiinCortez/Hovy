@@ -9,25 +9,12 @@ import TurnoDetalleModal from '../components/turnos/TurnoDetalleModal';
 import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import TurnoService from '../services/api/turno.service';
 import useRelojTurnos from '../components/turnos/useRelojTurnos';
-import { fechaDesdeIso, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+import { fechaDesdeIso, obtenerAhoraTurnos, fechaAIso, PRIORIDADES_CONFIG } from '../components/turnos/agendaTurnos';
 import PanelClima from '../components/clima/PanelClima';
 import MapaAgenda from '../components/turnos/MapaAgenda';
 import '../components/turnos/turnos.scss';
 
-const PRIORIDADES_CONFIG = {
-  P1_REASIGNADO: { label: 'P1 Reasignado', color: 'danger' },
-  P2_FIJO: { label: 'P2 Fijo', color: 'success' },
-  P3_CASUAL: { label: 'P3 Casual', color: 'secondary' }
-};
-
 const PRIORIDADES_INICIALES = Object.keys(PRIORIDADES_CONFIG);
-
-const toIsoDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 export default function TurnosPage() {
   const [vistaActual, setVistaActual] = useState('diaria');
@@ -48,6 +35,29 @@ export default function TurnosPage() {
   const [isModificarOpen, setIsModificarOpen] = useState(false);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState(null);
   const [datosNuevoTurno, setDatosNuevoTurno] = useState({});
+
+  const dateInputRef = useRef(null);
+  const dateControlRef = useRef(null);
+  const isPickerOpenRef = useRef(false);
+
+  useEffect(() => {
+    const handleGlobalPointerDown = (event) => {
+      if (dateControlRef.current && !dateControlRef.current.contains(event.target)) {
+        isPickerOpenRef.current = false;
+      }
+    };
+    const handleGlobalKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        isPickerOpenRef.current = false;
+      }
+    };
+    window.addEventListener('pointerdown', handleGlobalPointerDown);
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', handleGlobalPointerDown);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const onChange = () => setMapaFullscreen(document.fullscreenElement === mapaRef.current);
@@ -154,6 +164,53 @@ export default function TurnosPage() {
     setFechaActual(nuevaFecha);
   };
 
+  // Maneja la selección desde el picker nativo superpuesto en la etiqueta de fecha.
+  // - Diaria: navega al día exacto elegido.
+  // - Semanal: hace snap al lunes de la semana que contiene el día elegido.
+  // - Mensual: usa input[type=month] → navega al primer día del mes.
+  const handlePickerChange = (valor) => {
+    isPickerOpenRef.current = false;
+    if (dateInputRef.current) {
+      dateInputRef.current.blur();
+    }
+    if (!valor) return;
+    if (vistaActual === 'mensual') {
+      // valor llega como "2026-10" desde input[type=month]
+      setFechaActual(fechaDesdeIso(`${valor}-01`));
+      return;
+    }
+    // valor llega como "2026-10-15" desde input[type=date]
+    const d = fechaDesdeIso(valor);
+    if (vistaActual === 'semanal') {
+      // Retrocede al lunes de esa semana
+      const day = d.getDay();
+      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+    }
+    setFechaActual(d);
+  };
+
+  const toggleDatePicker = (event) => {
+    event.preventDefault();
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    if (isPickerOpenRef.current) {
+      input.blur();
+      isPickerOpenRef.current = false;
+    } else {
+      if (typeof input.showPicker === 'function') {
+        try {
+          input.showPicker();
+          isPickerOpenRef.current = true;
+        } catch {
+          input.focus();
+        }
+      } else {
+        input.focus();
+      }
+    }
+  };
+
   const getTextoFecha = () => {
     if (vistaActual === 'mensual') {
       const str = fechaActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
@@ -166,7 +223,7 @@ export default function TurnosPage() {
       fin.setDate(fin.getDate() + 6);
       return `Sem. del ${inicio.getDate()} al ${fin.getDate()} ${inicio.toLocaleDateString('es-AR', { month: 'short' })}`;
     }
-    const str = fechaActual.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const str = fechaActual.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
@@ -195,7 +252,7 @@ export default function TurnosPage() {
     });
   }, [turnos, searchTerm, activePriorities]);
 
-  const fechaIsoActual = toIsoDate(fechaActual);
+  const fechaIsoActual = fechaAIso(fechaActual);
 
   const turnosDiarios = useMemo(
     () => turnosFiltrados.filter((turno) => turno.fechaAsignada === fechaIsoActual),
@@ -211,8 +268,8 @@ export default function TurnosPage() {
       inicio.setDate(inicio.getDate() - (day === 0 ? 6 : day - 1));
       const fin = new Date(inicio);
       fin.setDate(fin.getDate() + 6);
-      const desde = toIsoDate(inicio);
-      const hasta = toIsoDate(fin);
+      const desde = fechaAIso(inicio);
+      const hasta = fechaAIso(fin);
       return turnosFiltrados.filter((turno) => turno.fechaAsignada >= desde && turno.fechaAsignada <= hasta);
     }
 
@@ -231,7 +288,7 @@ export default function TurnosPage() {
   }
 
   return (
-    <div className="d-flex flex-column gap-3 w-100 pb-4">
+    <div className="turnos-page d-flex flex-column gap-3 w-100 pb-4">
       
       <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start align-items-xl-center gap-3">
         <div className="d-flex justify-content-between align-items-start w-100 w-xl-auto">
@@ -247,10 +304,24 @@ export default function TurnosPage() {
         <div className="turnos-navigation d-flex flex-wrap align-items-center gap-2 w-100 w-xl-auto mt-2 mt-xl-0">
           <div className="turnos-date-control d-flex align-items-stretch bg-white border rounded-pill shadow-sm overflow-hidden">
             <button onClick={() => moverFecha(-1)} aria-label="Período anterior" className="btn btn-sm btn-light border-0 border-end text-dark px-3 rounded-0 flex-shrink-0"><ChevronLeft size={16}/></button>
-            <div className="turnos-date-label px-3 py-2 d-flex align-items-center justify-content-center gap-2 text-secondary small fw-medium bg-white text-center">
+            <button
+              ref={dateControlRef}
+              type="button"
+              onClick={toggleDatePicker}
+              aria-label="Seleccionar fecha en el calendario"
+              className="btn turnos-date-label border-0 px-3 py-2 d-flex align-items-center justify-content-center gap-2 text-secondary small fw-medium bg-white text-center position-relative shadow-none"
+            >
               <CalendarIcon size={14} className="flex-shrink-0" />
               <span>{getTextoFecha()}</span>
-            </div>
+              <input
+                ref={dateInputRef}
+                type={vistaActual === 'mensual' ? 'month' : 'date'}
+                tabIndex={-1}
+                aria-hidden="true"
+                value={vistaActual === 'mensual' ? fechaIsoActual.slice(0, 7) : fechaIsoActual}
+                onChange={(e) => handlePickerChange(e.target.value)}
+              />
+            </button>
             <button onClick={() => moverFecha(1)} aria-label="Período siguiente" className="btn btn-sm btn-light border-0 border-start text-dark px-3 rounded-0 flex-shrink-0"><ChevronRight size={16}/></button>
           </div>
 
