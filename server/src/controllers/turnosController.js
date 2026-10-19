@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { validarFechaAltaTurno } from '../utils/turnosFecha.js';
 import { validarSolapamientoTurno } from '../utils/algoritmoAgenda.js';
+import { crearPresupuestoParaTurno } from '../services/presupuestoService.js';
+import { responderErrorServicio } from '../utils/solicitudesVisita.js';
 
 // Lo que espera estrictamente la DB de Supabase para sus CHECK constraints
 export const PRIORIDADES_VALIDAS = ['P1_Reasignado', 'P2_Fijo', 'P3_Casual'];
@@ -138,7 +140,7 @@ export const getTurnoById = async (req, res) => {
 
 // POST /api/turnos/nuevo
 export const createTurno = async (req, res) => {
-  const { id_inmueble, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
+  const { id_inmueble, id_servicio, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
 
   if (!id_inmueble || !fecha_programada || !inicio_desde || !hasta || !prioridad) {
     return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios para agendar el turno.' });
@@ -151,11 +153,31 @@ export const createTurno = async (req, res) => {
     if (mapToDBEstado(estado) !== 'Cancelado' && await validarSolapamientoTurno({ fecha_programada, inicio_desde, hasta })) {
       return res.status(409).json({ ok: false, error: 'La franja seleccionada se superpone con otro turno.' });
     }
+
+    if (!id_servicio) {
+      return res.status(400).json({ ok: false, error: 'Debes seleccionar un servicio para agendar el turno.' });
+    }
+
+    const resultadoPresupuesto = await crearPresupuestoParaTurno({
+      idInmueble: id_inmueble,
+      idServicio: id_servicio,
+      idUsuario: Number(req.user?.sub),
+    });
+
+    if (resultadoPresupuesto.error) {
+      return responderErrorServicio(res, resultadoPresupuesto.error);
+    }
+
+    const idPresupuesto = resultadoPresupuesto.presupuesto.id_presupuesto;
+    const nombresServicio = resultadoPresupuesto.nombreServicio
+      ? [resultadoPresupuesto.nombreServicio]
+      : [];
+
     const { data, error } = await supabaseAdmin
       .from('turnos')
       .insert({
         id_inmueble,
-        id_presupuesto: null,
+        id_presupuesto: idPresupuesto,
         fecha_programada,
         inicio_desde,
         hasta,
@@ -165,7 +187,11 @@ export const createTurno = async (req, res) => {
       .select('*, inmueble:inmuebles(*, cliente:clientes(*))')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      await supabaseAdmin.from('detalle_presupuesto').delete().eq('id_presupuesto', idPresupuesto);
+      await supabaseAdmin.from('presupuestos').delete().eq('id_presupuesto', idPresupuesto);
+      throw error;
+    }
 
     const turnoFormateado = {
       idTurno: data.id_turno,
@@ -175,7 +201,7 @@ export const createTurno = async (req, res) => {
       estado: mapToFrontendEstado(data.estado),
       inmueble: data.inmueble,
       cliente: data.inmueble?.cliente,
-      servicio: { descripcion: 'Servicio programado (Sin presupuesto asociado)' }
+      servicio: armarServicio(nombresServicio)
     };
 
     res.status(201).json({ ok: true, data: turnoFormateado });
@@ -239,6 +265,8 @@ export const updateTurno = async (req, res) => {
     if (error?.code === 'P0001') return res.status(409).json({ ok: false, error: error.message });
     if (error) throw error;
 
+    const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto([data.id_presupuesto]);
+
     const turnoFormateado = {
       idTurno: data.id_turno,
       fechaAsignada: data.fecha_programada,
@@ -247,7 +275,7 @@ export const updateTurno = async (req, res) => {
       estado: mapToFrontendEstado(data.estado),
       inmueble: data.inmueble,
       cliente: data.inmueble?.cliente,
-      servicio: { descripcion: 'Servicio programado (Sin presupuesto asociado)' }
+      servicio: armarServicio(serviciosPorPresupuesto.get(data.id_presupuesto))
     };
 
     res.status(200).json({ ok: true, data: turnoFormateado });

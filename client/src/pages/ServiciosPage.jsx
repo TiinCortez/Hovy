@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Plus, Pencil, Trash2, AlertCircle, Wrench } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -12,13 +13,21 @@ const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(
 const formatPrice = (value) => `$${Number(value || 0).toLocaleString('es-AR')}`;
 
 export default function ServiciosPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [mios, setMios] = useState([]); // may include inactive rows; only active ones are listed
   const [tipos, setTipos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [modal, setModal] = useState(null); // { mode: 'add' | 'edit' | 'delete', servicio? }
+  const [modal, setModal] = useState(() => (location.state?.openNewServiceModal ? { mode: 'add' } : null)); // { mode: 'add' | 'edit' | 'delete', servicio? }
+
+  useEffect(() => {
+    if (location.state?.openNewServiceModal) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   // Mutations await this so the list is refreshed before the modal closes
   const loadServicios = useCallback(async () => {

@@ -508,3 +508,113 @@ export const obtenerResumenFlujoVisita = async (solicitud, idUsuario) => {
 
   return { servicios: error ? null : lineas, presupuesto };
 };
+
+// Creates an Accepted budget (presupuestos + detalle_presupuesto) directly from
+// an existing property (id_inmueble) and a single active service from the admin
+// user's catalog (usuario_servicio), so a manually created turno is always
+// linked to a valid id_presupuesto.
+// Returns { presupuesto, nombreServicio, subtotal } or { error }.
+export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsuario }) => {
+  const idInm = parsearIdSolicitud(idInmueble);
+  if (!idInm) {
+    return falla(400, 'El id del inmueble no es válido.');
+  }
+
+  const idServ = parsearIdSolicitud(idServicio);
+  if (!idServ) {
+    return falla(400, 'Debes seleccionar un servicio válido para agendar el turno.');
+  }
+
+  const idUsr = parsearIdSolicitud(idUsuario);
+  if (!idUsr) {
+    return falla(401, 'No se pudo identificar al usuario autenticado.');
+  }
+
+  const { data: inmueble, error: errorInmueble } = await supabaseAdmin
+    .from('inmuebles')
+    .select('id_inmueble, id_cliente, superficie_mantenible, superficie_total')
+    .eq('id_inmueble', idInm)
+    .maybeSingle();
+
+  if (errorInmueble) {
+    console.error('Error al consultar el inmueble para el presupuesto del turno:', errorInmueble);
+    return falla(500, 'No se pudo consultar el inmueble seleccionado.');
+  }
+
+  if (!inmueble) {
+    return falla(404, 'El inmueble seleccionado no existe.');
+  }
+
+  const superficieRaw = !estaVacio(inmueble.superficie_mantenible) && Number(inmueble.superficie_mantenible) > 0
+    ? Number(inmueble.superficie_mantenible)
+    : Number(inmueble.superficie_total);
+
+  if (!Number.isFinite(superficieRaw) || superficieRaw <= 0) {
+    return falla(
+      400,
+      'El inmueble seleccionado no tiene una superficie mantenible mayor a 0 m² para calcular el presupuesto del servicio.'
+    );
+  }
+
+  const { data: usuarioServicio, error: errorServicio } = await supabaseAdmin
+    .from('usuario_servicio')
+    .select('id_servicio, precio_base, activo, servicio:servicios_catalogo(nombre)')
+    .eq('id_usuario', idUsr)
+    .eq('id_servicio', idServ)
+    .eq('activo', true)
+    .maybeSingle();
+
+  if (errorServicio) {
+    console.error('Error al consultar el servicio del usuario para el turno:', errorServicio);
+    return falla(500, 'No se pudo consultar el servicio seleccionado.');
+  }
+
+  if (!usuarioServicio) {
+    return falla(400, 'El servicio seleccionado no existe o no está activo en tu catálogo.');
+  }
+
+  const precioUnitario = Number(usuarioServicio.precio_base);
+  if (!Number.isFinite(precioUnitario) || precioUnitario <= 0) {
+    return falla(400, 'El servicio seleccionado debe tener un precio por m² mayor a 0.');
+  }
+
+  const subtotal = redondear2(precioUnitario * superficieRaw);
+  const nombreServicio = usuarioServicio.servicio?.nombre ?? null;
+
+  const { data: presupuesto, error: errorPresupuesto } = await supabaseAdmin
+    .from('presupuestos')
+    .insert({
+      id_cliente: inmueble.id_cliente,
+      id_inmueble: inmueble.id_inmueble,
+      monto_estimado: subtotal,
+      monto_subtotal: subtotal,
+      monto_total: subtotal,
+      estado: 'Aceptado',
+    })
+    .select()
+    .single();
+
+  if (errorPresupuesto) {
+    console.error('Error al crear el presupuesto automático del turno:', errorPresupuesto);
+    return falla(500, 'No se pudo generar el presupuesto para el turno.');
+  }
+
+  const { error: errorDetalle } = await supabaseAdmin
+    .from('detalle_presupuesto')
+    .insert({
+      id_presupuesto: presupuesto.id_presupuesto,
+      id_servicio: idServ,
+      cantidad: superficieRaw,
+      precio_unitario: precioUnitario,
+      subtotal,
+    });
+
+  if (errorDetalle) {
+    console.error('Error al guardar el detalle del presupuesto del turno:', errorDetalle);
+    await supabaseAdmin.from('presupuestos').delete().eq('id_presupuesto', presupuesto.id_presupuesto);
+    return falla(500, 'No se pudo registrar el detalle del presupuesto para el turno.');
+  }
+
+  return { presupuesto, nombreServicio, subtotal };
+};
+

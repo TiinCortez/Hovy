@@ -17,21 +17,39 @@ function preparar(t, { registro = actual, choque = false } = {}) {
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-06T15:00:00Z').getTime() });
   t.mock.method(globalThis, 'fetch', () => { throw new Error('La prueba no permite conexiones de red.'); });
   t.mock.method(supabaseAdmin, 'from', (tabla) => {
-    assert.equal(tabla, 'turnos');
-    const consulta = { filtros: [] };
+    assert.ok(['turnos', 'inmuebles', 'usuario_servicio', 'presupuestos', 'detalle_presupuesto'].includes(tabla));
+    const consulta = { tabla, filtros: [] };
     consultas.push(consulta);
-    const resultado = () => ({ data: choque ? [{ id_turno: 9 }] : [], error: null });
+    const resultado = () => {
+      if (tabla === 'detalle_presupuesto' && consulta.insert) return { data: [consulta.insert], error: null };
+      return { data: choque ? [{ id_turno: 9 }] : [], error: null };
+    };
     const query = {
       select(campos) { consulta.campos = campos; return this; },
       insert(payload) { consulta.insert = payload; return this; },
       update(payload) { consulta.update = payload; return this; },
+      delete() { consulta.delete = true; return this; },
+      in(...args) { consulta.filtros.push(['in', ...args]); return this; },
       eq(...args) { consulta.filtros.push(['eq', ...args]); return this; },
       neq(...args) { consulta.filtros.push(['neq', ...args]); return this; },
       not(...args) { consulta.filtros.push(['not', ...args]); return this; },
       lt(...args) { consulta.filtros.push(['lt', ...args]); return this; },
       gt(...args) { consulta.filtros.push(['gt', ...args]); return this; },
-      maybeSingle() { return Promise.resolve({ data: registro, error: null }); },
-      single() { return Promise.resolve({ data: { ...registro, ...consulta.update, ...consulta.insert }, error: null }); },
+      maybeSingle() {
+        if (tabla === 'inmuebles') {
+          return Promise.resolve({ data: { id_inmueble: 1, id_cliente: 10, superficie_mantenible: 120, superficie_total: 150 }, error: null });
+        }
+        if (tabla === 'usuario_servicio') {
+          return Promise.resolve({ data: { id_servicio: 2, precio_base: 500, activo: true, servicio: { nombre: 'Mantenimiento regular de césped' } }, error: null });
+        }
+        return Promise.resolve({ data: registro, error: null });
+      },
+      single() {
+        if (tabla === 'presupuestos') {
+          return Promise.resolve({ data: { id_presupuesto: 42, ...consulta.insert }, error: null });
+        }
+        return Promise.resolve({ data: { ...registro, ...consulta.update, ...consulta.insert }, error: null });
+      },
       then(resolve, reject) { return Promise.resolve(resultado()).then(resolve, reject); }
     };
     return query;
@@ -46,21 +64,30 @@ function preparar(t, { registro = actual, choque = false } = {}) {
 
 test('el alta rechaza horarios pasados y conflictos sin escribir en la base', async (t) => {
   const { consultas, res } = preparar(t, { choque: true });
-  const body = { id_inmueble: 1, fecha_programada: '2026-10-06', inicio_desde: '10:00', hasta: '11:00', prioridad: 'P2_FIJO' };
-  await createTurno({ body }, res);
+  const body = { id_inmueble: 1, id_servicio: 2, fecha_programada: '2026-10-06', inicio_desde: '10:00', hasta: '11:00', prioridad: 'P2_FIJO' };
+  await createTurno({ body, user: { sub: 1 } }, res);
   assert.equal(res.codigo, 400);
   assert.equal(consultas.length, 0);
-  await createTurno({ body: { ...body, inicio_desde: '14:00', hasta: '16:00' } }, res);
+  await createTurno({ body: { ...body, inicio_desde: '14:00', hasta: '16:00' }, user: { sub: 1 } }, res);
   assert.equal(res.codigo, 409);
   assert.equal(consultas.some((consulta) => consulta.insert), false);
 });
 
-test('el alta usa la consulta existente de superposición y admite una franja libre', async (t) => {
+test('el alta usa la consulta existente de superposición, crea el presupuesto y admite una franja libre', async (t) => {
   const { consultas, res } = preparar(t);
-  await createTurno({ body: { id_inmueble: 1, fecha_programada: '2026-10-07', inicio_desde: '13:00', hasta: '15:00', prioridad: 'P2_FIJO' } }, res);
+  await createTurno({
+    body: { id_inmueble: 1, id_servicio: 2, fecha_programada: '2026-10-07', inicio_desde: '13:00', hasta: '15:00', prioridad: 'P2_FIJO' },
+    user: { sub: 1 }
+  }, res);
   assert.equal(res.codigo, 201);
   assert.ok(consultas[0].filtros.some((filtro) => filtro[0] === 'neq' && filtro[1] === 'estado' && filtro[2] === 'Cancelado'));
-  assert.equal(consultas.find((consulta) => consulta.insert).insert.inicio_desde, '13:00');
+  const insertPresupuesto = consultas.find((consulta) => consulta.tabla === 'presupuestos' && consulta.insert);
+  assert.equal(insertPresupuesto.insert.monto_total, 60000);
+  assert.equal(insertPresupuesto.insert.estado, 'Aceptado');
+  const insertTurno = consultas.find((consulta) => consulta.tabla === 'turnos' && consulta.insert);
+  assert.equal(insertTurno.insert.inicio_desde, '13:00');
+  assert.equal(insertTurno.insert.id_presupuesto, 42);
+  assert.equal(res.body.data.servicio.descripcion, 'Mantenimiento regular de césped');
 });
 
 test('reprogramar rechaza horas pasadas sin modificar el registro', async (t) => {
