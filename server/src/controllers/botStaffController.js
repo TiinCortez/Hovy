@@ -214,6 +214,9 @@ const cambiarEstadoTurnoStaff = (accion) => async (req, res) => {
       .select('id_turno, fecha_programada, inicio_desde, hasta, prioridad, estado, inmueble:inmuebles(direccion, barrio, latitud, longitud, cliente:clientes(nombre, apellido))')
       .single();
 
+    // P0001 = trg_turno_realizado rechazó el cierre (presupuesto no Aceptado o
+    // total 0): el turno no cambió y el bot tiene que poder explicar por qué.
+    if (error?.code === 'P0001') return res.status(409).json({ ok: false, error: error.message });
     if (error) throw error;
 
     return res.status(200).json({ ok: true, data: resumirTurno(actualizado) });

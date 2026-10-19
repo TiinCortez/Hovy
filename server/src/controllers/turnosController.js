@@ -23,7 +23,7 @@ const mapToDBEstado = (e) => {
   if (val === 'REALIZADO') return 'Realizado';
   if (val === 'CANCELADO') return 'Cancelado';
   return e || 'Coordinado';
-};
+};  
 
 // Mapeador inverso: DB -> Frontend
 const mapToFrontendEstado = (e) => {
@@ -233,6 +233,10 @@ export const updateTurno = async (req, res) => {
       .select('*, inmueble:inmuebles(*, cliente:clientes(*))')
       .single();
 
+    // P0001 = trg_turno_realizado o trg_turno_cancelado rechazaron el cambio de
+    // estado (presupuesto no Aceptado, total 0, o turno ya imputado en la cuenta
+    // corriente): el turno no cambió y el mensaje de la base explica por qué.
+    if (error?.code === 'P0001') return res.status(409).json({ ok: false, error: error.message });
     if (error) throw error;
 
     const turnoFormateado = {
@@ -269,6 +273,8 @@ export const cancelarTurno = async (req, res) => {
       .select()
       .single();
 
+    // P0001 = trg_turno_cancelado: el turno ya tiene un trabajo registrado.
+    if (error?.code === 'P0001') return res.status(409).json({ ok: false, error: error.message });
     if (error) throw error;
 
     res.status(200).json({ ok: true, data });
