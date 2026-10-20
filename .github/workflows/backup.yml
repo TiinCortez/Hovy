@@ -1,0 +1,42 @@
+name: Backup Diario Automatizado
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # Todos los días a las 04:00 UTC (01:00 AM Argentina)
+  workflow_dispatch:
+
+concurrency:
+  group: backup-routine
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Backup de Infraestructura y n8n
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar rutina de backup en Azure VM vía SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            FECHA=$(date +%Y-%m-%d_%H%M%S)
+            BACKUP_DIR="/home/azureuser/backups/$FECHA"
+            mkdir -p "$BACKUP_DIR"
+
+            echo "1. Respaldando volumen persistente de n8n (WhatsApp Bot)..."
+            if docker volume inspect n8n_data > /dev/null 2>&1; then
+              docker run --rm -v n8n_data:/data -v "$BACKUP_DIR":/backup alpine tar czf /backup/n8n_data.tar.gz -C /data .
+              echo "Volumen n8n_data respaldado exitosamente."
+            fi
+
+            echo "2. Respaldando archivos de configuración .env del servidor..."
+            mkdir -p "$BACKUP_DIR/configs"
+            [ -f /home/azureuser/Hovy-prod/server/.env ] && cp /home/azureuser/Hovy-prod/server/.env "$BACKUP_DIR/configs/prod.env"
+            [ -f /home/azureuser/Hovy-dev/server/.env ] && cp /home/azureuser/Hovy-dev/server/.env "$BACKUP_DIR/configs/dev.env"
+            [ -f /etc/nginx/sites-available/hovy.conf ] && cp /etc/nginx/sites-available/hovy.conf "$BACKUP_DIR/configs/hovy.nginx.conf"
+
+            echo "3. Rotando backups locales (conservando últimos 7 días)..."
+            find /home/azureuser/backups -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +
+            echo "Rutina de backup finalizada exitosamente en $BACKUP_DIR"

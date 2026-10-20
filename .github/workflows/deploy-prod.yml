@@ -14,6 +14,7 @@ jobs:
   test_and_deploy:
     name: Build & Deploy to Production VM
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -32,7 +33,7 @@ jobs:
       - name: Validar sintaxis y pruebas del Backend
         working-directory: server
         run: |
-          npm ci --omit=dev
+          npm ci
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
@@ -48,7 +49,26 @@ jobs:
             cd ~/Hovy-prod
             git fetch origin main
             git reset --hard origin/main
-            docker compose up -d --build
+            
+            # Forzar variables de compilación de Producción para Vite en el cliente
+            export VITE_SUPABASE_URL="https://dulaaxavsvgkqqbrvltd.supabase.co"
+            docker compose up -d --build --force-recreate
             docker image prune -f
-            sleep 5
-            curl -f http://127.0.0.1:4000/api/health || exit 1
+
+            echo "Verificando estado de salud del servicio en Producción..."
+            EXITO=0
+            for i in $(seq 1 12); do
+              if curl -s -f http://127.0.0.1:4000/api/health > /dev/null; then
+                echo "Smoke test exitoso en el intento $i/12."
+                EXITO=1
+                break
+              fi
+              echo "Esperando que el contenedor responda ($i/12)..."
+              sleep 5
+            done
+
+            if [ $EXITO -ne 1 ]; then
+              echo "ERROR: El healthcheck fallo tras 60 segundos."
+              docker compose logs --tail 50
+              exit 1
+            fi

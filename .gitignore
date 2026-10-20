@@ -19,3 +19,7 @@ odd
 .vscode/
 .idea/
 *.swp
+
+# Documentación interna y privada del responsable
+documentacion/
+*.private.*

@@ -12,10 +12,14 @@ RUN cd client && npm ci
 COPY client ./client
 COPY server/src/utils ./server/src/utils
 
-# Variables de compilación del frontend
-ENV VITE_API_URL=/api
-ENV VITE_SUPABASE_URL=https://kzfziqdmtvrcwotemvyj.supabase.co
-ENV VITE_SUPABASE_ANON_KEY=sb_publishable_6iEe3FDH5iTXQqRou3E4qQ_1DFCACJd
+# Variables de compilación del frontend inyectables en build-time (ARG)
+ARG VITE_API_URL=/api
+ARG VITE_SUPABASE_URL=https://kzfziqdmtvrcwotemvyj.supabase.co
+ARG VITE_SUPABASE_ANON_KEY=sb_publishable_6iEe3FDH5iTXQqRou3E4qQ_1DFCACJd
+
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 
 # Compilar frontend para producción
 RUN cd client && npm run build

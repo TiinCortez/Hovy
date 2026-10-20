@@ -1,0 +1,75 @@
+name: Rollback de Emergencia
+
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: 'Entorno donde ejecutar el rollback'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      referencia_git:
+        description: 'Commit SHA, Tag o referencia previa (ej. HEAD~1)'
+        required: true
+        default: 'HEAD~1'
+        type: string
+
+concurrency:
+  group: rollback-${{ github.event.inputs.entorno }}
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Ejecutar Rollback
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.entorno }}
+    steps:
+      - name: Ejecutar Rollback en Azure VM vía SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            ENTORNO="${{ github.event.inputs.entorno }}"
+            REF="${{ github.event.inputs.referencia_git }}"
+
+            if [ "$ENTORNO" = "production" ]; then
+              APP_DIR="/home/azureuser/Hovy-prod"
+              PORT=4000
+              export VITE_SUPABASE_URL="https://dulaaxavsvgkqqbrvltd.supabase.co"
+            else
+              APP_DIR="/home/azureuser/Hovy-dev"
+              PORT=4001
+              export VITE_SUPABASE_URL="https://kzfziqdmtvrcwotemvyj.supabase.co"
+            fi
+
+            echo "=== INICIANDO ROLLBACK EN $ENTORNO HACIA $REF ==="
+            cd "$APP_DIR" || exit 1
+            git fetch --all
+            git checkout "$REF"
+
+            echo "Reconstruyendo y levantando contenedor con versión restaurada..."
+            docker compose up -d --build --force-recreate
+            docker image prune -f
+
+            echo "Verificando salud del servicio post-rollback en puerto $PORT..."
+            EXITO=0
+            for i in $(seq 1 12); do
+              if curl -s -f "http://127.0.0.1:$PORT/api/health" > /dev/null; then
+                echo "Rollback exitoso: servicio saludable en intento $i/12."
+                EXITO=1
+                break
+              fi
+              echo "Esperando que el servicio levante ($i/12)..."
+              sleep 5
+            done
+
+            if [ $EXITO -ne 1 ]; then
+              echo "ERROR: El servicio no respondió tras el rollback."
+              docker compose logs --tail 50
+              exit 1
+            fi
