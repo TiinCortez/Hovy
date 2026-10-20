@@ -16,6 +16,8 @@ import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/
 import qrRoutes from './integrations/qr/qr.routes.js';
 import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
 import { supabaseAdmin } from './config/supabase.js';
+import requestTracer from './middleware/requestTracer.js';
+import errorHandler from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +30,9 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
+
+// Observabilidad: Trazabilidad distribuida con Request ID y métricas de latencia
+app.use(requestTracer);
 
 const defaultOrigins = [
   'http://localhost:5173',
@@ -159,5 +164,8 @@ if (staticDir) {
     res.sendFile(path.join(staticDir, 'index.html'));
   });
 }
+
+// Manejo centralizado y observabilidad de errores no controlados
+app.use(errorHandler);
 
 export default app;
