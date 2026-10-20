@@ -22,6 +22,17 @@ import errorHandler from './middleware/errorHandler.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Leer versión real desde package.json (funciona tanto con npm start como con node directo en Docker)
+const appVersion = (() => {
+  try {
+    const pkgPath = path.resolve(__dirname, '../package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkg.version || '1.0.0';
+  } catch {
+    return process.env.npm_package_version || '1.0.0';
+  }
+})();
+
 const app = express();
 app.set('trust proxy', 1);
 
@@ -59,7 +70,8 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-request-id'],
+  exposedHeaders: ['x-request-id']
 };
 
 app.use(cors(corsOptions));
@@ -68,13 +80,12 @@ app.use(express.json());
 // Endpoint de sondeo y verificación de salud con telemetría y deep check opcional
 app.get('/api/health', async (req, res) => {
   const isDeep = req.query.deep === 'true' || req.query.db === 'true';
-  const packageVersion = process.env.npm_package_version || '1.0.0';
   const commitSha = process.env.GIT_SHA || process.env.COMMIT_SHA || 'local-dev';
   const environment = process.env.NODE_ENV || 'development';
 
   const healthData = {
     status: 'ok',
-    version: packageVersion,
+    version: appVersion,
     commitSha,
     environment,
     uptime: Math.floor(process.uptime()),
@@ -89,7 +100,7 @@ app.get('/api/health', async (req, res) => {
   // Verificación profunda (deep check) de conectividad a la base de datos
   const startTime = Date.now();
   try {
-    const { error } = await supabaseAdmin.from('clientes').select('id_cliente').limit(1);
+    const { error } = await supabaseAdmin.from('usuarios').select('id').limit(1);
     const latencyMs = Date.now() - startTime;
 
     if (error) {

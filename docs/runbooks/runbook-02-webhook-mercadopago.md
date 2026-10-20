@@ -8,7 +8,7 @@
 
 ## 1. Detección y Síntomas
 - El cliente abonó un presupuesto mediante QR o Link de Pago, pero el cobro figura en estado `Pendiente` en el panel de Hovy.
-- Logs con mensajes `HMAC signature verification failed` o código HTTP 400/401 en `/api/mercadopago/webhooks/pagos`.
+- Logs con mensajes `webhook rechazado` (firma HMAC `x-signature` inválida o vencida) o código HTTP 400/401 en `POST /api/mercadopago/webhook`.
 - Peticiones rechazadas por Cloudflare o Basic Auth en el entorno de desarrollo.
 
 ---

@@ -16,13 +16,15 @@
 ## 2. Plan de Restauración de la Base de Datos
 
 ### Paso 1: Obtener el último respaldo
-> **Limitación conocida:** `backup.yml` respalda en la VM (`/home/azureuser/backups/`) el volumen `n8n_data`, los `.env` y la config de Nginx. **No hace `pg_dump` de Supabase.** Para la base de datos hay dos fuentes:
-> 1. **Supabase Dashboard > Database > Backups** (backups diarios propios de Supabase según el plan contratado; verificar retención).
-> 2. Esquema reconstruible desde `docs/migrations/001` a `008` (solo estructura, no datos).
->
-> Pendiente de mejora: agregar un `pg_dump` programado hacia un almacenamiento fuera de la VM.
+`backup.yml` corre todos los días a las 04:00 UTC y opera en dos capas:
+1. **Respaldo en la VM (`/home/azureuser/backups/<fecha>/`):** guarda `n8n_data.tar.gz`, `prod.env`, `dev.env` y `hovy.nginx.conf` (rotación de 7 días).
+2. **Respaldo Off-VM cifrado con AES-256 (GitHub Actions Artifacts):** si el secret `SUPABASE_DB_URL` está configurado en GitHub Secrets, ejecuta `pg_dump --no-owner --no-acl`, lo cifra con `openssl enc -aes-256-cbc -pbkdf2` usando `VM_SSH_KEY` y lo sube como artifact `hovy-offsite-backup-<run_number>` (retención 7 días). Adicionalmente, Supabase mantiene sus backups propios en **Supabase Dashboard > Database > Backups** y el esquema completo está versionado en `docs/migrations/001` a `008`.
 
-Si la VM también se perdió, los backups locales de n8n/.env se pierden con ella; por eso conviene copiar `/home/azureuser/backups/` fuera de la VM.
+Para descifrar el dump descargado desde GitHub Actions Artifacts:
+```bash
+cat ~/.ssh/id_rsa | openssl enc -d -aes-256-cbc -pbkdf2 -pass stdin \
+  -in supabase_dump.sql.gz.enc | gunzip > backup_prod_dump.sql
+```
 
 ### Paso 2: Restaurar en Supabase o PostgreSQL nuevo (si se dispone de un dump `.sql`)
 ```bash
@@ -51,16 +53,18 @@ Si la VM fue destruida:
    - **Tamaño:** Standard B1s (1 vCPU, 1 GiB RAM).
    - **IP Pública:** Estática (reasignar el registro DNS `A` en Cloudflare hacia la nueva IP).
 2. Conectarse por SSH a la nueva VM.
-3. Clonar el repositorio y ejecutar el aprovisionamiento automatizado (IaC):
+3. Clonar el repositorio para Producción y Staging y ejecutar el aprovisionamiento automatizado (IaC):
    ```bash
-   git clone https://github.com/TiinCortez/Hovy.git /opt/hovy
-   cd /opt/hovy
+   git clone -b main https://github.com/TiinCortez/Hovy.git /home/azureuser/Hovy-prod
+   git clone -b develop https://github.com/TiinCortez/Hovy.git /home/azureuser/Hovy-dev
+   cd /home/azureuser/Hovy-prod
    sudo bash infra/scripts/bootstrap-vm.sh
    ```
-4. Configurar el archivo `server/.env` con las variables de producción.
+4. Configurar los archivos `/home/azureuser/Hovy-prod/server/.env` y `/home/azureuser/Hovy-dev/server/.env` (y cargar el certificado Cloudflare Origin en `/etc/ssl/certs/cloudflare_origin.pem` y `/etc/ssl/private/cloudflare_origin.key`).
 5. Iniciar los contenedores:
    ```bash
-   docker compose pull && docker compose up -d
+   cd /home/azureuser/Hovy-prod && docker compose up -d --build
+   cd /home/azureuser/Hovy-dev && HOST_PORT=4001 CONTAINER_NAME=hovy-api-dev docker compose up -d --build
    ```
 6. Verificar operatividad:
    ```bash

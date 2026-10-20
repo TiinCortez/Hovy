@@ -59,14 +59,33 @@ if ! command -v docker >/dev/null 2>&1; then
 
   systemctl enable docker
   systemctl start docker
+  usermod -aG docker azureuser 2>/dev/null || true
   echo "✅ Docker instalado exitosamente."
 else
+  usermod -aG docker azureuser 2>/dev/null || true
   echo "ℹ️  Docker ya está instalado."
 fi
 
 # 4. Configuración de Nginx
 echo "🌐 Configurando Nginx para Hovy..."
 mkdir -p /etc/ssl/certs /etc/ssl/private /var/www/certbot
+
+# Si aún no se cargó el certificado Origin CA de Cloudflare, generar uno provisorio autofirmado
+# para que nginx -t valide y levante sin errores en una VM recién aprovisionada.
+if [ ! -f /etc/ssl/certs/cloudflare_origin.pem ] || [ ! -f /etc/ssl/private/cloudflare_origin.key ]; then
+  echo "⚠️  No se detectó Cloudflare Origin Certificate. Generando certificado TLS provisorio..."
+  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/cloudflare_origin.key \
+    -out /etc/ssl/certs/cloudflare_origin.pem \
+    -subj "/CN=hovyapp.com.ar"
+  chmod 600 /etc/ssl/private/cloudflare_origin.key
+fi
+
+# Asegurar existencia de archivo .htpasswd para Staging Basic Auth
+if [ ! -f /etc/nginx/.htpasswd ]; then
+  touch /etc/nginx/.htpasswd
+  chmod 640 /etc/nginx/.htpasswd
+fi
 
 # Copiar configuración versionada si se ejecuta desde el repositorio
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -80,29 +99,21 @@ if [ -f "$REPO_DIR/infra/nginx/hovy.conf" ]; then
   echo "✅ Configuración de Nginx aplicada y validada."
 fi
 
-# 5. Ejecutar Hardening de Red y Firewall
+# 5. Ejecutar Hardening de Red, UFW y Fail2Ban
 if [ -f "$SCRIPT_DIR/harden-vm.sh" ]; then
-  echo "🛡️  Ejecutando hardening de firewall y UFW..."
+  echo "🛡️  Ejecutando hardening de firewall (UFW + Fail2Ban)..."
   bash "$SCRIPT_DIR/harden-vm.sh"
 fi
 
-# 6. Configurar Fail2ban para SSH
-cat << 'EOF' > /etc/fail2ban/jail.local
-[sshd]
-enabled = true
-port = ssh
-filter = sshd
-logpath = /var/log/auth.log
-maxretry = 5
-bantime = 3600
-findtime = 600
-EOF
-
-systemctl enable fail2ban
-systemctl restart fail2ban
-echo "✅ Fail2ban activado."
+# 6. Programar monitoreo periódico de recursos cada 15 minutos
+if [ -f "$SCRIPT_DIR/monitor-resources.sh" ]; then
+  chmod +x "$SCRIPT_DIR/monitor-resources.sh"
+  echo "*/15 * * * * root $SCRIPT_DIR/monitor-resources.sh >> /var/log/hovy-monitor.log 2>&1" > /etc/cron.d/hovy-monitor
+  chmod 644 /etc/cron.d/hovy-monitor
+  echo "✅ Cron de monitoreo de recursos configurado (/etc/cron.d/hovy-monitor)."
+fi
 
 echo "======================================================================"
 echo "🎉 ¡Aprovisionamiento completado con éxito!"
-echo "La VM está blindada, con 2GB de Swap, Docker, Nginx y UFW activo."
+echo "La VM está blindada, con 2GB de Swap, Docker, Nginx, UFW y Fail2Ban activos."
 echo "======================================================================"

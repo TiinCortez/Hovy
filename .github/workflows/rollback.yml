@@ -51,8 +51,9 @@ jobs:
             cd "$APP_DIR" || exit 1
             git fetch --all
             git checkout "$REF"
+            export GIT_SHA=$(git rev-parse --short HEAD)
 
-            echo "Reconstruyendo y levantando contenedor con versión restaurada..."
+            echo "Reconstruyendo y levantando contenedor con versión restaurada (GIT_SHA=$GIT_SHA)..."
             docker compose up -d --build --force-recreate
             docker image prune -f
 

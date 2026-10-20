@@ -11,9 +11,25 @@ concurrency:
 
 jobs:
   backup:
-    name: Backup de Infraestructura y n8n
+    name: Backup de Base de Datos, Infraestructura y n8n
     runs-on: ubuntu-latest
     steps:
+      - name: Preparar directorio de respaldo en el runner
+        run: mkdir -p backup-offsite
+
+      - name: Respaldo lógico de Base de Datos Supabase (pg_dump)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            echo "Ejecutando pg_dump de Supabase (esquema + datos + triggers)..."
+            pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl | gzip > backup-offsite/supabase_dump.sql.gz
+            echo "Dump de base de datos generado exitosamente."
+          else
+            echo "AVISO: El secret SUPABASE_DB_URL no está configurado aún en GitHub Secrets."
+            echo "Se omite pg_dump externo (Supabase mantiene sus propios backups automáticos internos)."
+          fi
+
       - name: Ejecutar rutina de backup en Azure VM vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -36,7 +52,31 @@ jobs:
             [ -f /home/azureuser/Hovy-prod/server/.env ] && cp /home/azureuser/Hovy-prod/server/.env "$BACKUP_DIR/configs/prod.env"
             [ -f /home/azureuser/Hovy-dev/server/.env ] && cp /home/azureuser/Hovy-dev/server/.env "$BACKUP_DIR/configs/dev.env"
             [ -f /etc/nginx/sites-available/hovy.conf ] && cp /etc/nginx/sites-available/hovy.conf "$BACKUP_DIR/configs/hovy.nginx.conf"
+            chmod -R 600 "$BACKUP_DIR/configs" || true
 
-            echo "3. Rotando backups locales (conservando últimos 7 días)..."
+            echo "3. Actualizando enlace al último backup para extracción offsite..."
+            ln -sfn "$BACKUP_DIR" /home/azureuser/backups/latest
+
+            echo "4. Rotando backups locales en la VM (conservando últimos 7 días)..."
             find /home/azureuser/backups -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +
-            echo "Rutina de backup finalizada exitosamente en $BACKUP_DIR"
+            echo "Rutina de backup en VM finalizada exitosamente en $BACKUP_DIR"
+
+      - name: Cifrar con AES-256 los artefactos de backup offsite (si existen)
+        env:
+          PASSPHRASE: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          if [ -f backup-offsite/supabase_dump.sql.gz ]; then
+            echo "$PASSPHRASE" | openssl enc -aes-256-cbc -pbkdf2 -salt -pass stdin \
+              -in backup-offsite/supabase_dump.sql.gz \
+              -out backup-offsite/supabase_dump.sql.gz.enc
+            rm -f backup-offsite/supabase_dump.sql.gz
+          fi
+
+      - name: Resguardar copia cifrada fuera de la VM (GitHub Actions Artifact - 7 días)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hovy-offsite-backup-${{ github.run_number }}
+          path: backup-offsite/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -5,11 +5,12 @@
 set -euo pipefail
 
 echo "=== 1. Actualizando paquetes del sistema ==="
+export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y ufw fail2ban unattended-upgrades curl
+sudo apt-get install -y ufw fail2ban unattended-upgrades curl openssl
 
 echo "=== 2. Configurando actualizaciones de seguridad automáticas ==="
-sudo dpkg-reconfigure -plow unattended-upgrades
+sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades
 
 echo "=== 3. Configurando Fail2Ban contra ataques de fuerza bruta SSH ==="
 cat << 'EOF' | sudo tee /etc/fail2ban/jail.local
@@ -37,9 +38,13 @@ sudo ufw default allow outgoing
 # Permitir SSH (administración)
 sudo ufw allow 22/tcp comment 'SSH Access'
 
-# Descargar y permitir rangos oficiales IPv4 de Cloudflare en puertos 80 y 443
-for cf_ip in $(curl -s https://www.cloudflare.com/ips-v4); do
+# Descargar y permitir rangos oficiales IPv4 e IPv6 de Cloudflare en puertos 80 y 443
+for cf_ip in $(curl -fsSL https://www.cloudflare.com/ips-v4); do
   sudo ufw allow proto tcp from "$cf_ip" to any port 80,443 comment 'Cloudflare IPv4'
+done
+
+for cf_ip6 in $(curl -fsSL https://www.cloudflare.com/ips-v6); do
+  sudo ufw allow proto tcp from "$cf_ip6" to any port 80,443 comment 'Cloudflare IPv6' || true
 done
 
 # Activar firewall

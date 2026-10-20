@@ -78,4 +78,5 @@ export const logger = {
   }
 };
 
+export { sanitizeMeta, formatOutput };
 export default logger;

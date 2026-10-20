@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import app from '../app.js';
 
 test('contrato API: /api/health devuelve telemetría completa de versión y entorno', async () => {
+  const prevGitSha = process.env.GIT_SHA;
+  process.env.GIT_SHA = 'abc1234';
   const server = app.listen(0);
   const port = server.address().port;
 
@@ -13,12 +15,14 @@ test('contrato API: /api/health devuelve telemetría completa de versión y ento
     const body = await res.json();
     assert.equal(body.status, 'ok');
     assert.equal(body.service, 'hovy-api');
-    assert.ok(typeof body.version === 'string', 'version debe ser string');
-    assert.ok(typeof body.commitSha === 'string', 'commitSha debe ser string');
+    assert.equal(body.version, '1.0.0');
+    assert.equal(body.commitSha, 'abc1234');
     assert.ok(typeof body.environment === 'string', 'environment debe ser string');
     assert.ok(typeof body.uptime === 'number', 'uptime debe ser number');
     assert.ok(typeof body.timestamp === 'string', 'timestamp debe ser string');
   } finally {
+    if (prevGitSha === undefined) delete process.env.GIT_SHA;
+    else process.env.GIT_SHA = prevGitSha;
     server.close();
   }
 });
