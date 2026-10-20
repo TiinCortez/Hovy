@@ -20,7 +20,8 @@
     "react-hook-form": "^7.87.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.2",
-    "sass": "^1.103.1"
+    "sass": "^1.103.1",
+    "supercluster": "^9.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
