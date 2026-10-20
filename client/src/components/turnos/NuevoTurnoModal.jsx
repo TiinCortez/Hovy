@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Check, Clock,
-  Info, MapPin, Maximize, MessageCircle, Phone, Search, Sun, User, Home
+  Info, MapPin, Maximize, MessageCircle, Phone, Search, Sun, User, Home, Wrench, Plus
 } from 'lucide-react';
 import Button from '../ui/Button';
 import CloseButton from '../ui/CloseButton';
@@ -9,6 +10,7 @@ import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
+import ServicioService from '../../services/api/servicio.service';
 import useRelojTurnos from './useRelojTurnos';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, horaAMinutos, obtenerFranjasTurnos } from './agendaTurnos';
@@ -18,39 +20,63 @@ const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').repla
 export default function NuevoTurnoModal({
   isOpen, onClose, onTurnoCreated, turnosExistentes = [], datosClima, fechaInicial, horaInicioInicial
 }) {
+  const navigate = useNavigate();
   const ahora = useRelojTurnos();
   const [clientes, setClientes] = useState([]);
   const [inmuebles, setInmuebles] = useState([]);
+  const [servicios, setServicios] = useState([]);
 
   const [idCliente, setIdCliente] = useState('');
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [idInmueble, setIdInmueble] = useState('');
+  const [idServicio, setIdServicio] = useState('');
 
   const [prioridad, setPrioridad] = useState('P2_FIJO');
   const [fecha, setFecha] = useState(() => fechaInicial && fechaInicial >= ahora.fecha ? fechaInicial : ahora.fecha);
   const [franjaSeleccionada, setFranjaSeleccionada] = useState(horaInicioInicial || '');
 
   const [error, setError] = useState('');
+  const [errorServicios, setErrorServicios] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isLoadingServicios, setIsLoadingServicios] = useState(false);
 
-  // Cargar clientes al abrir el modal
+  // Cargar clientes y servicios del usuario al abrir el modal
   useEffect(() => {
-    if (isOpen) {
-      const fetchClientes = async () => {
-        setIsLoadingData(true);
-        try {
-          const res = await ClienteService.getAll();
-          setClientes(res.data || []);
-        } catch {
-          setError('Error al cargar la lista de clientes.');
-        } finally {
-          setIsLoadingData(false);
-        }
-      };
-      fetchClientes();
+    if (!isOpen) return undefined;
+    let vigente = true;
 
-    }
+    const fetchClientes = async () => {
+      setIsLoadingData(true);
+      try {
+        const res = await ClienteService.getAll();
+        if (vigente) setClientes(res.data || []);
+      } catch {
+        if (vigente) setError('Error al cargar la lista de clientes.');
+      } finally {
+        if (vigente) setIsLoadingData(false);
+      }
+    };
+
+    const fetchServicios = async () => {
+      setIsLoadingServicios(true);
+      setErrorServicios('');
+      try {
+        const res = await ServicioService.getMios();
+        if (!vigente) return;
+        const activos = (res.data || []).filter((s) => s.activo);
+        setServicios(activos);
+      } catch {
+        if (vigente) setErrorServicios('Error al cargar tu catálogo de servicios.');
+      } finally {
+        if (vigente) setIsLoadingServicios(false);
+      }
+    };
+
+    fetchClientes();
+    fetchServicios();
+
+    return () => { vigente = false; };
   }, [isOpen, fechaInicial, horaInicioInicial]);
 
   // Cargar inmuebles al seleccionar un cliente
@@ -113,6 +139,11 @@ export default function NuevoTurnoModal({
     setError('');
   };
 
+  const handleIrACargarServicio = () => {
+    onClose();
+    navigate('/servicios', { state: { openNewServiceModal: true } });
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = async (event) => {
@@ -121,6 +152,11 @@ export default function NuevoTurnoModal({
 
     if (!idCliente || !idInmueble) {
       setError('Debes seleccionar un cliente y un inmueble para agendar el turno.');
+      return;
+    }
+
+    if (!idServicio) {
+      setError('Debes seleccionar un servicio para agendar el turno.');
       return;
     }
 
@@ -150,6 +186,7 @@ export default function NuevoTurnoModal({
     try {
       const payload = {
         id_inmueble: idInmueble,
+        id_servicio: Number(idServicio),
         fecha_programada: fecha,
         inicio_desde: selectedSlot.horaInicio,
         hasta: selectedSlot.horaFin,
@@ -198,7 +235,7 @@ export default function NuevoTurnoModal({
               )}
 
               <div className="row g-4">
-                {/* Columna Izquierda: Cliente e Inmueble */}
+                {/* Columna Izquierda: Cliente, Inmueble y Servicio */}
                 <div className="col-12 col-lg-6">
 
                   {/* Selector de Cliente */}
@@ -240,10 +277,11 @@ export default function NuevoTurnoModal({
                   {/* Selector de Inmueble (Aparece solo si hay cliente seleccionado) */}
                   {clienteSeleccionado && (
                     <div className="mb-4">
-                      <label className="form-label nuevo-turno-label">Inmueble del cliente <span className="text-danger">*</span></label>
-                      <div className="input-group mb-3">
+                      <label htmlFor="turnos-nuevo-inmueble" className="form-label nuevo-turno-label">Inmueble del cliente <span className="text-danger">*</span></label>
+                      <div className="input-group">
                         <span className="input-group-text bg-white border-end-0"><Home size={16} /></span>
                         <select
+                          id="turnos-nuevo-inmueble"
                           className="form-select border-start-0 shadow-none fw-semibold"
                           value={idInmueble}
                           onChange={(e) => setIdInmueble(e.target.value)}
@@ -257,44 +295,105 @@ export default function NuevoTurnoModal({
                           ))}
                         </select>
                       </div>
+                    </div>
+                  )}
 
-                      {inmuebleSeleccionado && (
-                        <div className="border rounded-4 p-3 p-md-4">
-                          <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 pb-3 border-bottom">
-                            <div className="d-flex gap-2 min-w-0">
-                              <span className="bg-light p-2 rounded-circle border"><User size={16} /></span>
-                              <div className="min-w-0">
-                                <div className="fw-bold text-dark text-break">{clienteSeleccionado.nombre} {clienteSeleccionado.apellido}</div>
-                                <div className="small text-secondary d-flex align-items-center gap-1 mt-1"><Phone size={13} /> {clienteSeleccionado.telefono}</div>
-                              </div>
-                            </div>
-                            <div className="d-flex flex-column align-items-end gap-2">
-                              <span className="badge bg-success-subtle text-success rounded-pill px-2">{clienteSeleccionado.tipo_cliente?.toUpperCase() || 'FIJO'}</span>
-                              {enlaceWhatsApp ? (
-                                <a className="btn btn-outline-primary btn-sm" href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer" aria-label={`Abrir WhatsApp de ${clienteSeleccionado.nombre} ${clienteSeleccionado.apellido || ''}`}>
-                                  <MessageCircle size={16} aria-hidden="true" /> WhatsApp
-                                </a>
-                              ) : (
-                                <Button variant="light" size="sm" disabled title="El cliente no tiene un teléfono válido para WhatsApp"><MessageCircle size={16} aria-hidden="true" /> WhatsApp</Button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="bg-light rounded-3 border p-3 mt-3 mb-3">
-                            <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
-                              <span className="text-secondary text-uppercase" style={{ fontSize: '0.7rem' }}>Inmueble y condición</span>
-                              <span className="badge bg-white text-secondary border">{inmuebleSeleccionado.tipo_inmueble}</span>
-                            </div>
-                            <div className="d-flex align-items-start gap-2 fw-semibold text-dark small"><MapPin size={15} className="flex-shrink-0 mt-1 text-secondary" /> {inmuebleSeleccionado.direccion}</div>
-                            <div className="small text-secondary mt-1 ms-4">{inmuebleSeleccionado.barrio || inmuebleSeleccionado.provincia}</div>
-                          </div>
-
-                          <div className="bg-success-subtle text-success border-success-subtle border rounded-3 p-3 d-flex align-items-start gap-2">
-                            <Maximize size={16} className="flex-shrink-0 mt-1" />
-                            <span className="small">Superficie mantenible: <strong>{inmuebleSeleccionado.superficie_mantenible || '0'} m²</strong></span>
+                  {/* Selector de Servicio */}
+                  <div className="mb-4">
+                    <label htmlFor="turnos-nuevo-servicio" className="form-label nuevo-turno-label">Servicio a realizar <span className="text-danger">*</span></label>
+                    {isLoadingServicios ? (
+                      <div className="input-group">
+                        <span className="input-group-text bg-white border-end-0"><Wrench size={16} /></span>
+                        <select id="turnos-nuevo-servicio" className="form-select border-start-0 shadow-none fw-semibold" disabled value="">
+                          <option value="">Cargando servicios...</option>
+                        </select>
+                      </div>
+                    ) : errorServicios ? (
+                      <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-0">
+                        <Info size={16} className="flex-shrink-0" />
+                        <span className="small fw-medium">{errorServicios}</span>
+                      </div>
+                    ) : servicios.length === 0 ? (
+                      <div className="border rounded-4 p-3 p-md-4 bg-light">
+                        <div className="d-flex flex-column flex-sm-row align-items-start gap-3">
+                          <span
+                            className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 text-success"
+                            style={{ width: 42, height: 42, backgroundColor: '#E8F5E9' }}
+                          >
+                            <Wrench size={20} />
+                          </span>
+                          <div className="min-w-0 flex-grow-1">
+                            <div className="fw-bold text-dark small mb-1">Aún no vinculaste servicios con precios propios</div>
+                            <p className="text-secondary small mb-3">
+                              Para coordinar un turno necesitás tener al menos un servicio activo con su precio por m² en tu catálogo operativo.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              className="w-100 w-sm-auto justify-content-center"
+                              onClick={handleIrACargarServicio}
+                            >
+                              <Plus size={16} /> Cargar nuevo servicio
+                            </Button>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    ) : (
+                      <div className="input-group">
+                        <span className="input-group-text bg-white border-end-0"><Wrench size={16} /></span>
+                        <select
+                          id="turnos-nuevo-servicio"
+                          className="form-select border-start-0 shadow-none fw-semibold"
+                          value={idServicio}
+                          onChange={(e) => { setIdServicio(e.target.value); setError(''); }}
+                        >
+                          <option value="">Seleccionar servicio...</option>
+                          {servicios.map((s) => (
+                            <option key={s.id_servicio} value={s.id_servicio}>
+                              {s.servicio?.nombre || `Servicio #${s.id_servicio}`} — ${Number(s.precio_base || 0).toLocaleString('es-AR')}/m²
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {clienteSeleccionado && inmuebleSeleccionado && (
+                    <div className="border rounded-4 p-3 p-md-4 mb-4">
+                      <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 pb-3 border-bottom">
+                        <div className="d-flex gap-2 min-w-0">
+                          <span className="bg-light p-2 rounded-circle border"><User size={16} /></span>
+                          <div className="min-w-0">
+                            <div className="fw-bold text-dark text-break">{clienteSeleccionado.nombre} {clienteSeleccionado.apellido}</div>
+                            <div className="small text-secondary d-flex align-items-center gap-1 mt-1"><Phone size={13} /> {clienteSeleccionado.telefono}</div>
+                          </div>
+                        </div>
+                        <div className="d-flex flex-column align-items-end gap-2">
+                          <span className="badge bg-success-subtle text-success rounded-pill px-2">{clienteSeleccionado.tipo_cliente?.toUpperCase() || 'FIJO'}</span>
+                          {enlaceWhatsApp ? (
+                            <a className="btn btn-outline-primary btn-sm" href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer" aria-label={`Abrir WhatsApp de ${clienteSeleccionado.nombre} ${clienteSeleccionado.apellido || ''}`}>
+                              <MessageCircle size={16} aria-hidden="true" /> WhatsApp
+                            </a>
+                          ) : (
+                            <Button variant="light" size="sm" disabled title="El cliente no tiene un teléfono válido para WhatsApp"><MessageCircle size={16} aria-hidden="true" /> WhatsApp</Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-light rounded-3 border p-3 mt-3 mb-3">
+                        <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
+                          <span className="text-secondary text-uppercase" style={{ fontSize: '0.7rem' }}>Inmueble y condición</span>
+                          <span className="badge bg-white text-secondary border">{inmuebleSeleccionado.tipo_inmueble}</span>
+                        </div>
+                        <div className="d-flex align-items-start gap-2 fw-semibold text-dark small"><MapPin size={15} className="flex-shrink-0 mt-1 text-secondary" /> {inmuebleSeleccionado.direccion}</div>
+                        <div className="small text-secondary mt-1 ms-4">{inmuebleSeleccionado.barrio || inmuebleSeleccionado.provincia}</div>
+                      </div>
+
+                      <div className="bg-success-subtle text-success border-success-subtle border rounded-3 p-3 d-flex align-items-start gap-2">
+                        <Maximize size={16} className="flex-shrink-0 mt-1" />
+                        <span className="small">Superficie mantenible: <strong>{inmuebleSeleccionado.superficie_mantenible || '0'} m²</strong></span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -381,7 +480,7 @@ export default function NuevoTurnoModal({
 
             <div className="nuevo-turno-footer modal-footer border-top px-3 px-md-4 py-3 d-flex justify-content-between gap-2">
               <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
-              <Button type="submit" variant="primary" className="nuevo-turno-submit" disabled={!idInmueble || !puedeGuardar || isSubmitting}>
+              <Button type="submit" variant="primary" className="nuevo-turno-submit" disabled={!idInmueble || !idServicio || !puedeGuardar || isSubmitting}>
                 <Check size={17} /> {isSubmitting ? 'Guardando turno...' : 'Guardar turno coordinado'}
               </Button>
             </div>
