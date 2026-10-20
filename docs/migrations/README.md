@@ -28,6 +28,7 @@ Los scripts deben ejecutarse en el **SQL Editor de Supabase** en el orden numér
 5. **`005_presupuestos_estimados.sql`**: Soporte de estimación interna de presupuestos (`solicitud_servicio` y columna `monto_estimado` en `presupuestos`).
 6. **`006_mercadopago_oauth.sql`**: Vinculación de cuentas vendedor de Mercado Pago (`mercadopago_oauth_state` y `mercadopago_conexion` cifrada con AES-256).
 7. **`007_cobros_mercadopago.sql`**: Tabla `cobros_mercadopago` (links de pago Checkout Pro del vendedor con QR; el estado lo actualiza el webhook de Mercado Pago).
+8. **`008_triggers_cuenta_corriente.sql`**: Tablas `cuentas_corrientes`, `trabajos_ejecutados`, `movimientos_cuenta` y triggers `trg_turno_realizado` (imputación automática al completar turno con validación P0001) y `trg_turno_cancelado` (bloqueo de cancelación con P0001 si ya tiene trabajo registrado), más vistas `v_estado_cuenta` y `v_deudores`.
 
 ---
 

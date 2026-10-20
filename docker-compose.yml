@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://kzfziqdmtvrcwotemvyj.supabase.co}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-sb_publishable_6iEe3FDH5iTXQqRou3E4qQ_1DFCACJd}
     container_name: ${CONTAINER_NAME:-hovy-api}
     restart: unless-stopped
     ports:
