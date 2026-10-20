@@ -34,5 +34,5 @@ Verificar que la variable `MERCADOPAGO_WEBHOOK_SECRET` en `server/.env` coincida
 Si un webhook se perdió o no impactó en la base de datos:
 1. El webhook de Mercado Pago reintenta con backoff exponencial durante 48 horas.
 2. Si se requiere imputación inmediata:
-   - Consultar el ID del pago en Mercado Pago Developers.
-   - Desde el panel de administración de Hovy, ejecutar la consulta de sincronización manual de estado para actualizar la tabla `cobros_mercadopago` a `Aprobado`.
+   - Consultar el ID del pago en el panel de Mercado Pago Developers y confirmar que figura `approved` con el monto correcto.
+   - Revisar el registro en la tabla `cobros_mercadopago` (Supabase). Si Mercado Pago agotó los reintentos, actualizar el estado manualmente con una consulta SQL auditada, dejando constancia del `payment_id`.

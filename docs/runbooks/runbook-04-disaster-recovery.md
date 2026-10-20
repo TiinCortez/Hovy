@@ -2,7 +2,7 @@
 
 > **Severidad:** P1 (Catastrófico)  
 > **Objetivo RTO:** < 30 minutos  
-> **Objetivo RPO:** < 24 horas (respaldo diario a las 04:00 UTC)  
+> **Objetivo RPO:** < 24 horas (backup diario de Supabase + backup de VM a las 04:00 UTC)  
 > **Responsable:** DevOps & SRE Lead (Aramayo, Leg. 410995)
 
 ---
@@ -15,12 +15,16 @@
 
 ## 2. Plan de Restauración de la Base de Datos
 
-### Paso 1: Obtener el último respaldo automatizado
-1. Ir al repositorio en GitHub > pestaña **Actions** > workflow **Supabase Automated Daily Backup** (`backup.yml`).
-2. Descargar el artifact `supabase-backup-prod-YYYY-MM-DD` generado a las 04:00 UTC.
-3. Descomprimir el archivo `.tar.gz` o `.sql.gz`.
+### Paso 1: Obtener el último respaldo
+> **Limitación conocida:** `backup.yml` respalda en la VM (`/home/azureuser/backups/`) el volumen `n8n_data`, los `.env` y la config de Nginx. **No hace `pg_dump` de Supabase.** Para la base de datos hay dos fuentes:
+> 1. **Supabase Dashboard > Database > Backups** (backups diarios propios de Supabase según el plan contratado; verificar retención).
+> 2. Esquema reconstruible desde `docs/migrations/001` a `008` (solo estructura, no datos).
+>
+> Pendiente de mejora: agregar un `pg_dump` programado hacia un almacenamiento fuera de la VM.
 
-### Paso 2: Restaurar en Supabase o PostgreSQL nuevo
+Si la VM también se perdió, los backups locales de n8n/.env se pierden con ella; por eso conviene copiar `/home/azureuser/backups/` fuera de la VM.
+
+### Paso 2: Restaurar en Supabase o PostgreSQL nuevo (si se dispone de un dump `.sql`)
 ```bash
 # Restaurar esquema y datos con psql
 PGPASSWORD="<SUPABASE_DB_PASSWORD>" psql \

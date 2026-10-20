@@ -49,7 +49,7 @@ docker compose up -d
 Si el contenedor se reinicia indefinidamente tras un deploy reciente:
 1. Ir a GitHub Actions > **Rollback Deployment** (`rollback.yml`).
 2. Seleccionar el entorno (`staging` o `production`) y disparar el workflow con un clic.
-3. El workflow ejecutará `git reset --hard HEAD~1` y redesplegará la versión anterior probada.
+3. El workflow ejecuta `git checkout <referencia>` (por defecto `HEAD~1`, o el SHA/tag que indiques), reconstruye el contenedor con `docker compose up -d --build --force-recreate` y verifica `/api/health` hasta 12 veces.
 
 ---
 

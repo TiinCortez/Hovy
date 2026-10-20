@@ -15,8 +15,8 @@
 
 ## 2. Causa Raíz
 El error `P0001` es emitido por los triggers PL/pgSQL de Supabase:
-- `trg_turno_realizado` (función `fn_turno_realizado_cuenta_corriente`): falla si el turno no posee un presupuesto asociado con total imputable o cliente válido.
-- `trg_turno_cancelado` (función `fn_turno_cancelado_cuenta_corriente`): falla si se intenta cancelar un turno que no cumple los estados de transición.
+- `trg_turno_realizado` (función `fn_trg_turno_realizado`): falla si el presupuesto asociado no está `Aceptado` o su monto no es mayor a cero.
+- `trg_turno_cancelado` (función `fn_trg_turno_cancelado`): bloquea la cancelación de un turno que ya tiene un trabajo ejecutado imputado.
 
 ---
 
