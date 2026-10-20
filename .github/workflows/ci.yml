@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   client:
-    name: Client (lint + build)
+    name: Client (lint + audit + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,13 +26,15 @@ jobs:
           cache-dependency-path: client/package-lock.json
       - name: Instalar dependencias
         run: npm ci
+      - name: Auditoría de seguridad de dependencias
+        run: npm audit --audit-level=high
       - name: Lint
         run: npm run lint
       - name: Build
         run: npm run build
 
   server:
-    name: Server (install + syntax check)
+    name: Server (install + audit + syntax + tests)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,10 +48,33 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - name: Instalar dependencias
         run: npm ci
+      - name: Auditoría de seguridad de dependencias de producción
+        run: npm audit --omit=dev --audit-level=high
       - name: Chequeo de sintaxis
         run: |
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
-      - name: Ejecutar pruebas unitarias
+      - name: Ejecutar pruebas automatizadas
         run: npm test
+
+  security:
+    name: DevSecOps (Gitleaks + Trivy Scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Escaneo de secretos con Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Escaneo de vulnerabilidades en repositorio con Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'

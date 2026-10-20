@@ -3,6 +3,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import clientesRoutes from './routes/clientes.routes.js';
 import inmueblesRoutes from './routes/inmuebles.routes.js';
 import turnosRoutes from './routes/turnos.routes.js';
@@ -20,6 +21,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Hardening de cabeceras HTTP de seguridad con Helmet
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 
 const defaultOrigins = [
   'http://localhost:5173',
