@@ -78,3 +78,14 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           severity: 'CRITICAL,HIGH'
+
+  migrations:
+    name: Database Migrations Governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar correlatividad y gobernanza de migraciones SQL
+        run: node scripts/verify-migrations.mjs

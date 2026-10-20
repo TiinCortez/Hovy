@@ -1,0 +1,52 @@
+name: Release & Changelog Automation
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Generate Semantic Release & Changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extraer versión de package.json
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./server/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verificar si el Tag ya existe
+        id: check_tag
+        run: |
+          if git rev-parse "${{ steps.pkg.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "El tag ${{ steps.pkg.outputs.tag }} ya existe. Omitiendo creación de release."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generar notas de release automáticas y Tag
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.pkg.outputs.tag }}"
+          echo "Creando GitHub Release para $TAG..."
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --generate-notes \
+            --target main

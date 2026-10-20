@@ -15,6 +15,7 @@ import serviciosRoutes from './routes/servicios.routes.js';
 import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/mercadopago/mercadopago.routes.js';
 import qrRoutes from './integrations/qr/qr.routes.js';
 import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
+import { supabaseAdmin } from './config/supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,14 +60,63 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Endpoint de sondeo y verificación de salud
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
+// Endpoint de sondeo y verificación de salud con telemetría y deep check opcional
+app.get('/api/health', async (req, res) => {
+  const isDeep = req.query.deep === 'true' || req.query.db === 'true';
+  const packageVersion = process.env.npm_package_version || '1.0.0';
+  const commitSha = process.env.GIT_SHA || process.env.COMMIT_SHA || 'local-dev';
+  const environment = process.env.NODE_ENV || 'development';
+
+  const healthData = {
     status: 'ok',
-    uptime: process.uptime(),
+    version: packageVersion,
+    commitSha,
+    environment,
+    uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     service: 'hovy-api'
-  });
+  };
+
+  if (!isDeep) {
+    return res.status(200).json(healthData);
+  }
+
+  // Verificación profunda (deep check) de conectividad a la base de datos
+  const startTime = Date.now();
+  try {
+    const { error } = await supabaseAdmin.from('clientes').select('id_cliente').limit(1);
+    const latencyMs = Date.now() - startTime;
+
+    if (error) {
+      healthData.status = 'degraded';
+      healthData.checks = {
+        database: {
+          status: 'error',
+          latencyMs,
+          message: error.message
+        }
+      };
+      return res.status(503).json(healthData);
+    }
+
+    healthData.checks = {
+      database: {
+        status: 'ok',
+        latencyMs
+      }
+    };
+    return res.status(200).json(healthData);
+  } catch (err) {
+    healthData.status = 'degraded';
+    healthData.checks = {
+      database: {
+        status: 'unreachable',
+        latencyMs: Date.now() - startTime,
+        message: err.message
+      }
+    };
+    return res.status(503).json(healthData);
+  }
 });
 
 app.use('/auth', authRoutes);
