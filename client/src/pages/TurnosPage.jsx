@@ -474,14 +474,18 @@ export default function TurnosPage() {
         />
       )}
 
-      <TurnoDetalleModal
-        isOpen={isDetalleOpen}
-        onClose={() => setIsDetalleOpen(false)}
-        turnoData={turnoSeleccionado}
-        onCancelTurno={handleCancelTurno}
-        onEditTurno={openModificarModal}
-        onChangeState={handleChangeTurnoState}
-      />
+      {isDetalleOpen && (
+        <TurnoDetalleModal
+          key={turnoSeleccionado?.idTurno}
+          isOpen={isDetalleOpen}
+          onClose={() => setIsDetalleOpen(false)}
+          turnoData={turnoSeleccionado}
+          onCancelTurno={handleCancelTurno}
+          onEditTurno={openModificarModal}
+          onChangeState={handleChangeTurnoState}
+          onTurnoUpdated={handleTurnoUpdated}
+        />
+      )}
 
     </div>
   );

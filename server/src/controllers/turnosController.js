@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { validarFechaAltaTurno } from '../utils/turnosFecha.js';
 import { validarSolapamientoTurno } from '../utils/algoritmoAgenda.js';
-import { crearPresupuestoParaTurno } from '../services/presupuestoService.js';
+import { guardarPresupuestoParaTurno } from '../services/presupuestoService.js';
 import { responderErrorServicio } from '../utils/solicitudesVisita.js';
 
 // Lo que espera estrictamente la DB de Supabase para sus CHECK constraints
@@ -35,36 +35,88 @@ const mapToFrontendEstado = (e) => {
 };
 const DESCRIPCION_SIN_SERVICIO = 'Servicio programado (Sin presupuesto asociado)';
 
-// Servicios contratados por presupuesto: Map<id_presupuesto, string[]>.
+// Servicios y resumen de presupuesto contratados por presupuesto.
 // Un fallo acá no debe tirar el listado de turnos, así que degrada a vacío.
 const obtenerServiciosPorPresupuesto = async (idsPresupuesto) => {
   const ids = [...new Set(idsPresupuesto.filter((id) => id !== null && id !== undefined))];
   const porPresupuesto = new Map();
   if (ids.length === 0) return porPresupuesto;
 
-  const { data, error } = await supabaseAdmin
-    .from('detalle_presupuesto')
-    .select('id_presupuesto, servicio:servicios_catalogo(nombre)')
-    .in('id_presupuesto', ids);
+  const [resDetalles, resPresupuestos] = await Promise.all([
+    supabaseAdmin
+      .from('detalle_presupuesto')
+      .select('id_presupuesto, id_servicio, servicio:servicios_catalogo(nombre)')
+      .in('id_presupuesto', ids),
+    supabaseAdmin
+      .from('presupuestos')
+      .select('id_presupuesto, monto_estimado, monto_subtotal, monto_total, estado')
+      .in('id_presupuesto', ids),
+  ]);
 
-  if (error) {
-    console.error('Error al consultar los servicios de los turnos:', error);
-    return porPresupuesto;
+  if (resDetalles.error) {
+    console.error('Error al consultar los servicios de los turnos:', resDetalles.error);
+  }
+  if (resPresupuestos.error) {
+    console.error('Error al consultar los presupuestos de los turnos:', resPresupuestos.error);
   }
 
-  for (const fila of data ?? []) {
+  for (const p of resPresupuestos.data ?? []) {
+    porPresupuesto.set(p.id_presupuesto, {
+      nombres: [],
+      id_servicio: null,
+      presupuesto: {
+        id_presupuesto: p.id_presupuesto,
+        monto_estimado: Number(p.monto_estimado ?? 0),
+        monto_subtotal: Number(p.monto_subtotal ?? 0),
+        monto_total: Number(p.monto_total ?? 0),
+        estado: p.estado,
+      },
+    });
+  }
+
+  for (const fila of resDetalles.data ?? []) {
+    const actual = porPresupuesto.get(fila.id_presupuesto) ?? {
+      nombres: [],
+      id_servicio: null,
+      presupuesto: null,
+    };
+    if (!actual.id_servicio && fila.id_servicio) {
+      actual.id_servicio = Number(fila.id_servicio);
+    }
     const nombre = fila.servicio?.nombre;
-    if (!nombre) continue;
-    const nombres = porPresupuesto.get(fila.id_presupuesto) ?? [];
-    if (!nombres.includes(nombre)) nombres.push(nombre);
-    porPresupuesto.set(fila.id_presupuesto, nombres);
+    if (nombre && !actual.nombres.includes(nombre)) {
+      actual.nombres.push(nombre);
+    }
+    porPresupuesto.set(fila.id_presupuesto, actual);
   }
   return porPresupuesto;
 };
 
-const armarServicio = (nombres = []) => ({
-  nombres,
-  descripcion: nombres.length > 0 ? nombres.join(', ') : DESCRIPCION_SIN_SERVICIO
+const armarServicio = (infoPresupuesto) => {
+  const nombres = Array.isArray(infoPresupuesto)
+    ? infoPresupuesto
+    : (infoPresupuesto?.nombres ?? []);
+  const idServicio = Array.isArray(infoPresupuesto)
+    ? null
+    : (infoPresupuesto?.id_servicio ?? null);
+  return {
+    id_servicio: idServicio,
+    nombres,
+    descripcion: nombres.length > 0 ? nombres.join(', ') : DESCRIPCION_SIN_SERVICIO
+  };
+};
+
+const formatearTurnoRespuesta = (t, infoPresupuesto) => ({
+  idTurno: t.id_turno,
+  fechaAsignada: t.fecha_programada,
+  franjaHoraria: { horaInicio: t.inicio_desde, horaFin: t.hasta },
+  prioridad: t.prioridad?.toUpperCase() || 'P3_CASUAL',
+  estado: mapToFrontendEstado(t.estado),
+  motivo_cancelacion: t.motivo_cancelacion,
+  inmueble: t.inmueble,
+  cliente: t.inmueble?.cliente,
+  servicio: armarServicio(infoPresupuesto),
+  presupuesto: infoPresupuesto?.presupuesto ?? null,
 });
 
 // GET /api/turnos
@@ -85,17 +137,9 @@ export const getTurnos = async (req, res) => {
 
     const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto(data.map(t => t.id_presupuesto));
 
-    const turnosFormateados = data.map(t => ({
-      idTurno: t.id_turno,
-      fechaAsignada: t.fecha_programada,
-      franjaHoraria: { horaInicio: t.inicio_desde, horaFin: t.hasta },
-      prioridad: t.prioridad?.toUpperCase() || 'P3_CASUAL',
-      estado: mapToFrontendEstado(t.estado),
-      motivo_cancelacion: t.motivo_cancelacion,
-      inmueble: t.inmueble,
-      cliente: t.inmueble?.cliente,
-      servicio: armarServicio(serviciosPorPresupuesto.get(t.id_presupuesto))
-    }));
+    const turnosFormateados = data.map(t =>
+      formatearTurnoRespuesta(t, serviciosPorPresupuesto.get(t.id_presupuesto))
+    );
 
     res.status(200).json({ ok: true, data: turnosFormateados });
   } catch (error) {
@@ -118,18 +162,7 @@ export const getTurnoById = async (req, res) => {
     if (!data) return res.status(404).json({ ok: false, error: 'Turno no encontrado.' });
 
     const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto([data.id_presupuesto]);
-
-    const turnoFormateado = {
-      idTurno: data.id_turno,
-      fechaAsignada: data.fecha_programada,
-      franjaHoraria: { horaInicio: data.inicio_desde, horaFin: data.hasta },
-      prioridad: data.prioridad?.toUpperCase(),
-      estado: mapToFrontendEstado(data.estado),
-      motivo_cancelacion: data.motivo_cancelacion,
-      inmueble: data.inmueble,
-      cliente: data.inmueble?.cliente,
-      servicio: armarServicio(serviciosPorPresupuesto.get(data.id_presupuesto))
-    };
+    const turnoFormateado = formatearTurnoRespuesta(data, serviciosPorPresupuesto.get(data.id_presupuesto));
 
     res.status(200).json({ ok: true, data: turnoFormateado });
   } catch (error) {
@@ -140,7 +173,7 @@ export const getTurnoById = async (req, res) => {
 
 // POST /api/turnos/nuevo
 export const createTurno = async (req, res) => {
-  const { id_inmueble, id_servicio, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
+  const { id_inmueble, id_servicio, monto_total, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
 
   if (!id_inmueble || !fecha_programada || !inicio_desde || !hasta || !prioridad) {
     return res.status(400).json({ ok: false, error: 'Faltan campos obligatorios para agendar el turno.' });
@@ -158,10 +191,11 @@ export const createTurno = async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Debes seleccionar un servicio para agendar el turno.' });
     }
 
-    const resultadoPresupuesto = await crearPresupuestoParaTurno({
+    const resultadoPresupuesto = await guardarPresupuestoParaTurno({
       idInmueble: id_inmueble,
       idServicio: id_servicio,
       idUsuario: Number(req.user?.sub),
+      montoTotal: monto_total,
     });
 
     if (resultadoPresupuesto.error) {
@@ -193,16 +227,17 @@ export const createTurno = async (req, res) => {
       throw error;
     }
 
-    const turnoFormateado = {
-      idTurno: data.id_turno,
-      fechaAsignada: data.fecha_programada,
-      franjaHoraria: { horaInicio: data.inicio_desde, horaFin: data.hasta },
-      prioridad: data.prioridad?.toUpperCase(),
-      estado: mapToFrontendEstado(data.estado),
-      inmueble: data.inmueble,
-      cliente: data.inmueble?.cliente,
-      servicio: armarServicio(nombresServicio)
-    };
+    const turnoFormateado = formatearTurnoRespuesta(data, {
+      nombres: nombresServicio,
+      id_servicio: resultadoPresupuesto.idServicio ?? Number(id_servicio),
+      presupuesto: {
+        id_presupuesto: idPresupuesto,
+        monto_estimado: Number(resultadoPresupuesto.presupuesto.monto_estimado ?? 0),
+        monto_subtotal: Number(resultadoPresupuesto.presupuesto.monto_subtotal ?? 0),
+        monto_total: Number(resultadoPresupuesto.presupuesto.monto_total ?? 0),
+        estado: resultadoPresupuesto.presupuesto.estado ?? 'Aceptado',
+      },
+    });
 
     res.status(201).json({ ok: true, data: turnoFormateado });
   } catch (error) {
@@ -214,12 +249,12 @@ export const createTurno = async (req, res) => {
 // PUT /api/turnos/:id
 export const updateTurno = async (req, res) => {
   const { id } = req.params;
-  const { fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
+  const { id_inmueble, id_servicio, monto_total, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
 
   try {
     const { data: actual, error: errorConsulta } = await supabaseAdmin
       .from('turnos')
-      .select('id_turno, fecha_programada, inicio_desde, hasta, estado, prioridad')
+      .select('id_turno, id_inmueble, id_presupuesto, fecha_programada, inicio_desde, hasta, estado, prioridad')
       .eq('id_turno', id)
       .maybeSingle();
     if (errorConsulta) throw errorConsulta;
@@ -246,15 +281,46 @@ export const updateTurno = async (req, res) => {
       return res.status(409).json({ ok: false, error: 'La franja seleccionada se superpone con otro turno.' });
     }
 
+    const nuevoIdInmueble = id_inmueble === undefined ? actual.id_inmueble : Number(id_inmueble);
+    let nuevoIdPresupuesto = actual.id_presupuesto;
+    const actualizaDatosPresupuesto = id_inmueble !== undefined || id_servicio !== undefined || monto_total !== undefined;
+
+    if (actualizaDatosPresupuesto) {
+      if (actual.estado === 'Realizado' || actual.estado === 'Cancelado') {
+        return res.status(409).json({
+          ok: false,
+          error: 'No se puede modificar el cliente, inmueble, servicio o monto de un turno realizado o cancelado.'
+        });
+      }
+
+      const resultadoPresupuesto = await guardarPresupuestoParaTurno({
+        idPresupuesto: actual.id_presupuesto,
+        idInmueble: nuevoIdInmueble,
+        idServicio: id_servicio,
+        idUsuario: Number(req.user?.sub),
+        montoTotal: monto_total,
+      });
+
+      if (resultadoPresupuesto.error) {
+        return responderErrorServicio(res, resultadoPresupuesto.error);
+      }
+
+      nuevoIdPresupuesto = resultadoPresupuesto.presupuesto.id_presupuesto;
+    }
+
+    const camposUpdate = {
+      fecha_programada: nuevaFecha,
+      inicio_desde: nuevoInicio,
+      hasta: nuevoFin,
+      prioridad: prioridad === undefined ? actual.prioridad : mapToDBPrioridad(prioridad),
+      estado: nuevoEstado,
+    };
+    if (id_inmueble !== undefined) camposUpdate.id_inmueble = nuevoIdInmueble;
+    if (nuevoIdPresupuesto !== actual.id_presupuesto) camposUpdate.id_presupuesto = nuevoIdPresupuesto;
+
     const { data, error } = await supabaseAdmin
       .from('turnos')
-      .update({
-        fecha_programada: nuevaFecha,
-        inicio_desde: nuevoInicio,
-        hasta: nuevoFin,
-        prioridad: prioridad === undefined ? actual.prioridad : mapToDBPrioridad(prioridad),
-        estado: nuevoEstado
-      })
+      .update(camposUpdate)
       .eq('id_turno', id)
       .select('*, inmueble:inmuebles(*, cliente:clientes(*))')
       .single();
@@ -266,17 +332,7 @@ export const updateTurno = async (req, res) => {
     if (error) throw error;
 
     const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto([data.id_presupuesto]);
-
-    const turnoFormateado = {
-      idTurno: data.id_turno,
-      fechaAsignada: data.fecha_programada,
-      franjaHoraria: { horaInicio: data.inicio_desde, horaFin: data.hasta },
-      prioridad: data.prioridad?.toUpperCase(),
-      estado: mapToFrontendEstado(data.estado),
-      inmueble: data.inmueble,
-      cliente: data.inmueble?.cliente,
-      servicio: armarServicio(serviciosPorPresupuesto.get(data.id_presupuesto))
-    };
+    const turnoFormateado = formatearTurnoRespuesta(data, serviciosPorPresupuesto.get(data.id_presupuesto));
 
     res.status(200).json({ ok: true, data: turnoFormateado });
   } catch (error) {

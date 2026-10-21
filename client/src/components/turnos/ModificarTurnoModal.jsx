@@ -5,7 +5,7 @@ import CloseButton from '../ui/CloseButton';
 import TurnoService from '../../services/api/turno.service';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import useRelojTurnos from './useRelojTurnos';
-import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos } from './agendaTurnos';
+import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos, formatearHoraCorta } from './agendaTurnos';
 
 export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurnoUpdated, turnosExistentes = [] }) {
   const ahora = useRelojTurnos();
@@ -123,7 +123,7 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
                 {/* Datos de solo lectura */}
                 <div className="col-12 col-lg-5">
                   <div className="border rounded-4 p-3 p-md-4 bg-light h-100">
-                    <h6 className="text-secondary fw-bold small text-uppercase mb-3">Datos Actuales (No Editables)</h6>
+                    <h6 className="text-secondary fw-bold small text-uppercase mb-3">Datos Actuales</h6>
                     
                     <div className="d-flex align-items-center gap-2 mb-3">
                       <span className="bg-white p-2 rounded-circle border shadow-sm"><User size={16} className="text-secondary"/></span>
@@ -186,7 +186,7 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
                               className={`w-100 rounded-3 p-3 text-start border ${isPast ? 'border-light-subtle bg-light text-secondary opacity-75' : isSelected ? 'border-primary bg-primary text-white' : isOccupied ? 'border-danger-subtle bg-danger-subtle text-danger opacity-75' : 'border-light-subtle bg-white text-dark'}`}
                             >
                               <span className="d-flex justify-content-between align-items-center fw-bold small">
-                                <span>{slot.horaInicio} – {slot.horaFin} hs</span>
+                                <span>{formatearHoraCorta(slot.horaInicio)} – {formatearHoraCorta(slot.horaFin)} hs</span>
                                 <span className={`rounded-circle flex-shrink-0 ${isPast ? 'bg-secondary' : isOccupied ? 'bg-danger' : isSelected ? 'bg-white' : 'bg-success'}`} style={{ width: 8, height: 8 }} />
                               </span>
                               <span className={`d-block small mt-2 ${isSelected ? 'text-light' : 'text-secondary'}`}>{isPast ? 'Horario pasado' : isOccupied ? 'Ocupado' : 'Disponible'}</span>

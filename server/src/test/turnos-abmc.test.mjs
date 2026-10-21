@@ -46,7 +46,7 @@ function preparar(t, { registro = actual, choque = false } = {}) {
       },
       single() {
         if (tabla === 'presupuestos') {
-          return Promise.resolve({ data: { id_presupuesto: 42, ...consulta.insert }, error: null });
+          return Promise.resolve({ data: { id_presupuesto: 42, ...consulta.update, ...consulta.insert }, error: null });
         }
         return Promise.resolve({ data: { ...registro, ...consulta.update, ...consulta.insert }, error: null });
       },
@@ -130,4 +130,34 @@ test('la modificación responde 404 si el turno dejó de existir', async (t) => 
   await updateTurno({ params: { id: '7' }, body: { estado: 'CONFIRMADO' } }, res);
   assert.equal(res.codigo, 404);
   assert.equal(consultas.some((consulta) => consulta.update), false);
+});
+
+test('el alta permite sobrescribir monto_total manteniendo monto_estimado calculado', async (t) => {
+  const { consultas, res } = preparar(t);
+  await createTurno({
+    body: { id_inmueble: 1, id_servicio: 2, monto_total: 48500, fecha_programada: '2026-10-07', inicio_desde: '13:00', hasta: '15:00', prioridad: 'P2_FIJO' },
+    user: { sub: 1 }
+  }, res);
+  assert.equal(res.codigo, 201);
+  const insertPresupuesto = consultas.find((consulta) => consulta.tabla === 'presupuestos' && consulta.insert);
+  assert.equal(insertPresupuesto.insert.monto_estimado, 60000);
+  assert.equal(insertPresupuesto.insert.monto_subtotal, 60000);
+  assert.equal(insertPresupuesto.insert.monto_total, 48500);
+  assert.equal(res.body.data.presupuesto.monto_total, 48500);
+  assert.equal(res.body.data.presupuesto.monto_estimado, 60000);
+});
+
+test('la modificación actualiza inmueble, servicio y monto_total del presupuesto existente', async (t) => {
+  const registro = { ...actual, id_inmueble: 1, id_presupuesto: 42 };
+  const { consultas, res } = preparar(t, { registro });
+  await updateTurno({
+    params: { id: '7' },
+    body: { id_inmueble: 1, id_servicio: 2, monto_total: 52000 },
+    user: { sub: 1 }
+  }, res);
+  assert.equal(res.codigo, 200);
+  const updatePresupuesto = consultas.find((consulta) => consulta.tabla === 'presupuestos' && consulta.update);
+  assert.ok(updatePresupuesto);
+  assert.equal(updatePresupuesto.update.monto_estimado, 60000);
+  assert.equal(updatePresupuesto.update.monto_total, 52000);
 });

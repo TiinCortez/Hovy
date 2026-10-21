@@ -78,10 +78,42 @@ export function compararHorarioTurnos(a, b) {
   return inicioA - inicioB;
 }
 
+export function formatearHoraCorta(hora) {
+  if (typeof hora !== 'string') return '';
+  const limpia = hora.trim();
+  return /^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(limpia) ? limpia.slice(0, 5) : limpia;
+}
+
 export function formatearHorarioTurno(turno) {
   return tieneHorarioTurno(turno)
-    ? `${turno.franjaHoraria.horaInicio} - ${turno.franjaHoraria.horaFin} hs`
+    ? `${formatearHoraCorta(turno.franjaHoraria.horaInicio)} - ${formatearHoraCorta(turno.franjaHoraria.horaFin)} hs`
     : 'Sin horario';
+}
+
+export function calcularEstimadoTurno(inmueble, servicioUsuario) {
+  if (!inmueble || !servicioUsuario) return null;
+  const precioBase = Number(servicioUsuario.precio_base);
+  const superficie = Number(inmueble.superficie_mantenible ?? inmueble.superficie_total ?? 0);
+  if (!Number.isFinite(precioBase) || precioBase < 0 || !Number.isFinite(superficie) || superficie < 0) return null;
+  const superficieEfectiva = superficie > 0 ? superficie : 1;
+  const montoEstimado = Math.round(precioBase * superficieEfectiva * 100) / 100;
+  return {
+    precioBase,
+    superficie,
+    superficieEfectiva,
+    montoEstimado,
+  };
+}
+
+export function formatearMontoARS(monto) {
+  const num = Number(monto);
+  if (!Number.isFinite(num)) return '$0';
+  return num.toLocaleString('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function obtenerFranjasTurnos({ fecha, turnos = [], turnoActual, horaInicioInicial }) {
