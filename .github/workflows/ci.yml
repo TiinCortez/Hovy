@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   client:
-    name: Client (lint + audit + build)
+    name: Client (lint + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,7 +34,7 @@ jobs:
         run: npm run build
 
   server:
-    name: Server (install + audit + syntax + tests)
+    name: Server (install + syntax check)
     runs-on: ubuntu-latest
     defaults:
       run:
