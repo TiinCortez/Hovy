@@ -3,6 +3,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import clientesRoutes from './routes/clientes.routes.js';
 import inmueblesRoutes from './routes/inmuebles.routes.js';
 import turnosRoutes from './routes/turnos.routes.js';
@@ -14,12 +15,60 @@ import serviciosRoutes from './routes/servicios.routes.js';
 import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/mercadopago/mercadopago.routes.js';
 import qrRoutes from './integrations/qr/qr.routes.js';
 import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
+import { supabaseAdmin } from './config/supabase.js';
+import requestTracer from './middleware/requestTracer.js';
+import errorHandler from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Leer versión real desde package.json (funciona tanto con npm start como con node directo en Docker)
+const appVersion = (() => {
+  try {
+    const pkgPath = path.resolve(__dirname, '../package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkg.version || '1.0.0';
+  } catch {
+    return process.env.npm_package_version || '1.0.0';
+  }
+})();
+
 const app = express();
 app.set('trust proxy', 1);
+
+// Hardening de cabeceras HTTP de seguridad con Helmet y Content Security Policy explícita
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.tile.openstreetmap.org",
+        "https://ui-avatars.com",
+        "https:"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://*.supabase.co",
+        "wss://*.supabase.co",
+        "https://nominatim.openstreetmap.org",
+        "https://api.open-meteo.com",
+        "https://*.hovyapp.com.ar"
+      ],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Observabilidad: Trazabilidad distribuida con Request ID y métricas de latencia
+app.use(requestTracer);
 
 const defaultOrigins = [
   'http://localhost:5173',
@@ -46,20 +95,69 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-request-id'],
+  exposedHeaders: ['x-request-id']
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Endpoint de sondeo y verificación de salud
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
+// Endpoint de sondeo y verificación de salud con telemetría y deep check opcional
+app.get('/api/health', async (req, res) => {
+  const isDeep = req.query.deep === 'true' || req.query.db === 'true';
+  const commitSha = process.env.GIT_SHA || process.env.COMMIT_SHA || 'local-dev';
+  const environment = process.env.NODE_ENV || 'development';
+
+  const healthData = {
     status: 'ok',
-    uptime: process.uptime(),
+    version: appVersion,
+    commitSha,
+    environment,
+    uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     service: 'hovy-api'
-  });
+  };
+
+  if (!isDeep) {
+    return res.status(200).json(healthData);
+  }
+
+  // Verificación profunda (deep check) de conectividad a la base de datos
+  const startTime = Date.now();
+  try {
+    const { error } = await supabaseAdmin.from('usuarios').select('id').limit(1);
+    const latencyMs = Date.now() - startTime;
+
+    if (error) {
+      healthData.status = 'degraded';
+      healthData.checks = {
+        database: {
+          status: 'error',
+          latencyMs,
+          message: error.message
+        }
+      };
+      return res.status(503).json(healthData);
+    }
+
+    healthData.checks = {
+      database: {
+        status: 'ok',
+        latencyMs
+      }
+    };
+    return res.status(200).json(healthData);
+  } catch (err) {
+    healthData.status = 'degraded';
+    healthData.checks = {
+      database: {
+        status: 'unreachable',
+        latencyMs: Date.now() - startTime,
+        message: err.message
+      }
+    };
+    return res.status(503).json(healthData);
+  }
 });
 
 app.use('/auth', authRoutes);
@@ -102,5 +200,8 @@ if (staticDir) {
     res.sendFile(path.join(staticDir, 'index.html'));
   });
 }
+
+// Manejo centralizado y observabilidad de errores no controlados
+app.use(errorHandler);
 
 export default app;

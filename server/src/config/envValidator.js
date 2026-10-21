@@ -31,10 +31,8 @@ export function validarVariablesEntorno() {
     advertencias.push('BOT_API_KEY no está configurada. Las llamadas del bot de WhatsApp (n8n) serán rechazadas.');
   }
 
-  const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-  if (!emailUser || !emailPass) {
-    advertencias.push('SMTP_USER / EMAIL_USER o SMTP_PASS / EMAIL_PASS no están configurados. El envío de correos (recuperación de contraseña / bienvenidas) fallará.');
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.EMAIL_FROM) {
+    advertencias.push('SMTP_HOST, SMTP_USER, SMTP_PASS o EMAIL_FROM no están configurados. El envío de correos (recuperación de contraseña / bienvenidas) fallará.');
   }
 
   // Cobros con Mercado Pago (opcionales: solo se advierte). MERCADOPAGO_PAYMENT_RETURN_URL es opcional.

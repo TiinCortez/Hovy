@@ -41,8 +41,10 @@ COPY --from=client-builder /app/client/dist ./public
 RUN chown -R node:node /app
 USER node
 
+ARG GIT_SHA=local-dev
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV GIT_SHA=${GIT_SHA}
 
 EXPOSE 4000
 
