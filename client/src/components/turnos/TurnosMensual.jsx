@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronRight, MapPin } from 'lucide-react';
 import Card from '../ui/Card';
-import { fechaAIso, fechaDesdeIso, PRIORIDADES_CONFIG, compararHorarioTurnos, tieneHorarioTurno } from './agendaTurnos';
+import { fechaAIso, fechaDesdeIso, PRIORIDADES_CONFIG, compararHorarioTurnos, tieneHorarioTurno, formatearHoraCorta } from './agendaTurnos';
 
 export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSelectTurno, onSwitchToDailyView }) {
   // Estado para la vista mobile (día seleccionado)
@@ -187,7 +187,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
 
                       <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2">
                         <div className="d-flex flex-wrap align-items-center gap-2">
-                          <span className="fw-bold bg-light rounded-2 px-2 py-1 border">{tieneHorarioTurno(turno) ? `${turno.franjaHoraria.horaInicio} hs` : 'Sin horario'}</span>
+                          <span className="fw-bold bg-light rounded-2 px-2 py-1 border">{tieneHorarioTurno(turno) ? `${formatearHoraCorta(turno.franjaHoraria.horaInicio)} hs` : 'Sin horario'}</span>
                           <h6 className="fw-bold m-0 text-dark fs-6">{turno.cliente.nombre}</h6>
                         </div>
                         <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.65rem'}}>
@@ -268,11 +268,11 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                             onClick={(e) => { e.stopPropagation(); onSelectTurno(t.idTurno); }}
                             className={`badge border ${bg} ${border} rounded-2 text-start p-1 px-2 d-flex align-items-center w-100 shadow-sm hover-opacity ${isEjecucion ? 'turno-en-curso-solid' : ''}`}
                             style={{ cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600 }}
-                            title={`${tieneHorarioTurno(t) ? t.franjaHoraria.horaInicio : 'Sin horario'} ${t.cliente.nombre}`}
+                            title={`${tieneHorarioTurno(t) ? formatearHoraCorta(t.franjaHoraria.horaInicio) : 'Sin horario'} ${t.cliente.nombre}`}
                           >
                             <span className="me-1 flex-shrink-0 d-flex align-items-center gap-1">
                               {isEjecucion ? <span className="turno-en-curso-dot turno-en-curso-dot--light" /> : '•'}
-                              {tieneHorarioTurno(t) ? t.franjaHoraria.horaInicio : 'Sin horario'}
+                              {tieneHorarioTurno(t) ? formatearHoraCorta(t.franjaHoraria.horaInicio) : 'Sin horario'}
                             </span>
                             <span className="text-truncate flex-grow-1">{t.cliente.nombre.split(' ')[0]}</span>
                             <span className="ms-1 flex-shrink-0 opacity-75">[{conf.code}]</span>

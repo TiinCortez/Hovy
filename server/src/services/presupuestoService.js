@@ -509,12 +509,18 @@ export const obtenerResumenFlujoVisita = async (solicitud, idUsuario) => {
   return { servicios: error ? null : lineas, presupuesto };
 };
 
-// Creates an Accepted budget (presupuestos + detalle_presupuesto) directly from
-// an existing property (id_inmueble) and a single active service from the admin
-// user's catalog (usuario_servicio), so a manually created turno is always
-// linked to a valid id_presupuesto.
-// Returns { presupuesto, nombreServicio, subtotal } or { error }.
-export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsuario }) => {
+// Creates or updates an Accepted budget (presupuestos + detalle_presupuesto)
+// directly from an existing property (id_inmueble) and a single active service
+// from the admin user's catalog (usuario_servicio), optionally applying a custom
+// final monto_total while keeping monto_estimado / monto_subtotal as precio_base * m2.
+// Returns { presupuesto, nombreServicio, idServicio, subtotal, montoTotal } or { error }.
+export const guardarPresupuestoParaTurno = async ({
+  idPresupuesto = null,
+  idInmueble,
+  idServicio,
+  idUsuario,
+  montoTotal = null,
+}) => {
   const idInm = parsearIdSolicitud(idInmueble);
   if (!idInm) {
     return falla(400, 'El id del inmueble no es válido.');
@@ -522,12 +528,21 @@ export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsua
 
   const idServ = parsearIdSolicitud(idServicio);
   if (!idServ) {
-    return falla(400, 'Debes seleccionar un servicio válido para agendar el turno.');
+    return falla(400, 'Debes seleccionar un servicio válido para el turno.');
   }
 
   const idUsr = parsearIdSolicitud(idUsuario);
   if (!idUsr) {
     return falla(401, 'No se pudo identificar al usuario autenticado.');
+  }
+
+  let montoFinalOverride = null;
+  if (!estaVacio(montoTotal)) {
+    const parsedMonto = Number(montoTotal);
+    if (!Number.isFinite(parsedMonto) || parsedMonto <= 0) {
+      return falla(400, 'El valor final del presupuesto debe ser un número mayor a 0.');
+    }
+    montoFinalOverride = redondear2(parsedMonto);
   }
 
   const { data: inmueble, error: errorInmueble } = await supabaseAdmin
@@ -579,18 +594,68 @@ export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsua
   }
 
   const subtotal = redondear2(precioUnitario * superficieRaw);
+  const montoFinal = montoFinalOverride ?? subtotal;
   const nombreServicio = usuarioServicio.servicio?.nombre ?? null;
 
-  const { data: presupuesto, error: errorPresupuesto } = await supabaseAdmin
+  const camposPresupuesto = {
+    id_cliente: inmueble.id_cliente,
+    id_inmueble: inmueble.id_inmueble,
+    monto_estimado: subtotal,
+    monto_subtotal: subtotal,
+    monto_total: montoFinal,
+    estado: 'Aceptado',
+  };
+
+  const idPresExistente = parsearIdSolicitud(idPresupuesto);
+  let presupuesto = null;
+
+  if (idPresExistente) {
+    const { data: actualizado, error: errorUpdate } = await supabaseAdmin
+      .from('presupuestos')
+      .update(camposPresupuesto)
+      .eq('id_presupuesto', idPresExistente)
+      .select()
+      .maybeSingle();
+
+    if (errorUpdate) {
+      console.error('Error al actualizar el presupuesto del turno:', errorUpdate);
+      return falla(500, 'No se pudo actualizar el presupuesto del turno.');
+    }
+
+    if (actualizado) {
+      presupuesto = actualizado;
+      const { error: errorBorrado } = await supabaseAdmin
+        .from('detalle_presupuesto')
+        .delete()
+        .eq('id_presupuesto', idPresExistente);
+
+      if (errorBorrado) {
+        console.error('Error al borrar el detalle previo del presupuesto del turno:', errorBorrado);
+        return falla(500, 'No se pudo actualizar el detalle del presupuesto del turno.');
+      }
+
+      const { error: errorDetalleUpdate } = await supabaseAdmin
+        .from('detalle_presupuesto')
+        .insert({
+          id_presupuesto: idPresExistente,
+          id_servicio: idServ,
+          cantidad: superficieRaw,
+          precio_unitario: precioUnitario,
+          subtotal,
+        });
+
+      if (errorDetalleUpdate) {
+        console.error('Error al guardar el nuevo detalle del presupuesto del turno:', errorDetalleUpdate);
+        return falla(500, 'No se pudo registrar el detalle actualizado del presupuesto.');
+      }
+
+      return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal };
+    }
+  }
+
+  const { data: creado, error: errorPresupuesto } = await supabaseAdmin
     .from('presupuestos')
-    .insert({
-      id_cliente: inmueble.id_cliente,
-      id_inmueble: inmueble.id_inmueble,
-      monto_estimado: subtotal,
-      monto_subtotal: subtotal,
-      monto_total: subtotal,
-      estado: 'Aceptado',
-    })
+    .insert(camposPresupuesto)
     .select()
     .single();
 
@@ -598,6 +663,8 @@ export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsua
     console.error('Error al crear el presupuesto automático del turno:', errorPresupuesto);
     return falla(500, 'No se pudo generar el presupuesto para el turno.');
   }
+
+  presupuesto = creado;
 
   const { error: errorDetalle } = await supabaseAdmin
     .from('detalle_presupuesto')
@@ -615,6 +682,8 @@ export const crearPresupuestoParaTurno = async ({ idInmueble, idServicio, idUsua
     return falla(500, 'No se pudo registrar el detalle del presupuesto para el turno.');
   }
 
-  return { presupuesto, nombreServicio, subtotal };
+  return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal };
 };
+
+export const crearPresupuestoParaTurno = (params) => guardarPresupuestoParaTurno(params);
 
