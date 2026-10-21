@@ -56,6 +56,11 @@ jobs:
             node --check "$f"
           done
       - name: Ejecutar pruebas automatizadas
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: https://ci-tests.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-tests-sin-conexion
+          JWT_SECRET: ci-test-jwt-secret-key-min-32-chars
         run: npm test
 
   security:

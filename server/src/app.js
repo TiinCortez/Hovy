@@ -36,9 +36,34 @@ const appVersion = (() => {
 const app = express();
 app.set('trust proxy', 1);
 
-// Hardening de cabeceras HTTP de seguridad con Helmet
+// Hardening de cabeceras HTTP de seguridad con Helmet y Content Security Policy explícita
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.tile.openstreetmap.org",
+        "https://ui-avatars.com",
+        "https:"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://*.supabase.co",
+        "wss://*.supabase.co",
+        "https://nominatim.openstreetmap.org",
+        "https://api.open-meteo.com",
+        "https://*.hovyapp.com.ar"
+      ],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
   crossOriginEmbedderPolicy: false
 }));
 

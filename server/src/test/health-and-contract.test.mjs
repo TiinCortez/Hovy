@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import app from '../app.js';
+
+// Cliente aislado para CI/tests sin .env local: nunca toca la base real si no está definido
+process.env.SUPABASE_URL ||= 'https://ci-tests.supabase.co';
+process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'ci-tests-sin-conexion';
+const { default: app } = await import('../app.js');
 
 test('contrato API: /api/health devuelve telemetría completa de versión y entorno', async () => {
   const prevGitSha = process.env.GIT_SHA;

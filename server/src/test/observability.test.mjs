@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import app from '../app.js';
 import logger, { sanitizeMeta } from '../utils/logger.js';
 import errorHandler from '../middleware/errorHandler.js';
+
+// Cliente aislado para CI/tests sin .env local
+process.env.SUPABASE_URL ||= 'https://ci-tests.supabase.co';
+process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'ci-tests-sin-conexion';
+const { default: app } = await import('../app.js');
 
 test('observabilidad: /api/health genera automáticamente una cabecera x-request-id', async () => {
   const server = app.listen(0);
