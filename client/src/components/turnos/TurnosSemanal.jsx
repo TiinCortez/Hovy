@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapPin, ChevronRight, LockKeyhole } from 'lucide-react';
 import Card from '../ui/Card';
-import { fechaAIso, fechaDesdeIso, inicioSemanaTurnos, sumarDiasTurnos, horarioPasadoTurnos, PRIORIDADES_CONFIG as prioridadesConfig, horaAMinutos, minutosAHora, compararHorarioTurnos, tieneHorarioTurno } from './agendaTurnos';
+import { fechaAIso, fechaDesdeIso, inicioSemanaTurnos, sumarDiasTurnos, horarioPasadoTurnos, PRIORIDADES_CONFIG as prioridadesConfig, horaAMinutos, minutosAHora, compararHorarioTurnos, tieneHorarioTurno, formatearHoraCorta } from './agendaTurnos';
 
 export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelectTurno, onCreateTurno }) {
   const horaActualDecimal = ahora.segundos / 3600;
@@ -115,8 +115,8 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
 
                   {/* Hora */}
                   <div className="d-flex flex-column align-items-end justify-content-start pt-2 pe-2 text-end flex-shrink-0" style={{ width: '60px' }}>
-                    <span className={`fw-bold ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`} style={{ fontSize: '0.90rem' }}>{tieneHorarioTurno(turno) ? turno.franjaHoraria.horaInicio : 'Sin horario'}</span>
-                    {tieneHorarioTurno(turno) && <span className="text-secondary small">{turno.franjaHoraria.horaFin}</span>}
+                    <span className={`fw-bold ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`} style={{ fontSize: '0.90rem' }}>{tieneHorarioTurno(turno) ? formatearHoraCorta(turno.franjaHoraria.horaInicio) : 'Sin horario'}</span>
+                    {tieneHorarioTurno(turno) && <span className="text-secondary small">{formatearHoraCorta(turno.franjaHoraria.horaFin)}</span>}
                     {isEjecucion && <span className="badge turno-en-curso-solid rounded-pill px-2 mt-1" style={{ fontSize: '0.60rem' }}>AHORA</span>}
                   </div>
 
