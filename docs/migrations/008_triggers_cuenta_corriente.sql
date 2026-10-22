@@ -1,16 +1,16 @@
--- Sub-sistema de Cuenta Corriente, Trabajos Ejecutados y Triggers de Turnos
+﻿-- Sub-sistema de Cuenta Corriente, Trabajos Ejecutados y Triggers de Turnos
 --
 -- Ejecutar en el SQL Editor de Supabase. Es idempotente (seguro de re-ejecutar).
 --
 -- Contenido:
 --   1. Tablas base: cuentas_corrientes, movimientos_cuenta, trabajos_ejecutados
 --   2. Triggers de integridad:
---      - trg_turno_realizado: imputa automáticamente el trabajo y débito en cuenta corriente
---        al pasar un turno a 'Realizado'. Rechaza con código P0001 si el presupuesto no está
+--      - trg_turno_realizado: imputa automÃ¡ticamente el trabajo y dÃ©bito en cuenta corriente
+--        al pasar un turno a 'Realizado'. Rechaza con cÃ³digo P0001 si el presupuesto no estÃ¡
 --        'Aceptado' o su monto_total es <= 0.
 --      - trg_turno_cancelado: bloquea cancelar un turno si ya tiene un trabajo registrado (P0001).
 --   3. Vistas auxiliares:
---      - v_estado_cuenta: historial unificado de débitos (trabajos) y créditos (pagos)
+--      - v_estado_cuenta: historial unificado de dÃ©bitos (trabajos) y crÃ©ditos (pagos)
 --      - v_deudores: clientes con saldo deudor pendiente
 
 -- 1. Tablas Base -------------------------------------------------------------
@@ -53,11 +53,7 @@ CREATE TABLE IF NOT EXISTS public.movimientos_cuenta (
   id_trabajo            BIGINT REFERENCES public.trabajos_ejecutados (id_trabajo) ON DELETE SET NULL
 );
 
-<<<<<<< HEAD
--- Compatibilidad defensiva: si movimientos_cuenta ya existía previamente sin estas columnas
-=======
 -- Compatibilidad defensiva: si movimientos_cuenta ya existía previamente en Producción sin estas columnas:
->>>>>>> origin/develop
 ALTER TABLE public.movimientos_cuenta
   ADD COLUMN IF NOT EXISTS id_trabajo BIGINT REFERENCES public.trabajos_ejecutados (id_trabajo) ON DELETE SET NULL;
 
@@ -72,7 +68,7 @@ CREATE INDEX IF NOT EXISTS movimientos_cuenta_trabajo_idx
 
 -- 2. Funciones y Triggers ----------------------------------------------------
 
--- Trigger 1: Al pasar a 'Realizado', validar presupuesto e imputar débito en cuenta corriente
+-- Trigger 1: Al pasar a 'Realizado', validar presupuesto e imputar dÃ©bito en cuenta corriente
 CREATE OR REPLACE FUNCTION public.fn_trg_turno_realizado()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -109,11 +105,11 @@ BEGIN
     END IF;
 
     IF COALESCE(v_presupuesto.monto_total, 0) <= 0 THEN
-      RAISE EXCEPTION 'El presupuesto del turno tiene monto $0 o inválido: no se puede imputar el trabajo'
+      RAISE EXCEPTION 'El presupuesto del turno tiene monto $0 o invÃ¡lido: no se puede imputar el trabajo'
         USING ERRCODE = 'P0001';
     END IF;
 
-    -- 3. Identificar el cliente (a través del inmueble del turno o de la solicitud/presupuesto)
+    -- 3. Identificar el cliente (a travÃ©s del inmueble del turno o de la solicitud/presupuesto)
     SELECT i.id_cliente INTO v_id_cliente
     FROM public.inmuebles i
     WHERE i.id_inmueble = NEW.id_inmueble;
@@ -129,7 +125,7 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
-    -- 4. Registrar trabajo si aún no existe
+    -- 4. Registrar trabajo si aÃºn no existe
     SELECT id_trabajo INTO v_id_trabajo
     FROM public.trabajos_ejecutados
     WHERE id_turno = NEW.id_turno;
@@ -149,7 +145,7 @@ BEGIN
     FROM public.cuentas_corrientes
     WHERE id_cliente = v_id_cliente;
 
-    -- 6. Registrar movimiento de Débito (si no fue registrado previamente para este trabajo)
+    -- 6. Registrar movimiento de DÃ©bito (si no fue registrado previamente para este trabajo)
     IF NOT EXISTS (
       SELECT 1 FROM public.movimientos_cuenta
       WHERE id_trabajo = v_id_trabajo AND tipo = 'Debito'
@@ -192,7 +188,7 @@ CREATE TRIGGER trg_turno_realizado
   FOR EACH ROW
   EXECUTE FUNCTION public.fn_trg_turno_realizado();
 
--- Trigger 2: Bloquear la cancelación de un turno si ya tiene trabajo/imputación registrada
+-- Trigger 2: Bloquear la cancelaciÃ³n de un turno si ya tiene trabajo/imputaciÃ³n registrada
 CREATE OR REPLACE FUNCTION public.fn_trg_turno_cancelado()
 RETURNS TRIGGER
 LANGUAGE plpgsql

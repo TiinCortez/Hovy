@@ -72,6 +72,11 @@ for (const file of files) {
   const filePath = path.join(migrationsDir, file);
   const sqlContent = fs.readFileSync(filePath, 'utf8');
 
+  if (/^(<{7}|={7}|>{7})/m.test(sqlContent)) {
+    console.error(`❌ Marcadores de conflicto Git sin resolver en '${file}'.`);
+    hasErrors = true;
+  }
+
   if (/DROP\s+DATABASE/i.test(sqlContent)) {
     console.error(`❌ Sentencia prohibida en '${file}': DROP DATABASE detectado.`);
     hasErrors = true;
