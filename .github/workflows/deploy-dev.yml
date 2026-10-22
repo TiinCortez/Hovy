@@ -68,7 +68,13 @@ jobs:
             docker image prune -f
 
             echo "Ejecutando migraciones automáticas pendientes en Staging..."
-            docker compose exec -T api node scripts/db-migrate.mjs --apply
+            if ! docker compose exec -T api node scripts/db-migrate.mjs --apply; then
+              echo "ERROR: Falló la ejecución de migraciones automáticas en Staging. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
+              exit 1
+            fi
 
             echo "Verificando estado de salud del servicio en Staging (GIT_SHA=$GIT_SHA)..."
             EXITO=0

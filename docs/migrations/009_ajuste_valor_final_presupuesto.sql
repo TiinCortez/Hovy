@@ -1,7 +1,7 @@
 -- =============================================================================
 -- 009_ajuste_valor_final_presupuesto.sql
 -- Migración de paridad para edición del valor final de presupuestos (VAL-168)
--- y limpieza de columna obsoleta documento_pdf_url.
+-- y limpieza de columnas huérfanas (presupuestos.documento_pdf_url y turnos.cobrado).
 -- =============================================================================
 
 ALTER TABLE public.presupuestos
@@ -10,3 +10,6 @@ ALTER TABLE public.presupuestos
 
 ALTER TABLE public.presupuestos
   DROP COLUMN IF EXISTS documento_pdf_url;
+
+ALTER TABLE public.turnos
+  DROP COLUMN IF EXISTS cobrado;

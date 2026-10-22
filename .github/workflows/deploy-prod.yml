@@ -73,9 +73,16 @@ jobs:
             FECHA=$(date +%Y%m%d_%H%M%S)
             docker compose exec -T api node scripts/db-backup-https.mjs /tmp/pre_deploy_prod.json.gz || true
             docker cp hovy-api-prod:/tmp/pre_deploy_prod.json.gz "/home/azureuser/backups/pre_deploy_prod_${FECHA}.json.gz" 2>/dev/null || true
+            docker compose exec -T api rm -f /tmp/pre_deploy_prod.json.gz || true
 
             echo "Ejecutando migraciones automáticas pendientes en Producción..."
-            docker compose exec -T api node scripts/db-migrate.mjs --apply
+            if ! docker compose exec -T api node scripts/db-migrate.mjs --apply; then
+              echo "ERROR: Falló la ejecución de migraciones automáticas en Producción. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
+              exit 1
+            fi
 
             echo "Verificando estado de salud del servicio en Producción (GIT_SHA=$GIT_SHA)..."
             EXITO=0
