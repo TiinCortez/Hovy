@@ -3,11 +3,12 @@
 /**
  * verify-migrations.mjs
  * Script Anti-Schema-Drift y verificación de gobernanza de Base de Datos para Hovy.
- * 
+ *
  * Verifica:
- * 1. Nomenclatura y correlatividad numérica estricta (001_, 002_, ..., sin huecos ni duplicados).
+ * 1. Nomenclatura y correlatividad numérica estricta (000_, 001_, 002_, ..., sin huecos ni duplicados).
  * 2. Documentación obligatoria de cada script SQL en docs/migrations/README.md.
  * 3. Detección de sentencias destructivas no controladas (DROP DATABASE, TRUNCATE indiscriminado).
+ * 4. Recomendaciones de idempotencia (IF NOT EXISTS en CREATE TABLE / ADD COLUMN).
  */
 
 import fs from 'node:fs';
@@ -33,7 +34,7 @@ if (!fs.existsSync(readmePath)) {
 }
 
 const readmeContent = fs.readFileSync(readmePath, 'utf8');
-const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql'));
+const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
 
 if (files.length === 0) {
   console.error('❌ Error: No se encontraron archivos de migración .sql en docs/migrations/');
@@ -42,14 +43,14 @@ if (files.length === 0) {
 
 console.log(`📁 Encontrados ${files.length} archivos de migración.`);
 
-const migrationPattern = /^(\d{3})_([a-zA-Z0-9_\-]+)\.sql$/;
+const migrationPattern = /^(\d{3})_([a-zA-Z0-9_-]+)\.sql$/;
 const numbersFound = [];
 let hasErrors = false;
 
 for (const file of files) {
   const match = file.match(migrationPattern);
   if (!match) {
-    console.error(`❌ Nomenclatura inválida: '${file}'. Debe seguir el formato 'NNN_descripcion.sql' (ej: 001_initial.sql).`);
+    console.error(`❌ Nomenclatura inválida: '${file}'. Debe seguir el formato 'NNN_descripcion.sql' (ej: 010_nueva_tabla.sql).`);
     hasErrors = true;
     continue;
   }
@@ -63,7 +64,7 @@ for (const file of files) {
 
   // Verificar documentación en README.md
   if (!readmeContent.includes(file)) {
-    console.error(`❌ Falta documentación: '${file}' no está documentado en docs/migrations/README.md.`);
+    console.error(`❌ Falta documentación: '${file}' no está documentado en docs/migrations/README.md (usá 'npm run db:new <nombre>').`);
     hasErrors = true;
   }
 
@@ -81,10 +82,11 @@ for (const file of files) {
   }
 }
 
-// Verificar correlatividad numérica estricta (1, 2, 3, ...)
+// Verificar correlatividad numérica estricta (empezando en 000 o 001, sin huecos)
 numbersFound.sort((a, b) => a - b);
+const startNumber = numbersFound[0] === 0 ? 0 : 1;
 for (let i = 0; i < numbersFound.length; i++) {
-  const expected = i + 1;
+  const expected = startNumber + i;
   const actual = numbersFound[i];
   if (actual !== expected) {
     console.error(`❌ Hueco en la secuencia de migraciones: se esperaba la migración ${String(expected).padStart(3, '0')}, pero se encontró ${String(actual).padStart(3, '0')}.`);

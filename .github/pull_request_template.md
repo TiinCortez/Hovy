@@ -1,25 +1,25 @@
 ## Resumen
 
-<!-- Qué hace este PR y a qué historia de Jira corresponde (ej: US-001 - Registrar cliente) -->
+<!-- Qué hace este PR y a qué historia de Jira corresponde (ej: VAL-168 - Editar presupuesto) -->
 
-**Jira:** US-XXX - Título de la historia
+**Jira:** VAL-XXX - Título de la historia
 
 ## Cambios principales
 
-<!-- Listar de forma concisa qué se agregó/modificó -->
-
 -
+
+## Base de Datos y Migraciones
+
+- [ ] No requiere cambios de base de datos, **O BIEN:**
+- [ ] Creé la migración con `npm run db:new <nombre>` en `docs/migrations/` usando sentencias idempotentes (`IF NOT EXISTS`).
 
 ## Cómo se probó
 
-<!-- Pasos concretos para reproducir la prueba (qué se tocó y qué resultado se espera) -->
-
 -
 
-## Checklist
+## Checklist antes de pedir revisión
 
-- [ ] El CI está en verde (lint + build)
-- [ ] Fue revisado por al menos un compañero
-- [ ] No se subieron archivos `.env` ni secretos
-- [ ] La rama se creó desde `develop` siguiendo el GITFLOW
-- [ ] (Si aplica) Se actualizó la documentación correspondiente
+- [ ] Ejecuté `npm run check` en la raíz (verifica migraciones + lint + build cliente + tests servidor).
+- [ ] El CI en GitHub está en verde.
+- [ ] No se subieron archivos `.env` ni secretos.
+- [ ] La rama se creó desde `develop` siguiendo GitFlow.

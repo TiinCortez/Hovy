@@ -1,10 +1,12 @@
-# Revisores sugeridos por defecto para todos los PRs.
-# Actualizar con los usuarios de GitHub de cada integrante del equipo.
-# El dueño del repo es TiinCortez.
+# Revisores por defecto y propietarios de áreas críticas (Governance & DevSecOps)
 
-* @TiinCortez
+* @TiinCortez @Nailiyo
 
-# Áreas específicas (agregar cuando estén definidos los dueños):
-# /client/ @usuario-frontend
-# /server/ @usuario-backend
-# /docs/   @usuario-documentacion
+# Infraestructura, Pipelines CI/CD y Gobernanza de Base de Datos (DevOps & SRE Lead)
+/.github/ @Nailiyo @TiinCortez
+/infra/ @Nailiyo @TiinCortez
+/scripts/ @Nailiyo @TiinCortez
+/docs/migrations/ @Nailiyo @TiinCortez
+/docs/runbooks/ @Nailiyo @TiinCortez
+/Dockerfile @Nailiyo @TiinCortez
+/docker-compose.yml @Nailiyo @TiinCortez

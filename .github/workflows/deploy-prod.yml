@@ -27,6 +27,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verificar correlatividad de migraciones SQL
+        run: node scripts/verify-migrations.mjs
+
       - name: Validar dependencias y build del Cliente
         working-directory: client
         run: |
@@ -35,6 +38,11 @@ jobs:
 
       - name: Validar sintaxis y pruebas del Backend
         working-directory: server
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: https://ci-tests.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-tests-sin-conexion
+          JWT_SECRET: ci-test-jwt-secret-key-min-32-chars
         run: |
           npm ci
           for f in $(find src -name '*.js'); do
@@ -42,44 +50,32 @@ jobs:
           done
           node --test src/test/*.test.mjs
 
-      - name: Login en GitHub Container Registry (GHCR)
-        uses: docker/login-action@v3
-        continue-on-error: true
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Compilar y publicar imagen Docker de Producción en GHCR
-        uses: docker/build-push-action@v6
-        continue-on-error: true
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/tiincortez/hovy-api:prod
-            ghcr.io/tiincortez/hovy-api:prod-${{ github.sha }}
-          build-args: |
-            VITE_API_URL=/api
-            VITE_SUPABASE_URL=https://dulaaxavsvgkqqbrvltd.supabase.co
-            GIT_SHA=${{ github.sha }}
-
-      - name: Desplegar en Azure VM (Producción - Puerto 4000)
+      - name: Desplegar, Respaldar, Migrar BD y Verificar Salud en Azure VM (Producción - Puerto 4000)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            set -e
             cd ~/Hovy-prod
+            PREV_SHA=$(git rev-parse HEAD)
             git fetch origin main
             git reset --hard origin/main
-            
-            # Forzar variables de compilación de Producción para Vite y trazabilidad GIT_SHA
+
             export VITE_SUPABASE_URL="https://dulaaxavsvgkqqbrvltd.supabase.co"
             export GIT_SHA=$(git rev-parse --short HEAD)
             docker compose up -d --build --force-recreate
             docker image prune -f
+
+            echo "Generando backup HTTPS preventivo antes de migrar Producción..."
+            mkdir -p /home/azureuser/backups
+            FECHA=$(date +%Y%m%d_%H%M%S)
+            docker compose exec -T api node scripts/db-backup-https.mjs /tmp/pre_deploy_prod.json.gz || true
+            docker cp hovy-api-prod:/tmp/pre_deploy_prod.json.gz "/home/azureuser/backups/pre_deploy_prod_${FECHA}.json.gz" 2>/dev/null || true
+
+            echo "Ejecutando migraciones automáticas pendientes en Producción..."
+            docker compose exec -T api node scripts/db-migrate.mjs --apply
 
             echo "Verificando estado de salud del servicio en Producción (GIT_SHA=$GIT_SHA)..."
             EXITO=0
@@ -96,7 +92,10 @@ jobs:
             done
 
             if [ $EXITO -ne 1 ]; then
-              echo "ERROR: El healthcheck fallo tras 60 segundos."
+              echo "ERROR: El healthcheck falló tras 60s. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
               docker compose logs --tail 50
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
               exit 1
             fi

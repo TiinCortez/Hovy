@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS public.movimientos_cuenta (
   id_trabajo            BIGINT REFERENCES public.trabajos_ejecutados (id_trabajo) ON DELETE SET NULL
 );
 
+-- Compatibilidad defensiva: si movimientos_cuenta ya existía previamente sin estas columnas
+ALTER TABLE public.movimientos_cuenta
+  ADD COLUMN IF NOT EXISTS id_trabajo BIGINT REFERENCES public.trabajos_ejecutados (id_trabajo) ON DELETE SET NULL;
+
+ALTER TABLE public.movimientos_cuenta
+  ADD COLUMN IF NOT EXISTS id_presupuesto INTEGER REFERENCES public.presupuestos (id_presupuesto) ON DELETE SET NULL;
+
 CREATE INDEX IF NOT EXISTS movimientos_cuenta_cuenta_idx
   ON public.movimientos_cuenta (id_cuenta);
 
