@@ -6,15 +6,14 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Semilla inicial idempotente: nunca sobrescribe la contraseña si el usuario ya existe
 INSERT INTO public.usuarios (usuario, password_hash, rol)
 VALUES (
   'hovy',
   '$2b$10$I304t/p.IXucJPg0wFdZcujf2E7kK2GLxqjiAE1O8Qi8VWEDz9ux6',
   'admin'
 )
-ON CONFLICT (usuario) DO UPDATE
-SET password_hash = EXCLUDED.password_hash,
-    rol = EXCLUDED.rol;
+ON CONFLICT (usuario) DO NOTHING;
 
 SELECT id, usuario, rol, created_at
 FROM public.usuarios

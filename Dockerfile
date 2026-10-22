@@ -25,7 +25,7 @@ ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 RUN cd client && npm run build
 
 # =============================================================================
-# ETAPA 2: Servidor Node.js Express de Producción
+# ETAPA 2: Servidor Node.js Express de Producción + Motor de Migraciones
 # =============================================================================
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -36,6 +36,8 @@ COPY server/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY server/src ./src
+COPY scripts ./scripts
+COPY docs/migrations ./docs/migrations
 COPY --from=client-builder /app/client/dist ./public
 
 RUN chown -R node:node /app

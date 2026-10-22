@@ -1,4 +1,4 @@
-name: Deploy Staging (dev.hovyapp.com.ar)
+name: Deploy Desarrollo / Staging (dev.hovyapp.com.ar)
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
   test_and_deploy:
     name: Build & Deploy to Staging VM
     runs-on: ubuntu-latest
-    environment: staging
     permissions:
       contents: read
       packages: write
@@ -27,6 +26,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verificar correlatividad de migraciones SQL
+        run: node scripts/verify-migrations.mjs
+
       - name: Validar dependencias y build del Cliente
         working-directory: client
         run: |
@@ -35,6 +37,11 @@ jobs:
 
       - name: Validar sintaxis y pruebas del Backend
         working-directory: server
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: https://ci-tests.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-tests-sin-conexion
+          JWT_SECRET: ci-test-jwt-secret-key-min-32-chars
         run: |
           npm ci
           for f in $(find src -name '*.js'); do
@@ -42,41 +49,32 @@ jobs:
           done
           node --test src/test/*.test.mjs
 
-      - name: Login en GitHub Container Registry (GHCR)
-        uses: docker/login-action@v3
-        continue-on-error: true
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Compilar y publicar imagen Docker de Staging en GHCR
-        uses: docker/build-push-action@v6
-        continue-on-error: true
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/tiincortez/hovy-api:staging
-            ghcr.io/tiincortez/hovy-api:staging-${{ github.sha }}
-          build-args: |
-            VITE_API_URL=/api
-            VITE_SUPABASE_URL=https://kzfziqdmtvrcwotemvyj.supabase.co
-            GIT_SHA=${{ github.sha }}
-
-      - name: Desplegar en Azure VM (Staging - Puerto 4001)
+      - name: Desplegar, Migrar BD y Verificar Salud en Azure VM (Staging - Puerto 4001)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            set -e
             cd ~/Hovy-dev
+            PREV_SHA=$(git rev-parse HEAD)
             git fetch origin develop
             git reset --hard origin/develop
+
+            export VITE_SUPABASE_URL="https://kzfziqdmtvrcwotemvyj.supabase.co"
             export GIT_SHA=$(git rev-parse --short HEAD)
             docker compose up -d --build --force-recreate
             docker image prune -f
+
+            echo "Ejecutando migraciones automáticas pendientes en Staging..."
+            if ! docker compose exec -T api node scripts/db-migrate.mjs --apply; then
+              echo "ERROR: Falló la ejecución de migraciones automáticas en Staging. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
+              exit 1
+            fi
 
             echo "Verificando estado de salud del servicio en Staging (GIT_SHA=$GIT_SHA)..."
             EXITO=0
@@ -93,7 +91,10 @@ jobs:
             done
 
             if [ $EXITO -ne 1 ]; then
-              echo "ERROR: El healthcheck fallo tras 60 segundos."
+              echo "ERROR: El healthcheck falló tras 60s. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
               docker compose logs --tail 50
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
               exit 1
             fi

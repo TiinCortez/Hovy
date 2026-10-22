@@ -1,82 +1,56 @@
-name: Backup Diario Automatizado
+name: Backup Semanal de Base de Datos y Configuración
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Todos los días a las 04:00 UTC (01:00 AM Argentina)
+    # Todos los domingos a las 03:00 AM UTC (00:00 AM hora Argentina)
+    - cron: '0 3 * * 0'
   workflow_dispatch:
 
 concurrency:
-  group: backup-routine
+  group: backup-semanal
   cancel-in-progress: false
 
 jobs:
   backup:
-    name: Backup de Base de Datos, Infraestructura y n8n
+    name: Ejecutar Backup de Configuración y Base de Datos (HTTPS Free Tier)
     runs-on: ubuntu-latest
     steps:
-      - name: Preparar directorio de respaldo en el runner
-        run: mkdir -p backup-offsite
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
 
-      - name: Respaldo lógico de Base de Datos Supabase (pg_dump)
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          if [ -n "$SUPABASE_DB_URL" ]; then
-            echo "Ejecutando pg_dump de Supabase (esquema + datos + triggers)..."
-            pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl | gzip > backup-offsite/supabase_dump.sql.gz
-            echo "Dump de base de datos generado exitosamente."
-          else
-            echo "AVISO: El secret SUPABASE_DB_URL no está configurado aún en GitHub Secrets."
-            echo "Se omite pg_dump externo (Supabase mantiene sus propios backups automáticos internos)."
-          fi
-
-      - name: Ejecutar rutina de backup en Azure VM vía SSH
+      - name: Ejecutar Backup en Azure VM (Configuración + Volcado Lógico HTTPS de Producción)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            FECHA=$(date +%Y-%m-%d_%H%M%S)
-            BACKUP_DIR="/home/azureuser/backups/$FECHA"
+            BACKUP_DIR="/home/azureuser/backups"
+            FECHA=$(date +%Y%m%d_%H%M%S)
             mkdir -p "$BACKUP_DIR"
 
-            echo "1. Respaldando volumen persistente de n8n (WhatsApp Bot)..."
-            if docker volume inspect n8n_data > /dev/null 2>&1; then
-              docker run --rm -v n8n_data:/data -v "$BACKUP_DIR":/backup alpine tar czf /backup/n8n_data.tar.gz -C /data .
-              echo "Volumen n8n_data respaldado exitosamente."
+            echo "=== 1. Respaldando archivos de configuración y esquemas SQL ($FECHA) ==="
+            tar -czf "$BACKUP_DIR/hovy_backup_$FECHA.tar.gz" \
+              /home/azureuser/Hovy-prod/docs/migrations \
+              /home/azureuser/Hovy-prod/docker-compose.yml \
+              /etc/nginx/sites-available \
+              2>/dev/null || true
+
+            echo "=== 2. Exportando datos y esquema de Supabase Producción vía HTTPS (Free Tier) ==="
+            if docker ps --format '{{.Names}}' | grep -q '^hovy-api-prod$'; then
+              if docker exec hovy-api-prod test -f /app/scripts/db-backup-https.mjs; then
+                docker exec hovy-api-prod node /app/scripts/db-backup-https.mjs /tmp/supabase_prod_https.json.gz
+                docker cp hovy-api-prod:/tmp/supabase_prod_https.json.gz "$BACKUP_DIR/supabase_prod_${FECHA}.json.gz"
+                docker exec hovy-api-prod rm -f /tmp/supabase_prod_https.json.gz
+              else
+                echo "ℹ️  El contenedor hovy-api-prod aún no incluye scripts/db-backup-https.mjs (se activará en el próximo merge a main)."
+              fi
             fi
 
-            echo "2. Respaldando archivos de configuración .env del servidor..."
-            mkdir -p "$BACKUP_DIR/configs"
-            [ -f /home/azureuser/Hovy-prod/server/.env ] && cp /home/azureuser/Hovy-prod/server/.env "$BACKUP_DIR/configs/prod.env"
-            [ -f /home/azureuser/Hovy-dev/server/.env ] && cp /home/azureuser/Hovy-dev/server/.env "$BACKUP_DIR/configs/dev.env"
-            [ -f /etc/nginx/sites-available/hovy.conf ] && cp /etc/nginx/sites-available/hovy.conf "$BACKUP_DIR/configs/hovy.nginx.conf"
-            chmod -R 600 "$BACKUP_DIR/configs" || true
+            # Rotación de retención: conservar únicamente los últimos 8 backups en la VM
+            ls -1t "$BACKUP_DIR"/hovy_backup_*.tar.gz 2>/dev/null | tail -n +9 | xargs -r rm -f
+            ls -1t "$BACKUP_DIR"/supabase_prod_*.json.gz 2>/dev/null | tail -n +9 | xargs -r rm -f
+            ls -1t "$BACKUP_DIR"/pre_deploy_prod_*.json.gz 2>/dev/null | tail -n +9 | xargs -r rm -f
 
-            echo "3. Actualizando enlace al último backup para extracción offsite..."
-            ln -sfn "$BACKUP_DIR" /home/azureuser/backups/latest
-
-            echo "4. Rotando backups locales en la VM (conservando últimos 7 días)..."
-            find /home/azureuser/backups -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} +
-            echo "Rutina de backup en VM finalizada exitosamente en $BACKUP_DIR"
-
-      - name: Cifrar con AES-256 los artefactos de backup offsite (si existen)
-        env:
-          PASSPHRASE: ${{ secrets.VM_SSH_KEY }}
-        run: |
-          if [ -f backup-offsite/supabase_dump.sql.gz ]; then
-            echo "$PASSPHRASE" | openssl enc -aes-256-cbc -pbkdf2 -salt -pass stdin \
-              -in backup-offsite/supabase_dump.sql.gz \
-              -out backup-offsite/supabase_dump.sql.gz.enc
-            rm -f backup-offsite/supabase_dump.sql.gz
-          fi
-
-      - name: Resguardar copia cifrada fuera de la VM (GitHub Actions Artifact - 7 días)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: hovy-offsite-backup-${{ github.run_number }}
-          path: backup-offsite/
-          if-no-files-found: ignore
-          retention-days: 7
+            echo "=== Backups disponibles en $BACKUP_DIR ==="
+            ls -lh "$BACKUP_DIR"
