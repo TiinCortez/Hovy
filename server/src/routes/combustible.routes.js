@@ -13,11 +13,11 @@ const combustibleRateLimit = rateLimit({
 
 // JWT + admin are applied in app.js, mounted at /api/combustible.
 const router = Router();
-router.use(combustibleRateLimit);
-router.get('/ciudades', controller.ciudades);
-router.get('/precios', controller.precios);
-router.get('/traslado', controller.traslado);
-router.get('/config', controller.obtenerConfig);
-router.put('/config', controller.guardarConfig);
+// The limiter is set on each route (not with router.use) so CodeQL recognizes it.
+router.get('/ciudades', combustibleRateLimit, controller.ciudades);
+router.get('/precios', combustibleRateLimit, controller.precios);
+router.get('/traslado', combustibleRateLimit, controller.traslado);
+router.get('/config', combustibleRateLimit, controller.obtenerConfig);
+router.put('/config', combustibleRateLimit, controller.guardarConfig);
 
 export default router;
