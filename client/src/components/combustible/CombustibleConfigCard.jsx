@@ -4,12 +4,29 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import CombustibleService from '../../services/api/combustible.service';
 import { getApiError } from '../visitas/visitaUtils';
-import { antiguedadPrecio, consumoValido, UNIDADES, TIPOS_COMBUSTIBLE } from './combustibleUtils';
+import {
+  antiguedadPrecio,
+  consumoValido,
+  costoEjemplo,
+  formatearPesos,
+  UNIDADES,
+  TIPOS_COMBUSTIBLE,
+} from './combustibleUtils';
 import CiudadAutocomplete from './CiudadAutocomplete';
 
 const VERDE = '#1B3006';
+const KM_EJEMPLO = 10;
 
 const FORM_VACIO = { ciudad: '', tipo: 'nafta', empresa: '', producto: '', consumo: '' };
+
+function Aviso({ tipo, icono: Icono, children }) {
+  return (
+    <div className={`combustible-aviso is-${tipo}`} role={tipo === 'error' ? 'alert' : 'status'}>
+      <Icono size={18} className="flex-shrink-0" />
+      <span>{children}</span>
+    </div>
+  );
+}
 
 // Fuel settings: type, station and product (with live prices) and the vehicle's
 // consumption per 100 km, which the budget uses to price the trip.
@@ -124,137 +141,137 @@ export default function CombustibleConfigCard() {
   }
 
   if (loadError) {
-    return <Card><p className="text-danger small fw-medium mb-0" role="alert">{loadError}</p></Card>;
+    return <Card><Aviso tipo="error" icono={AlertCircle}>{loadError}</Aviso></Card>;
   }
 
   return (
     <Card>
       <div className="d-flex flex-column gap-4">
-        {error && (
-          <div className="alert alert-danger d-flex align-items-center gap-2 rounded-3 mb-0" role="alert">
-            <AlertCircle size={18} className="flex-shrink-0" />
-            <span className="small fw-medium">{error}</span>
-          </div>
-        )}
-        {guardado && (
-          <div className="alert alert-success d-flex align-items-center gap-2 rounded-3 mb-0" role="status">
-            <CheckCircle2 size={18} className="flex-shrink-0" />
-            <span className="small fw-medium">Configuración de combustible guardada.</span>
-          </div>
-        )}
+        {error && <Aviso tipo="error" icono={AlertCircle}>{error}</Aviso>}
+        {guardado && <Aviso tipo="ok" icono={CheckCircle2}>Configuración de combustible guardada.</Aviso>}
 
         <div>
-          <span className="form-label small fw-bold text-secondary d-block">Tipo de combustible</span>
-          <div className="d-flex gap-3 flex-wrap">
+          <span className="combustible-label" id="combustible-tipo-label">Tipo de combustible</span>
+          <div className="combustible-tipos" role="radiogroup" aria-labelledby="combustible-tipo-label">
             {TIPOS_COMBUSTIBLE.map((t) => (
-              <div className="form-check" key={t.valor}>
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="combustible-tipo"
-                  id={`combustible-tipo-${t.valor}`}
-                  checked={form.tipo === t.valor}
-                  onChange={() => handleTipo(t.valor)}
-                />
-                <label className="form-check-label" htmlFor={`combustible-tipo-${t.valor}`}>{t.etiqueta}</label>
-              </div>
+              <button
+                key={t.valor}
+                type="button"
+                role="radio"
+                aria-checked={form.tipo === t.valor}
+                className={`combustible-tipo ${form.tipo === t.valor ? 'is-selected' : ''}`}
+                onClick={() => handleTipo(t.valor)}
+              >
+                {t.etiqueta}
+              </button>
             ))}
           </div>
         </div>
 
         <div className="row g-3">
           <div className="col-12 col-md-6">
-            <label className="form-label small fw-bold text-secondary" htmlFor="combustible-ciudad">Ciudad</label>
+            <label className="combustible-label" htmlFor="combustible-ciudad">Ciudad</label>
             <CiudadAutocomplete
               id="combustible-ciudad"
-              placeholder="Escribí tu ciudad"
+              placeholder="Buscá tu ciudad"
               value={form.ciudad}
               opciones={ciudades}
               onChange={handleCiudad}
             />
-            <div className="form-text">Escribí y elegí una ciudad de la lista para ver los precios.</div>
           </div>
           <div className="col-12 col-md-6">
-            <label className="form-label small fw-bold text-secondary" htmlFor="combustible-consumo">
-              Consumo cada 100 km ({unidad.consumo})
-            </label>
-            <input
-              id="combustible-consumo"
-              type="number"
-              step="any"
-              min="0"
-              max="100"
-              inputMode="decimal"
-              className="form-control bg-light rounded-3"
-              value={form.consumo}
-              onChange={(e) => cambiarCampo({ consumo: e.target.value })}
-              required
-            />
-            <div className="form-text">
-              Obligatorio para calcular el traslado. Para conocerlo: cargá el tanque, anotá los km hasta la
-              próxima carga y dividí lo cargado por esos km × 100.
+            <label className="combustible-label" htmlFor="combustible-consumo">Consumo cada 100 km</label>
+            <div className="input-group">
+              <input
+                id="combustible-consumo"
+                type="number"
+                step="any"
+                min="0"
+                max="100"
+                inputMode="decimal"
+                className="form-control bg-light"
+                placeholder="Ej: 8,5"
+                value={form.consumo}
+                onChange={(e) => cambiarCampo({ consumo: e.target.value })}
+                required
+              />
+              <span className="input-group-text">{unidad.consumo}</span>
             </div>
+            {!consumoOk && form.consumo !== '' && (
+              <div className="text-danger small mt-1">Tiene que ser mayor a 0 y hasta 100.</div>
+            )}
+            <details className="combustible-ayuda mt-2">
+              <summary>¿Cómo calculo mi consumo?</summary>
+              <p>
+                Cargá el tanque lleno, anotá los km que hacés hasta la próxima carga y dividí lo cargado
+                ({form.tipo === 'gnc' ? 'm³' : 'litros'}) por esos km, multiplicado por 100.
+              </p>
+            </details>
           </div>
         </div>
 
         <div>
-          <span className="form-label small fw-bold text-secondary d-block">Estación y producto</span>
-          {isLoadingPrecios && <p className="text-secondary small mb-0">Buscando precios...</p>}
+          <span className="combustible-label">Estación y producto</span>
+
+          {isLoadingPrecios && <div className="combustible-vacio">Buscando precios...</div>}
           {!isLoadingPrecios && !precios && (
-            <p className="text-secondary small mb-0">Elegí una ciudad para ver los precios.</p>
+            <div className="combustible-vacio">Elegí tu ciudad para ver los precios disponibles.</div>
           )}
           {!isLoadingPrecios && precios && opciones.length === 0 && (
-            <p className="text-secondary small mb-0">No hay precios de {form.tipo} para {precios.ciudad}.</p>
+            <div className="combustible-vacio">No hay precios de {form.tipo} para {precios.ciudad}.</div>
           )}
           {!isLoadingPrecios && precios?.desactualizado && (
-            <div className="alert alert-warning d-flex align-items-center gap-2 rounded-3 py-2 small">
-              <AlertTriangle size={16} className="flex-shrink-0" />
-              No pudimos actualizar los precios: se muestran los últimos guardados.
+            <div className="mb-3">
+              <Aviso tipo="aviso" icono={AlertTriangle}>
+                No pudimos actualizar los precios: se muestran los últimos guardados.
+              </Aviso>
             </div>
           )}
+
           {!isLoadingPrecios && empresas.map((empresa) => (
             <div key={empresa} className="mb-3">
-              <div className="fw-bold small mb-1" style={{ color: VERDE }}>{empresa}</div>
-              <div className="list-group">
-                {opciones.filter((p) => p.empresa === empresa).map((p) => {
-                  const elegido = form.empresa === p.empresa && form.producto === p.producto;
-                  return (
-                    <label
-                      key={`${p.empresa}-${p.producto}`}
-                      className={`list-group-item d-flex align-items-center gap-3 ${elegido ? 'border-success' : ''}`}
-                      style={{ cursor: 'pointer', ...(elegido ? { borderColor: VERDE, backgroundColor: '#f4f7ef' } : {}) }}
-                    >
-                      <input
-                        className="form-check-input m-0"
-                        type="radio"
-                        name="combustible-producto"
-                        checked={elegido}
-                        onChange={() => cambiarCampo({ empresa: p.empresa, producto: p.producto })}
-                      />
-                      <span className="flex-grow-1">
-                        <span className="fw-semibold d-block">
-                          {p.producto}
-                          {p.precio === masBarato && (
-                            <span className="badge rounded-pill text-bg-success ms-2">Más barato</span>
-                          )}
-                        </span>
-                        <span className="text-secondary small d-block">
-                          {antiguedadPrecio(p.fecha_vigencia, ahora)}
-                          {p.precio_de_referencia && p.desde_ciudad && ` · Precio de referencia de ${p.desde_ciudad}`}
-                        </span>
+              <p className="combustible-marca">{empresa}</p>
+              {opciones.filter((p) => p.empresa === empresa).map((p) => {
+                const elegido = form.empresa === p.empresa && form.producto === p.producto;
+                return (
+                  <label
+                    key={`${p.empresa}-${p.producto}`}
+                    className={`combustible-opcion ${elegido ? 'is-selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="combustible-producto"
+                      checked={elegido}
+                      onChange={() => cambiarCampo({ empresa: p.empresa, producto: p.producto })}
+                    />
+                    <span className="flex-grow-1 min-w-0">
+                      <span className="fw-semibold text-dark d-block">
+                        {p.producto}
+                        {p.precio === masBarato && <span className="combustible-pill">Más barato</span>}
                       </span>
-                      <span className="fw-bold text-dark text-nowrap">
-                        ${p.precio.toLocaleString('es-AR')} {unidad.precio}
+                      <span className="text-secondary small d-block">
+                        {antiguedadPrecio(p.fecha_vigencia, ahora)}
+                        {p.precio_de_referencia && p.desde_ciudad && ` · Precio de referencia de ${p.desde_ciudad}`}
                       </span>
-                    </label>
-                  );
-                })}
-              </div>
+                    </span>
+                    <span className="combustible-precio">
+                      ${p.precio.toLocaleString('es-AR')}<small>{unidad.precio}</small>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           ))}
         </div>
 
-        <div className="d-flex align-items-center gap-3 flex-wrap">
+        {seleccion && consumoOk && (
+          <div className="combustible-ejemplo">
+            Ejemplo: un traslado de <strong>{KM_EJEMPLO} km</strong> (solo ida) costaría aproximadamente{' '}
+            <strong>{formatearPesos(costoEjemplo(KM_EJEMPLO, form.consumo, seleccion.precio))}</strong>.
+          </div>
+        )}
+
+        <div>
           <Button
             variant="primary"
             onClick={handleGuardar}
@@ -263,9 +280,6 @@ export default function CombustibleConfigCard() {
           >
             {isSaving ? 'Guardando...' : 'Guardar'}
           </Button>
-          {!consumoOk && form.consumo !== '' && (
-            <span className="text-danger small">El consumo tiene que ser mayor a 0 y hasta 100.</span>
-          )}
         </div>
       </div>
     </Card>
