@@ -23,6 +23,7 @@ import {
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
+import { logisticaStaff } from '../controllers/logisticaController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
 import {
   buscarSolicitudesStaff,
@@ -131,6 +132,10 @@ router.post('/staff/:telefono/visitas/:id/confirmar', resolverStaffPorTelefono, 
 router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consultarDisponibilidadStaff);
 
 router.get('/staff/:telefono/turnos', resolverStaffPorTelefono, listarTurnosStaff);
+// Logística del día del jefe: turnos, clientes, ruta en km y combustible (o gas) estimado,
+// con un `mensaje` listo para reenviar. Solo lectura. Sin `fecha`, hoy.
+// GET  /api/bot/staff/:telefono/logistica?fecha=YYYY-MM-DD
+router.get('/staff/:telefono/logistica', resolverStaffPorTelefono, logisticaStaff);
 
 router.post('/staff/:telefono/turnos/:id/iniciar', resolverStaffPorTelefono, iniciarTurnoStaff);
 

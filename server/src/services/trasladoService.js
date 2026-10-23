@@ -11,7 +11,7 @@ export const TRAMOS_TRASLADO = 1;
 
 const MENSAJES = {
   sin_configuracion: 'Cargá tu ajuste de combustible (combustible y consumo) en Configuración para sumar el traslado.',
-  sin_origen: 'Cargá tu punto de salida en Configuración para sumar el traslado.',
+  sin_origen: 'Cargá tu dirección de salida en el Perfil para sumar el traslado.',
   inmueble_sin_ubicacion: 'El inmueble no tiene ubicación cargada: no se pudo calcular el traslado.',
   sin_precio: 'Tu combustible ya no tiene precio en la ciudad elegida. Revisá tu ajuste de combustible.',
   sin_ruteo: 'El cálculo de distancias no está configurado en el servidor.',
@@ -22,7 +22,7 @@ const MENSAJES = {
 const sinTraslado = (motivo) => ({ incluido: false, motivo, mensaje: MENSAJES[motivo] });
 
 // Data access. Replaceable in tests.
-const leerConfigUsuario = async (idUsuario) => {
+export const leerConfigUsuario = async (idUsuario) => {
   const { data, error } = await supabaseAdmin
     .from('usuarios')
     .select(
