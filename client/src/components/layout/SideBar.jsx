@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, CalendarDays, BarChart3, Wrench, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, BarChart3, Wrench, ClipboardList, Wallet } from 'lucide-react';
 
 export default function Sidebar() {
   const navItems = [
@@ -8,6 +8,7 @@ export default function Sidebar() {
     { path: '/calendar', label: 'Agenda', icon: <CalendarDays size={22} /> },
     { path: '/visitas', label: 'Solicitudes de contacto', icon: <ClipboardList size={22} /> },
     { path: '/servicios', label: 'Servicios', icon: <Wrench size={22} /> },
+    { path: '/cobros', label: 'Cobros', icon: <Wallet size={22} /> },
     { path: '/analytics', label: 'Métricas', icon: <BarChart3 size={22} /> },
   ];
 
