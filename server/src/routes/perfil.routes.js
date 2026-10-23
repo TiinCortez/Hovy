@@ -12,7 +12,7 @@ const sugerenciaRateLimit = rateLimit({
     res.status(429).json({ ok: false, error: 'Demasiados pedidos. Probá de nuevo en un momento.' }),
 });
 
-const perfilRateLimit = rateLimit({
+export const perfilRateLimit = rateLimit({
   windowMs: 60_000,
   limit: Number(process.env.PERFIL_RATE_LIMIT_MAX) || 60,
   standardHeaders: true,
@@ -21,11 +21,11 @@ const perfilRateLimit = rateLimit({
     res.status(429).json({ ok: false, error: 'Demasiados pedidos. Probá de nuevo en un momento.' }),
 });
 
-// JWT + admin are applied in app.js, mounted at /api/perfil.
+// JWT, admin and the general rate limit are applied in app.js, mounted at /api/perfil.
 const router = Router();
-router.get('/salida', perfilRateLimit, controller.obtener);
+router.get('/salida', controller.obtener);
 router.post('/salida/sugerencia', sugerenciaRateLimit, controller.sugerencia);
-router.put('/salida', perfilRateLimit, controller.guardar);
-router.delete('/salida', perfilRateLimit, controller.quitar);
+router.put('/salida', controller.guardar);
+router.delete('/salida', controller.quitar);
 
 export default router;
