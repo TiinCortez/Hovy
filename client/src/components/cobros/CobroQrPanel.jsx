@@ -3,6 +3,8 @@ import { AlertCircle, CheckCircle2, Copy, QrCode, RefreshCw } from 'lucide-react
 import Button from '../ui/Button';
 import Aviso from '../ui/Aviso';
 import CobroService from '../../services/api/cobro.service';
+import PagoService from '../../services/api/pago.service';
+import ElegirFormaDePago from './ElegirFormaDePago';
 import { formatearMontoARS } from '../turnos/agendaTurnos';
 import { getApiError } from '../visitas/visitaUtils';
 import {
@@ -13,6 +15,7 @@ import {
   hayQueSeguirConsultando,
   sePuedeRegenerar,
 } from './cobroEstado';
+import { medioDeForma, seleccionInicial, textoConfirmar, validarSeleccion } from './formaDePago';
 
 const VERDE = '#1B3006';
 
@@ -21,30 +24,54 @@ const IconoEspera = () => <span className="hovy-spinner" aria-hidden="true" />;
 
 const ICONOS = { espera: IconoEspera, ok: CheckCircle2, aviso: AlertCircle, error: AlertCircle };
 
-// Charge a finished turno with a Mercado Pago QR and show, on screen, when the
-// payment arrives and when it is recorded in the client's account. While the QR is
-// shown the panel asks the backend every few seconds (the backend checks Mercado
-// Pago itself, so it works even if the automatic notification does not arrive).
-// `onCobrado` is called once when the payment is recorded.
-export default function CobroQrPanel({ turno, onCobrado }) {
+const FORMAS_PANEL = ['qr', 'efectivo', 'transferencia'];
+const FORMAS_MANUALES = ['efectivo', 'transferencia'];
+
+const aNumero = (texto) => Number(String(texto).replace(',', '.'));
+
+const formatearFecha = (iso) =>
+  iso ? new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) : null;
+
+// How a finished turno is charged: a Mercado Pago QR, cash or a bank transfer. It
+// shows what the client still owes and the payments already registered. With a QR on
+// screen it asks the backend every few seconds (the backend checks Mercado Pago
+// itself, so it works even if the automatic notification does not arrive).
+//   onCobrado  - called once when the turno ends up fully paid.
+//   preferencia - the choice made in the finish-turno dialog ({ forma, monto,
+//                 referencia }); it is carried out once, as soon as the debt exists.
+export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
   const idTurno = turno.idTurno;
   const [cobro, setCobro] = useState(null);
   const [qr, setQr] = useState(null);
+  const [saldo, setSaldo] = useState(null);
+  const [versionSaldo, setVersionSaldo] = useState(0);
+  const [seleccion, setSeleccion] = useState(() => seleccionInicial('qr', null));
+  const [mostrarManual, setMostrarManual] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [pausado, setPausado] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [error, setError] = useState(null);
+  const [mensajeOk, setMensajeOk] = useState(null);
   const avisado = useRef(false);
+  const preferenciaEjecutada = useRef(false);
 
   const yaCobrado = turno.cobrado === true;
+  const pendiente = saldo?.pendiente ?? null;
 
-  // Updates the cobro and tells the parent the first time the payment is recorded.
+  // Tells the parent the first time the turno is fully paid.
+  const avisarCobrado = () => {
+    if (avisado.current) return;
+    avisado.current = true;
+    if (onCobrado) onCobrado();
+  };
+
+  // Updates the cobro (Mercado Pago link) and, once its payment is recorded, the balance.
   const actualizarCobro = (nuevo) => {
     setCobro(nuevo);
-    if (nuevo?.impactado && !avisado.current) {
-      avisado.current = true;
-      if (onCobrado) onCobrado();
+    if (nuevo?.impactado) {
+      setVersionSaldo((v) => v + 1);
+      avisarCobrado();
     }
   };
 
@@ -58,6 +85,15 @@ export default function CobroQrPanel({ turno, onCobrado }) {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, [idTurno, yaCobrado]);
+
+  // Balance and payments of the turno (reloaded after every payment).
+  useEffect(() => {
+    let cancelled = false;
+    PagoService.getSaldo(idTurno)
+      .then((res) => { if (!cancelled) setSaldo(res.data); })
+      .catch(() => { /* the balance is a convenience: the panel still works without it */ });
+    return () => { cancelled = true; };
+  }, [idTurno, versionSaldo]);
 
   // QR image of the pending cobro. The auth header is needed, so it is fetched as a
   // blob; the object URL is released when the cobro changes or the panel closes.
@@ -106,6 +142,7 @@ export default function CobroQrPanel({ turno, onCobrado }) {
   const ejecutar = async (accion, mensajeError) => {
     setIsWorking(true);
     setError(null);
+    setMensajeOk(null);
     try {
       await accion();
     } catch (err) {
@@ -115,14 +152,67 @@ export default function CobroQrPanel({ turno, onCobrado }) {
     }
   };
 
-  const handleCobrar = () =>
+  const crearQr = () =>
     ejecutar(async () => {
       const res = await CobroService.crearParaTurno(idTurno);
       avisado.current = false;
       setPausado(false);
       setQr(null);
+      setMostrarManual(false);
       actualizarCobro(res.data);
     }, 'No se pudo generar el cobro.');
+
+  // Cash or transfer. The server cancels the turno's pending Mercado Pago links (their
+  // amount no longer matches what is owed) and only marks the turno paid when nothing
+  // is left to pay.
+  const registrarManual = (eleccion) =>
+    ejecutar(async () => {
+      const medio = medioDeForma(eleccion.forma);
+      const monto = aNumero(eleccion.monto);
+      const res = await PagoService.registrar(idTurno, {
+        medio,
+        monto,
+        referencia: eleccion.referencia.trim() || undefined,
+      });
+      setMensajeOk(`Se registró el pago de ${formatearMontoARS(monto)} (${medio}).`);
+      setCobro(null);
+      setQr(null);
+      setMostrarManual(false);
+      setSeleccion(seleccionInicial('qr', null));
+      setVersionSaldo((v) => v + 1);
+      if (res.data?.cobrado) avisarCobrado();
+    }, 'No se pudo registrar el pago.');
+
+  // The choice made when finishing the turno is carried out once the panel knows the
+  // debt exists (the turno is Realizado and the balance has loaded).
+  useEffect(() => {
+    if (!preferencia || yaCobrado || isLoading || !saldo) return undefined;
+    // Deferred, and marked as done only when it actually runs: if React remounts the
+    // effect (development), the first timer is cleared and the second one still fires.
+    const temporizador = setTimeout(() => {
+      if (preferenciaEjecutada.current) return;
+      preferenciaEjecutada.current = true;
+      if (preferencia.forma === 'qr') crearQr();
+      else registrarManual(preferencia);
+    }, 0);
+    return () => clearTimeout(temporizador);
+    // Runs once per preferencia; the handlers only use setters, refs and stable props.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferencia, yaCobrado, isLoading, saldo]);
+
+  const handleConfirmar = () => {
+    const problema = validarSeleccion(seleccion, pendiente);
+    if (problema) {
+      setError(problema);
+      return;
+    }
+    if (seleccion.forma === 'qr') {
+      crearQr();
+      return;
+    }
+    const aviso = `¿Registrar ${formatearMontoARS(aNumero(seleccion.monto))} en ${medioDeForma(seleccion.forma)}? Esta operación no se puede deshacer.`;
+    if (window.confirm(aviso)) registrarManual(seleccion);
+  };
 
   const handleVerificar = () =>
     ejecutar(async () => {
@@ -147,12 +237,40 @@ export default function CobroQrPanel({ turno, onCobrado }) {
     }
   };
 
+  const cambiarSeleccion = (nueva) => {
+    setSeleccion(nueva);
+    setError(null);
+  };
+
+  const alternarManual = () => {
+    setError(null);
+    setSeleccion(seleccionInicial('efectivo', pendiente));
+    setMostrarManual((visible) => !visible);
+  };
+
+  const listaPagos = saldo?.pagos?.length > 0 && (
+    <div className="mt-3">
+      <span className="combustible-label">Pagos registrados</span>
+      <ul className="list-unstyled m-0 small">
+        {saldo.pagos.map((pago) => (
+          <li key={pago.id_pago} className="d-flex justify-content-between gap-2">
+            <span className="text-secondary">
+              {pago.medio}{formatearFecha(pago.fecha) ? ` · ${formatearFecha(pago.fecha)}` : ''}
+            </span>
+            <strong className="text-dark">{formatearMontoARS(pago.monto)}</strong>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
   if (yaCobrado) {
     return (
       <div className="cobro-qr mt-4">
         <Aviso tipo="ok" icono={CheckCircle2}>
-          Este turno está cobrado{cobro?.monto ? `: ${formatearMontoARS(cobro.monto)}` : ''}.
+          Este turno está cobrado{saldo?.total ? `: ${formatearMontoARS(saldo.total)}` : ''}.
         </Aviso>
+        {listaPagos}
       </div>
     );
   }
@@ -163,33 +281,51 @@ export default function CobroQrPanel({ turno, onCobrado }) {
 
   const estado = cobro ? describirCobro(cobro, formatearMontoARS) : null;
   const qrVisible = qr && qr.id === cobroId ? qr.url : null;
+  const sinSaldo = pendiente !== null && pendiente <= 0;
+  const elegirNuevo = !cobro || sePuedeRegenerar(cobro);
 
   return (
     <div className="cobro-qr mt-4">
       <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
         <h6 className="text-secondary fw-bold small text-uppercase d-flex align-items-center gap-2 m-0" style={{ letterSpacing: '0.05em' }}>
-          <QrCode size={16} /> Cobro con Mercado Pago
+          <QrCode size={16} /> Cobro del turno
         </h6>
-        {cobro && <strong className="text-dark">{formatearMontoARS(cobro.monto)}</strong>}
+        {pendiente !== null && (
+          <span className="text-end">
+            <span className="text-secondary small d-block">Pendiente de cobro</span>
+            <strong className="text-dark">{formatearMontoARS(pendiente)}</strong>
+          </span>
+        )}
       </div>
 
+      {mensajeOk && <div className="mb-3"><Aviso tipo="ok" icono={CheckCircle2}>{mensajeOk}</Aviso></div>}
       {error && <div className="mb-3"><Aviso tipo="error" icono={AlertCircle}>{error}</Aviso></div>}
 
-      {!cobro || sePuedeRegenerar(cobro) ? (
+      {sinSaldo && !cobro ? (
+        <Aviso tipo="ok" icono={CheckCircle2}>Este turno no tiene saldo pendiente de cobro.</Aviso>
+      ) : elegirNuevo ? (
         <>
           {estado && <div className="mb-3"><Aviso tipo={estado.tipo} icono={ICONOS[estado.tipo]}>{estado.mensaje}</Aviso></div>}
-          <p className="text-secondary small mb-3">
-            Se cobra lo que el cliente todavía debe de este trabajo. Mientras no pague, la deuda sigue en su cuenta corriente.
+          <p className="text-secondary small mb-2">
+            Elegí cómo paga el cliente. Mientras no pague, la deuda sigue en su cuenta corriente.
           </p>
-          <Button
-            variant="primary"
-            onClick={handleCobrar}
+          <ElegirFormaDePago
+            formas={FORMAS_PANEL}
+            value={seleccion}
+            onChange={cambiarSeleccion}
+            pendiente={pendiente}
             disabled={isWorking}
-            style={{ backgroundColor: VERDE, borderColor: VERDE }}
-          >
-            <QrCode size={16} className="me-2" />
-            {isWorking ? 'Generando...' : (cobro ? 'Generar nuevo QR' : 'Cobrar con QR')}
-          </Button>
+          />
+          <div className="mt-3">
+            <Button
+              variant="primary"
+              onClick={handleConfirmar}
+              disabled={isWorking}
+              style={{ backgroundColor: VERDE, borderColor: VERDE }}
+            >
+              {isWorking ? 'Procesando...' : textoConfirmar(seleccion.forma)}
+            </Button>
+          </div>
         </>
       ) : (
         <>
@@ -222,11 +358,41 @@ export default function CobroQrPanel({ turno, onCobrado }) {
                     Dejé de consultar automáticamente. Usá &quot;Verificar ahora&quot; cuando el cliente haya pagado.
                   </span>
                 )}
+                <button type="button" className="btn btn-link btn-sm p-0 text-start text-decoration-none fw-semibold" style={{ color: VERDE }} onClick={alternarManual}>
+                  {mostrarManual ? 'Ocultar' : 'El cliente pagó de otra forma (efectivo o transferencia)'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {cobroPendiente && mostrarManual && (
+            <div className="mt-3 pt-3 border-top">
+              <p className="text-secondary small mb-2">
+                Al registrar el pago, el QR pendiente se cancela para que nadie lo pague de más.
+              </p>
+              <ElegirFormaDePago
+                formas={FORMAS_MANUALES}
+                value={seleccion}
+                onChange={cambiarSeleccion}
+                pendiente={pendiente}
+                disabled={isWorking}
+              />
+              <div className="mt-3">
+                <Button
+                  variant="primary"
+                  onClick={handleConfirmar}
+                  disabled={isWorking}
+                  style={{ backgroundColor: VERDE, borderColor: VERDE }}
+                >
+                  {isWorking ? 'Procesando...' : textoConfirmar(seleccion.forma)}
+                </Button>
               </div>
             </div>
           )}
         </>
       )}
+
+      {listaPagos}
     </div>
   );
 }
