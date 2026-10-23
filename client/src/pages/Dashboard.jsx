@@ -15,7 +15,11 @@ import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 import VisitaService from '../services/api/visita.service';
 import TurnoService from '../services/api/turno.service';
+import LogisticaService from '../services/api/logistica.service';
 import { compararHorarioTurnos, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+import {
+  avisosLogistica, etiquetaConsumo, formatearConsumo, formatearCosto, formatearKm, SIN_DATO
+} from '../components/dashboard/logisticaUtils';
 
 const MAX_TURNOS_PROXIMOS = 4;
 
@@ -36,10 +40,30 @@ const formatearDiaMes = (fechaIso) => {
 const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !== 'REALIZADO';
 
 export default function Dashboard() {
-  // Cantidad real de solicitudes de visita pendientes (el resto del panel sigue mockeado).
+  // Datos reales: solicitudes pendientes, turnos y logística del día (ruta, clientes
+  // y combustible). Ganancias y alertas del panel siguen mockeadas.
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
   const [turnos, setTurnos] = useState([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
+  const [logistica, setLogistica] = useState(null);
+  const [cargandoLogistica, setCargandoLogistica] = useState(true);
+  const [errorLogistica, setErrorLogistica] = useState(false);
+
+  useEffect(() => {
+    const fetchLogistica = async () => {
+      try {
+        const response = await LogisticaService.getDia();
+        setLogistica(response.data);
+      } catch (err) {
+        console.error('No se pudo obtener la logística del día:', err);
+        setErrorLogistica(true);
+      } finally {
+        setCargandoLogistica(false);
+      }
+    };
+
+    fetchLogistica();
+  }, []);
 
   useEffect(() => {
     const fetchTurnos = async () => {
@@ -73,17 +97,11 @@ export default function Dashboard() {
   const mockData = {
     usuario: "Admin",
     kpis: {
-      alertasPendientes: 3,
-      kilometrosRuta: 48
+      alertasPendientes: 3
     },
     ganancias: {
       total: "1.250.000",
       variacion: "+12.5%"
-    },
-    logistica: {
-      clientesAVisitar: 12,
-      combustibleEstimado: "15 L",
-      zonaPrincipal: "Zona Norte"
     },
     // Épica 14 y 4: Notificaciones y Alertas del negocio
     alertas: [
@@ -186,8 +204,12 @@ export default function Dashboard() {
                 <MapPin size={24} />
               </div>
               <div>
-                <p className="text-secondary small fw-semibold m-0">Ruta diaria (Km)</p>
-                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.kilometrosRuta}</h3>
+                <p className="text-secondary small fw-semibold m-0">
+                  Ruta diaria{logistica?.ruta?.km_aproximados ? ' (aprox.)' : ''}
+                </p>
+                <h3 className="fw-bold m-0 text-dark">
+                  {cargandoLogistica ? '...' : formatearKm(logistica?.ruta)}
+                </h3>
               </div>
             </div>
           </Card>
@@ -219,18 +241,30 @@ export default function Dashboard() {
           {/* Resumen Logística (Épica 5) */}
           <Card>
             <h4 className="fw-bold text-dark m-0 fs-5 mb-3">Logística de Hoy</h4>
-            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
-              <span className="text-secondary fw-semibold">Clientes a visitar</span>
-              <span className="fw-bold text-dark">{mockData.logistica.clientesAVisitar}</span>
-            </div>
-            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
-              <span className="text-secondary fw-semibold">Combustible est.</span>
-              <span className="fw-bold text-dark">{mockData.logistica.combustibleEstimado}</span>
-            </div>
-            <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light">
-              <span className="text-secondary fw-semibold">Zona principal</span>
-              <span className="fw-bold text-dark">{mockData.logistica.zonaPrincipal}</span>
-            </div>
+            {errorLogistica ? (
+              <p className="text-danger small m-0" role="alert">No se pudo cargar la logística del día.</p>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
+                  <span className="text-secondary fw-semibold">Clientes a visitar</span>
+                  <span className="fw-bold text-dark">{cargandoLogistica ? '...' : logistica?.clientes_a_visitar ?? SIN_DATO}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center p-3 rounded-4 bg-light mb-2">
+                  <span className="text-secondary fw-semibold">{etiquetaConsumo(logistica?.combustible)}</span>
+                  <span className="text-end">
+                    <span className="fw-bold text-dark d-block">
+                      {cargandoLogistica ? '...' : formatearConsumo(logistica?.combustible)}
+                    </span>
+                    {formatearCosto(logistica?.combustible) && (
+                      <span className="text-secondary small">≈ {formatearCosto(logistica?.combustible)}</span>
+                    )}
+                  </span>
+                </div>
+                {avisosLogistica(logistica).map((aviso) => (
+                  <p key={aviso} className="text-secondary small m-0 mt-2">{aviso}</p>
+                ))}
+              </>
+            )}
           </Card>
 
         </div>

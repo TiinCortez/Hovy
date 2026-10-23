@@ -1,0 +1,40 @@
+### Manual cases for the day's logistics (turnos, clients, route and fuel).
+### Web: JWT + admin. Bot: x-api-key + the phone of an admin user.
+@base = http://localhost:4000/api
+@token = PASTE_JWT_HERE
+@botKey = PASTE_BOT_API_KEY_HERE
+@telefono = PASTE_ADMIN_PHONE_HERE
+
+### 1) Logistics of today  -  [Expect 200, data.turnos / clientes_a_visitar / ruta / combustible]
+GET {{base}}/logistica/dia
+Authorization: Bearer {{token}}
+
+### 2) Logistics of a specific day  -  [Expect 200]
+GET {{base}}/logistica/dia?fecha=2026-10-20
+Authorization: Bearer {{token}}
+
+### 3) Invalid date format  -  [Expect 400]
+GET {{base}}/logistica/dia?fecha=20/10/2026
+Authorization: Bearer {{token}}
+
+### 4) Date that does not exist  -  [Expect 400]
+GET {{base}}/logistica/dia?fecha=2026-02-30
+Authorization: Bearer {{token}}
+
+### 5) Without token  -  [Expect 401]
+GET {{base}}/logistica/dia
+
+### 6) Bot (WhatsApp, staff): same data plus a ready-to-send `mensaje`  -  [Expect 200]
+GET {{base}}/bot/staff/{{telefono}}/logistica
+x-api-key: {{botKey}}
+
+### 7) Bot with a specific day  -  [Expect 200]
+GET {{base}}/bot/staff/{{telefono}}/logistica?fecha=2026-10-20
+x-api-key: {{botKey}}
+
+### 8) Bot with a phone that is not staff  -  [Expect 404]
+GET {{base}}/bot/staff/5490000000000/logistica
+x-api-key: {{botKey}}
+
+### 9) Bot without the API key  -  [Expect 401]
+GET {{base}}/bot/staff/{{telefono}}/logistica
