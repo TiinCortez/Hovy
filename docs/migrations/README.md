@@ -34,6 +34,8 @@ Los scripts se aplican en orden numérico estricto indicado por su prefijo de 3 
 10. **`010_agregar_columna_cobrado_turnos.sql`**: Incorporación estandarizada de la columna booleana `cobrado` (`DEFAULT FALSE`) en la tabla `turnos`.
 11. **`011_combustible_usuario_y_precios.sql`**: Migración `combustible usuario y precios`.
 12. **`012_presupuesto_traslado.sql`**: Migración `presupuesto traslado`.
+13. **`013_cobro_por_turno_y_registro_de_pago.sql`**: Migración `cobro por turno y registro de pago`.
+14. **`014_pago_manual_efectivo_transferencia.sql`**: Migración `pago manual efectivo transferencia`.
 
 ---
 

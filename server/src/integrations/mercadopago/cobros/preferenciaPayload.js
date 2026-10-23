@@ -1,7 +1,8 @@
 // Pure builder of the Checkout Pro preference body (no I/O, easy to reason about).
 
 export const WEBHOOK_PATH = '/api/mercadopago/webhook';
-const EXPIRACION_MS = 24 * 60 * 60 * 1000;
+// A payment link stops working this long after it was created.
+export const EXPIRACION_MS = 24 * 60 * 60 * 1000;
 
 export const esUrlPublicaHttps = (valor) => {
   try {

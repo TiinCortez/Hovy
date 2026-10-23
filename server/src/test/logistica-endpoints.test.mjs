@@ -25,6 +25,8 @@ const simularTurnos = (t, { data = [], error = null } = {}) => {
       eq(...args) { consulta.filtros.push(['eq', ...args]); return this; },
       neq(...args) { consulta.filtros.push(['neq', ...args]); return this; },
       order() { return this; },
+      // The user's settings are read together with the turnos (usuarios query).
+      maybeSingle() { return Promise.resolve({ data: null, error: null }); },
       then(resolve, reject) { return Promise.resolve({ data, error }).then(resolve, reject); },
     };
     return query;

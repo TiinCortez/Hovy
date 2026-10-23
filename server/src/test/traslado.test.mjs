@@ -234,6 +234,47 @@ test('calcularTraslado: usa precios desactualizados pero lo indica', async () =>
   assert.equal(r.desactualizado, true);
 });
 
+// Each database read costs a network round trip: independent reads must not wait for each other.
+const esperarUnTurno = () => new Promise((resolver) => setImmediate(resolver));
+
+test('calcularTraslado: lee la configuracion y el inmueble al mismo tiempo', async () => {
+  let configResuelta = false;
+  const r = await calcularTraslado(
+    { idUsuario: 1, idInmueble: 5 },
+    deps({
+      leerConfigUsuario: async () => {
+        await esperarUnTurno();
+        configResuelta = true;
+        return { data: CONFIG };
+      },
+      leerInmueble: async () => {
+        assert.equal(configResuelta, false, 'el inmueble se pidio recien despues de la configuracion');
+        return { data: { latitud: '-24.2177', longitud: '-65.2781' } };
+      },
+    })
+  );
+  assert.equal(r.incluido, true);
+});
+
+test('calcularTraslado: consulta los precios mientras calcula la distancia', async () => {
+  let distanciaTerminada = false;
+  const r = await calcularTraslado(
+    { idUsuario: 1, idInmueble: 5 },
+    deps({
+      distanciaKm: async () => {
+        await esperarUnTurno();
+        distanciaTerminada = true;
+        return { km: 12 };
+      },
+      obtenerPrecios: async () => {
+        assert.equal(distanciaTerminada, false, 'los precios se pidieron recien despues de la distancia');
+        return PRECIOS;
+      },
+    })
+  );
+  assert.equal(r.incluido, true);
+});
+
 test('calcularTraslado: propaga los motivos del ruteo', async () => {
   for (const motivo of ['sin_ruteo', 'ruta_no_disponible']) {
     const r = await calcularTraslado(

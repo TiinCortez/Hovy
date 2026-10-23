@@ -10,6 +10,8 @@ import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
 import ServicioService from '../../services/api/servicio.service';
+import CobroQrPanel from '../cobros/CobroQrPanel';
+import RegistroPagoModal from '../cobros/RegistroPagoModal';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -33,6 +35,12 @@ export default function TurnoDetalleModal({
   const [isLoadingInmuebles, setIsLoadingInmuebles] = useState(false);
   const [isSavingDatos, setIsSavingDatos] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState('');
+
+  // Finishing a turno asks how the client pays. The choice is kept here and carried
+  // out by the payment panel once the turno is Realizado (that is when the debt exists).
+  const [isFinalizarOpen, setIsFinalizarOpen] = useState(false);
+  const [isFinalizando, setIsFinalizando] = useState(false);
+  const [preferenciaCobro, setPreferenciaCobro] = useState(null);
 
   const cliente = turnoData?.cliente || {};
   const inmueble = turnoData?.inmueble || {};
@@ -190,6 +198,19 @@ export default function TurnoDetalleModal({
       const query = encodeURIComponent(`${inmueble.direccion}, ${inmueble.provincia}`);
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
+  };
+
+  const handleFinalizar = async (seleccion) => {
+    setIsFinalizando(true);
+    setPreferenciaCobro(seleccion.forma === 'anotar' ? null : seleccion);
+    // The parent reports a failure with `false` (it already showed the error).
+    const ok = await onChangeState(turnoData.idTurno, 'REALIZADO', turnoData);
+    setIsFinalizando(false);
+    if (ok === false) {
+      setPreferenciaCobro(null);
+      return;
+    }
+    setIsFinalizarOpen(false);
   };
 
   const handleCancelClick = () => {
@@ -495,6 +516,29 @@ export default function TurnoDetalleModal({
                 </div>
               </div>
             )}
+
+            {/* Cobro del turno ya realizado: QR de Mercado Pago y confirmación del pago */}
+            {isRealizado && !isEditingDatos && (
+              <CobroQrPanel
+                key={turnoData.idTurno}
+                turno={turnoData}
+                preferencia={preferenciaCobro}
+                onCobrado={() => { if (onTurnoUpdated) onTurnoUpdated({ ...turnoData, cobrado: true }); }}
+              />
+            )}
+
+            {/* Pregunta al finalizar: Anotar, Efectivo, Transferencia o QR */}
+            {isFinalizarOpen && (
+              <RegistroPagoModal
+                modo="finalizar"
+                formas={['anotar', 'efectivo', 'transferencia', 'qr']}
+                total={Number(presupuesto?.monto_total) > 0 ? Number(presupuesto.monto_total) : null}
+                pendiente={Number(presupuesto?.monto_total) > 0 ? Number(presupuesto.monto_total) : null}
+                isSaving={isFinalizando}
+                onClose={() => setIsFinalizarOpen(false)}
+                onConfirm={handleFinalizar}
+              />
+            )}
           </div>
 
           <div className="modal-footer border-top-0 pt-0 pb-4 px-3 px-md-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
@@ -561,7 +605,7 @@ export default function TurnoDetalleModal({
                   )}
 
                   {turnoData.estado === 'EN_EJECUCION' && (
-                    <Button variant="success" onClick={() => onChangeState(turnoData.idTurno, 'REALIZADO', turnoData)} className="rounded-pill px-5 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                    <Button variant="success" onClick={() => setIsFinalizarOpen(true)} className="rounded-pill px-5 shadow-sm d-flex align-items-center justify-content-center gap-2">
                       <CheckCircle size={18} /> Marcar como Realizado
                     </Button>
                   )}

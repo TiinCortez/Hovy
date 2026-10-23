@@ -57,12 +57,6 @@ test('resolverTransicionTurno rechaza acciones desconocidas', () => {
   assert.equal(resolverTransicionTurno('Coordinado', 'borrar').ok, false);
 });
 
-test('contenidoQrTurno devuelve un contenido provisorio y estable por turno', async () => {
-  const { contenidoQrTurno } = await import('../utils/turnosBot.js');
-  assert.equal(contenidoQrTurno(7), 'HOVY-TURNO-7');
-  assert.equal(contenidoQrTurno(7), contenidoQrTurno(7));
-});
-
 test('parsearEstadosTurno acepta una lista separada por comas', async () => {
   const { parsearEstadosTurno } = await import('../utils/turnosBot.js');
   assert.deepEqual(parsearEstadosTurno('Coordinado, Confirmado'), { ok: true, estados: ['Coordinado', 'Confirmado'] });

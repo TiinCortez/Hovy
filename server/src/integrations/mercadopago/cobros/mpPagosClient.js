@@ -35,6 +35,21 @@ export const crearPreferencia = (accessToken, payload, idempotencyKey) =>
     'checkout/preferences'
   );
 
+// Payments of one cobro, newest first (GET /v1/payments/search). Used by the active
+// check, when the webhook did not arrive. Resolves { paging, results } or null.
+export const buscarPagosPorReferencia = (accessToken, externalReference) => {
+  const url = new URL(`${PAYMENTS_URL}/search`);
+  url.searchParams.set('external_reference', externalReference);
+  url.searchParams.set('sort', 'date_created');
+  url.searchParams.set('criteria', 'desc');
+  url.searchParams.set('limit', '10');
+  return llamar(
+    url.toString(),
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    'v1/payments/search'
+  );
+};
+
 export const obtenerPago = (accessToken, paymentId) =>
   llamar(
     `${PAYMENTS_URL}/${encodeURIComponent(String(paymentId))}`,
