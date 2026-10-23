@@ -68,6 +68,9 @@ app.use(helmet({
       upgradeInsecureRequests: []
     }
   },
+  // OpenStreetMap bloquea (403) los tiles que llegan sin Referer; el origen alcanza
+  // y no filtra rutas completas a terceros.
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   crossOriginEmbedderPolicy: false
 }));
 
