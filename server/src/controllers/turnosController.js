@@ -113,6 +113,8 @@ const formatearTurnoRespuesta = (t, infoPresupuesto) => ({
   prioridad: t.prioridad?.toUpperCase() || 'P3_CASUAL',
   estado: mapToFrontendEstado(t.estado),
   motivo_cancelacion: t.motivo_cancelacion,
+  // Estado de cobro del turno (vista de Cobros). null se toma como pendiente.
+  cobrado: t.cobrado === true,
   inmueble: t.inmueble,
   cliente: t.inmueble?.cliente,
   servicio: armarServicio(infoPresupuesto),

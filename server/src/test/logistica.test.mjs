@@ -313,6 +313,51 @@ test('obtenerLogisticaDia: no expone coordenadas en la respuesta', async () => {
   assert.equal(texto.includes('longitud'), false);
 });
 
+// Each database read costs a network round trip: independent reads must not wait for each other.
+const esperarUnTurno = () => new Promise((resolver) => setImmediate(resolver));
+
+test('obtenerLogisticaDia: pide los turnos y la configuracion al mismo tiempo', async () => {
+  let turnosResueltos = false;
+  const r = await pedir({
+    leerTurnosDelDia: async () => {
+      await esperarUnTurno();
+      turnosResueltos = true;
+      return { data: TURNOS };
+    },
+    leerConfigUsuario: async () => {
+      assert.equal(turnosResueltos, false, 'la configuracion se pidio recien despues de los turnos');
+      return { data: CONFIG };
+    },
+  });
+  assert.equal(r.error, undefined);
+  assert.equal(r.data.ruta.incluido, true);
+});
+
+test('obtenerLogisticaDia: consulta los precios mientras calcula la ruta', async () => {
+  let rutaTerminada = false;
+  const r = await pedir({
+    distanciaRutaKm: async () => {
+      await esperarUnTurno();
+      rutaTerminada = true;
+      return { km: 20, aproximado: false };
+    },
+    obtenerPrecios: async () => {
+      assert.equal(rutaTerminada, false, 'los precios se pidieron recien despues de la ruta');
+      return PRECIOS;
+    },
+  });
+  assert.equal(r.error, undefined);
+  assert.equal(r.data.combustible.incluido, true);
+});
+
+test('obtenerLogisticaDia: sin combustible configurado no consulta los precios', async () => {
+  const r = await pedir({
+    leerConfigUsuario: async () => ({ data: { ...CONFIG, consumo_100km: null } }),
+    obtenerPrecios: async () => assert.fail('no debe consultar los precios'),
+  });
+  assert.equal(r.data.combustible.motivo, 'sin_configuracion');
+});
+
 // ---- armarMensajeLogistica (para el bot) -----------------------------------
 
 test('armarMensajeLogistica: resume turnos, clientes, ruta y combustible', async () => {

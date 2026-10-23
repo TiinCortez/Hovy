@@ -43,19 +43,20 @@ const leerTurnosDelDia = async (fecha) => {
   return error ? { dbError: error } : { data: data ?? [] };
 };
 
-// Fuel block from the user's settings and the km of the day.
-const calcularCombustible = async (config, km, dependencias) => {
-  if (
-    !config?.combustible_ciudad
-    || !config.combustible_tipo
-    || !config.combustible_empresa
-    || !config.combustible_producto
-    || !(Number(config.consumo_100km) > 0)
-  ) {
+const tieneCombustibleConfigurado = (config) =>
+  Boolean(config?.combustible_ciudad)
+  && Boolean(config.combustible_tipo)
+  && Boolean(config.combustible_empresa)
+  && Boolean(config.combustible_producto)
+  && Number(config.consumo_100km) > 0;
+
+// Fuel block from the user's settings, the km of the day and the prices of their
+// city (null when they have no fuel configured).
+const calcularCombustible = (config, km, precios) => {
+  if (!tieneCombustibleConfigurado(config) || !precios) {
     return noIncluido('sin_configuracion');
   }
 
-  const precios = await dependencias.obtenerPrecios(config.combustible_ciudad);
   const precio = precios.error
     ? null
     : precios.data.precios.find(
@@ -94,7 +95,11 @@ export const obtenerLogisticaDia = async ({ idUsuario, fecha }, deps = {}) => {
   const dependencias = { leerTurnosDelDia, leerConfigUsuario, obtenerPrecios, distanciaRutaKm, ...deps };
 
   try {
-    const lecturaTurnos = await dependencias.leerTurnosDelDia(fecha);
+    // Independent reads go together: each one costs a network round trip.
+    const [lecturaTurnos, lecturaConfig] = await Promise.all([
+      dependencias.leerTurnosDelDia(fecha),
+      dependencias.leerConfigUsuario(idUsuario),
+    ]);
     if (lecturaTurnos.dbError) {
       console.error('[logistica] no se pudieron leer los turnos del día');
       return falla(500, ERROR_DB);
@@ -113,7 +118,6 @@ export const obtenerLogisticaDia = async ({ idUsuario, fecha }, deps = {}) => {
     if (dia.turnos === 0) return sinRuta('sin_turnos');
     if (dia.puntos.length === 0) return sinRuta('sin_ubicacion');
 
-    const lecturaConfig = await dependencias.leerConfigUsuario(idUsuario);
     if (lecturaConfig.dbError) {
       console.error('[logistica] no se pudo leer la configuración del usuario');
       return sinRuta('error');
@@ -123,7 +127,11 @@ export const obtenerLogisticaDia = async ({ idUsuario, fecha }, deps = {}) => {
     const origen = normalizarCoordenadas(config?.latitud_base, config?.longitud_base);
     if (!origen) return sinRuta('sin_origen');
 
-    const recorrido = await dependencias.distanciaRutaKm({ puntos: [origen, ...dia.puntos] });
+    // The route and the fuel prices do not depend on each other.
+    const [recorrido, precios] = await Promise.all([
+      dependencias.distanciaRutaKm({ puntos: [origen, ...dia.puntos] }),
+      tieneCombustibleConfigurado(config) ? dependencias.obtenerPrecios(config.combustible_ciudad) : null,
+    ]);
     if (recorrido.motivo) return sinRuta(recorrido.motivo);
 
     return {
@@ -135,7 +143,7 @@ export const obtenerLogisticaDia = async ({ idUsuario, fecha }, deps = {}) => {
           km_aproximados: recorrido.aproximado === true,
           paradas: dia.puntos.length,
         },
-        combustible: await calcularCombustible(config, recorrido.km, dependencias),
+        combustible: calcularCombustible(config, recorrido.km, precios),
       },
     };
   } catch (error) {

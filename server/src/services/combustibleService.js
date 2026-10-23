@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { falla, estaVacio } from '../utils/solicitudesVisita.js';
-import { normalizarCiudad, aplanarPrecios, preciosVencidos } from '../utils/combustible.js';
+import { normalizarCiudad, aplanarPrecios, preciosVencidos, TTL_PRECIOS_MS } from '../utils/combustible.js';
 
 // Fuel prices from naftas.com.ar, cached in combustible_precios.
 //
@@ -14,6 +14,8 @@ import { normalizarCiudad, aplanarPrecios, preciosVencidos } from '../utils/comb
 const BASE_URL = process.env.NAFTAS_API_URL || 'https://www.naftas.com.ar/api/fuel';
 const TIMEOUT_MS = 8000;
 const TTL_CIUDADES_MS = 24 * 60 * 60 * 1000;
+// After a failed refresh, the old prices are kept for this long before trying again.
+const REINTENTO_TRAS_FALLA_MS = 10 * 60 * 1000;
 const TIPOS = ['nafta', 'gasoil', 'gnc'];
 const CONSUMO_MAXIMO = 100;
 const ERROR_DB = 'No se pudo completar la operación. Intentá de nuevo más tarde.';
@@ -117,55 +119,110 @@ const vistaPrecio = (fila) => ({
   precio_de_referencia: fila.precision === 'low',
 });
 
-// Prices of one city, refreshed when older than 3 days.
-// Returns { data: { ciudad, precios, desactualizado } } or { error }.
-export const obtenerPrecios = async (
-  ciudadTexto,
-  { fetchFn = fetch, repo = repositorioPrecios, ahora = Date.now() } = {}
-) => {
-  const ciudad = normalizarCiudad(ciudadTexto);
-  if (!ciudad) return falla(400, 'Indicá la ciudad.');
-
+// Loads the prices of one city from the database and, when they are older than
+// 3 days, from the naftas API. Resolves { respuesta, venceEn }: `respuesta` is what
+// obtenerPrecios returns and `venceEn` (ms) is until when it can be kept in memory,
+// or null when it must not be kept (errors).
+const cargarPrecios = async (ciudad, ciudadTexto, { fetchFn, repo, ahora }) => {
   const cache = await repo.leer(ciudad);
   if (cache.dbError) {
     console.error('[combustible] no se pudo leer la caché de precios');
-    return falla(500, ERROR_DB);
+    return { respuesta: falla(500, ERROR_DB), venceEn: null };
   }
 
   if (!preciosVencidos(cache.data, ahora)) {
-    return { data: { ciudad, precios: cache.data.map(vistaPrecio), desactualizado: false } };
+    // Still valid: it stays in memory until 3 days after the oldest saved update.
+    const masViejo = Math.min(...cache.data.map((fila) => Date.parse(fila.actualizado_en)));
+    return {
+      respuesta: { data: { ciudad, precios: cache.data.map(vistaPrecio), desactualizado: false } },
+      venceEn: masViejo + TTL_PRECIOS_MS,
+    };
   }
 
-  const respuesta = await consultarNaftas(ciudad, fetchFn);
+  const consulta = await consultarNaftas(ciudad, fetchFn);
 
-  if (respuesta.ciudadNoEncontrada) {
-    return falla(404, `No hay precios de combustible para "${ciudadTexto}". Elegí una ciudad de la lista.`);
+  if (consulta.ciudadNoEncontrada) {
+    return {
+      respuesta: falla(404, `No hay precios de combustible para "${ciudadTexto}". Elegí una ciudad de la lista.`),
+      venceEn: null,
+    };
   }
 
-  const filas = respuesta.data ? aplanarPrecios(respuesta.data) : [];
+  const filas = consulta.data ? aplanarPrecios(consulta.data) : [];
   if (filas.length === 0) {
-    // API down or empty answer: keep serving the last known prices, flagged.
+    // API down or empty answer: keep serving the last known prices, flagged. They are
+    // remembered for a few minutes so a down API is not retried (and waited for) on
+    // every request.
     if (cache.data.length > 0) {
-      return { data: { ciudad, precios: cache.data.map(vistaPrecio), desactualizado: true } };
+      return {
+        respuesta: { data: { ciudad, precios: cache.data.map(vistaPrecio), desactualizado: true } },
+        venceEn: ahora + REINTENTO_TRAS_FALLA_MS,
+      };
     }
-    return falla(502, 'No se pudieron obtener los precios de combustible. Intentá de nuevo más tarde.');
+    return {
+      respuesta: falla(502, 'No se pudieron obtener los precios de combustible. Intentá de nuevo más tarde.'),
+      venceEn: null,
+    };
   }
 
   const marca = new Date(ahora).toISOString();
   const guardado = await repo.guardar(filas, marca);
   if (guardado.dbError) {
     console.error('[combustible] no se pudieron guardar los precios');
-    return falla(500, ERROR_DB);
+    return { respuesta: falla(500, ERROR_DB), venceEn: null };
   }
   await repo.depurar(ciudad, marca);
 
   return {
-    data: {
-      ciudad,
-      precios: filas.map((fila) => vistaPrecio({ ...fila, actualizado_en: marca })),
-      desactualizado: false,
+    respuesta: {
+      data: {
+        ciudad,
+        precios: filas.map((fila) => vistaPrecio({ ...fila, actualizado_en: marca })),
+        desactualizado: false,
+      },
     },
+    venceEn: ahora + TTL_PRECIOS_MS,
   };
+};
+
+// Prices already loaded, by city. Each city is read once and then kept until its
+// 3-day check is due, so the usual request neither reads the database nor calls
+// the API. Only the cities somebody actually uses end up here.
+const preciosEnMemoria = new Map();
+// Loads in progress, so simultaneous requests share one (no stampede on the API).
+const cargasEnCurso = new Map();
+
+// Test helper: forgets the prices kept in memory.
+export const reiniciarCachePrecios = () => {
+  preciosEnMemoria.clear();
+  cargasEnCurso.clear();
+};
+
+// Prices of one city, checked against the naftas API every 3 days.
+// Returns { data: { ciudad, precios, desactualizado } } or { error }.
+// The returned object is shared between callers: do not modify it.
+export const obtenerPrecios = (
+  ciudadTexto,
+  { fetchFn = fetch, repo = repositorioPrecios, ahora = Date.now() } = {}
+) => {
+  const ciudad = normalizarCiudad(ciudadTexto);
+  if (!ciudad) return Promise.resolve(falla(400, 'Indicá la ciudad.'));
+
+  const guardado = preciosEnMemoria.get(ciudad);
+  if (guardado && ahora < guardado.venceEn) return Promise.resolve(guardado.respuesta);
+
+  const enCurso = cargasEnCurso.get(ciudad);
+  if (enCurso) return enCurso;
+
+  const carga = cargarPrecios(ciudad, ciudadTexto, { fetchFn, repo, ahora })
+    .then(({ respuesta, venceEn }) => {
+      if (venceEn !== null) preciosEnMemoria.set(ciudad, { respuesta, venceEn });
+      return respuesta;
+    })
+    .finally(() => cargasEnCurso.delete(ciudad));
+
+  cargasEnCurso.set(ciudad, carga);
+  return carga;
 };
 
 const CAMPOS_CONFIG =

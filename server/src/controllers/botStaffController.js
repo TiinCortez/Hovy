@@ -8,7 +8,7 @@ import {
 import { consultarDisponibilidad, confirmarVisita, agendarTurnoVisita } from '../services/visitaFlujoService.js';
 import { armarLinkMaps, resolverTransicionTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
 import { componerQrEnPlantilla } from '../integrations/qr/qrPlantillaService.js';
-import { crearCobroDeTurno } from '../integrations/mercadopago/cobros/cobrosService.js';
+import { crearCobroDeTurno, consultarCobroDeTurno } from '../integrations/mercadopago/cobros/cobrosService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
 // visitó una solicitud de visita y el cliente confirmó que quiere el
@@ -265,6 +265,24 @@ export const qrTurnoStaff = async (req, res) => {
   } catch (err) {
     console.error('Error inesperado al generar el QR del turno:', err);
     return res.status(500).json({ ok: false, error: 'No se pudo generar el QR del turno.' });
+  }
+};
+
+// GET /api/bot/staff/:telefono/turnos/:id/cobro
+//
+// "¿Ya pagó?": estado del cobro del turno. Si el último cobro sigue abierto, se le
+// pregunta a Mercado Pago en el momento (no hace falta esperar el aviso automático).
+// `impactado` indica que el pago ya figura en la cuenta corriente del cliente, y
+// `mensaje` es un resumen en texto listo para reenviar. Solo lectura.
+export const cobroTurnoStaff = async (req, res) => {
+  try {
+    const resultado = await consultarCobroDeTurno(req.usuario.id, req.params.id);
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(200).json({ ok: true, data: resultado.data, mensaje: resultado.data.mensaje });
+  } catch (err) {
+    console.error('Error inesperado al consultar el cobro del turno:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo consultar el cobro del turno.' });
   }
 };
 

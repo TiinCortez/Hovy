@@ -7,7 +7,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'bot-qr-turno-sin-conexion';
 process.env.MERCADOPAGO_PUBLIC_BASE_URL = 'https://hovy.example.com';
 
 const { supabaseAdmin } = await import('../config/supabase.js');
-const { qrTurnoStaff } = await import('../controllers/botStaffController.js');
+const { qrTurnoStaff, cobroTurnoStaff } = await import('../controllers/botStaffController.js');
 const { crearCobroDeTurno } = await import('../integrations/mercadopago/cobros/cobrosService.js');
 
 const res = () => ({
@@ -28,6 +28,7 @@ const simular = (t, { turno = null, activos = [], movimientos = [], presupuesto 
       select() { return this; },
       eq() { return this; },
       in() { return this; },
+      order() { return this; },
       limit() { return this; },
       maybeSingle() {
         if (tabla === 'turnos') return Promise.resolve({ data: turno, error: null });
@@ -85,6 +86,24 @@ test('bot QR: ya no genera el QR provisorio con el id del turno', async (t) => {
   assert.equal(r.cuerpo, undefined);
   const turnosBot = await import('../utils/turnosBot.js');
   assert.equal('contenidoQrTurno' in turnosBot, false);
+});
+
+test('bot cobro: un id invalido es un 400', async (t) => {
+  simular(t);
+  const r = res();
+  await cobroTurnoStaff({ params: { id: 'abc' }, usuario: { id: 4 } }, r);
+  assert.equal(r.codigo, 400);
+});
+
+test('bot cobro: un turno sin cobro responde ok con "Sin cobro" y un mensaje', async (t) => {
+  simular(t);
+  const r = res();
+  await cobroTurnoStaff({ params: { id: '12' }, usuario: { id: 4 } }, r);
+  assert.equal(r.codigo, 200);
+  assert.equal(r.body.ok, true);
+  assert.equal(r.body.data.estado, 'Sin cobro');
+  assert.equal(r.body.data.impactado, false);
+  assert.match(r.body.mensaje, /todavía no tiene un cobro/);
 });
 
 test('cobro de turno: sin la URL publica configurada es un 503', async (t) => {

@@ -27,6 +27,36 @@ const SIGNO = { Debito: 1, Ajuste_Debito: 1, Credito: -1, Ajuste_Credito: -1 };
 
 const aCentavos = (valor) => Math.round(Number(valor) * 100);
 
+const pesos = (valor) => `$${Number(valor).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+
+// Plain-text status of a cobro for the panel and the WhatsApp bot. Accepts the
+// database row or the view the API returns (`impactado` = already recorded in the
+// client's account). null means the turno has no cobro yet.
+export const armarMensajeCobro = (cobro) => {
+  if (!cobro) return 'Este turno todavía no tiene un cobro generado.';
+
+  const monto = pesos(cobro.monto);
+  const impactado = cobro.impactado ?? Boolean(cobro.id_pago);
+
+  switch (cobro.estado) {
+    case 'Aprobado':
+      if (impactado) return `El pago de ${monto} fue aprobado y ya impactó en la cuenta del cliente.`;
+      return cobro.id_turno
+        ? `Mercado Pago aprobó el pago de ${monto}, pero todavía no se registró en la cuenta del cliente. Se reintenta automáticamente.`
+        : `El pago de ${monto} fue aprobado.`;
+    case 'Pendiente':
+      return `Todavía no se recibió el pago de ${monto}.`;
+    case 'Rechazado':
+      return 'Mercado Pago rechazó el pago. Podés generar un nuevo QR.';
+    case 'Cancelado':
+      return 'El cobro fue cancelado.';
+    case 'Expirado':
+      return 'El link de pago venció. Generá un nuevo QR.';
+    default:
+      return `Estado del cobro: ${cobro.estado}.`;
+  }
+};
+
 // Outstanding amount of one job from its movements, or null when there are none.
 // Summed in cents so floating point errors never reach the amount to charge.
 export const calcularPendienteTrabajo = (movimientos) => {

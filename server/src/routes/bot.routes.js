@@ -34,6 +34,7 @@ import {
   iniciarTurnoStaff,
   finalizarTurnoStaff,
   qrTurnoStaff,
+  cobroTurnoStaff,
 } from '../controllers/botStaffController.js';
 import {
   cargarPresupuestoStaff,
@@ -142,6 +143,9 @@ router.post('/staff/:telefono/turnos/:id/iniciar', resolverStaffPorTelefono, ini
 router.post('/staff/:telefono/turnos/:id/finalizar', resolverStaffPorTelefono, finalizarTurnoStaff);
 
 router.get('/staff/:telefono/turnos/:id/qr', resolverStaffPorTelefono, qrTurnoStaff);
+// "¿Ya pagó?": estado del cobro del turno (verifica contra Mercado Pago si sigue abierto).
+// GET  /api/bot/staff/:telefono/turnos/:id/cobro
+router.get('/staff/:telefono/turnos/:id/cobro', resolverStaffPorTelefono, cobroTurnoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/presupuesto
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno
