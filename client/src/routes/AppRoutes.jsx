@@ -17,6 +17,7 @@ import TurnosPage from '../pages/TurnosPage.jsx';
 import VisitasPage from '../pages/VisitasPage.jsx';
 import VisitaDetallePage from '../pages/VisitaDetallePage.jsx';
 import ServiciosPage from '../pages/ServiciosPage.jsx';
+import CobrosPage from '../pages/CobrosPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import SettingsPage from '../pages/SettingsPage.jsx';
 
@@ -105,6 +106,17 @@ export default function AppRoutes() {
             <RequireAuth>
               <DashboardLayout>
                 <ServiciosPage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/cobros"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <CobrosPage />
               </DashboardLayout>
             </RequireAuth>
           }

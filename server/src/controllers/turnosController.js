@@ -113,6 +113,8 @@ const formatearTurnoRespuesta = (t, infoPresupuesto) => ({
   prioridad: t.prioridad?.toUpperCase() || 'P3_CASUAL',
   estado: mapToFrontendEstado(t.estado),
   motivo_cancelacion: t.motivo_cancelacion,
+  // Estado de cobro del turno (vista de Cobros). null se toma como pendiente.
+  cobrado: t.cobrado === true,
   inmueble: t.inmueble,
   cliente: t.inmueble?.cliente,
   servicio: armarServicio(infoPresupuesto),
@@ -249,7 +251,12 @@ export const createTurno = async (req, res) => {
 // PUT /api/turnos/:id
 export const updateTurno = async (req, res) => {
   const { id } = req.params;
-  const { id_inmueble, id_servicio, monto_total, fecha_programada, inicio_desde, hasta, prioridad, estado } = req.body;
+  const { id_inmueble, id_servicio, monto_total, fecha_programada, inicio_desde, hasta, prioridad, estado, cobrado } = req.body;
+
+  // cobrado es opcional: solo se valida si viene en el body.
+  if (cobrado !== undefined && typeof cobrado !== 'boolean') {
+    return res.status(400).json({ ok: false, error: 'cobrado tiene que ser verdadero o falso.' });
+  }
 
   try {
     const { data: actual, error: errorConsulta } = await supabaseAdmin
@@ -264,6 +271,15 @@ export const updateTurno = async (req, res) => {
     const nuevoInicio = inicio_desde === undefined ? actual.inicio_desde : inicio_desde;
     const nuevoFin = hasta === undefined ? actual.hasta : hasta;
     const nuevoEstado = estado === undefined ? actual.estado : mapToDBEstado(estado);
+
+    // Solo un turno Realizado puede quedar marcado como cobrado.
+    if (cobrado === true && nuevoEstado !== 'Realizado') {
+      return res.status(409).json({
+        ok: false,
+        error: `Solo se puede registrar el cobro de un turno Realizado (estado actual: ${nuevoEstado}).`
+      });
+    }
+
     // Postgres devuelve HH:MM:SS; los selectores también pueden enviar HH:MM.
     const horaComparable = (hora) => typeof hora === 'string' && hora.length === 5 ? `${hora}:00` : hora;
     const reprogramado = nuevaFecha !== actual.fecha_programada
@@ -317,6 +333,7 @@ export const updateTurno = async (req, res) => {
     };
     if (id_inmueble !== undefined) camposUpdate.id_inmueble = nuevoIdInmueble;
     if (nuevoIdPresupuesto !== actual.id_presupuesto) camposUpdate.id_presupuesto = nuevoIdPresupuesto;
+    if (cobrado !== undefined) camposUpdate.cobrado = cobrado;
 
     const { data, error } = await supabaseAdmin
       .from('turnos')
