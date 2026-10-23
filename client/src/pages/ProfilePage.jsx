@@ -1,4 +1,5 @@
 import Card from '../components/ui/Card';
+import SalidaCard from '../components/perfil/SalidaCard';
 import AuthService from '../services/auth.service';
 
 const ROLES = {
@@ -16,7 +17,7 @@ function Dato({ label, value }) {
   );
 }
 
-// Read-only profile: shows the data already stored in the session.
+// Account data is read-only; the departure point is the only editable item.
 export default function ProfilePage() {
   const user = AuthService.getSession()?.user;
 
@@ -30,6 +31,7 @@ export default function ProfilePage() {
           <Dato label="Rol" value={ROLES[user?.rol] ?? user?.rol} />
         </div>
       </Card>
+      <SalidaCard />
     </div>
   );
 }
