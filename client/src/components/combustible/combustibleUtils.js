@@ -26,6 +26,22 @@ export const antiguedadPrecio = (fecha, ahora) => {
 
 export const MAX_SUGERENCIAS = 5;
 
+const UNIDADES_TRASLADO = {
+  l: { consumo: 'L', precio: '/l' },
+  m3: { consumo: 'm³', precio: '/m³' },
+};
+
+const numeroAR = (valor) => Number(valor).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+
+// "12 km aprox. (solo ida) × (10 L/100 km ÷ 100) × $2.109/l · YPF SUPER": the
+// formula behind a trip cost, for the forms that show a budget.
+export const formulaTraslado = (traslado, formatMonto) => {
+  const unidad = UNIDADES_TRASLADO[traslado.unidad] ?? UNIDADES_TRASLADO.l;
+  return `${numeroAR(traslado.km)} km${traslado.km_aproximados ? ' aprox.' : ''} (solo ida) × `
+    + `(${numeroAR(traslado.consumo_100km)} ${unidad.consumo}/100 km ÷ 100) × `
+    + `${formatMonto(traslado.precio_unidad)}${unidad.precio} · ${traslado.combustible}`;
+};
+
 const sinTildes = (texto) =>
   String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
