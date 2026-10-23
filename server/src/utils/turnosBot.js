@@ -20,11 +20,6 @@ export const armarLinkMaps = (inmueble) => {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destino)}&travelmode=driving`;
 };
 
-// Contenido que se codifica en el QR que se le muestra al cliente al terminar
-// el turno. PROVISORIO: cuando se configure Mercado Pago acá va el payload real
-// del cobro (QR dinámico del turno). Mientras tanto es solo un identificador.
-export const contenidoQrTurno = (idTurno) => `HOVY-TURNO-${idTurno}`;
-
 // Máquina de estados mínima: iniciar y finalizar. Cancelar y reprogramar
 // quedan fuera a propósito (el agente del jefe es de consulta + estas dos acciones).
 const TRANSICIONES = {

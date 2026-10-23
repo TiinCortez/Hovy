@@ -36,6 +36,13 @@ export const resolverTransicion = (cobro, pago) => {
   return { nuevoEstado: destino };
 };
 
+// True when the payment of a turno's cobro still has to be recorded in the
+// client's account: the cobro is Aprobado (just now, or in an earlier notification
+// whose registration failed), it belongs to a turno and has no pago yet. The
+// provider status is checked again so a refunded payment is never registered.
+export const requiereRegistroDePago = (cobro, pago) =>
+  cobro?.estado === 'Aprobado' && Boolean(cobro.id_turno) && !cobro.id_pago && pago?.status === 'approved';
+
 // A valid amount is a JS number > 0 with at most 2 decimals; otherwise null.
 export const validarMonto = (valor) => {
   if (typeof valor !== 'number' || !Number.isFinite(valor) || valor <= 0) return null;

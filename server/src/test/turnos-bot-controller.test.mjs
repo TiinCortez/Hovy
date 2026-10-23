@@ -112,45 +112,9 @@ test('id inválido devuelve 400', async (t) => {
   assert.equal(res.statusCode, 400);
 });
 
-const { qrTurnoStaff } = await import('../controllers/botStaffController.js');
-
-function respuestaBinaria() {
-  const res = { statusCode: null, body: null, headers: {} };
-  res.status = (c) => { res.statusCode = c; return res; };
-  res.json = (b) => { res.body = b; return res; };
-  res.set = (h) => { Object.assign(res.headers, h); return res; };
-  res.send = (b) => { res.body = b; return res; };
-  return res;
-}
-
-test('qr de un turno Realizado devuelve un PNG', async (t) => {
-  preparar(t, turno('Realizado'));
-  const res = respuestaBinaria();
-  await qrTurnoStaff({ params: { id: '7' } }, res);
-
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.headers['Content-Type'], 'image/png');
-  assert.ok(Buffer.isBuffer(res.body));
-  assert.deepEqual([...res.body.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47]);
-});
-
-test('qr de un turno que no está Realizado devuelve 409', async (t) => {
-  preparar(t, turno('En ejecución'));
-  const res = respuestaBinaria();
-  await qrTurnoStaff({ params: { id: '7' } }, res);
-  assert.equal(res.statusCode, 409);
-});
-
-test('qr de un turno inexistente devuelve 404 y con id inválido 400', async (t) => {
-  preparar(t, null);
-  const r404 = respuestaBinaria();
-  await qrTurnoStaff({ params: { id: '99' } }, r404);
-  assert.equal(r404.statusCode, 404);
-
-  const r400 = respuestaBinaria();
-  await qrTurnoStaff({ params: { id: 'x' } }, r400);
-  assert.equal(r400.statusCode, 400);
-});
+// El QR del turno ahora es el link de pago real de Mercado Pago (crearCobroDeTurno):
+// sus casos (id inválido, inexistente, no Realizado, ya cobrado, reutilización) se
+// prueban en bot-qr-turno.test.mjs. Los tests de acá fijaban el QR provisorio.
 
 const { listarTurnosStaff } = await import('../controllers/botStaffController.js');
 

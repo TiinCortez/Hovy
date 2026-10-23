@@ -6,8 +6,9 @@ import {
   responderErrorServicio,
 } from '../utils/solicitudesVisita.js';
 import { consultarDisponibilidad, confirmarVisita, agendarTurnoVisita } from '../services/visitaFlujoService.js';
-import { armarLinkMaps, resolverTransicionTurno, contenidoQrTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
+import { armarLinkMaps, resolverTransicionTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
 import { componerQrEnPlantilla } from '../integrations/qr/qrPlantillaService.js';
+import { crearCobroDeTurno } from '../integrations/mercadopago/cobros/cobrosService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
 // visitó una solicitud de visita y el cliente confirmó que quiere el
@@ -234,9 +235,12 @@ export const finalizarTurnoStaff = cambiarEstadoTurnoStaff('finalizar');
 
 // GET /api/bot/staff/:telefono/turnos/:id/qr -> image/png
 //
-// QR sobre la plantilla de Hovy para mostrarle al cliente cuando se termina el
-// turno. Solo se entrega con el turno ya Realizado: un turno sin terminar no
-// debe poder cobrarse.
+// QR de cobro REAL sobre la plantilla de Hovy, para mostrarle al cliente cuando se
+// termina el turno: codifica el link de pago de Mercado Pago de lo que el cliente
+// todavía debe (ver crearCobroDeTurno). Solo se entrega con el turno ya Realizado.
+// Si ya había un link vigente por ese monto se reutiliza el mismo; si venció o el
+// monto cambió, se genera uno nuevo. El cobro viaja en los headers X-Cobro-* para
+// que el agente pueda avisar el monto.
 export const qrTurnoStaff = async (req, res) => {
   const idTurno = Number(req.params.id);
   if (!Number.isInteger(idTurno) || idTurno <= 0) {
@@ -244,25 +248,19 @@ export const qrTurnoStaff = async (req, res) => {
   }
 
   try {
-    const { data: turno, error } = await supabaseAdmin
-      .from('turnos')
-      .select('id_turno, estado')
-      .eq('id_turno', idTurno)
-      .maybeSingle();
+    const cobro = await crearCobroDeTurno(req.usuario.id, idTurno);
+    if (cobro.error) return responderErrorServicio(res, cobro.error);
 
-    if (error) throw error;
-    if (!turno) return res.status(404).json({ ok: false, error: 'Turno no encontrado.' });
-    if (turno.estado !== 'Realizado') {
-      return res.status(409).json({
-        ok: false,
-        error: `El QR solo se genera para turnos realizados (este está "${turno.estado}").`,
-      });
-    }
-
-    const imagen = await componerQrEnPlantilla(contenidoQrTurno(turno.id_turno));
+    const imagen = await componerQrEnPlantilla(cobro.data.init_point);
     if (imagen.error) return responderErrorServicio(res, imagen.error);
 
-    res.set({ 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+    res.set({
+      'Content-Type': 'image/png',
+      'Cache-Control': 'no-store',
+      'X-Cobro-Id': String(cobro.data.id),
+      'X-Cobro-Monto': String(cobro.data.monto),
+      'X-Cobro-Reutilizado': String(cobro.reutilizado === true),
+    });
     return res.status(200).send(imagen);
   } catch (err) {
     console.error('Error inesperado al generar el QR del turno:', err);
