@@ -47,6 +47,35 @@ Authorization: Bearer {{token}}
 POST {{base}}/cobros/{{idCobro}}/cancelar
 Authorization: Bearer {{token}}
 
+### 7b) Cash payment of a Realizado turno (migration 014)  -  [Expect 201, data.id_pago, pendiente, cobrado]
+###     The amount cannot exceed what the client still owes; pending Mercado Pago links of the turno are cancelled.
+POST {{base}}/turnos/{{idTurno}}/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "medio": "Efectivo", "monto": 1000 }
+
+### 7c) Bank transfer with its operation number  -  [Expect 201]
+POST {{base}}/turnos/{{idTurno}}/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "medio": "Transferencia", "monto": 2000, "referencia": "Op 8841" }
+
+### 7d) More than the client owes  -  [Expect 409, "supera lo que el cliente todavía debe"]
+POST {{base}}/turnos/{{idTurno}}/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "medio": "Efectivo", "monto": 99999999 }
+
+### 7e) Invalid medium or amount  -  [Expect 400]
+POST {{base}}/turnos/{{idTurno}}/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "medio": "Cheque", "monto": -5 }
+
 ### 8) Bot: QR of the real payment link  -  [Expect 200 image/png, headers X-Cobro-Id / X-Cobro-Monto / X-Cobro-Reutilizado]
 GET {{base}}/bot/staff/{{telefono}}/turnos/{{idTurno}}/qr
 x-api-key: {{botKey}}
