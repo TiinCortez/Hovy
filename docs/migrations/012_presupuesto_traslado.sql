@@ -20,7 +20,10 @@ ALTER TABLE public.presupuestos
   ADD COLUMN IF NOT EXISTS traslado_consumo_100km NUMERIC(6, 2),
   ADD COLUMN IF NOT EXISTS traslado_precio_unidad NUMERIC(10, 2),
   ADD COLUMN IF NOT EXISTS traslado_unidad        TEXT,
-  ADD COLUMN IF NOT EXISTS traslado_combustible   TEXT;
+  ADD COLUMN IF NOT EXISTS traslado_combustible   TEXT,
+  -- TRUE cuando los km son una estimación (línea recta x factor de rodeo) y no
+  -- una ruta real de OpenRouteService.
+  ADD COLUMN IF NOT EXISTS traslado_aproximado     BOOLEAN;
 
 DO $$
 BEGIN

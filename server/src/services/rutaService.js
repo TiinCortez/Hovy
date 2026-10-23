@@ -5,8 +5,15 @@
 // meters. The free plan has a daily quota, so results are cached by coordinate
 // pair: a property rarely moves and the boss's departure point changes seldom.
 //
-// Never throws: it resolves { km } or { motivo } so the budget keeps working
-// without a trip cost when routing is unavailable.
+// Never throws. It resolves { km, aproximado }:
+//  - aproximado false: real driving distance from OpenRouteService.
+//  - aproximado true: fallback (straight line x detour factor, see
+//    utils/distancia.js) used when there is no API key or the service fails.
+//    It is NOT cached, so the real route takes over as soon as it is available.
+// With the fallback turned off (RUTA_RESPALDO_APROXIMADO=false) it resolves
+// { motivo } instead, and the budget goes without a trip cost.
+
+import { kmAproximados } from '../utils/distancia.js';
 
 const BASE_URL = process.env.OPENROUTESERVICE_URL || 'https://api.openrouteservice.org';
 const PERFIL = 'driving-car';
@@ -35,13 +42,21 @@ const guardar = (clave, km, ahora) => {
 
 export const distanciaKm = async (
   { origen, destino },
-  { fetchFn = fetch, apiKey = process.env.OPENROUTESERVICE_API_KEY, ahora = Date.now() } = {}
+  {
+    fetchFn = fetch,
+    apiKey = process.env.OPENROUTESERVICE_API_KEY,
+    ahora = Date.now(),
+    respaldoAproximado = process.env.RUTA_RESPALDO_APROXIMADO !== 'false',
+  } = {}
 ) => {
-  if (!apiKey) return { motivo: 'sin_ruteo' };
+  const sinRuta = (motivo) =>
+    respaldoAproximado ? { km: kmAproximados(origen, destino), aproximado: true } : { motivo };
+
+  if (!apiKey) return sinRuta('sin_ruteo');
 
   const clave = claveCache(origen, destino);
   const guardado = cache.get(clave);
-  if (guardado && ahora < guardado.hasta) return { km: guardado.km };
+  if (guardado && ahora < guardado.hasta) return { km: guardado.km, aproximado: false };
 
   const controlador = new AbortController();
   const temporizador = setTimeout(() => controlador.abort(), TIMEOUT_MS);
@@ -67,15 +82,15 @@ export const distanciaKm = async (
     const metros = extraerMetros(cuerpo);
     if (!respuesta.ok || !Number.isFinite(metros) || metros < 0) {
       console.error('[ruta] OpenRouteService no devolvió una distancia válida:', respuesta.status);
-      return { motivo: 'ruta_no_disponible' };
+      return sinRuta('ruta_no_disponible');
     }
 
     const km = Math.round((metros / 1000) * 100) / 100;
     guardar(clave, km, ahora);
-    return { km };
+    return { km, aproximado: false };
   } catch (error) {
     console.error('[ruta] no se pudo consultar OpenRouteService:', error.message);
-    return { motivo: 'ruta_no_disponible' };
+    return sinRuta('ruta_no_disponible');
   } finally {
     clearTimeout(temporizador);
   }

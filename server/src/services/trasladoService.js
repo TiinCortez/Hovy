@@ -115,6 +115,8 @@ export const calcularTraslado = async (
       unidad: precio.unidad,
       combustible: `${precio.empresa} ${precio.producto}`,
       tramos: TRAMOS_TRASLADO,
+      // true when the km are an estimate (straight line x detour), not a route.
+      km_aproximados: ruta.aproximado === true,
       desactualizado: precios.data.desactualizado,
       precio_de_referencia: precio.precio_de_referencia,
     };
@@ -136,5 +138,6 @@ export const camposTrasladoPresupuesto = (traslado) =>
         traslado_precio_unidad: traslado.precio_unidad,
         traslado_unidad: traslado.unidad,
         traslado_combustible: traslado.combustible,
+        traslado_aproximado: traslado.km_aproximados === true,
       }
     : {};

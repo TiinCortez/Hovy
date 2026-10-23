@@ -17,6 +17,7 @@ const TRASLADO = {
   unidad: 'l',
   combustible: 'YPF SUPER',
   tramos: 1,
+  km_aproximados: true,
 };
 
 // Minimal stand-in for the tables the budget touches.
@@ -66,6 +67,7 @@ test('camposTrasladoPresupuesto: foto completa cuando se incluyo', () => {
     traslado_precio_unidad: 2109,
     traslado_unidad: 'l',
     traslado_combustible: 'YPF SUPER',
+    traslado_aproximado: true,
   });
 });
 
