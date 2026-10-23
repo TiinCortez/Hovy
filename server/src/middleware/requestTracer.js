@@ -10,6 +10,23 @@
 import crypto from 'node:crypto';
 import logger from '../utils/logger.js';
 
+// Decides whether a finished request is logged.
+//  - Errors (4xx / 5xx) are always logged.
+//  - The healthcheck and the CORS preflight (OPTIONS) are noise when they succeed.
+//  - Successful requests are logged in production (observability) but not in
+//    development: the web panel polls the API every minute per open tab, which
+//    buries the lines that matter. LOG_HTTP=all brings them back.
+export function debeRegistrarRequest(
+  { method, path, statusCode },
+  { production = process.env.NODE_ENV === 'production', logAll = process.env.LOG_HTTP === 'all' } = {}
+) {
+  if (statusCode >= 400) return true;
+  if (path === '/api/health') return false;
+  if (logAll) return true;
+  if (method === 'OPTIONS') return false;
+  return production;
+}
+
 export function requestTracer(req, res, next) {
   // Usar cabecera entrante (Cloudflare Ray ID o x-request-id) o generar nuevo UUID
   const requestId = req.headers['x-request-id'] || req.headers['cf-ray'] || crypto.randomUUID();
@@ -19,8 +36,7 @@ export function requestTracer(req, res, next) {
   const startTime = Date.now();
 
   res.on('finish', () => {
-    // No saturar logs con healthchecks periódicos a menos que den error
-    if (req.path === '/api/health' && res.statusCode === 200) {
+    if (!debeRegistrarRequest({ method: req.method, path: req.path, statusCode: res.statusCode })) {
       return;
     }
 
