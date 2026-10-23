@@ -1,5 +1,15 @@
 import { responderErrorServicio } from '../utils/solicitudesVisita.js';
 import { registrarPagoTurno } from '../services/pagoManualService.js';
+import { obtenerSaldoTurno } from '../services/saldoTurnoService.js';
+
+// GET /api/turnos/:id/saldo
+// Total, what the client still owes and the payments registered for a turno.
+export const saldoTurno = async (req, res) => {
+  const resultado = await obtenerSaldoTurno(req.params.id);
+  if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+  return res.status(200).json({ ok: true, data: resultado.data });
+};
 
 // POST /api/turnos/:id/pagos  { medio: 'Efectivo' | 'Transferencia', monto, referencia? }
 // Registers a payment received by hand for a Realizado turno. Ownership of the

@@ -92,7 +92,7 @@ export const leerContextoCobroTurno = async (idTurno) => {
     .eq('id_turno', idTurno)
     .maybeSingle();
   if (error) return { dbError: error };
-  if (!turno) return { data: { turno: null, movimientos: [], presupuesto: null, servicio: null } };
+  if (!turno) return { data: { turno: null, movimientos: [], presupuesto: null, servicio: null, idTrabajo: null } };
 
   const { data: trabajo, error: errTrabajo } = await supabaseAdmin
     .from('trabajos_ejecutados')
@@ -137,9 +137,21 @@ export const leerContextoCobroTurno = async (idTurno) => {
       movimientos,
       presupuesto,
       servicio,
+      idTrabajo: trabajo?.id_trabajo ?? null,
     },
   };
 };
+
+// Payments registered for a job (cash, transfer, Mercado Pago), oldest first.
+// The reference is not selected: it can hold bank operation numbers.
+export const listarPagosDeTrabajo = async (idTrabajo) =>
+  resultado(
+    await supabaseAdmin
+      .from('pagos')
+      .select('id_pago, medio_pago, monto, estado, fecha_pago')
+      .eq('id_trabajo', idTrabajo)
+      .order('id_pago', { ascending: true })
+  );
 
 // Records an approved cobro in the client's account (payment + credit + cobrado
 // flag), atomically and idempotently, with the database function of migration 013.
