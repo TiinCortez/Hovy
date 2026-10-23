@@ -354,7 +354,8 @@ export const aceptarPresupuestoVisita = async ({ idSolicitud, idUsuario, montoTo
     monto_total: montoTotal,
     estado: 'Aceptado',
     nota,
-    ...camposTrasladoPresupuesto(traslado),
+    // Legacy loose amount (no services): the surcharge columns are left untouched.
+    ...(conServicios ? camposTrasladoPresupuesto(traslado) : {}),
   };
   if (conServicios) camposPresupuesto.monto_estimado = estimadoTotal;
 

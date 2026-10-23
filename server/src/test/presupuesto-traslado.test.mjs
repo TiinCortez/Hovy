@@ -54,13 +54,27 @@ const preparar = (t) => {
 const insertPresupuesto = (consultas) =>
   consultas.find((c) => c.tabla === 'presupuestos' && c.insert).insert;
 
-test('camposTrasladoPresupuesto: vacio cuando el traslado no se incluyo', () => {
-  assert.deepEqual(camposTrasladoPresupuesto({ incluido: false, motivo: 'sin_origen' }), {});
-  assert.deepEqual(camposTrasladoPresupuesto(null), {});
+// The database computes monto_estimado = monto_subtotal - descuento + recargo_logistico
+// with a trigger, so the trip cost must travel in recargo_logistico.
+const SIN_TRASLADO = {
+  recargo_logistico: 0,
+  monto_traslado: null,
+  traslado_km: null,
+  traslado_consumo_100km: null,
+  traslado_precio_unidad: null,
+  traslado_unidad: null,
+  traslado_combustible: null,
+  traslado_aproximado: null,
+};
+
+test('camposTrasladoPresupuesto: sin traslado limpia el recargo y la foto anterior', () => {
+  assert.deepEqual(camposTrasladoPresupuesto({ incluido: false, motivo: 'sin_origen' }), SIN_TRASLADO);
+  assert.deepEqual(camposTrasladoPresupuesto(null), SIN_TRASLADO);
 });
 
-test('camposTrasladoPresupuesto: foto completa cuando se incluyo', () => {
+test('camposTrasladoPresupuesto: con traslado manda el recargo y la foto completa', () => {
   assert.deepEqual(camposTrasladoPresupuesto(TRASLADO), {
+    recargo_logistico: 2530.8,
     monto_traslado: 2530.8,
     traslado_km: 12,
     traslado_consumo_100km: 10,
@@ -84,6 +98,7 @@ test('turno: el traslado se suma al estimado y al total, y se guarda la foto', a
   assert.equal(insert.monto_subtotal, 60000);
   assert.equal(insert.monto_estimado, 62530.8);
   assert.equal(insert.monto_total, 62530.8);
+  assert.equal(insert.recargo_logistico, 2530.8);
   assert.equal(insert.monto_traslado, 2530.8);
   assert.equal(insert.traslado_combustible, 'YPF SUPER');
   assert.equal(r.traslado.costo, 2530.8);
@@ -103,7 +118,7 @@ test('turno: el valor final que el jefe edita manda, el estimado conserva el tra
   assert.equal(insert.monto_estimado, 62530.8);
 });
 
-test('turno: sin traslado el presupuesto queda como antes y no escribe columnas nuevas', async (t) => {
+test('turno: sin traslado el recargo queda en 0 y no queda una foto vieja', async (t) => {
   const consultas = preparar(t);
   const r = await guardarPresupuestoParaTurno({
     idInmueble: 1,
@@ -114,7 +129,8 @@ test('turno: sin traslado el presupuesto queda como antes y no escribe columnas 
   const insert = insertPresupuesto(consultas);
   assert.equal(insert.monto_estimado, 60000);
   assert.equal(insert.monto_total, 60000);
-  assert.equal('monto_traslado' in insert, false);
-  assert.equal('traslado_km' in insert, false);
+  assert.equal(insert.recargo_logistico, 0);
+  assert.equal(insert.monto_traslado, null);
+  assert.equal(insert.traslado_km, null);
   assert.equal(r.traslado.incluido, false);
 });
