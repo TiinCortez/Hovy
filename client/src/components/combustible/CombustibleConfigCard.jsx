@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import Aviso from '../ui/Aviso';
 import CombustibleService from '../../services/api/combustible.service';
 import { getApiError } from '../visitas/visitaUtils';
 import {
@@ -18,15 +19,6 @@ const VERDE = '#1B3006';
 const KM_EJEMPLO = 10;
 
 const FORM_VACIO = { ciudad: '', tipo: 'nafta', empresa: '', producto: '', consumo: '' };
-
-function Aviso({ tipo, icono: Icono, children }) {
-  return (
-    <div className={`combustible-aviso is-${tipo}`} role={tipo === 'error' ? 'alert' : 'status'}>
-      <Icono size={18} className="flex-shrink-0" />
-      <span>{children}</span>
-    </div>
-  );
-}
 
 // Fuel settings: type, station and product (with live prices) and the vehicle's
 // consumption per 100 km, which the budget uses to price the trip.
