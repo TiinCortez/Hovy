@@ -4,7 +4,7 @@ import { supabaseAdmin } from '../../../config/supabase.js';
 // Each function returns { data } or { dbError } (never forwarded to clients).
 
 const COLUMNAS =
-  'id, id_usuario, id_solicitud, monto, descripcion, external_reference, preference_id, init_point, estado, mp_payment_id, created_at, updated_at';
+  'id, id_usuario, id_solicitud, id_turno, id_cliente, id_pago, monto, descripcion, external_reference, preference_id, init_point, estado, mp_payment_id, created_at, updated_at';
 
 const resultado = ({ data, error }) => (error ? { dbError: error } : { data });
 
@@ -55,6 +55,83 @@ export const buscarActivoPorSolicitud = async (idSolicitud, idUsuario) =>
       .in('estado', ['Pendiente', 'Aprobado'])
       .limit(1)
   );
+
+// Live cobros (Pendiente / Aprobado) of a turno, whoever created them: a turno
+// cannot be charged twice, so this is not scoped to one seller.
+export const buscarActivosPorTurno = async (idTurno) =>
+  resultado(
+    await supabaseAdmin
+      .from('cobros_mercadopago')
+      .select(COLUMNAS)
+      .eq('id_turno', idTurno)
+      .in('estado', ['Pendiente', 'Aprobado'])
+  );
+
+// Everything needed to decide how much a turno owes: the turno with its client,
+// the movements of its job in the account ledger, the budget and the service name.
+// Resolves { data: { turno, movimientos, presupuesto, servicio } } with turno null
+// when it does not exist, or { dbError }.
+export const leerContextoCobroTurno = async (idTurno) => {
+  const { data: turno, error } = await supabaseAdmin
+    .from('turnos')
+    .select('id_turno, estado, cobrado, id_presupuesto, inmueble:inmuebles(id_cliente)')
+    .eq('id_turno', idTurno)
+    .maybeSingle();
+  if (error) return { dbError: error };
+  if (!turno) return { data: { turno: null, movimientos: [], presupuesto: null, servicio: null } };
+
+  const { data: trabajo, error: errTrabajo } = await supabaseAdmin
+    .from('trabajos_ejecutados')
+    .select('id_trabajo')
+    .eq('id_turno', idTurno)
+    .maybeSingle();
+  if (errTrabajo) return { dbError: errTrabajo };
+
+  let movimientos = [];
+  if (trabajo) {
+    const lectura = await supabaseAdmin
+      .from('movimientos_cuenta')
+      .select('tipo, monto')
+      .eq('id_trabajo', trabajo.id_trabajo);
+    if (lectura.error) return { dbError: lectura.error };
+    movimientos = lectura.data ?? [];
+  }
+
+  let presupuesto = null;
+  let servicio = null;
+  if (turno.id_presupuesto) {
+    const [pres, detalle] = await Promise.all([
+      supabaseAdmin
+        .from('presupuestos')
+        .select('monto_total, estado')
+        .eq('id_presupuesto', turno.id_presupuesto)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('detalle_presupuesto')
+        .select('servicio:servicios_catalogo(nombre)')
+        .eq('id_presupuesto', turno.id_presupuesto)
+        .limit(1),
+    ]);
+    if (pres.error) return { dbError: pres.error };
+    presupuesto = pres.data ?? null;
+    servicio = detalle.data?.[0]?.servicio?.nombre ?? null;
+  }
+
+  return {
+    data: {
+      turno: { id_turno: turno.id_turno, estado: turno.estado, cobrado: turno.cobrado, id_cliente: turno.inmueble?.id_cliente ?? null },
+      movimientos,
+      presupuesto,
+      servicio,
+    },
+  };
+};
+
+// Records an approved cobro in the client's account (payment + credit + cobrado
+// flag), atomically and idempotently, with the database function of migration 013.
+// Resolves { data: { registrado, motivo?, id_pago?, ... } } or { dbError }.
+export const registrarPagoCobro = async (idCobro) =>
+  resultado(await supabaseAdmin.rpc('fn_registrar_pago_cobro', { p_id_cobro: idCobro }));
 
 export const obtenerPorReferencia = async (externalReference, idUsuario) =>
   resultado(

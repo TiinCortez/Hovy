@@ -1,7 +1,7 @@
 import { obtenerAccessTokenVigente } from '../mercadopagoOAuthService.js';
 import * as repo from './cobrosRepository.js';
 import { obtenerPago } from './mpPagosClient.js';
-import { resolverTransicion } from './estadoPago.js';
+import { resolverTransicion, requiereRegistroDePago } from './estadoPago.js';
 import { verificarFirmaWebhook } from './webhookSignature.js';
 
 // Returns { status } for the HTTP answer. 200 for handled and for valid-but-unknown
@@ -55,15 +55,29 @@ export const procesarWebhook = async ({ headers, query, body }) => {
   if (!cobro) return { status: 200 };
 
   const { nuevoEstado, motivo } = resolverTransicion(cobro, pago);
-  if (!nuevoEstado) {
-    if (motivo === 'monto_no_coincide') {
-      console.error(`[cobros] monto o moneda no coinciden en el cobro ${cobro.id}; no se aprueba`);
-    }
-    return { status: 200 };
+  let cobroActual = cobro;
+
+  if (nuevoEstado) {
+    const { dbError: errUpd } = await repo.transicionarDesdePendiente(cobro.id, nuevoEstado, pago.id);
+    if (errUpd) return { status: 500 };
+    console.log(`[cobros] cobro ${cobro.id} -> ${nuevoEstado}`);
+    cobroActual = { ...cobro, estado: nuevoEstado };
+  } else if (motivo === 'monto_no_coincide') {
+    console.error(`[cobros] monto o moneda no coinciden en el cobro ${cobro.id}; no se aprueba`);
   }
 
-  const { dbError: errUpd } = await repo.transicionarDesdePendiente(cobro.id, nuevoEstado, pago.id);
-  if (errUpd) return { status: 500 };
-  console.log(`[cobros] cobro ${cobro.id} -> ${nuevoEstado}`);
+  // An approved payment of a turno must end up in the client's account (payment,
+  // credit, cobrado flag). It also covers a notification that arrives after an
+  // earlier one approved the cobro but failed to record it: the database function
+  // is idempotent. Answering 5xx makes Mercado Pago retry the notification.
+  if (requiereRegistroDePago(cobroActual, pago)) {
+    const registro = await repo.registrarPagoCobro(cobro.id);
+    if (registro.dbError) {
+      console.error(`[cobros] no se pudo registrar en la cuenta el pago del cobro ${cobro.id}`);
+      return { status: 500 };
+    }
+    console.log(`[cobros] pago del cobro ${cobro.id} registrado (${registro.data?.motivo ?? 'ok'})`);
+  }
+
   return { status: 200 };
 };
