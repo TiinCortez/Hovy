@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import Aviso from '../ui/Aviso';
 import CobroService from '../../services/api/cobro.service';
 import PagoService from '../../services/api/pago.service';
-import ElegirFormaDePago from './ElegirFormaDePago';
+import RegistroPagoModal from './RegistroPagoModal';
 import { formatearMontoARS } from '../turnos/agendaTurnos';
 import { getApiError } from '../visitas/visitaUtils';
 import {
@@ -15,7 +15,7 @@ import {
   hayQueSeguirConsultando,
   sePuedeRegenerar,
 } from './cobroEstado';
-import { medioDeForma, seleccionInicial, textoConfirmar, validarSeleccion } from './formaDePago';
+import { medioDeForma, totalPagado } from './formaDePago';
 
 const VERDE = '#1B3006';
 
@@ -45,8 +45,8 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
   const [qr, setQr] = useState(null);
   const [saldo, setSaldo] = useState(null);
   const [versionSaldo, setVersionSaldo] = useState(0);
-  const [seleccion, setSeleccion] = useState(() => seleccionInicial('qr', null));
-  const [mostrarManual, setMostrarManual] = useState(false);
+  // Which payment dialog is open: null | 'cobrar' (QR, cash or transfer) | 'manual' (cash or transfer)
+  const [modal, setModal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [pausado, setPausado] = useState(false);
@@ -139,14 +139,17 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seguir, cobroId]);
 
+  // Runs an action and reports whether it worked (the dialog closes only on success).
   const ejecutar = async (accion, mensajeError) => {
     setIsWorking(true);
     setError(null);
     setMensajeOk(null);
     try {
       await accion();
+      return true;
     } catch (err) {
       setError(getApiError(err, mensajeError));
+      return false;
     } finally {
       setIsWorking(false);
     }
@@ -158,7 +161,6 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
       avisado.current = false;
       setPausado(false);
       setQr(null);
-      setMostrarManual(false);
       actualizarCobro(res.data);
     }, 'No se pudo generar el cobro.');
 
@@ -177,8 +179,6 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
       setMensajeOk(`Se registró el pago de ${formatearMontoARS(monto)} (${medio}).`);
       setCobro(null);
       setQr(null);
-      setMostrarManual(false);
-      setSeleccion(seleccionInicial('qr', null));
       setVersionSaldo((v) => v + 1);
       if (res.data?.cobrado) avisarCobrado();
     }, 'No se pudo registrar el pago.');
@@ -200,18 +200,15 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferencia, yaCobrado, isLoading, saldo]);
 
-  const handleConfirmar = () => {
-    const problema = validarSeleccion(seleccion, pendiente);
-    if (problema) {
-      setError(problema);
-      return;
-    }
-    if (seleccion.forma === 'qr') {
-      crearQr();
-      return;
-    }
-    const aviso = `¿Registrar ${formatearMontoARS(aNumero(seleccion.monto))} en ${medioDeForma(seleccion.forma)}? Esta operación no se puede deshacer.`;
-    if (window.confirm(aviso)) registrarManual(seleccion);
+  const handleConfirmar = async (eleccion) => {
+    const ok = eleccion.forma === 'qr' ? await crearQr() : await registrarManual(eleccion);
+    if (ok) setModal(null);
+  };
+
+  const abrirModal = (cual) => {
+    setError(null);
+    setMensajeOk(null);
+    setModal(cual);
   };
 
   const handleVerificar = () =>
@@ -235,17 +232,6 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     } catch {
       setError('No se pudo copiar el link.');
     }
-  };
-
-  const cambiarSeleccion = (nueva) => {
-    setSeleccion(nueva);
-    setError(null);
-  };
-
-  const alternarManual = () => {
-    setError(null);
-    setSeleccion(seleccionInicial('efectivo', pendiente));
-    setMostrarManual((visible) => !visible);
   };
 
   const listaPagos = saldo?.pagos?.length > 0 && (
@@ -299,7 +285,7 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
       </div>
 
       {mensajeOk && <div className="mb-3"><Aviso tipo="ok" icono={CheckCircle2}>{mensajeOk}</Aviso></div>}
-      {error && <div className="mb-3"><Aviso tipo="error" icono={AlertCircle}>{error}</Aviso></div>}
+      {error && !modal && <div className="mb-3"><Aviso tipo="error" icono={AlertCircle}>{error}</Aviso></div>}
 
       {sinSaldo && !cobro ? (
         <Aviso tipo="ok" icono={CheckCircle2}>Este turno no tiene saldo pendiente de cobro.</Aviso>
@@ -307,25 +293,16 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
         <>
           {estado && <div className="mb-3"><Aviso tipo={estado.tipo} icono={ICONOS[estado.tipo]}>{estado.mensaje}</Aviso></div>}
           <p className="text-secondary small mb-2">
-            Elegí cómo paga el cliente. Mientras no pague, la deuda sigue en su cuenta corriente.
+            Mientras el cliente no pague, la deuda sigue en su cuenta corriente.
           </p>
-          <ElegirFormaDePago
-            formas={FORMAS_PANEL}
-            value={seleccion}
-            onChange={cambiarSeleccion}
-            pendiente={pendiente}
+          <Button
+            variant="primary"
+            onClick={() => abrirModal('cobrar')}
             disabled={isWorking}
-          />
-          <div className="mt-3">
-            <Button
-              variant="primary"
-              onClick={handleConfirmar}
-              disabled={isWorking}
-              style={{ backgroundColor: VERDE, borderColor: VERDE }}
-            >
-              {isWorking ? 'Procesando...' : textoConfirmar(seleccion.forma)}
-            </Button>
-          </div>
+            style={{ backgroundColor: VERDE, borderColor: VERDE }}
+          >
+            Cobrar
+          </Button>
         </>
       ) : (
         <>
@@ -358,41 +335,34 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
                     Dejé de consultar automáticamente. Usá &quot;Verificar ahora&quot; cuando el cliente haya pagado.
                   </span>
                 )}
-                <button type="button" className="btn btn-link btn-sm p-0 text-start text-decoration-none fw-semibold" style={{ color: VERDE }} onClick={alternarManual}>
-                  {mostrarManual ? 'Ocultar' : 'El cliente pagó de otra forma (efectivo o transferencia)'}
+                <button type="button" className="btn btn-link btn-sm p-0 text-start text-decoration-none fw-semibold" style={{ color: VERDE }} onClick={() => abrirModal('manual')}>
+                  El cliente pagó de otra forma (efectivo o transferencia)
                 </button>
               </div>
             </div>
           )}
 
-          {cobroPendiente && mostrarManual && (
-            <div className="mt-3 pt-3 border-top">
-              <p className="text-secondary small mb-2">
-                Al registrar el pago, el QR pendiente se cancela para que nadie lo pague de más.
-              </p>
-              <ElegirFormaDePago
-                formas={FORMAS_MANUALES}
-                value={seleccion}
-                onChange={cambiarSeleccion}
-                pendiente={pendiente}
-                disabled={isWorking}
-              />
-              <div className="mt-3">
-                <Button
-                  variant="primary"
-                  onClick={handleConfirmar}
-                  disabled={isWorking}
-                  style={{ backgroundColor: VERDE, borderColor: VERDE }}
-                >
-                  {isWorking ? 'Procesando...' : textoConfirmar(seleccion.forma)}
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
       {listaPagos}
+
+      {modal && (
+        <RegistroPagoModal
+          modo="registrar"
+          formas={modal === 'manual' ? FORMAS_MANUALES : FORMAS_PANEL}
+          formaInicial={modal === 'manual' ? 'efectivo' : 'qr'}
+          subtitulo={`Turno #${idTurno}`}
+          total={saldo?.total ?? null}
+          pendiente={pendiente}
+          pagado={totalPagado(saldo?.pagos)}
+          aviso={modal === 'manual' ? 'Al registrar el pago, el QR pendiente se cancela para que nadie lo pague de más.' : null}
+          isSaving={isWorking}
+          error={error}
+          onConfirm={handleConfirmar}
+          onClose={() => setModal(null)}
+        />
+      )}
     </div>
   );
 }

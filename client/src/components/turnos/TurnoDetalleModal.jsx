@@ -11,7 +11,7 @@ import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
 import ServicioService from '../../services/api/servicio.service';
 import CobroQrPanel from '../cobros/CobroQrPanel';
-import FinalizarTurnoModal from '../cobros/FinalizarTurnoModal';
+import RegistroPagoModal from '../cobros/RegistroPagoModal';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -529,8 +529,11 @@ export default function TurnoDetalleModal({
 
             {/* Pregunta al finalizar: Anotar, Efectivo, Transferencia o QR */}
             {isFinalizarOpen && (
-              <FinalizarTurnoModal
-                total={presupuesto?.monto_total}
+              <RegistroPagoModal
+                modo="finalizar"
+                formas={['anotar', 'efectivo', 'transferencia', 'qr']}
+                total={Number(presupuesto?.monto_total) > 0 ? Number(presupuesto.monto_total) : null}
+                pendiente={Number(presupuesto?.monto_total) > 0 ? Number(presupuesto.monto_total) : null}
                 isSaving={isFinalizando}
                 onClose={() => setIsFinalizarOpen(false)}
                 onConfirm={handleFinalizar}
