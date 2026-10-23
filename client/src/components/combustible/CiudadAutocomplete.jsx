@@ -1,8 +1,10 @@
 import { useId, useState } from 'react';
-import { filtrarCiudades } from './combustibleUtils';
+import { Search } from 'lucide-react';
+import { filtrarCiudades, partirCoincidencia } from './combustibleUtils';
 
-// Text input with a short suggestion list: shows at most 5 matches
-// and narrows them while the user keeps typing. Keyboard: arrows, Enter, Escape.
+// Text input with a short suggestion list: shows at most 5 matches, highlights
+// what the user typed and narrows while they keep typing.
+// Keyboard: arrows, Enter, Escape.
 export default function CiudadAutocomplete({ id, value, opciones, onChange, placeholder }) {
   const listaId = useId();
   const [abierto, setAbierto] = useState(false);
@@ -10,6 +12,7 @@ export default function CiudadAutocomplete({ id, value, opciones, onChange, plac
 
   const { items, total } = filtrarCiudades(opciones, value);
   const visible = abierto && items.length > 0;
+  const indiceActivo = Math.min(activo, items.length - 1);
 
   const elegir = (opcion) => {
     onChange(opcion);
@@ -26,14 +29,15 @@ export default function CiudadAutocomplete({ id, value, opciones, onChange, plac
       setActivo((a) => Math.max(a - 1, 0));
     } else if (e.key === 'Enter' && visible) {
       e.preventDefault();
-      elegir(items[Math.min(activo, items.length - 1)]);
+      elegir(items[indiceActivo]);
     } else if (e.key === 'Escape') {
       setAbierto(false);
     }
   };
 
   return (
-    <div className="position-relative">
+    <div className="combustible-search">
+      <Search size={16} aria-hidden="true" />
       <input
         id={id}
         className="form-control bg-light rounded-3"
@@ -43,7 +47,7 @@ export default function CiudadAutocomplete({ id, value, opciones, onChange, plac
         aria-expanded={visible}
         aria-controls={listaId}
         aria-autocomplete="list"
-        aria-activedescendant={visible ? `${listaId}-${Math.min(activo, items.length - 1)}` : undefined}
+        aria-activedescendant={visible ? `${listaId}-${indiceActivo}` : undefined}
         value={value}
         onChange={(e) => {
           onChange(e.target.value);
@@ -55,32 +59,32 @@ export default function CiudadAutocomplete({ id, value, opciones, onChange, plac
         onKeyDown={handleKeyDown}
       />
       {visible && (
-        <div
-          id={listaId}
-          role="listbox"
-          className="list-group position-absolute w-100 shadow-sm mt-1"
-          style={{ zIndex: 10 }}
-        >
-          {items.map((opcion, indice) => (
-            <button
-              key={opcion}
-              id={`${listaId}-${indice}`}
-              type="button"
-              role="option"
-              aria-selected={indice === Math.min(activo, items.length - 1)}
-              className={`list-group-item list-group-item-action small ${indice === Math.min(activo, items.length - 1) ? 'active' : ''}`}
-              // mousedown (not click) so the input's blur does not close the list first
-              onMouseDown={(e) => {
-                e.preventDefault();
-                elegir(opcion);
-              }}
-            >
-              {opcion}
-            </button>
-          ))}
+        <div id={listaId} role="listbox" className="combustible-sugerencias">
+          {items.map((opcion, indice) => {
+            const [antes, coincidencia, despues] = partirCoincidencia(opcion, value);
+            return (
+              <button
+                key={opcion}
+                id={`${listaId}-${indice}`}
+                type="button"
+                role="option"
+                aria-selected={indice === indiceActivo}
+                className={`combustible-sugerencia ${indice === indiceActivo ? 'is-activa' : ''}`}
+                // mousedown (not click) so the input's blur does not close the list first
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  elegir(opcion);
+                }}
+              >
+                {antes}
+                {coincidencia && <mark>{coincidencia}</mark>}
+                {despues}
+              </button>
+            );
+          })}
           {total > items.length && (
-            <div className="list-group-item small text-secondary">
-              Hay {total - items.length} más. Seguí escribiendo para acotar.
+            <div className="combustible-sugerencias-pie">
+              {total - items.length} más. Seguí escribiendo para acotar.
             </div>
           )}
         </div>

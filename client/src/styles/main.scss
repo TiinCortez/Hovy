@@ -753,4 +753,213 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 }
 
+/* --- AJUSTE DE COMBUSTIBLE ---
+   Bootstrap se importa de forma selectiva (sin list-group, badge ni alert),
+   así que estos estilos son propios. */
+.combustible-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #454a43;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.combustible-tipos {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background-color: #f1f1ec;
+  border-radius: 999px;
+}
+
+.combustible-tipo {
+  padding: 0.45rem 1.25rem;
+  color: $hovy-gray;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+
+  &:hover:not(.is-selected) { background-color: rgba(27, 48, 6, 0.07); }
+  &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
+
+  &.is-selected {
+    color: #ffffff;
+    background-color: $hovy-green;
+    box-shadow: 0 2px 6px rgba(27, 48, 6, 0.22);
+  }
+}
+
+.combustible-search {
+  position: relative;
+
+  > svg {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: #8a9086;
+    pointer-events: none;
+  }
+
+  > input { padding-left: 2.5rem; }
+}
+
+.combustible-sugerencias {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 10;
+  padding: 0.35rem;
+  background-color: #ffffff;
+  border: 1px solid $hovy-border;
+  border-radius: 0.9rem;
+  box-shadow: 0 12px 28px rgba(27, 48, 6, 0.12);
+}
+
+.combustible-sugerencia {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  color: #343934;
+  font-size: 0.9rem;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 0.6rem;
+
+  &:hover,
+  &.is-activa { background-color: rgba(27, 48, 6, 0.07); }
+
+  mark {
+    padding: 0;
+    color: $hovy-green;
+    font-weight: 800;
+    background: transparent;
+  }
+}
+
+.combustible-sugerencias-pie {
+  padding: 0.45rem 0.75rem 0.25rem;
+  color: #70766d;
+  font-size: 0.78rem;
+}
+
+.combustible-marca {
+  margin: 0 0 0.5rem;
+  color: $hovy-green;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.combustible-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 0.5rem;
+  padding: 0.8rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid #dfe1dc;
+  border-radius: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+
+  input {
+    flex: 0 0 auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: $hovy-green;
+  }
+
+  &:hover { border-color: #9eab96; }
+
+  &.is-selected {
+    background-color: #f4f9ef;
+    border-color: $hovy-green;
+    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+  }
+}
+
+.combustible-precio {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1f2a14;
+  white-space: nowrap;
+
+  small {
+    margin-left: 0.15rem;
+    color: #70766d;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.combustible-pill {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.55rem;
+  color: #08775b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: middle;
+  background-color: #eafff6;
+  border: 1px solid #8ee5c6;
+  border-radius: 999px;
+}
+
+.combustible-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 0.8rem;
+
+  &.is-error { color: #a12626; background-color: #fdecec; border: 1px solid #f5b5b5; }
+  &.is-ok { color: #08775b; background-color: #eafff6; border: 1px solid #8ee5c6; }
+  &.is-aviso { color: #8a5b00; background-color: #fff9e8; border: 1px solid #f4d77b; }
+}
+
+.combustible-vacio {
+  padding: 1.25rem;
+  color: #70766d;
+  font-size: 0.9rem;
+  text-align: center;
+  background-color: #fafaf7;
+  border: 1px dashed #cfd2c8;
+  border-radius: 0.9rem;
+}
+
+.combustible-ejemplo {
+  padding: 0.75rem 1rem;
+  color: #294b15;
+  font-size: 0.88rem;
+  background-color: #f0f8e9;
+  border: 1px solid #d5e9c6;
+  border-radius: 0.8rem;
+}
+
+.combustible-ayuda {
+  summary {
+    color: $hovy-green;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  p {
+    margin: 0.4rem 0 0;
+    color: #62675f;
+    font-size: 0.82rem;
+  }
+}
+
 @import './buttons';

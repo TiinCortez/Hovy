@@ -46,6 +46,25 @@ export const filtrarCiudades = (opciones, texto, limite = MAX_SUGERENCIAS) => {
   return { items: coinciden.slice(0, limite), total: coinciden.length };
 };
 
+// Splits `texto` around the first match of `buscado` (ignoring case and accents)
+// so the match can be highlighted. Falls back to no highlight when accents make
+// the indexes of the normalized and the original text differ.
+export const partirCoincidencia = (texto, buscado) => {
+  const normalizado = sinTildes(texto);
+  const indice = normalizado.indexOf(sinTildes(buscado));
+  if (indice < 0 || normalizado.length !== texto.length || !buscado.trim()) return [texto, '', ''];
+  const fin = indice + sinTildes(buscado).length;
+  return [texto.slice(0, indice), texto.slice(indice, fin), texto.slice(fin)];
+};
+
+// Example shown to the user: cost of a trip of `km` with the chosen settings.
+// Same formula as the backend (km x consumo/100 x price per unit, one way).
+export const costoEjemplo = (km, consumo100km, precioUnidad) =>
+  Math.round((km * (Number(consumo100km) / 100) * precioUnidad + Number.EPSILON) * 100) / 100;
+
+export const formatearPesos = (monto) =>
+  `$${monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 // Same rule as the backend: a number greater than 0 and up to 100.
 export const consumoValido = (valor) => {
   if (valor === '' || valor === null || valor === undefined) return false;
