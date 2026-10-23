@@ -1,0 +1,71 @@
+### Manual cases for /api/combustible (JWT + admin).
+### Set @token with the accessToken returned by POST /auth/login.
+@base = http://localhost:4000/api
+@token = PASTE_JWT_HERE
+
+### 1) Cities available in the naftas API  -  [Expect 200, list of names]
+GET {{base}}/combustible/ciudades
+Authorization: Bearer {{token}}
+
+### 2) Prices of a city (cached, refreshed after 3 days)  -  [Expect 200, desactualizado=false]
+GET {{base}}/combustible/precios?ciudad=San Salvador de Jujuy
+Authorization: Bearer {{token}}
+
+### 3) Unknown city  -  [Expect 404]
+GET {{base}}/combustible/precios?ciudad=NOEXISTE
+Authorization: Bearer {{token}}
+
+### 4) Save the fuel configuration (nafta, consumo in L/100km)  -  [Expect 200]
+PUT {{base}}/combustible/config
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ciudad": "SAN SALVADOR DE JUJUY",
+  "tipo": "nafta",
+  "empresa": "YPF",
+  "producto": "SUPER",
+  "consumo_100km": 8.5
+}
+
+### 5) GNC (consumo in m3/100km)  -  [Expect 200]
+PUT {{base}}/combustible/config
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ciudad": "SAN SALVADOR DE JUJUY",
+  "tipo": "gnc",
+  "empresa": "YPF",
+  "producto": "GNC",
+  "consumo_100km": 9.2
+}
+
+### 6) Missing consumo  -  [Expect 400]
+PUT {{base}}/combustible/config
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ciudad": "SAN SALVADOR DE JUJUY",
+  "tipo": "nafta",
+  "empresa": "YPF",
+  "producto": "SUPER"
+}
+
+### 7) Product that does not exist for that type  -  [Expect 400]
+PUT {{base}}/combustible/config
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ciudad": "SAN SALVADOR DE JUJUY",
+  "tipo": "gasoil",
+  "empresa": "YPF",
+  "producto": "SUPER",
+  "consumo_100km": 8
+}
+
+### 8) Current configuration  -  [Expect 200]
+GET {{base}}/combustible/config
+Authorization: Bearer {{token}}
