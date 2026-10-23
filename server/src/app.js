@@ -17,6 +17,7 @@ import qrRoutes from './integrations/qr/qr.routes.js';
 import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
 import { supabaseAdmin } from './config/supabase.js';
 import requestTracer from './middleware/requestTracer.js';
+import { apiRateLimit } from './middleware/apiRateLimit.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -159,6 +160,10 @@ app.get('/api/health', async (req, res) => {
     return res.status(503).json(healthData);
   }
 });
+
+// Límite general de la API (el bot y el webhook de Mercado Pago quedan afuera: tienen
+// su propio cupo). Va antes de todas las rutas, salvo /api/health para no cortar sondeos.
+app.use('/api', apiRateLimit);
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
