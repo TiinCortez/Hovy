@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import CombustibleService from '../../services/api/combustible.service';
 import { getApiError } from '../visitas/visitaUtils';
 import { antiguedadPrecio, consumoValido, UNIDADES, TIPOS_COMBUSTIBLE } from './combustibleUtils';
+import CiudadAutocomplete from './CiudadAutocomplete';
 
 const VERDE = '#1B3006';
 
@@ -164,19 +165,14 @@ export default function CombustibleConfigCard() {
         <div className="row g-3">
           <div className="col-12 col-md-6">
             <label className="form-label small fw-bold text-secondary" htmlFor="combustible-ciudad">Ciudad</label>
-            <input
+            <CiudadAutocomplete
               id="combustible-ciudad"
-              list="combustible-ciudades"
-              className="form-control bg-light rounded-3"
-              placeholder="Buscá tu ciudad"
-              autoComplete="off"
+              placeholder="Escribí tu ciudad"
               value={form.ciudad}
-              onChange={(e) => handleCiudad(e.target.value)}
+              opciones={ciudades}
+              onChange={handleCiudad}
             />
-            <datalist id="combustible-ciudades">
-              {ciudades.map((c) => <option key={c} value={c} />)}
-            </datalist>
-            <div className="form-text">Elegí una ciudad de la lista para ver los precios.</div>
+            <div className="form-text">Escribí y elegí una ciudad de la lista para ver los precios.</div>
           </div>
           <div className="col-12 col-md-6">
             <label className="form-label small fw-bold text-secondary" htmlFor="combustible-consumo">
