@@ -126,12 +126,19 @@ export const calcularTraslado = async (
   }
 };
 
-// Columns of presupuestos that keep a snapshot of the trip (migration 012).
-// Empty when the trip was not included, so a budget without trip never writes
-// columns that may not exist yet.
+// Columns of presupuestos for the trip cost.
+//
+// The trip travels in `recargo_logistico`: the database computes
+// monto_estimado = monto_subtotal - descuento + recargo_logistico with a trigger
+// (and ignores any monto_estimado sent), so that is what makes the estimate and
+// the suggested total include it. The other columns (migration 012) keep a
+// snapshot of what was used, so the amount does not change if the fuel price
+// does. Without trip, the surcharge goes back to 0 and the snapshot is cleared,
+// so re-saving a budget never leaves a previous trip behind.
 export const camposTrasladoPresupuesto = (traslado) =>
   traslado?.incluido
     ? {
+        recargo_logistico: traslado.costo,
         monto_traslado: traslado.costo,
         traslado_km: traslado.km,
         traslado_consumo_100km: traslado.consumo_100km,
@@ -140,4 +147,13 @@ export const camposTrasladoPresupuesto = (traslado) =>
         traslado_combustible: traslado.combustible,
         traslado_aproximado: traslado.km_aproximados === true,
       }
-    : {};
+    : {
+        recargo_logistico: 0,
+        monto_traslado: null,
+        traslado_km: null,
+        traslado_consumo_100km: null,
+        traslado_precio_unidad: null,
+        traslado_unidad: null,
+        traslado_combustible: null,
+        traslado_aproximado: null,
+      };
