@@ -16,6 +16,7 @@ const router = Router();
 router.use(combustibleRateLimit);
 router.get('/ciudades', controller.ciudades);
 router.get('/precios', controller.precios);
+router.get('/traslado', controller.traslado);
 router.get('/config', controller.obtenerConfig);
 router.put('/config', controller.guardarConfig);
 
