@@ -57,7 +57,11 @@ export const calcularTraslado = async (
   };
 
   try {
-    const lecturaConfig = await dependencias.leerConfigUsuario(idUsuario);
+    // Independent reads go together: each one costs a network round trip.
+    const [lecturaConfig, lecturaInmueble] = await Promise.all([
+      dependencias.leerConfigUsuario(idUsuario),
+      dependencias.leerInmueble(idInmueble),
+    ]);
     if (lecturaConfig.dbError) {
       console.error('[traslado] no se pudo leer la configuración del usuario');
       return sinTraslado('error');
@@ -77,7 +81,6 @@ export const calcularTraslado = async (
     const origen = normalizarCoordenadas(config.latitud_base, config.longitud_base);
     if (!origen) return sinTraslado('sin_origen');
 
-    const lecturaInmueble = await dependencias.leerInmueble(idInmueble);
     if (lecturaInmueble.dbError) {
       console.error('[traslado] no se pudo leer el inmueble');
       return sinTraslado('error');
@@ -85,7 +88,11 @@ export const calcularTraslado = async (
     const destino = normalizarCoordenadas(lecturaInmueble.data?.latitud, lecturaInmueble.data?.longitud);
     if (!destino) return sinTraslado('inmueble_sin_ubicacion');
 
-    const precios = await dependencias.obtenerPrecios(config.combustible_ciudad);
+    // The fuel price and the distance do not depend on each other.
+    const [precios, ruta] = await Promise.all([
+      dependencias.obtenerPrecios(config.combustible_ciudad),
+      dependencias.distanciaKm({ origen, destino }),
+    ]);
     if (precios.error) return sinTraslado('sin_precio');
     const precio = precios.data.precios.find(
       (p) =>
@@ -95,7 +102,6 @@ export const calcularTraslado = async (
     );
     if (!precio) return sinTraslado('sin_precio');
 
-    const ruta = await dependencias.distanciaKm({ origen, destino });
     if (ruta.motivo) return sinTraslado(ruta.motivo);
 
     const costo = calcularCostoTraslado({

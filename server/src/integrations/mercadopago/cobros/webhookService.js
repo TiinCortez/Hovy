@@ -1,7 +1,7 @@
 import { obtenerAccessTokenVigente } from '../mercadopagoOAuthService.js';
 import * as repo from './cobrosRepository.js';
 import { obtenerPago } from './mpPagosClient.js';
-import { resolverTransicion } from './estadoPago.js';
+import { aplicarPagoACobro } from './aplicarPago.js';
 import { verificarFirmaWebhook } from './webhookSignature.js';
 
 // Returns { status } for the HTTP answer. 200 for handled and for valid-but-unknown
@@ -54,16 +54,10 @@ export const procesarWebhook = async ({ headers, query, body }) => {
   if (errCobro) return { status: 500 };
   if (!cobro) return { status: 200 };
 
-  const { nuevoEstado, motivo } = resolverTransicion(cobro, pago);
-  if (!nuevoEstado) {
-    if (motivo === 'monto_no_coincide') {
-      console.error(`[cobros] monto o moneda no coinciden en el cobro ${cobro.id}; no se aprueba`);
-    }
-    return { status: 200 };
-  }
+  // Same logic as the active check (see aplicarPagoACobro). Answering 5xx when it
+  // fails makes Mercado Pago retry the notification (every 15 minutes).
+  const aplicado = await aplicarPagoACobro(cobro, pago);
+  if (aplicado.dbError) return { status: 500 };
 
-  const { dbError: errUpd } = await repo.transicionarDesdePendiente(cobro.id, nuevoEstado, pago.id);
-  if (errUpd) return { status: 500 };
-  console.log(`[cobros] cobro ${cobro.id} -> ${nuevoEstado}`);
   return { status: 200 };
 };

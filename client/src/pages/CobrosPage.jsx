@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import CobrosResumen from '../components/cobros/CobrosResumen';
 import CobroFila from '../components/cobros/CobroFila';
 import TurnoDetalleModal from '../components/turnos/TurnoDetalleModal';
+import MarcarCobradoModal from '../components/cobros/MarcarCobradoModal';
 import TurnoService from '../services/api/turno.service';
 import { obtenerAhoraTurnos, cambiarMesTurnos } from '../components/turnos/agendaTurnos';
 import {
@@ -44,6 +45,7 @@ export default function CobrosPage() {
   const [guardandoId, setGuardandoId] = useState(null);
   const [feedback, setFeedback] = useState(null); // { type: 'success' | 'danger', text }
   const [detalle, setDetalle] = useState(null);
+  const [pagando, setPagando] = useState(null); // turno cuyo pago se está registrando
 
   // Se traen todos los turnos una vez; el mes y los filtros se resuelven en memoria.
   // El estado solo se toca dentro de los callbacks asíncronos.
@@ -148,9 +150,15 @@ export default function CobrosPage() {
     setReloadKey((k) => k + 1);
   };
 
-  // Usa el PUT existente de turnos: el backend devuelve el turno actualizado
-  const handleCambiarCobrado = async (turno, cobrado) => {
+  // Marcar como cobrado registra el pago real (modal); volver a pendiente usa el PUT.
+  const handleCambiarCobrado = (turno, cobrado) => {
     setMenuAbiertoId(null);
+    if (cobrado) setPagando(turno);
+    else actualizarCobrado(turno, false);
+  };
+
+  // Usa el PUT existente de turnos: el backend devuelve el turno actualizado
+  const actualizarCobrado = async (turno, cobrado) => {
     setGuardandoId(turno.idTurno);
     try {
       const response = await TurnoService.update(turno.idTurno, { cobrado });
@@ -165,6 +173,17 @@ export default function CobrosPage() {
       setFeedback({ type: 'danger', text: error.response?.data?.error || 'No se pudo actualizar el estado de cobro.' });
     } finally {
       setGuardandoId(null);
+    }
+  };
+
+  // El pago quedó registrado: si saldó la deuda el turno pasa a cobrado, si no sigue pendiente.
+  const handlePagoRegistrado = (turno, resultado) => {
+    setPagando(null);
+    if (resultado?.cobrado) {
+      setTurnos((prev) => prev.map((t) => (t.idTurno === turno.idTurno ? { ...t, cobrado: true } : t)));
+      setFeedback({ type: 'success', text: `El turno ${codigoOrden(turno)} quedó cobrado.` });
+    } else {
+      setFeedback({ type: 'success', text: `Se registró el pago del turno ${codigoOrden(turno)}; todavía queda saldo pendiente.` });
     }
   };
 
@@ -321,6 +340,17 @@ export default function CobrosPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {pagando && (
+        <MarcarCobradoModal
+          key={pagando.idTurno}
+          turno={pagando}
+          onRegistrado={(resultado) => handlePagoRegistrado(pagando, resultado)}
+          onSinSaldo={() => { const turno = pagando; setPagando(null); actualizarCobrado(turno, true); }}
+          onFallo={(text) => { setPagando(null); setFeedback({ type: 'danger', text }); }}
+          onClose={() => setPagando(null)}
+        />
       )}
 
       {/* Los turnos de esta vista ya están Realizados: el modal solo muestra el detalle */}
