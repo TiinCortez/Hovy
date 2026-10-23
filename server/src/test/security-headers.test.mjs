@@ -27,3 +27,17 @@ test('seguridad: /api/health expone cabeceras HTTP defensivas (Helmet, CSP y COR
     server.close();
   }
 });
+
+// OpenStreetMap responde 403 a los pedidos de tiles que llegan sin Referer, así que la
+// página no puede usar `no-referrer`. Con el origen alcanza y no filtra rutas completas.
+test('seguridad: Referrer-Policy deja pasar el origen para que el mapa cargue los tiles de OSM', async () => {
+  const server = app.listen(0);
+  const port = server.address().port;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/health`);
+    assert.equal(res.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+  } finally {
+    server.close();
+  }
+});
