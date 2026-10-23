@@ -68,6 +68,18 @@ export const preciosVencidos = (filas, ahora = Date.now(), ttlMs = TTL_PRECIOS_M
   return ahora - masViejo >= ttlMs;
 };
 
+// Fuel (liters, or m3 for GNC) a trip of `km` needs: km x consumo / 100.
+// Returns null when any input is missing or invalid.
+export const calcularConsumoEstimado = ({ km, consumo100km }) => {
+  const valores = [km, consumo100km];
+  if (valores.some((v) => v === null || v === undefined || v === '' || typeof v === 'boolean')) return null;
+
+  const [kmNum, consumo] = valores.map(Number);
+  if (!Number.isFinite(kmNum) || !Number.isFinite(consumo) || kmNum < 0 || consumo <= 0) return null;
+
+  return redondear2(kmNum * (consumo / 100));
+};
+
 // km x (consumo per 100 km / 100) x price per unit (liter or m3) x tramos.
 // `tramos` is 1 for one way (current rule) and 2 for a round trip.
 // Returns null when any input is missing or invalid, so the caller can ask the

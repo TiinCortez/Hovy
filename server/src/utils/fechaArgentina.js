@@ -33,6 +33,29 @@ export const sumarDias = (fechaISO, n) => {
   return fecha.toISOString().slice(0, 10);
 };
 
+// Fecha de una consulta de solo lectura: sin valor es hoy en Argentina, y con
+// valor tiene que ser YYYY-MM-DD y existir. A diferencia de validarFechaNoPasada,
+// admite fechas pasadas (consultar un día que ya ocurrió no escribe nada).
+// Devuelve { fecha } o { error }.
+export const resolverFechaConsulta = (valor, ahora = new Date()) => {
+  if (valor === undefined || valor === null || String(valor).trim() === '') {
+    return { fecha: hoyEnArgentina(ahora) };
+  }
+
+  const fecha = String(valor).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return { error: 'La fecha tiene que tener el formato YYYY-MM-DD.' };
+  }
+
+  const [anio, mes, dia] = fecha.split('-').map(Number);
+  const fechaUtc = new Date(Date.UTC(anio, mes - 1, dia));
+  if (fechaUtc.getUTCMonth() !== mes - 1 || fechaUtc.getUTCDate() !== dia) {
+    return { error: `La fecha no es válida: "${fecha}".` };
+  }
+
+  return { fecha };
+};
+
 // Devuelve el mensaje de error o null. Chequea el formato y que la fecha
 // exista (2026-02-30 pasa la regex pero no es una fecha), y que no sea
 // anterior a hoy.
