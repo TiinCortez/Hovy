@@ -26,6 +26,8 @@ jobs:
           cache-dependency-path: client/package-lock.json
       - name: Instalar dependencias
         run: npm ci
+      - name: Auditoría de seguridad de dependencias
+        run: npm audit --audit-level=high
       - name: Lint
         run: npm run lint
       - name: Build
@@ -46,10 +48,80 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - name: Instalar dependencias
         run: npm ci
+      - name: Auditoría de seguridad de dependencias de producción
+        run: npm audit --omit=dev --audit-level=high
       - name: Chequeo de sintaxis
         run: |
           for f in $(find src -name '*.js'); do
             node --check "$f"
           done
-      - name: Ejecutar pruebas unitarias
+      - name: Ejecutar pruebas automatizadas
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: https://ci-tests.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-tests-sin-conexion
+          JWT_SECRET: ci-test-jwt-secret-key-min-32-chars
         run: npm test
+
+  security:
+    name: DevSecOps (Gitleaks + Trivy Scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Escaneo de secretos con Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Escaneo de vulnerabilidades en repositorio con Trivy (FS)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Construir imagen Docker Alpine para validación y escaneo
+        run: |
+          docker build --build-arg GIT_SHA=${{ github.sha }} -t hovy-api:ci .
+
+      - name: Escaneo de vulnerabilidades en imagen Docker Alpine con Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'image'
+          image-ref: 'hovy-api:ci'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+  migrations:
+    name: Database Migrations & IaC Governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar correlatividad y gobernanza de migraciones SQL
+        run: node scripts/verify-migrations.mjs
+      - name: Validar sintaxis de scripts Bash de infraestructura (IaC)
+        run: |
+          for s in infra/scripts/*.sh; do
+            bash -n "$s"
+          done
+      - name: Validar sintaxis de configuración Nginx con nginx -t
+        run: |
+          docker run --rm -v "${{ github.workspace }}/infra/nginx/hovy.conf:/tmp/hovy.conf:ro" nginx:alpine sh -c "
+            apk add --no-cache openssl >/dev/null &&
+            mkdir -p /etc/ssl/certs /etc/ssl/private &&
+            openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+              -keyout /etc/ssl/private/cloudflare_origin.key \
+              -out /etc/ssl/certs/cloudflare_origin.pem \
+              -subj '/CN=hovyapp.com.ar' 2>/dev/null &&
+            touch /etc/nginx/.htpasswd &&
+            cp /tmp/hovy.conf /etc/nginx/conf.d/default.conf &&
+            nginx -t
+          "

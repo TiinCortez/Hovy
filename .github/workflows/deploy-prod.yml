@@ -15,6 +15,9 @@ jobs:
     name: Build & Deploy to Production VM
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -24,6 +27,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verificar correlatividad de migraciones SQL
+        run: node scripts/verify-migrations.mjs
+
       - name: Validar dependencias y build del Cliente
         working-directory: client
         run: |
@@ -32,6 +38,11 @@ jobs:
 
       - name: Validar sintaxis y pruebas del Backend
         working-directory: server
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: https://ci-tests.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-tests-sin-conexion
+          JWT_SECRET: ci-test-jwt-secret-key-min-32-chars
         run: |
           npm ci
           for f in $(find src -name '*.js'); do
@@ -39,27 +50,47 @@ jobs:
           done
           node --test src/test/*.test.mjs
 
-      - name: Desplegar en Azure VM (Producción - Puerto 4000)
+      - name: Desplegar, Respaldar, Migrar BD y Verificar Salud en Azure VM (Producción - Puerto 4000)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            set -e
             cd ~/Hovy-prod
+            PREV_SHA=$(git rev-parse HEAD)
             git fetch origin main
             git reset --hard origin/main
-            
-            # Forzar variables de compilación de Producción para Vite en el cliente
+
             export VITE_SUPABASE_URL="https://dulaaxavsvgkqqbrvltd.supabase.co"
+            export GIT_SHA=$(git rev-parse --short HEAD)
             docker compose up -d --build --force-recreate
             docker image prune -f
 
-            echo "Verificando estado de salud del servicio en Producción..."
+            echo "Generando backup HTTPS preventivo antes de migrar Producción..."
+            mkdir -p /home/azureuser/backups
+            FECHA=$(date +%Y%m%d_%H%M%S)
+            docker compose exec -T api node scripts/db-backup-https.mjs /tmp/pre_deploy_prod.json.gz || true
+            docker cp hovy-api-prod:/tmp/pre_deploy_prod.json.gz "/home/azureuser/backups/pre_deploy_prod_${FECHA}.json.gz" 2>/dev/null || true
+            docker compose exec -T api rm -f /tmp/pre_deploy_prod.json.gz || true
+
+            echo "Ejecutando migraciones automáticas pendientes en Producción..."
+            if ! docker compose exec -T api node scripts/db-migrate.mjs --apply; then
+              echo "ERROR: Falló la ejecución de migraciones automáticas en Producción. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
+              exit 1
+            fi
+
+            echo "Verificando estado de salud del servicio en Producción (GIT_SHA=$GIT_SHA)..."
             EXITO=0
             for i in $(seq 1 12); do
               if curl -s -f http://127.0.0.1:4000/api/health > /dev/null; then
                 echo "Smoke test exitoso en el intento $i/12."
+                curl -s http://127.0.0.1:4000/api/health?deep=true || true
+                echo ""
                 EXITO=1
                 break
               fi
@@ -68,7 +99,10 @@ jobs:
             done
 
             if [ $EXITO -ne 1 ]; then
-              echo "ERROR: El healthcheck fallo tras 60 segundos."
+              echo "ERROR: El healthcheck falló tras 60s. Ejecutando AUTO-ROLLBACK hacia $PREV_SHA..."
               docker compose logs --tail 50
+              git reset --hard "$PREV_SHA"
+              export GIT_SHA=$(git rev-parse --short HEAD)
+              docker compose up -d --build --force-recreate
               exit 1
             fi

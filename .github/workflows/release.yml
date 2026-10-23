@@ -1,0 +1,76 @@
+name: Release & Changelog Automation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Generate Semantic Release & Changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout del repositorio con historial completo y tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calcular siguiente versión semántica (SemVer)
+        id: semver
+        run: |
+          git fetch --tags --force
+          PKG_VER=$(node -p "require('./server/package.json').version")
+          LAST_TAG=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            NEXT_TAG="v${PKG_VER}"
+          elif ! git rev-parse "v${PKG_VER}" >/dev/null 2>&1; then
+            NEXT_TAG="v${PKG_VER}"
+          else
+            VER="${LAST_TAG#v}"
+            MAJOR=$(echo "$VER" | cut -d. -f1)
+            MINOR=$(echo "$VER" | cut -d. -f2)
+            PATCH=$(echo "$VER" | cut -d. -f3)
+
+            COMMITS=$(git log "${LAST_TAG}..HEAD" --pretty=format:"%s" || true)
+            if [ -z "$COMMITS" ]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if echo "$COMMITS" | grep -qiE "^feat(\(.*\))?!:|BREAKING CHANGE"; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+            elif echo "$COMMITS" | grep -qiE "^feat(\(.*\))?:"; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            else
+              PATCH=$((PATCH + 1))
+            fi
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
+          echo "Siguiente tag calculado: $NEXT_TAG"
+
+      - name: Crear GitHub Release y notas de cambios automáticas
+        if: steps.semver.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.semver.outputs.tag }}"
+          echo "Creando GitHub Release para $TAG..."
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --generate-notes \
+            --target main

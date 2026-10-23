@@ -1,0 +1,20 @@
+# Configuración de Gitleaks para Hovy
+title = "Gitleaks Hovy Config"
+
+[allowlist]
+description = "Permitir mocks de prueba y plantillas documentadas"
+paths = [
+  '''server/\.env\.example''',
+  '''client/\.env\.example''',
+  '''.*\.test\.mjs$''',
+  '''.*\.http$''',
+  '''package-lock\.json$''',
+  '''docs/migrations/.*\.sql$'''
+]
+
+stopwords = [
+  "tu_supabase_service_role_key_aqui",
+  "tu_secreto_jwt_seguro_y_aleatorio",
+  "tu_clave_secreta_para_el_bot_n8n",
+  "sb_publishable_6iEe3FDH5iTXQqRou3E4qQ_1DFCACJd"
+]
