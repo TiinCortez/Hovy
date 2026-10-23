@@ -7,6 +7,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'traslado-tests-sin-conexion';
 
 const { distanciaKm, reiniciarCacheRutas } = await import('../services/rutaService.js');
 const { calcularTraslado, TRAMOS_TRASLADO } = await import('../services/trasladoService.js');
+const { kmAproximados } = await import('../utils/distancia.js');
 
 const ORIGEN = { latitud: -24.1858, longitud: -65.2995 };
 const DESTINO = { latitud: -24.2177, longitud: -65.2781 };
@@ -16,11 +17,21 @@ const respuestaRuta = (metros) => respuestaJson({ routes: [{ summary: { distance
 
 // ---- rutaService ------------------------------------------------------------
 
-test('distanciaKm: sin clave de OpenRouteService no consulta y avisa', async () => {
+test('distanciaKm: sin clave no consulta y usa la distancia aproximada', async () => {
   reiniciarCacheRutas();
   const r = await distanciaKm(
     { origen: ORIGEN, destino: DESTINO },
     { apiKey: '', fetchFn: async () => assert.fail('no debe consultar') }
+  );
+  assert.equal(r.aproximado, true);
+  assert.equal(r.km, kmAproximados(ORIGEN, DESTINO));
+});
+
+test('distanciaKm: sin clave y con el respaldo apagado avisa que no hay ruteo', async () => {
+  reiniciarCacheRutas();
+  const r = await distanciaKm(
+    { origen: ORIGEN, destino: DESTINO },
+    { apiKey: '', respaldoAproximado: false, fetchFn: async () => assert.fail('no debe consultar') }
   );
   assert.equal(r.motivo, 'sin_ruteo');
 });
@@ -39,6 +50,7 @@ test('distanciaKm: convierte metros a km y manda [lon, lat] con la clave en el h
     }
   );
   assert.equal(r.km, 12.35);
+  assert.equal(r.aproximado, false);
   assert.match(pedido.url, /v2\/directions\/driving-car$/);
   assert.equal(pedido.opciones.method, 'POST');
   assert.equal(pedido.opciones.headers.Authorization, 'clave-de-prueba');
@@ -70,14 +82,35 @@ test('distanciaKm: cachea por par de coordenadas', async () => {
   assert.equal(llamadas, 1);
 });
 
-test('distanciaKm: error de red, status inesperado o respuesta sin distancia no tiran', async () => {
-  for (const fetchFn of [
-    async () => { throw new Error('boom'); },
-    async () => respuestaJson({ error: { code: 2010 } }, false, 404),
-    async () => respuestaJson({ routes: [] }),
-  ]) {
+const FALLAS_ORS = [
+  async () => { throw new Error('boom'); },
+  async () => respuestaJson({ error: { code: 2010 } }, false, 404),
+  async () => respuestaJson({ routes: [] }),
+];
+
+test('distanciaKm: si OpenRouteService falla usa la distancia aproximada y no la cachea', async () => {
+  for (const fetchFn of FALLAS_ORS) {
     reiniciarCacheRutas();
     const r = await distanciaKm({ origen: ORIGEN, destino: DESTINO }, { apiKey: 'k', fetchFn });
+    assert.equal(r.aproximado, true);
+    assert.equal(r.km, kmAproximados(ORIGEN, DESTINO));
+  }
+  // The approximation must not be cached: once ORS is back, the real route wins.
+  const real = await distanciaKm(
+    { origen: ORIGEN, destino: DESTINO },
+    { apiKey: 'k', fetchFn: async () => respuestaRuta(9000) }
+  );
+  assert.equal(real.aproximado, false);
+  assert.equal(real.km, 9);
+});
+
+test('distanciaKm: con el respaldo apagado, la falla de OpenRouteService no tira', async () => {
+  for (const fetchFn of FALLAS_ORS) {
+    reiniciarCacheRutas();
+    const r = await distanciaKm(
+      { origen: ORIGEN, destino: DESTINO },
+      { apiKey: 'k', fetchFn, respaldoAproximado: false }
+    );
     assert.equal(r.motivo, 'ruta_no_disponible');
   }
 });
@@ -124,6 +157,17 @@ test('calcularTraslado: solo ida, devuelve costo y la foto de los datos usados',
   assert.equal(r.unidad, 'l');
   assert.equal(r.combustible, 'YPF SUPER');
   assert.equal(r.desactualizado, false);
+  assert.equal(r.km_aproximados, false);
+});
+
+test('calcularTraslado: con distancia aproximada lo indica en el resultado', async () => {
+  const r = await calcularTraslado(
+    { idUsuario: 1, idInmueble: 5 },
+    deps({ distanciaKm: async () => ({ km: 12, aproximado: true }) })
+  );
+  assert.equal(r.incluido, true);
+  assert.equal(r.km_aproximados, true);
+  assert.equal(r.costo, 2530.8);
 });
 
 test('calcularTraslado: GNC usa m3 y marca el precio de referencia', async () => {
