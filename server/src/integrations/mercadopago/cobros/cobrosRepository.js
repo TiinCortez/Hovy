@@ -24,15 +24,29 @@ export const actualizarPreferencia = async (id, { preference_id, init_point }) =
 export const eliminarCobro = async (id) =>
   resultado(await supabaseAdmin.from('cobros_mercadopago').delete().eq('id', id));
 
-export const listarCobros = async (idUsuario, idSolicitud) => {
+export const listarCobros = async (idUsuario, idSolicitud, idTurno = null) => {
   let query = supabaseAdmin
     .from('cobros_mercadopago')
     .select(COLUMNAS)
     .eq('id_usuario', idUsuario)
     .order('created_at', { ascending: false });
   if (idSolicitud) query = query.eq('id_solicitud', idSolicitud);
+  if (idTurno) query = query.eq('id_turno', idTurno);
   return resultado(await query);
 };
+
+// Most recent cobro of a turno in any state (to answer "did they pay?"), whoever
+// created it. Resolves { data: row | null }.
+export const buscarUltimoPorTurno = async (idTurno) =>
+  resultado(
+    await supabaseAdmin
+      .from('cobros_mercadopago')
+      .select(COLUMNAS)
+      .eq('id_turno', idTurno)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  );
 
 // Owner-scoped lookup: another seller's cobro looks like a missing one.
 export const obtenerCobro = async (id, idUsuario) =>

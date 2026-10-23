@@ -1,13 +1,17 @@
-import test from 'node:test';
+import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   consultarNaftas,
   obtenerPrecios,
   listarCiudades,
   reiniciarCacheCiudades,
+  reiniciarCachePrecios,
   validarConfig,
 } from '../services/combustibleService.js';
 import { TTL_PRECIOS_MS } from '../utils/combustible.js';
+
+// Each test starts without prices in memory: they check the database path.
+beforeEach(() => reiniciarCachePrecios());
 
 const AHORA = Date.parse('2026-10-23T12:00:00Z');
 

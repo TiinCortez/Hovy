@@ -22,9 +22,19 @@ export const crear = conUsuario(async (req, res, idUsuario) => {
 });
 
 export const listar = conUsuario(async (req, res, idUsuario) => {
-  const r = await service.listarCobros(idUsuario, req.query.id_solicitud);
+  const r = await service.listarCobros(idUsuario, req.query.id_solicitud, req.query.id_turno);
   if (r.error) return responderErrorServicio(res, r.error);
   return res.json({ ok: true, data: r.data });
+});
+
+// POST /api/cobros/:id/verificar
+// Active check: asks Mercado Pago about the payment (at most once every 15 s per
+// cobro) and applies it like the webhook. Meant to be polled by the panel while
+// the QR is on screen. Always answers with the current state of the cobro.
+export const verificar = conUsuario(async (req, res, idUsuario) => {
+  const r = await service.verificarCobro(req.params.id, idUsuario);
+  if (r.error) return responderErrorServicio(res, r.error);
+  return res.json({ ok: true, data: r.data, verificado: r.verificado });
 });
 
 export const obtener = conUsuario(async (req, res, idUsuario) => {
