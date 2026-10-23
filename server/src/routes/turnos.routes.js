@@ -6,7 +6,7 @@ import {
   updateTurno,
   cancelarTurno
 } from "../controllers/turnosController.js";
-import { registrarPago } from "../controllers/pagosController.js";
+import { registrarPago, saldoTurno } from "../controllers/pagosController.js";
 
 const router = Router();
 
@@ -24,6 +24,9 @@ router.put("/:id", updateTurno);
 
 // Baja lógica
 router.patch("/:id/cancelar", cancelarTurno);
+
+// Saldo del turno (total, deuda pendiente y pagos registrados)
+router.get("/:id/saldo", saldoTurno);
 
 // Pago recibido a mano (efectivo o transferencia) de un turno realizado
 router.post("/:id/pagos", registrarPago);
