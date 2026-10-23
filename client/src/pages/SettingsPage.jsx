@@ -1,5 +1,5 @@
-import Card from '../components/ui/Card';
 import MercadoPagoConexionCard from '../components/mercadopago/MercadoPagoConexionCard';
+import CombustibleConfigCard from '../components/combustible/CombustibleConfigCard';
 
 export default function SettingsPage() {
   return (
@@ -13,11 +13,7 @@ export default function SettingsPage() {
 
       <section className="d-flex flex-column gap-2">
         <h5 className="fw-bold text-dark m-0">Ajuste de combustible</h5>
-        <Card>
-          <p className="text-secondary mb-0">
-            Próximamente vas a poder elegir tu combustible y cargar el consumo de tu vehículo para calcular el traslado en los presupuestos.
-          </p>
-        </Card>
+        <CombustibleConfigCard />
       </section>
     </div>
   );
