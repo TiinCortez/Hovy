@@ -1,0 +1,60 @@
+### Manual cases: charge a finished turno with Mercado Pago and confirm the payment.
+### Web: JWT + admin (the seller is the logged-in user, who must have linked Mercado Pago).
+### Bot: x-api-key + the phone of an admin user. Migration 013 must be applied.
+@base = http://localhost:4000/api
+@token = PASTE_JWT_HERE
+@botKey = PASTE_BOT_API_KEY_HERE
+@telefono = PASTE_ADMIN_PHONE_HERE
+@idTurno = PASTE_ID_OF_A_REALIZADO_TURNO
+@idCobro = PASTE_ID_FROM_STEP_1
+
+### 1) Get or create the payment link of a turno  -  [Expect 201, data.init_point, data.monto = what the client still owes]
+POST {{base}}/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_turno": {{idTurno}} }
+
+### 2) Same request again while the link is valid  -  [Expect 201 and the SAME cobro id]
+POST {{base}}/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_turno": {{idTurno}} }
+
+### 3) Turno that is not Realizado  -  [Expect 409, "tiene que estar Realizado"]
+POST {{base}}/cobros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "id_turno": 1 }
+
+### 4) QR image of the link  -  [Expect 200 image/png]
+GET {{base}}/cobros/{{idCobro}}/qr
+Authorization: Bearer {{token}}
+
+### 5) Cobros of a turno  -  [Expect 200, newest first]
+GET {{base}}/cobros?id_turno={{idTurno}}
+Authorization: Bearer {{token}}
+
+### 6) Active check against Mercado Pago (the panel polls this)  -  [Expect 200, data.estado / data.impactado, verificado]
+###    Pay with a Mercado Pago TEST buyer, then call this: it must turn Aprobado and impactado=true
+###    without waiting for the webhook (works from localhost). Mercado Pago is asked at most once per 15 s.
+POST {{base}}/cobros/{{idCobro}}/verificar
+Authorization: Bearer {{token}}
+
+### 7) Cancel locally  -  [Expect 200, estado Cancelado] (the link keeps working at Mercado Pago until it expires)
+POST {{base}}/cobros/{{idCobro}}/cancelar
+Authorization: Bearer {{token}}
+
+### 8) Bot: QR of the real payment link  -  [Expect 200 image/png, headers X-Cobro-Id / X-Cobro-Monto / X-Cobro-Reutilizado]
+GET {{base}}/bot/staff/{{telefono}}/turnos/{{idTurno}}/qr
+x-api-key: {{botKey}}
+
+### 9) Bot: "did they pay?"  -  [Expect 200, data.estado, data.impactado, mensaje]
+GET {{base}}/bot/staff/{{telefono}}/turnos/{{idTurno}}/cobro
+x-api-key: {{botKey}}
+
+### 10) Bot: turno without a cobro  -  [Expect 200, estado "Sin cobro"]
+GET {{base}}/bot/staff/{{telefono}}/turnos/999999/cobro
+x-api-key: {{botKey}}
