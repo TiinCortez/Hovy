@@ -967,21 +967,25 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 .forma-pago-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
 }
 
 .forma-pago {
-  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.85rem 0.95rem;
   color: #343934;
   text-align: left;
   background-color: #ffffff;
   border: 1px solid #dfe1dc;
-  border-radius: 0.85rem;
+  border-radius: 1rem;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 
-  strong { display: block; font-size: 0.92rem; }
-  small { display: block; margin-top: 0.1rem; color: #70766d; font-size: 0.72rem; line-height: 1.25; }
+  strong { display: block; font-size: 0.95rem; }
+  small { display: block; color: #70766d; font-size: 0.74rem; line-height: 1.25; }
 
   &:hover:not(:disabled):not(.is-selected) { border-color: #9eab96; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
@@ -991,7 +995,98 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     background-color: #f4f9ef;
     border-color: $hovy-green;
     box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+
+    .forma-pago-icono { color: #ffffff; background-color: $hovy-green; }
   }
+}
+
+.forma-pago-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-bottom: 0.35rem;
+  color: $hovy-green;
+  background-color: rgba(27, 48, 6, 0.08);
+  border-radius: 50%;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+/* Resumen de lo que se debe, arriba del modal de pago */
+.pago-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 2rem;
+  padding: 1rem 1.25rem;
+  background-color: #f6f5f0;
+  border: 1px solid #e5e3da;
+  border-radius: 1rem;
+
+  > div { display: flex; flex-direction: column; }
+}
+
+.pago-resumen-principal { margin-left: auto; text-align: right; }
+
+.pago-resumen-etiqueta {
+  color: #70766d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pago-resumen-cifra { color: #343934; font-size: 1.05rem; font-weight: 700; }
+
+.pago-resumen-total {
+  color: $hovy-green;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 575.98px) {
+  .pago-resumen-principal { width: 100%; margin-left: 0; text-align: left; }
+}
+
+.pago-chip {
+  padding: 0.3rem 0.8rem;
+  color: $hovy-green;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: #ffffff;
+  border: 1px solid #cdd7c4;
+  border-radius: 999px;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+
+  &:hover:not(:disabled) { background-color: #f4f9ef; border-color: $hovy-green; }
+  &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* Qué significa el monto escrito: salda la deuda, es parcial o se pasa */
+.pago-estado {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  &.is-salda { color: #08775b; }
+  &.is-parcial { color: #8a5b00; }
+  &.is-excede { color: #a12626; }
+}
+
+.pago-nota {
+  padding: 0.75rem 1rem;
+  color: #62675f;
+  font-size: 0.85rem;
+  background-color: #fafaf7;
+  border-left: 3px solid #cfd2c8;
+  border-radius: 0.5rem;
 }
 
 .cobro-qr-vacio {
