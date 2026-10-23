@@ -24,6 +24,28 @@ export const antiguedadPrecio = (fecha, ahora) => {
   return `Actualizado hace ${dias} días`;
 };
 
+export const MAX_SUGERENCIAS = 5;
+
+const sinTildes = (texto) =>
+  String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+// Cities matching what the user typed (ignoring case and accents). Those that
+// start with the text come first. Returns the first `limite` plus the total count.
+export const filtrarCiudades = (opciones, texto, limite = MAX_SUGERENCIAS) => {
+  const buscado = sinTildes(texto);
+  if (!buscado) return { items: [], total: 0 };
+
+  const coinciden = opciones
+    .filter((opcion) => sinTildes(opcion).includes(buscado))
+    .sort((a, b) => {
+      const prioridadA = sinTildes(a).startsWith(buscado) ? 0 : 1;
+      const prioridadB = sinTildes(b).startsWith(buscado) ? 0 : 1;
+      return prioridadA - prioridadB || a.localeCompare(b, 'es');
+    });
+
+  return { items: coinciden.slice(0, limite), total: coinciden.length };
+};
+
 // Same rule as the backend: a number greater than 0 and up to 100.
 export const consumoValido = (valor) => {
   if (valor === '' || valor === null || valor === undefined) return false;
