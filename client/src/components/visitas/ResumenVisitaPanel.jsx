@@ -21,7 +21,11 @@ export default function ResumenVisitaPanel({ visita }) {
     return () => { isMounted = false; };
   }, [visita.id_turno]);
 
-  const totalEstimado = servicios.reduce((acc, l) => acc + (l.subtotal ?? 0), 0);
+  const totalServicios = servicios.reduce((acc, l) => acc + (l.subtotal ?? 0), 0);
+  // The saved budget's estimate already includes the trip cost (fuel to the
+  // property); without it the "difference" with the final price would be wrong.
+  const totalEstimado = presupuesto?.monto_estimado != null ? Number(presupuesto.monto_estimado) : totalServicios;
+  const montoTraslado = Math.max(0, Math.round((totalEstimado - totalServicios) * 100) / 100);
   const franja = turno?.franjaHoraria;
 
   return (
@@ -53,7 +57,7 @@ export default function ResumenVisitaPanel({ visita }) {
               <Lock size={12} /> {INTERNAL_NOTICE}
             </span>
           </div>
-          <EstimadoTable lineas={servicios} total={totalEstimado} />
+          <EstimadoTable lineas={servicios} total={totalEstimado} montoTraslado={montoTraslado} />
         </div>
       )}
 

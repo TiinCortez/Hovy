@@ -21,6 +21,15 @@ const CombustibleService = {
     return response.data;
   },
 
+  // Trip cost from the user's departure point to a property. Always resolves:
+  // when it cannot be computed, data.incluido is false and data.mensaje says why.
+  // -> { ok, data: { incluido, km, costo, consumo_100km, precio_unidad, unidad, combustible,
+  //      km_aproximados, desactualizado } | { incluido: false, motivo, mensaje } }
+  getTraslado: async (idInmueble) => {
+    const response = await httpService.get('/combustible/traslado', { params: { id_inmueble: idInmueble } });
+    return response.data;
+  },
+
   guardarConfig: async (config) => {
     const response = await httpService.put('/combustible/config', config);
     return response.data;

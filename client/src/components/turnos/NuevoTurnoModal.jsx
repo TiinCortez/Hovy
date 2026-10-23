@@ -11,6 +11,8 @@ import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
 import ServicioService from '../../services/api/servicio.service';
+import CombustibleService from '../../services/api/combustible.service';
+import TrasladoDetalle from '../combustible/TrasladoDetalle';
 import useRelojTurnos from './useRelojTurnos';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import {
@@ -37,6 +39,9 @@ export default function NuevoTurnoModal({
   const [idInmueble, setIdInmueble] = useState('');
   const [idServicio, setIdServicio] = useState('');
   const [montoFinalEditado, setMontoFinalEditado] = useState(null);
+  // Trip cost of the chosen property: { idInmueble, datos }. Kept with its id so a
+  // stale answer is never used for another property.
+  const [trasladoCargado, setTrasladoCargado] = useState(null);
 
   const [prioridad, setPrioridad] = useState('P2_FIJO');
   const [fecha, setFecha] = useState(() => fechaInicial && fechaInicial >= ahora.fecha ? fechaInicial : ahora.fecha);
@@ -110,6 +115,25 @@ export default function NuevoTurnoModal({
     return () => { vigente = false; };
   }, [idCliente]);
 
+  // Costo de traslado hasta el inmueble elegido (combustible del jefe). Si no se
+  // puede calcular, el presupuesto sigue igual y se explica el motivo.
+  useEffect(() => {
+    if (!isOpen || !idInmueble) return undefined;
+    let vigente = true;
+    const fetchTraslado = async () => {
+      let datos;
+      try {
+        const res = await CombustibleService.getTraslado(idInmueble);
+        datos = res.data;
+      } catch {
+        datos = { incluido: false, motivo: 'error', mensaje: 'No se pudo calcular el traslado.' };
+      }
+      if (vigente) setTrasladoCargado({ idInmueble: String(idInmueble), datos });
+    };
+    fetchTraslado();
+    return () => { vigente = false; };
+  }, [isOpen, idInmueble]);
+
   // Bloquear scroll de fondo
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -141,15 +165,24 @@ export default function NuevoTurnoModal({
     () => calcularEstimadoTurno(inmuebleSeleccionado, servicioSeleccionado),
     [inmuebleSeleccionado, servicioSeleccionado]
   );
+  const traslado = trasladoCargado && trasladoCargado.idInmueble === String(idInmueble)
+    ? trasladoCargado.datos
+    : null;
+  // Property chosen but its trip cost not answered yet: the total is not final.
+  const cargandoTraslado = Boolean(idInmueble) && !traslado;
+  const montoTraslado = traslado?.incluido ? traslado.costo : 0;
+  const montoEstimadoTotal = calculoPresupuesto
+    ? Math.round((calculoPresupuesto.montoEstimado + montoTraslado) * 100) / 100
+    : null;
   const valorMontoInput = montoFinalEditado !== null
     ? montoFinalEditado
-    : (calculoPresupuesto ? String(calculoPresupuesto.montoEstimado) : '');
+    : (montoEstimadoTotal !== null ? String(montoEstimadoTotal) : '');
   const montoFinalNumero = valorMontoInput === '' ? NaN : Number(valorMontoInput);
   const montoEsPersonalizado = Boolean(
-    calculoPresupuesto
+    montoEstimadoTotal !== null
     && montoFinalEditado !== null
     && Number.isFinite(montoFinalNumero)
-    && Math.round(montoFinalNumero * 100) !== Math.round(calculoPresupuesto.montoEstimado * 100)
+    && Math.round(montoFinalNumero * 100) !== Math.round(montoEstimadoTotal * 100)
   );
 
   const franjas = useMemo(() => obtenerFranjasTurnos({ fecha, turnos: turnosExistentes, horaInicioInicial }), [fecha, horaInicioInicial, turnosExistentes]);
@@ -158,7 +191,7 @@ export default function NuevoTurnoModal({
 
   // Validaciones por etapa del Wizard
   const paso1Completo = Boolean(idCliente && idInmueble && clienteSeleccionado && inmuebleSeleccionado);
-  const paso2Completo = Boolean(paso1Completo && idServicio && servicioSeleccionado && Number.isFinite(montoFinalNumero) && montoFinalNumero > 0);
+  const paso2Completo = Boolean(paso1Completo && idServicio && servicioSeleccionado && !cargandoTraslado && Number.isFinite(montoFinalNumero) && montoFinalNumero > 0);
   const paso3Completo = Boolean(paso2Completo && puedeGuardarAgenda);
 
   const pasoHabilitado = (numeroPaso) => {
@@ -664,11 +697,22 @@ export default function NuevoTurnoModal({
                             </span>
                           </div>
 
-                          <div className="d-flex justify-content-between align-items-center py-2 px-3 bg-light rounded-3 border mb-3">
-                            <div>
-                              <span className="small text-secondary fw-medium d-block">Total final estimado</span>
+                          <div className="py-2 px-3 bg-light rounded-3 border mb-3">
+                            <div className="d-flex justify-content-between align-items-center small text-secondary mb-1">
+                              <span>Servicio ({formatearMontoARS(calculoPresupuesto.precioBase)}/m² × {calculoPresupuesto.superficieEfectiva} m²)</span>
+                              <span>{formatearMontoARS(calculoPresupuesto.montoEstimado)}</span>
                             </div>
-                            <strong className="text-dark fs-5">{formatearMontoARS(calculoPresupuesto.montoEstimado)}</strong>
+                            {cargandoTraslado ? (
+                              <div className="small text-secondary mb-2">Calculando traslado...</div>
+                            ) : (
+                              <TrasladoDetalle traslado={traslado} formatMonto={formatearMontoARS} className="small mb-2" />
+                            )}
+                            <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                              <span className="small text-secondary fw-medium">Total final estimado</span>
+                              <strong className="text-dark fs-5">
+                                {cargandoTraslado ? '-' : formatearMontoARS(montoEstimadoTotal)}
+                              </strong>
+                            </div>
                           </div>
                         </div>
 
@@ -877,8 +921,18 @@ export default function NuevoTurnoModal({
 
                       <div className="pt-2 border-top">
                         <div className="d-flex justify-content-between align-items-center small text-secondary">
-                          <span>Total estimado:</span>
+                          <span>Servicio:</span>
                           <span>{calculoPresupuesto ? formatearMontoARS(calculoPresupuesto.montoEstimado) : '-'}</span>
+                        </div>
+                        {traslado?.incluido && (
+                          <div className="d-flex justify-content-between align-items-center small text-secondary">
+                            <span>Traslado{traslado.km_aproximados ? ' (aprox.)' : ''}:</span>
+                            <span>{formatearMontoARS(traslado.costo)}</span>
+                          </div>
+                        )}
+                        <div className="d-flex justify-content-between align-items-center small text-secondary">
+                          <span>Total estimado:</span>
+                          <span>{montoEstimadoTotal !== null ? formatearMontoARS(montoEstimadoTotal) : '-'}</span>
                         </div>
                         <div className="d-flex justify-content-between align-items-center">
                           <span className="small fw-bold text-dark">Valor final del presupuesto:</span>
