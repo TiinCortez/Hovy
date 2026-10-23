@@ -140,9 +140,11 @@ export default function ClientInmueblesPage() {
 
       const response = await TurnoService.update(idTurno, payload);
       handleTurnoUpdated(response.data);
+      return true;
     } catch (error) {
       console.error(`Error al cambiar el estado a ${newState}:`, error);
       alert('Ocurrió un error al actualizar el estado del turno.');
+      return false;
     }
   };
 
