@@ -1,5 +1,6 @@
-import { responderErrorServicio } from '../utils/solicitudesVisita.js';
+import { responderErrorServicio, parsearIdSolicitud } from '../utils/solicitudesVisita.js';
 import * as service from '../services/combustibleService.js';
+import { calcularTraslado } from '../services/trasladoService.js';
 
 // Ownership always comes from the JWT (sub), never from the body.
 const idUsuarioDelToken = (req) => {
@@ -29,6 +30,21 @@ export const precios = async (req, res) => {
   }
 
   return responder(res, await service.obtenerPrecios(ciudad));
+};
+
+// GET /api/combustible/traslado?id_inmueble=
+// Preview of the trip cost to a property, for the forms that build a budget.
+// Always 200: when it cannot be computed, `incluido` is false with a `motivo`.
+export const traslado = async (req, res) => {
+  const idUsuario = idUsuarioDelToken(req);
+  if (!idUsuario) return res.status(401).json({ ok: false, error: 'No se pudo identificar al usuario.' });
+
+  const idInmueble = parsearIdSolicitud(req.query.id_inmueble);
+  if (!idInmueble) {
+    return res.status(400).json({ ok: false, error: 'El id del inmueble tiene que ser un número entero positivo.' });
+  }
+
+  return res.status(200).json({ ok: true, data: await calcularTraslado({ idUsuario, idInmueble }) });
 };
 
 // GET /api/combustible/config

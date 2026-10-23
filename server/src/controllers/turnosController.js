@@ -236,6 +236,7 @@ export const createTurno = async (req, res) => {
         monto_subtotal: Number(resultadoPresupuesto.presupuesto.monto_subtotal ?? 0),
         monto_total: Number(resultadoPresupuesto.presupuesto.monto_total ?? 0),
         estado: resultadoPresupuesto.presupuesto.estado ?? 'Aceptado',
+        traslado: resultadoPresupuesto.traslado ?? null,
       },
     });
 
