@@ -10,6 +10,7 @@ import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
 import ServicioService from '../../services/api/servicio.service';
+import CobroQrPanel from '../cobros/CobroQrPanel';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -494,6 +495,15 @@ export default function TurnoDetalleModal({
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Cobro del turno ya realizado: QR de Mercado Pago y confirmación del pago */}
+            {isRealizado && !isEditingDatos && (
+              <CobroQrPanel
+                key={turnoData.idTurno}
+                turno={turnoData}
+                onCobrado={() => { if (onTurnoUpdated) onTurnoUpdated({ ...turnoData, cobrado: true }); }}
+              />
             )}
           </div>
 

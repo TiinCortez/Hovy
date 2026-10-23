@@ -926,6 +926,57 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   &.is-error { color: #a12626; background-color: #fdecec; border: 1px solid #f5b5b5; }
   &.is-ok { color: #08775b; background-color: #eafff6; border: 1px solid #8ee5c6; }
   &.is-aviso { color: #8a5b00; background-color: #fff9e8; border: 1px solid #f4d77b; }
+  &.is-espera { color: #294b15; background-color: #f0f8e9; border: 1px solid #d5e9c6; }
+}
+
+/* --- COBRO CON QR --- */
+@keyframes hovySpin { to { transform: rotate(360deg); } }
+
+.hovy-spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid rgba(27, 48, 6, 0.2);
+  border-top-color: $hovy-green;
+  border-radius: 50%;
+  animation: hovySpin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hovy-spinner { animation-duration: 2.4s; }
+}
+
+.cobro-qr {
+  padding: 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #dfe1dc;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+}
+
+.cobro-qr-imagen {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  background-color: #ffffff;
+  border: 1px solid #e5e3da;
+  border-radius: 0.75rem;
+}
+
+.cobro-qr-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  color: #70766d;
+  font-size: 0.85rem;
+  background-color: #fafaf7;
+  border: 1px dashed #cfd2c8;
+  border-radius: 0.75rem;
 }
 
 .combustible-vacio {
