@@ -3,10 +3,15 @@ import { AlertCircle, AlertTriangle, Lock, CheckCircle2 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import VisitaService from '../../services/api/visita.service';
+import TrasladoDetalle from '../combustible/TrasladoDetalle';
+import { formulaTraslado } from '../combustible/combustibleUtils';
 import { getApiError, formatMoney, INTERNAL_NOTICE } from './visitaUtils';
 
 // Estimate lines table. Internal only: it is never meant to be sent to the client.
-export function EstimadoTable({ lineas, total }) {
+// The trip cost (fuel to the property) comes either as the full `traslado` answer
+// of the estimate (with its formula) or, for a saved budget, as a bare `montoTraslado`.
+export function EstimadoTable({ lineas, total, traslado = null, montoTraslado = 0 }) {
+  const trasladoIncluido = traslado?.incluido === true;
   return (
     <div className="table-responsive">
       <table className="table table-sm align-middle small mb-2">
@@ -29,12 +34,36 @@ export function EstimadoTable({ lineas, total }) {
           ))}
         </tbody>
         <tfoot>
+          {trasladoIncluido && (
+            <tr>
+              <td colSpan={3}>
+                <span className="fw-semibold">Traslado</span>
+                {traslado.km_aproximados && <span className="combustible-pill">Aproximado</span>}
+                <small className="d-block text-secondary">{formulaTraslado(traslado, formatMoney)}</small>
+              </td>
+              <td className="text-end">{formatMoney(traslado.costo)}</td>
+            </tr>
+          )}
+          {!trasladoIncluido && montoTraslado > 0 && (
+            <tr>
+              <td colSpan={3} className="fw-semibold">Traslado (combustible)</td>
+              <td className="text-end">{formatMoney(montoTraslado)}</td>
+            </tr>
+          )}
           <tr className="fw-bold">
             <td colSpan={3} className="text-end">Total estimado</td>
             <td className="text-end">{formatMoney(total)}</td>
           </tr>
         </tfoot>
       </table>
+      {traslado && !trasladoIncluido && (
+        <TrasladoDetalle traslado={traslado} formatMonto={formatMoney} className="mb-2" />
+      )}
+      {trasladoIncluido && traslado.km_aproximados && (
+        <small className="text-secondary d-block mb-2">
+          Los km del traslado son una estimación en línea recta con un margen por calles, no una ruta real.
+        </small>
+      )}
     </div>
   );
 }
@@ -131,7 +160,7 @@ export default function PresupuestoPanel({ visita, onSaved }) {
           <p className="text-danger small m-0" role="alert">{loadError}</p>
         ) : estimado && (
           <>
-            <EstimadoTable lineas={estimado.lineas} total={estimado.total_estimado} />
+            <EstimadoTable lineas={estimado.lineas} total={estimado.total_estimado} traslado={estimado.traslado} />
             {estimado.advertencias?.map((a) => (
               <div key={a} className="alert alert-warning d-flex align-items-center gap-2 rounded-3 py-2 mb-2 small">
                 <AlertTriangle size={16} className="flex-shrink-0" /> {a}

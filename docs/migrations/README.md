@@ -32,6 +32,8 @@ Los scripts se aplican en orden numérico estricto indicado por su prefijo de 3 
 8. **`008_triggers_cuenta_corriente.sql`**: Tablas `cuentas_corrientes`, `trabajos_ejecutados`, `movimientos_cuenta` y triggers `trg_turno_realizado` (imputación automática al completar turno con validación P0001) y `trg_turno_cancelado` (bloqueo de cancelación con P0001 si ya tiene trabajo registrado), más vistas `v_estado_cuenta` y `v_deudores`.
 9. **`009_ajuste_valor_final_presupuesto.sql`**: Columnas `diferencia_ajuste` y `motivo_ajuste` en `presupuestos` para edición de valor final (VAL-168) y eliminación de columna obsoleta `documento_pdf_url`.
 10. **`010_agregar_columna_cobrado_turnos.sql`**: Incorporación estandarizada de la columna booleana `cobrado` (`DEFAULT FALSE`) en la tabla `turnos`.
+11. **`011_combustible_usuario_y_precios.sql`**: Migración `combustible usuario y precios`.
+12. **`012_presupuesto_traslado.sql`**: Migración `presupuesto traslado`.
 
 ---
 

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { estaVacio, parsearIdSolicitud, falla } from '../utils/solicitudesVisita.js';
+import { calcularTraslado, camposTrasladoPresupuesto } from './trasladoService.js';
 
 // Business/data logic of the INTERNAL estimate and the final budget of a visit.
 //
@@ -20,6 +21,15 @@ export const redondear2 = (numero) => Math.round((numero + Number.EPSILON) * 100
 
 const sumarSubtotales = (lineas) =>
   redondear2(lineas.reduce((acumulado, linea) => acumulado + (linea.subtotal ?? 0), 0));
+
+// Trip cost of a visit's property, or "not included" when it cannot be computed
+// (see trasladoService). The budget never fails because of it.
+const trasladoDeVisita = (solicitud, idUsuario) =>
+  solicitud.id_inmueble
+    ? calcularTraslado({ idUsuario, idInmueble: solicitud.id_inmueble })
+    : { incluido: false, motivo: 'inmueble_sin_ubicacion' };
+
+const costoTraslado = (traslado) => (traslado?.incluido ? traslado.costo : 0);
 
 // Loads a visit by id. `contexto` only shapes the server log line.
 export const buscarSolicitud = async (idSolicitud, contexto) => {
@@ -118,10 +128,17 @@ export const obtenerEstimadoVisita = async (idSolicitud, idUsuario) => {
         `El servicio "${linea.nombre ?? linea.id_servicio}" ya no está activo en tu catálogo: no se incluyó en el total.`
     );
 
+  // The estimate also carries the trip cost (fuel to the property) when the
+  // boss has set up their fuel and departure point.
+  const subtotalServicios = sumarSubtotales(lineas);
+  const traslado = await trasladoDeVisita(busqueda.solicitud, idUsuario);
+
   const data = {
     id_solicitud: idSolicitud,
     lineas,
-    total_estimado: sumarSubtotales(lineas),
+    subtotal_servicios: subtotalServicios,
+    traslado,
+    total_estimado: redondear2(subtotalServicios + costoTraslado(traslado)),
     aviso: AVISO_ESTIMADO_INTERNO,
   };
   if (advertencias.length > 0) data.advertencias = advertencias;
@@ -322,15 +339,23 @@ export const aceptarPresupuestoVisita = async ({ idSolicitud, idUsuario, montoTo
     );
   }
 
-  const estimadoTotal = sumarSubtotales(lineas);
+  const subtotalServicios = sumarSubtotales(lineas);
+  // The trip cost only applies to budgets built from services; the legacy loose
+  // amount (no services) is left exactly as before.
+  const traslado = conServicios
+    ? await trasladoDeVisita(solicitud, idUsuario)
+    : { incluido: false };
+  const estimadoTotal = redondear2(subtotalServicios + costoTraslado(traslado));
 
   const camposPresupuesto = {
     id_cliente: solicitud.id_cliente,
     id_inmueble: solicitud.id_inmueble,
-    monto_subtotal: conServicios ? estimadoTotal : montoTotal,
+    monto_subtotal: conServicios ? subtotalServicios : montoTotal,
     monto_total: montoTotal,
     estado: 'Aceptado',
     nota,
+    // Legacy loose amount (no services): the surcharge columns are left untouched.
+    ...(conServicios ? camposTrasladoPresupuesto(traslado) : {}),
   };
   if (conServicios) camposPresupuesto.monto_estimado = estimadoTotal;
 
@@ -378,7 +403,7 @@ export const aceptarPresupuestoVisita = async ({ idSolicitud, idUsuario, montoTo
     }
   }
 
-  if (!conServicios) return { solicitud, presupuesto, conServicios, lineas, estimadoTotal };
+  if (!conServicios) return { solicitud, presupuesto, conServicios, lineas, estimadoTotal, traslado };
 
   // Detail: one row per service with TODAY's price per m2 (snapshot), so the
   // budget does not change if the admin edits prices later. No transaction is
@@ -411,7 +436,7 @@ export const aceptarPresupuestoVisita = async ({ idSolicitud, idUsuario, montoTo
     return falla(500, 'El presupuesto se registró, pero no se pudo guardar su detalle. Reintentá la carga.');
   }
 
-  return { solicitud, presupuesto, conServicios, lineas, estimadoTotal };
+  return { solicitud, presupuesto, conServicios, lineas, estimadoTotal, traslado };
 };
 
 // POST .../cancelar: only solicitudes_visita.estado changes. Services
@@ -520,6 +545,8 @@ export const guardarPresupuestoParaTurno = async ({
   idServicio,
   idUsuario,
   montoTotal = null,
+  // Replaceable in tests.
+  calcularTrasladoFn = calcularTraslado,
 }) => {
   const idInm = parsearIdSolicitud(idInmueble);
   if (!idInm) {
@@ -594,16 +621,21 @@ export const guardarPresupuestoParaTurno = async ({
   }
 
   const subtotal = redondear2(precioUnitario * superficieRaw);
-  const montoFinal = montoFinalOverride ?? subtotal;
+  // Trip cost (fuel to the property). Not included when the boss has not set up
+  // fuel / departure point or the property has no location: same budget as before.
+  const traslado = await calcularTrasladoFn({ idUsuario: idUsr, idInmueble: inmueble.id_inmueble });
+  const montoEstimado = redondear2(subtotal + costoTraslado(traslado));
+  const montoFinal = montoFinalOverride ?? montoEstimado;
   const nombreServicio = usuarioServicio.servicio?.nombre ?? null;
 
   const camposPresupuesto = {
     id_cliente: inmueble.id_cliente,
     id_inmueble: inmueble.id_inmueble,
-    monto_estimado: subtotal,
+    monto_estimado: montoEstimado,
     monto_subtotal: subtotal,
     monto_total: montoFinal,
     estado: 'Aceptado',
+    ...camposTrasladoPresupuesto(traslado),
   };
 
   const idPresExistente = parsearIdSolicitud(idPresupuesto);
@@ -649,7 +681,7 @@ export const guardarPresupuestoParaTurno = async ({
         return falla(500, 'No se pudo registrar el detalle actualizado del presupuesto.');
       }
 
-      return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal };
+      return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal, traslado };
     }
   }
 
@@ -682,7 +714,7 @@ export const guardarPresupuestoParaTurno = async ({
     return falla(500, 'No se pudo registrar el detalle del presupuesto para el turno.');
   }
 
-  return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal };
+  return { presupuesto, nombreServicio, idServicio: idServ, subtotal, montoTotal: montoFinal, traslado };
 };
 
 export const crearPresupuestoParaTurno = (params) => guardarPresupuestoParaTurno(params);
