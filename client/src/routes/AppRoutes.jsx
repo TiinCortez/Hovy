@@ -20,9 +20,7 @@ import ServiciosPage from '../pages/ServiciosPage.jsx';
 import CobrosPage from '../pages/CobrosPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import SettingsPage from '../pages/SettingsPage.jsx';
-
-// Componentes temporales (Mocks)
-const Analytics = () => <h1>Estadísticas</h1>;
+import MetricasPage from '../pages/MetricasPage.jsx';
 
 export default function AppRoutes() {
   return (
@@ -127,7 +125,7 @@ export default function AppRoutes() {
           element={
             <RequireAuth>
               <DashboardLayout>
-                <Analytics />
+                <MetricasPage />
               </DashboardLayout>
             </RequireAuth>
           } 
