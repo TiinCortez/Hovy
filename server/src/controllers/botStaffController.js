@@ -9,6 +9,9 @@ import { consultarDisponibilidad, confirmarVisita, agendarTurnoVisita } from '..
 import { armarLinkMaps, resolverTransicionTurno, parsearEstadosTurno } from '../utils/turnosBot.js';
 import { componerQrEnPlantilla } from '../integrations/qr/qrPlantillaService.js';
 import { crearCobroDeTurno, consultarCobroDeTurno } from '../integrations/mercadopago/cobros/cobrosService.js';
+import { registrarPagoTurno } from '../services/pagoManualService.js';
+import { obtenerSaldoTurno } from '../services/saldoTurnoService.js';
+import { obtenerResumenFinanciero, obtenerDeudores } from '../services/finanzasStaffService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
 // visitó una solicitud de visita y el cliente confirmó que quiere el
@@ -248,7 +251,8 @@ export const qrTurnoStaff = async (req, res) => {
   }
 
   try {
-    const cobro = await crearCobroDeTurno(req.usuario.id, idTurno);
+    const montoDeseado = req.query?.monto ?? req.body?.monto ?? null;
+    const cobro = await crearCobroDeTurno(req.usuario.id, idTurno, { montoDeseado });
     if (cobro.error) return responderErrorServicio(res, cobro.error);
 
     const imagen = await componerQrEnPlantilla(cobro.data.init_point);
@@ -345,5 +349,73 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
       ok: false,
       error: 'Ocurrió un error inesperado al agendar el turno.',
     });
+  }
+};
+
+// GET /api/bot/staff/:telefono/turnos/:id/saldo
+//
+// Saldo y pagos pendientes del turno para staff: total del trabajo, pagos
+// registrados y lo que el cliente todavía debe según el libro de movimientos.
+export const saldoTurnoStaff = async (req, res) => {
+  try {
+    const resultado = await obtenerSaldoTurno(req.params.id);
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(200).json({ ok: true, data: resultado.data });
+  } catch (err) {
+    console.error('Error inesperado al consultar saldo del turno para staff:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo consultar el saldo del turno.' });
+  }
+};
+
+// POST /api/bot/staff/:telefono/turnos/:id/pagos
+//
+// Registra un cobro a mano (Efectivo o Transferencia) de un turno realizado desde el bot.
+// El id del usuario que registra sale de req.usuario.id (resuelto por resolverStaffPorTelefono).
+export const registrarPagoTurnoStaff = async (req, res) => {
+  const idUsuario = Number(req.usuario?.id);
+  if (!Number.isInteger(idUsuario) || idUsuario <= 0) {
+    return res.status(401).json({ ok: false, error: 'No se pudo identificar al usuario de staff.' });
+  }
+
+  try {
+    const resultado = await registrarPagoTurno({ idUsuario, idTurno: req.params.id, body: req.body });
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(201).json({ ok: true, data: resultado.data });
+  } catch (err) {
+    console.error('Error inesperado al registrar el pago del turno para staff:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo registrar el pago del turno.' });
+  }
+};
+
+// GET /api/bot/staff/:telefono/finanzas/resumen?mes=YYYY-MM
+//
+// Resumen financiero del mes para staff: total liquidado, monto recaudado,
+// saldo por cobrar y porcentaje, con mensaje listo para WhatsApp.
+export const resumenFinancieroStaff = async (req, res) => {
+  try {
+    const resultado = await obtenerResumenFinanciero({ mes: req.query?.mes });
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(200).json({ ok: true, data: resultado.data, mensaje: resultado.mensaje });
+  } catch (err) {
+    console.error('Error inesperado al consultar resumen financiero para staff:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo consultar el resumen financiero.' });
+  }
+};
+
+// GET /api/bot/staff/:telefono/finanzas/deudores?limite=20
+//
+// Listado de clientes con saldo deudor en cuenta corriente para staff.
+export const deudoresStaff = async (req, res) => {
+  try {
+    const resultado = await obtenerDeudores({ limite: req.query?.limite });
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(200).json({ ok: true, data: resultado.data, mensaje: resultado.mensaje });
+  } catch (err) {
+    console.error('Error inesperado al consultar deudores para staff:', err);
+    return res.status(500).json({ ok: false, error: 'No se pudo consultar el listado de deudores.' });
   }
 };

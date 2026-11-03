@@ -147,3 +147,40 @@ test('cobro de turno: reutiliza el link propio si el monto no cambio', async (t)
   assert.equal(r.data.id, 7);
   assert.equal(r.data.init_point, 'https://mp/x');
 });
+
+
+test('cobro de turno: rechaza montoDeseado mayor al saldo con 400', async (t) => {
+  simular(t, {
+    turno: { id_turno: 12, estado: 'Realizado', cobrado: false, id_presupuesto: 5, inmueble: { id_cliente: 3 } },
+    presupuesto: { monto_total: 60000, estado: 'Aceptado' },
+    activos: [],
+  });
+  const r = await crearCobroDeTurno(4, 12, { montoDeseado: 75000 });
+  assert.equal(r.error.status, 400);
+  assert.match(r.error.message, /no puede superar/);
+});
+
+test('cobro de turno: reutiliza el link propio si coincide con el montoDeseado parcial', async (t) => {
+  simular(t, {
+    turno: { id_turno: 12, estado: 'Realizado', cobrado: false, id_presupuesto: 5, inmueble: { id_cliente: 3 } },
+    presupuesto: { monto_total: 60000, estado: 'Aceptado' },
+    activos: [{ id: 8, id_usuario: 4, id_turno: 12, estado: 'Pendiente', monto: 25000, init_point: 'https://mp/parcial', created_at: new Date().toISOString() }],
+  });
+  const r = await crearCobroDeTurno(4, 12, { montoDeseado: 25000 });
+  assert.equal(r.reutilizado, true);
+  assert.equal(r.data.id, 8);
+  assert.equal(r.data.monto, 25000);
+});
+
+test('bot QR: valida que monto en query no supere la deuda y responde 400', async (t) => {
+  simular(t, {
+    turno: { id_turno: 12, estado: 'Realizado', cobrado: false, id_presupuesto: 5, inmueble: { id_cliente: 3 } },
+    presupuesto: { monto_total: 60000, estado: 'Aceptado' },
+    activos: [],
+  });
+  const r = res();
+  await qrTurnoStaff({ params: { id: '12' }, query: { monto: '999999' }, usuario: { id: 4 } }, r);
+  assert.equal(r.codigo, 400);
+  assert.equal(r.body.ok, false);
+  assert.match(r.body.error, /no puede superar/);
+});

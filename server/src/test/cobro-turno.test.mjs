@@ -200,3 +200,50 @@ test('requiereRegistroDePago: un pago devuelto o en proceso no se registra aunqu
   assert.equal(requiereRegistroDePago(cobro({ estado: 'Aprobado' }), { status: 'refunded' }), false);
   assert.equal(requiereRegistroDePago(cobro({ estado: 'Aprobado' }), { status: 'in_process' }), false);
 });
+
+
+// ---- planificarCobroTurno con montoDeseado (monto parcial) ------------------
+
+test('planificarCobroTurno: con montoDeseado valido genera el cobro por ese monto parcial', () => {
+  const r = planificar({
+    movimientos: [{ tipo: 'Debito', monto: 60000 }],
+    montoDeseado: 25000,
+  });
+  assert.equal(r.accion, 'crear');
+  assert.equal(r.monto, 25000);
+});
+
+test('planificarCobroTurno: montoDeseado puede ser string con coma o punto', () => {
+  const r1 = planificar({ movimientos: [{ tipo: 'Debito', monto: 60000 }], montoDeseado: '15000.50' });
+  assert.equal(r1.monto, 15000.5);
+
+  const r2 = planificar({ movimientos: [{ tipo: 'Debito', monto: 60000 }], montoDeseado: '15000,50' });
+  assert.equal(r2.monto, 15000.5);
+});
+
+test('planificarCobroTurno: rechaza montoDeseado mayor al saldo pendiente con 400', () => {
+  const r = planificar({
+    movimientos: [{ tipo: 'Debito', monto: 60000 }],
+    montoDeseado: 60001,
+  });
+  assert.equal(r.error.status, 400);
+  assert.match(r.error.message, /no puede superar/i);
+});
+
+test('planificarCobroTurno: rechaza montoDeseado invalido, menor a cero o con mas de 2 decimales', () => {
+  for (const m of [0, -100, 'abc', 100.005]) {
+    const r = planificar({ movimientos: [{ tipo: 'Debito', monto: 60000 }], montoDeseado: m });
+    assert.equal(r.error.status, 400, String(m));
+  }
+});
+
+test('planificarCobroTurno: reutiliza cobro si el link pendiente coincide con el montoDeseado', () => {
+  const existente = cobro({ monto: 20000 });
+  const r = planificar({
+    movimientos: [{ tipo: 'Debito', monto: 60000 }],
+    cobrosActivos: [existente],
+    montoDeseado: 20000,
+  });
+  assert.equal(r.accion, 'reutilizar');
+  assert.equal(r.cobro, existente);
+});
