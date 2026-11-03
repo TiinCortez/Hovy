@@ -12,6 +12,7 @@ import { crearCobroDeTurno, consultarCobroDeTurno } from '../integrations/mercad
 import { registrarPagoTurno } from '../services/pagoManualService.js';
 import { obtenerSaldoTurno } from '../services/saldoTurnoService.js';
 import { obtenerResumenFinanciero, obtenerDeudores } from '../services/finanzasStaffService.js';
+import { obtenerTurnosPendientesCobro } from '../services/turnosPendientesCobroService.js';
 
 // Operaciones de staff por WhatsApp: agendar un turno después de que un admin
 // visitó una solicitud de visita y el cliente confirmó que quiere el
@@ -417,5 +418,30 @@ export const deudoresStaff = async (req, res) => {
   } catch (err) {
     console.error('Error inesperado al consultar deudores para staff:', err);
     return res.status(500).json({ ok: false, error: 'No se pudo consultar el listado de deudores.' });
+  }
+};
+
+
+// GET /api/bot/staff/:telefono/turnos/pendientes-cobro?limite=20
+//
+// Turnos en estado Realizado que aún tienen cobrado = false y saldo pendiente > 0,
+// ordenados cronológicamente desde el más antiguo al más reciente.
+export const turnosPendientesCobroStaff = async (req, res) => {
+  try {
+    const resultado = await obtenerTurnosPendientesCobro({ limite: req.query?.limite });
+    if (resultado.error) return responderErrorServicio(res, resultado.error);
+
+    return res.status(200).json({
+      ok: true,
+      total: resultado.data.length,
+      data: resultado.data,
+      mensaje: resultado.mensaje,
+    });
+  } catch (err) {
+    console.error('Error inesperado al consultar turnos pendientes de cobro para staff:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'No se pudieron consultar los turnos pendientes de cobro.',
+    });
   }
 };

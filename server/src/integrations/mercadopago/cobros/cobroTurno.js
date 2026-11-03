@@ -93,7 +93,12 @@ export const planificarCobroTurno = ({
   }
 
   const activos = Array.isArray(cobrosActivos) ? cobrosActivos : [];
-  if (turno.cobrado === true || activos.some((cobro) => cobro.estado === 'Aprobado')) {
+  // An approved cobro that has already impacted the ledger (id_pago != null) is
+  // reflected in `movimientos`: if the turno still owes money, a new QR can be created.
+  const enCurso = activos.filter(
+    (cobro) => cobro.estado === 'Pendiente' || (cobro.estado === 'Aprobado' && !cobro.id_pago)
+  );
+  if (turno.cobrado === true || enCurso.some((cobro) => cobro.estado === 'Aprobado')) {
     return falla(409, 'Este turno ya fue cobrado.');
   }
 

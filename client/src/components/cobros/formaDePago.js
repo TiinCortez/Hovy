@@ -10,8 +10,8 @@ export const FORMAS = {
 
 const MAX_REFERENCIA = 100;
 
-// Cash and transfer are registered right away and need an amount.
-export const requiereMonto = (forma) => forma === 'efectivo' || forma === 'transferencia';
+// Cash, transfer and QR accept an amount (full or partial).
+export const requiereMonto = (forma) => forma === 'efectivo' || forma === 'transferencia' || forma === 'qr';
 
 // Medium name the API expects ('Efectivo' | 'Transferencia'), or null.
 export const medioDeForma = (forma) => FORMAS[forma]?.medio ?? null;
@@ -62,6 +62,7 @@ export const seleccionInicial = (forma, montoSugerido) => ({
 export const validarSeleccion = ({ forma, monto, referencia }, pendiente = null) => {
   if (!FORMAS[forma]) return 'Elegí cómo se cobra.';
   if (!requiereMonto(forma)) return null;
+  if (forma === 'qr' && pendiente === null && String(monto ?? '').trim() === '') return null;
 
   const numero = Number(String(monto).replace(',', '.'));
   if (String(monto).trim() === '' || !Number.isFinite(numero) || numero <= 0) {

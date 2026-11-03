@@ -40,6 +40,7 @@ import {
   registrarPagoTurnoStaff,
   resumenFinancieroStaff,
   deudoresStaff,
+  turnosPendientesCobroStaff,
 } from '../controllers/botStaffController.js';
 import {
   cargarPresupuestoStaff,
@@ -142,6 +143,8 @@ router.post('/staff/:telefono/visitas/:id/confirmar', resolverStaffPorTelefono, 
 router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consultarDisponibilidadStaff);
 
 router.get('/staff/:telefono/turnos', resolverStaffPorTelefono, listarTurnosStaff);
+// GET  /api/bot/staff/:telefono/turnos/pendientes-cobro?limite=20
+router.get('/staff/:telefono/turnos/pendientes-cobro', resolverStaffPorTelefono, turnosPendientesCobroStaff);
 // Logística del día del jefe: turnos, clientes, ruta en km y combustible (o gas) estimado,
 // con un `mensaje` listo para reenviar. Solo lectura. Sin `fecha`, hoy.
 // GET  /api/bot/staff/:telefono/logistica?fecha=YYYY-MM-DD

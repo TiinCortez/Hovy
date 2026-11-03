@@ -205,8 +205,11 @@ export const crearCobroDeTurno = async (idUsuario, idTurnoRaw, { montoDeseado = 
   if (plan.error) return { error: plan.error };
 
   // The turno is shared by the whole crew, but each cobro is paid into one seller's
-  // Mercado Pago account: another seller's link is never reused or cancelled here.
-  if (activos.some((cobro) => cobro.id_usuario !== idUsuario)) {
+  // Mercado Pago account: another seller's in-progress link is never reused or cancelled here.
+  const enCurso = activos.filter(
+    (cobro) => cobro.estado === 'Pendiente' || (cobro.estado === 'Aprobado' && !cobro.id_pago)
+  );
+  if (enCurso.some((cobro) => cobro.id_usuario !== idUsuario)) {
     return falla(409, 'Este turno ya tiene un cobro generado desde otra cuenta de Mercado Pago.');
   }
 

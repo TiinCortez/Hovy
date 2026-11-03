@@ -247,3 +247,13 @@ test('planificarCobroTurno: reutiliza cobro si el link pendiente coincide con el
   assert.equal(r.accion, 'reutilizar');
   assert.equal(r.cobro, existente);
 });
+
+test('planificarCobroTurno: permite generar un segundo QR por el saldo restante si el QR anterior aprobado ya impacto en la cuenta', () => {
+  const qrParcialImpactado = cobro({ id: 5, monto: 25000, estado: 'Aprobado', id_pago: 42 });
+  const r = planificar({
+    movimientos: [{ tipo: 'Debito', monto: 60000 }, { tipo: 'Credito', monto: 25000 }],
+    cobrosActivos: [qrParcialImpactado],
+  });
+  assert.equal(r.accion, 'crear');
+  assert.equal(r.monto, 35000);
+});
