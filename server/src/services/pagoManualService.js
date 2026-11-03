@@ -37,7 +37,10 @@ export const registrarPagoTurno = async ({ idUsuario, idTurno, body }, { rpc = r
     if (error) {
       // The function raises P0001 with a message ready to show for business rules.
       if (error.code === 'P0001') return falla(409, error.message);
-      console.error('[pagos] no se pudo registrar el pago del turno');
+      if (error.code === '23505') {
+        return falla(409, 'Ya existe un pago registrado con esa referencia o comprobante.');
+      }
+      console.error('[pagos] no se pudo registrar el pago del turno:', error.code);
       return falla(500, ERROR_DB);
     }
 

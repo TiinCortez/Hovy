@@ -36,6 +36,7 @@ Los scripts se aplican en orden numérico estricto indicado por su prefijo de 3 
 12. **`012_presupuesto_traslado.sql`**: Migración `presupuesto traslado`.
 13. **`013_cobro_por_turno_y_registro_de_pago.sql`**: Migración `cobro por turno y registro de pago`.
 14. **`014_pago_manual_efectivo_transferencia.sql`**: Migración `pago manual efectivo transferencia`.
+15. **`015_drop_constraint_pagos_comprobante_uidx.sql`**: Migración `drop constraint pagos comprobante uidx`.
 
 ---
 
