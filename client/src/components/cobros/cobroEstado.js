@@ -39,6 +39,9 @@ export const describirCobro = (cobro, formatMonto) => {
   }
 };
 
-// A new QR can be generated when the cobro is over without being paid.
+// A new QR can be generated when the cobro is over without being paid, or when a
+// partial QR was already approved and recorded in the ledger (the panel checks `sinSaldo`).
 export const sePuedeRegenerar = (cobro) =>
-  Boolean(cobro) && ['Cancelado', 'Expirado', 'Rechazado'].includes(cobro.estado);
+  Boolean(cobro)
+  && (['Cancelado', 'Expirado', 'Rechazado'].includes(cobro.estado)
+    || (cobro.estado === 'Aprobado' && Boolean(cobro.impactado)));
