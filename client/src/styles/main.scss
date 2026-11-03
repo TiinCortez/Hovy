@@ -195,6 +195,35 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   border-bottom: 1px solid $hovy-border;
   height: 72px;
 }
+.hovy-header-brand {
+  gap: 12px;
+  min-width: 0;
+}
+.hovy-header-emblema {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.hovy-header-nombre {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #274922;
+}
+.hovy-header-divisor {
+  width: 1px;
+  height: 28px;
+  background-color: $hovy-border;
+}
+.hovy-header-subtitulo {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #6b7564;
+}
 .hovy-brand {
   font-weight: 800;
   color: $hovy-green;

@@ -111,9 +111,10 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><User size={16} /></span>
                     <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`}
-                      {...register('apellido', { required: 'El apellido es opcional si es empresa' })}
+                      {...register('apellido', { required: 'El apellido es obligatorio' })}
                     />
                   </div>
+                  {errors.apellido && <span className="text-danger small mt-1 d-block">{errors.apellido.message}</span>}
                 </div>
               </div>
 
@@ -126,6 +127,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                       {...register('telefono', { required: 'El teléfono es obligatorio' })}
                     />
                   </div>
+                  {errors.telefono && <span className="text-danger small mt-1 d-block">{errors.telefono.message}</span>}
                 </div>
 
                 <div className="col-12 col-md-6">

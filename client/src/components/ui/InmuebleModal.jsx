@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Building2, MapPin, Map, Maximize, Clock, Leaf, AlertCircle, Navigation, Search } from 'lucide-react';
 import Button from './Button';
@@ -16,11 +16,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const errorRef = useRef(null);
 
   const isEditMode = !!inmuebleData;
 
   // Extraemos 'control' en lugar de 'watch'
-  const { register, handleSubmit, reset, formState: { errors, isValid, isSubmitted }, setValue, getValues, control } = useForm({
+  const { register, handleSubmit, reset, formState: { errors }, setValue, getValues, setError, setFocus, control } = useForm({
     defaultValues: {
       tipo_inmueble: 'Casa Habitada',
       provincia: 'Córdoba',
@@ -72,6 +73,11 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
       }
     }
   }, [isOpen, inmuebleData, reset, isEditMode]);
+
+  // Los errores que no son de un campo (conexión, servidor) se muestran arriba: llevamos la vista hasta ahí
+  useEffect(() => {
+    if (errorMessage) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [errorMessage]);
 
   if (!isOpen) return null;
 
@@ -135,7 +141,13 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
       onClose();
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Ocurrió un error al guardar el inmueble.';
-      setErrorMessage(errorMsg);
+      // Si el backend rechaza las superficies, se marca el campo en vez de mostrar un aviso general
+      if (errorMsg.includes('superficie construida')) {
+        setError('superficie_construida', { type: 'server', message: 'No puede ser mayor a la superficie total' });
+        setFocus('superficie_construida');
+      } else {
+        setErrorMessage(errorMsg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -155,16 +167,9 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
           <div className="modal-body p-4">
             {errorMessage && (
-              <div className="alert alert-danger d-flex align-items-center gap-2 rounded-3 mb-4">
+              <div ref={errorRef} className="alert alert-danger d-flex align-items-center gap-2 rounded-3 mb-4">
                 <AlertCircle size={18} className="flex-shrink-0" />
                 <span className="small fw-medium">{errorMessage}</span>
-              </div>
-            )}
-
-            {!isValid && isSubmitted && (
-              <div className="alert alert-warning d-flex align-items-center gap-2 rounded-3 mb-4">
-                <AlertCircle size={18} className="flex-shrink-0" />
-                <span className="small fw-medium">Revisa los campos marcados en rojo antes de continuar.</span>
               </div>
             )}
 
@@ -219,16 +224,17 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-4">
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Barrio</label>
+                  <label className="form-label small fw-bold text-secondary">Barrio *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Map size={16} /></span>
                     <input 
                       type="text" 
-                      className="form-control bg-light border-start-0 small"
+                      className={`form-control bg-light border-start-0 small ${errors.barrio ? 'is-invalid' : ''}`}
                       placeholder="Ej: Cerro de las Rosas"
-                      {...register('barrio')}
+                      {...register('barrio', { required: 'El barrio es obligatorio' })}
                     />
                   </div>
+                  {errors.barrio && <div className="text-danger small mt-1">{errors.barrio.message}</div>}
                 </div>
 
                 <div className="col-6 col-md-3">
@@ -290,15 +296,15 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-4">
                 <div className="col-12 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Sup. Total (m²)</label>
+                  <label className="form-label small fw-bold text-secondary">Sup. Total (m²) *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Maximize size={16} /></span>
                     <input 
                       type="number" 
                       step="0.01" 
-                      className="form-control bg-light border-start-0 small" 
+                      className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`}
                       placeholder="Ej: 450.00"
-                      {...register('superficie_total', { min: { value: 1, message: 'Debe ser > 0'} })} 
+                      {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 1, message: 'Debe ser > 0'}, deps: ['superficie_construida'] })} 
                     />
                   </div>
                   {errors.superficie_total && <div className="text-danger small mt-1">{errors.superficie_total.message}</div>}
@@ -309,9 +315,17 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   <input 
                     type="number" 
                     step="0.01" 
-                    className="form-control bg-light small" 
+                    className={`form-control bg-light small ${errors.superficie_construida ? 'is-invalid' : ''}`}
                     placeholder="Ej: 180.00"
-                    {...register('superficie_construida', { min: { value: 0, message: 'Inválido'} })} 
+                    {...register('superficie_construida', {
+                      min: { value: 0, message: 'Inválido'},
+                      // Mismo control que hace el backend: la construida no puede superar a la total
+                      validate: (valor, valores) => {
+                        if (valor === '' || valor == null) return true;
+                        if (valores.superficie_total === '' || valores.superficie_total == null) return 'Cargá primero la superficie total';
+                        return Number(valor) <= Number(valores.superficie_total) || 'No puede ser mayor a la superficie total';
+                      }
+                    })} 
                   />
                   {errors.superficie_construida && <div className="text-danger small mt-1">{errors.superficie_construida.message}</div>}
                 </div>
@@ -359,7 +373,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Clock size={16} /></span>
                     <input 
                       type="number" 
-                      className="form-control bg-light border-start-0 small" 
+                      className={`form-control bg-light border-start-0 small ${errors.tiempo_promedio_min ? 'is-invalid' : ''}`}
                       placeholder="Ej: 45" 
                       {...register('tiempo_promedio_min', { min: { value: 1, message: 'Debe ser > 0'} })} 
                     />
