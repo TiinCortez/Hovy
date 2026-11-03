@@ -49,7 +49,7 @@ const obtenerServiciosPorPresupuesto = async (idsPresupuesto) => {
       .in('id_presupuesto', ids),
     supabaseAdmin
       .from('presupuestos')
-      .select('id_presupuesto, monto_estimado, monto_subtotal, monto_total, estado')
+      .select('id_presupuesto, monto_estimado, monto_subtotal, monto_total, estado, monto_traslado, traslado_km')
       .in('id_presupuesto', ids),
   ]);
 
@@ -70,6 +70,8 @@ const obtenerServiciosPorPresupuesto = async (idsPresupuesto) => {
         monto_subtotal: Number(p.monto_subtotal ?? 0),
         monto_total: Number(p.monto_total ?? 0),
         estado: p.estado,
+        monto_traslado: p.monto_traslado != null ? Number(p.monto_traslado) : null,
+        traslado_km: p.traslado_km != null ? Number(p.traslado_km) : null,
       },
     });
   }

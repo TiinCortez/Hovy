@@ -1,0 +1,740 @@
+// Estilos exclusivos de la vista de Métricas (paleta del DESIGN.md).
+// Bootstrap (main.scss) se inyecta después de este archivo: donde se pisa una
+// clase de Bootstrap se usa un selector de dos clases para ganar especificidad.
+$metricas-verde: #2D4A27;
+$metricas-verde-oscuro: #173313;
+$metricas-verde-medio: #496544;
+$metricas-verde-claro: #CBECC1;
+$metricas-terracota: #C87D55;
+$metricas-barra-pendiente: #C25E00;
+$metricas-barra-traslado: #8C4A3B;
+$metricas-borde: #EAE6DF;
+$metricas-superficie: #F5F3F0;
+$metricas-texto: #1F291E;
+$metricas-texto-secundario: #5F695D;
+$metricas-texto-tenue: #8D968B;
+$metricas-sombra: 0px 2px 8px rgba(45, 74, 39, 0.04);
+$metricas-sombra-flotante: 0px 8px 24px rgba(31, 41, 30, 0.08);
+
+$metricas-alto-grafico: 260px;
+$metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
+
+.metricas-texto-verde { color: $metricas-verde-medio !important; }
+.metricas-texto-terracota { color: $metricas-terracota !important; }
+
+/* --- Selector de período --- */
+.metricas-periodo {
+  width: 100%;
+
+  @media (min-width: 768px) { width: auto; }
+}
+
+.metricas-periodo-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $metricas-verde-oscuro;
+  background-color: #FFFFFF;
+  border: 1px solid $metricas-borde;
+  border-radius: 1rem;
+  box-shadow: $metricas-sombra;
+  transition: background-color 0.15s ease;
+
+  > svg:first-child { color: $metricas-verde-medio; }
+  > svg:last-child { margin-left: auto; color: $metricas-texto-tenue; }
+
+  &:hover { background-color: #FBF9F6; }
+  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+
+  @media (min-width: 768px) {
+    width: auto;
+    min-width: 15rem;
+  }
+}
+
+.metricas-periodo-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #FFFFFF;
+  border: 1px solid $metricas-borde;
+  border-radius: 1rem;
+  box-shadow: $metricas-sombra-flotante;
+
+  @media (min-width: 768px) {
+    left: auto;
+    width: 18rem;
+  }
+}
+
+.metricas-periodo-modos {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background-color: $metricas-superficie;
+  border-radius: 9999px;
+}
+
+.metricas-periodo-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+
+  > span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $metricas-texto-secundario;
+  }
+}
+
+/* --- Tarjetas de resumen --- */
+.metricas-kpi-titulo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $metricas-texto-secundario;
+}
+
+.metricas-kpi-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+
+  &--verde { background-color: $metricas-verde-claro; color: $metricas-verde-oscuro; }
+  &--terracota { background-color: #FFDBCB; color: #4F1E00; }
+}
+
+.metricas-kpi-valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: $metricas-verde-oscuro;
+  font-variant-numeric: tabular-nums;
+
+  @media (min-width: 576px) { font-size: 2rem; }
+}
+
+.metricas-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  border-radius: 9999px;
+
+  &--verde { color: #4F6C4A; background-color: $metricas-verde-claro; }
+  &--terracota { color: #713714; background-color: #FFDBCB; }
+}
+
+.metricas-kpi-pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid $metricas-borde;
+}
+
+.metricas-kpi-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  > span {
+    font-size: 0.72rem;
+    color: $metricas-texto-tenue;
+  }
+
+  > strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $metricas-texto;
+  }
+
+  &:last-child { text-align: right; }
+}
+
+/* --- Tarjeta verde (balance comparativo) --- */
+.metricas-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, $metricas-verde 0%, $metricas-verde-medio 100%);
+  border-radius: 1.5rem;
+  box-shadow: $metricas-sombra;
+
+  @media (min-width: 576px) { padding: 2rem; }
+}
+
+.metricas-hero-deco {
+  position: absolute;
+  top: -4rem;
+  right: -4rem;
+  width: 18rem;
+  height: 18rem;
+  color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.metricas-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $metricas-verde-claro;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+.metricas-hero-titulo {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #FFFFFF;
+
+  > span {
+    font-weight: 700;
+    color: $metricas-verde-claro;
+  }
+
+  @media (min-width: 576px) { font-size: 1.5rem; }
+}
+
+.metricas-hero-caja {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.6rem;
+  height: 100%;
+  padding: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+}
+
+.metricas-hero-etiqueta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.metricas-hero-icono { color: $metricas-verde-claro; }
+
+.metricas-hero-numero {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: $metricas-verde-claro;
+  font-variant-numeric: tabular-nums;
+
+  > small {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.metricas-hero-diferencia {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $metricas-verde-claro;
+  background-color: rgba(203, 236, 193, 0.2);
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+
+  &.is-baja {
+    color: #FFDBCB;
+    background-color: rgba(255, 219, 203, 0.2);
+  }
+}
+
+.metricas-hero-detalle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.metricas-hero-progreso {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  overflow: hidden;
+
+  > span {
+    display: block;
+    height: 100%;
+    background-color: $metricas-verde-claro;
+    border-radius: inherit;
+    transition: width 0.6s ease;
+  }
+}
+
+/* --- Paneles (gráfico y tabla) --- */
+.metricas-panel {
+  padding: 1.25rem;
+  background-color: #FFFFFF;
+  border: 1px solid $metricas-borde;
+  border-radius: 1rem;
+  box-shadow: $metricas-sombra;
+
+  @media (min-width: 576px) { padding: 1.75rem 2rem; }
+}
+
+.metricas-panel-cabecera {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid $metricas-borde;
+
+  @media (min-width: 992px) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.metricas-panel-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $metricas-verde-oscuro;
+}
+
+.metricas-panel-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid $metricas-borde;
+  font-size: 0.875rem;
+  color: $metricas-texto-secundario;
+
+  > strong {
+    font-size: 1.1rem;
+    color: $metricas-verde-oscuro;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Pie del gráfico: traslado del período (izquierda) y total facturado (derecha)
+.metricas-pie-traslado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+
+  > strong {
+    font-size: 1.1rem;
+    color: $metricas-barra-traslado;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.metricas-pie-km {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $metricas-texto;
+  font-variant-numeric: tabular-nums;
+}
+
+.metricas-pie-total {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  > strong {
+    font-size: 1.1rem;
+    color: $metricas-verde-oscuro;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.metricas-select {
+  position: relative;
+
+  .form-select {
+    min-height: 40px;
+    padding: 0.5rem 2.25rem 0.5rem 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $metricas-texto;
+    background-color: $metricas-superficie;
+    background-image: none;
+    border: 0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+
+    &:hover { background-color: #EFEEEB; }
+    &:focus { box-shadow: 0 0 0 1px $metricas-verde; }
+  }
+}
+
+.metricas-select-icono {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  color: $metricas-texto-tenue;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.metricas-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $metricas-texto;
+  background-color: $metricas-superficie;
+  border-radius: 0.75rem;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.metricas-leyenda-color {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+
+  &--cobrado { background-color: $metricas-verde; }
+  &--pendiente { background-color: $metricas-barra-pendiente; }
+  &--traslado { background-color: $metricas-barra-traslado; }
+}
+
+/* --- Gráfico de barras --- */
+.metricas-grafico-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.25rem;
+}
+
+// Columna 1: eje Y. Columna 2: área de barras. Fila 2: meses debajo del eje $0.
+// Líneas, etiquetas y barras usan la misma base (bottom: 0), así la barra
+// arranca exactamente sobre la línea de $0.
+.metricas-grafico {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  grid-template-rows: $metricas-alto-grafico auto;
+  padding-top: 0.75rem;
+}
+
+.metricas-grafico-eje {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+
+  > span {
+    position: absolute;
+    right: 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    color: $metricas-texto-tenue;
+    white-space: nowrap;
+    transform: translateY(50%);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.metricas-grafico-area {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.metricas-grafico-linea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: rgba(234, 232, 229, 0.8);
+  pointer-events: none;
+
+  &.is-base { background-color: #E4E2DF; }
+}
+
+.metricas-grafico-columnas {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.metricas-grafico-columna {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  border-radius: 0.5rem 0.5rem 0 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &.is-activa,
+  &.is-destacada { background-color: rgba(203, 236, 193, 0.18); }
+
+  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+}
+
+.metricas-grafico-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 100%;
+}
+
+.metricas-barra {
+  display: block;
+  width: 1.25rem;
+  border-radius: 6px 6px 0 0;
+  transition: opacity 0.15s ease;
+
+  &--cobrado { background-color: $metricas-verde; }
+  &--pendiente { background-color: $metricas-barra-pendiente; }
+  &--traslado { background-color: $metricas-barra-traslado; }
+
+  @media (min-width: 576px) { width: 1.6rem; }
+}
+
+.metricas-grafico-columna.is-activa .metricas-barra { opacity: 0.9; }
+
+// Solo durante la animación de entrada la altura tiene transición
+.metricas-grafico.is-animando .metricas-barra {
+  transition: height $metricas-duracion-barras cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
+}
+
+.metricas-grafico-etiquetas {
+  display: flex;
+  grid-column: 2;
+  grid-row: 2;
+  padding-top: 0.75rem;
+
+  > span {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $metricas-texto-secundario;
+    white-space: nowrap;
+
+    > small {
+      font-size: 0.65rem;
+      font-weight: 500;
+      color: $metricas-texto-tenue;
+    }
+
+    &.is-activa,
+    &.is-destacada {
+      font-weight: 700;
+      color: $metricas-verde-oscuro;
+    }
+  }
+}
+
+.metricas-tooltip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 5;
+  min-width: 13rem;
+  padding: 0.65rem 0.85rem;
+  color: #F2F0ED;
+  background-color: #30312F;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  &.is-izquierda { left: 0; transform: none; }
+  &.is-derecha { left: auto; right: 0; transform: none; }
+}
+
+.metricas-tooltip-titulo {
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #FBF9F6;
+  border-bottom: 1px solid rgba(115, 121, 111, 0.3);
+}
+
+.metricas-tooltip-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  &--cobrado {
+    color: $metricas-verde-claro;
+    i { background-color: #97B98C; }
+  }
+
+  &--pendiente {
+    color: #FFDBCB;
+    i { background-color: $metricas-barra-pendiente; }
+  }
+
+  &--traslado {
+    color: #FFB691;
+    i { background-color: $metricas-barra-traslado; }
+  }
+}
+
+/* --- Tabla de desglose --- */
+.btn.metricas-boton-csv {
+  gap: 0.4rem;
+  align-self: flex-start;
+  border-radius: 0.75rem;
+
+  @media (min-width: 992px) { align-self: auto; }
+}
+
+.metricas-tabla-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.metricas-tabla {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead th {
+    padding: 0.85rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $metricas-texto-secundario;
+    white-space: nowrap;
+    background-color: $metricas-superficie;
+
+    &:first-child { border-radius: 0.75rem 0 0 0.75rem; }
+    &:last-child { border-radius: 0 0.75rem 0.75rem 0; }
+  }
+
+  tbody th,
+  tbody td {
+    padding: 1rem;
+    white-space: nowrap;
+    border-bottom: 1px solid $metricas-borde;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tbody th {
+    font-weight: 600;
+    color: $metricas-texto;
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease;
+
+    &:hover { background-color: #FBF9F6; }
+    &:last-child th,
+    &:last-child td { border-bottom: 0; }
+
+    &.is-destacada {
+      background-color: rgba(203, 236, 193, 0.22);
+
+      th { color: $metricas-verde-oscuro; }
+    }
+  }
+}
+
+.metricas-celda-cobrado { font-weight: 600; color: $metricas-verde-oscuro; }
+.metricas-celda-pendiente { font-weight: 600; color: $metricas-terracota; }
+.metricas-celda-total { font-weight: 700; color: $metricas-texto; }
+
+.metricas-punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: $metricas-verde-medio;
+}
+
+.metricas-etiqueta-curso {
+  padding: 0.1rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #324D2E;
+  background-color: $metricas-verde-claro;
+  border-radius: 0.25rem;
+}
+
+.metricas-variacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+
+  &.is-sube { color: $metricas-verde-medio; }
+  &.is-baja { color: #BA1A1A; }
+  &.is-neutra { color: $metricas-texto-tenue; font-weight: 600; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metricas-grafico.is-animando .metricas-barra,
+  .metricas-barra,
+  .metricas-grafico-columna,
+  .metricas-hero-progreso > span { transition: none; }
+}
