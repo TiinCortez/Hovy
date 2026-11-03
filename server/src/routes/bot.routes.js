@@ -22,6 +22,7 @@ import {
   darDeBajaInmuebleBot,
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
+import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { logisticaStaff } from '../controllers/logisticaController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
@@ -113,6 +114,10 @@ router.post('/clientes/:telefono/inmuebles', resolverClientePorTelefono, createI
 router.put('/clientes/:telefono/inmuebles/:id', resolverClientePorTelefono, updateInmuebleBot);
 // DELETE /api/bot/clientes/:telefono/inmuebles/:id/baja
 router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefono, darDeBajaInmuebleBot);
+
+// Turnos futuros del cliente (Coordinado, Confirmado, En ejecución).
+// GET    /api/bot/clientes/:telefono/turnos?limite=20
+router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFuturosDelCliente);
 
 
 // Solicitud de visita. No requiere registro, así que no monta
