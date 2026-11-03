@@ -22,6 +22,7 @@ import {
   darDeBajaInmuebleBot,
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
+import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { logisticaStaff } from '../controllers/logisticaController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
@@ -35,6 +36,11 @@ import {
   finalizarTurnoStaff,
   qrTurnoStaff,
   cobroTurnoStaff,
+  saldoTurnoStaff,
+  registrarPagoTurnoStaff,
+  resumenFinancieroStaff,
+  deudoresStaff,
+  turnosPendientesCobroStaff,
 } from '../controllers/botStaffController.js';
 import {
   cargarPresupuestoStaff,
@@ -109,6 +115,10 @@ router.put('/clientes/:telefono/inmuebles/:id', resolverClientePorTelefono, upda
 // DELETE /api/bot/clientes/:telefono/inmuebles/:id/baja
 router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefono, darDeBajaInmuebleBot);
 
+// Turnos futuros del cliente (Coordinado, Confirmado, En ejecución).
+// GET    /api/bot/clientes/:telefono/turnos?limite=20
+router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFuturosDelCliente);
+
 
 // Solicitud de visita. No requiere registro, así que no monta
 // resolverClientePorTelefono: el número nuevo daría 404. El teléfono igual va
@@ -133,6 +143,8 @@ router.post('/staff/:telefono/visitas/:id/confirmar', resolverStaffPorTelefono, 
 router.get('/staff/:telefono/disponibilidad', resolverStaffPorTelefono, consultarDisponibilidadStaff);
 
 router.get('/staff/:telefono/turnos', resolverStaffPorTelefono, listarTurnosStaff);
+// GET  /api/bot/staff/:telefono/turnos/pendientes-cobro?limite=20
+router.get('/staff/:telefono/turnos/pendientes-cobro', resolverStaffPorTelefono, turnosPendientesCobroStaff);
 // Logística del día del jefe: turnos, clientes, ruta en km y combustible (o gas) estimado,
 // con un `mensaje` listo para reenviar. Solo lectura. Sin `fecha`, hoy.
 // GET  /api/bot/staff/:telefono/logistica?fecha=YYYY-MM-DD
@@ -146,6 +158,18 @@ router.get('/staff/:telefono/turnos/:id/qr', resolverStaffPorTelefono, qrTurnoSt
 // "¿Ya pagó?": estado del cobro del turno (verifica contra Mercado Pago si sigue abierto).
 // GET  /api/bot/staff/:telefono/turnos/:id/cobro
 router.get('/staff/:telefono/turnos/:id/cobro', resolverStaffPorTelefono, cobroTurnoStaff);
+// Saldo y pagos pendientes del turno para staff (total, deuda pendiente y pagos registrados).
+// GET  /api/bot/staff/:telefono/turnos/:id/saldo
+router.get('/staff/:telefono/turnos/:id/saldo', resolverStaffPorTelefono, saldoTurnoStaff);
+// Pago recibido a mano (Efectivo o Transferencia) de un turno realizado.
+// POST /api/bot/staff/:telefono/turnos/:id/pagos
+router.post('/staff/:telefono/turnos/:id/pagos', resolverStaffPorTelefono, registrarPagoTurnoStaff);
+// Resumen financiero del mes para staff (total liquidado, cobrado y por cobrar).
+// GET  /api/bot/staff/:telefono/finanzas/resumen?mes=YYYY-MM
+router.get('/staff/:telefono/finanzas/resumen', resolverStaffPorTelefono, resumenFinancieroStaff);
+// Listado de clientes con saldo deudor en cuenta corriente para staff.
+// GET  /api/bot/staff/:telefono/finanzas/deudores?limite=20
+router.get('/staff/:telefono/finanzas/deudores', resolverStaffPorTelefono, deudoresStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/presupuesto
 router.post('/staff/:telefono/visitas/:id/presupuesto', resolverStaffPorTelefono, cargarPresupuestoStaff);
 // POST /api/bot/staff/:telefono/visitas/:id/turno

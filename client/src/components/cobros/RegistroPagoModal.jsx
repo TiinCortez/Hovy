@@ -48,7 +48,9 @@ export default function RegistroPagoModal({
   const [errorLocal, setErrorLocal] = useState(null);
 
   const deuda = pendiente ?? total;
-  const necesitaMonto = requiereMonto(seleccion.forma);
+  const esQr = seleccion.forma === 'qr';
+  const esManual = seleccion.forma === 'efectivo' || seleccion.forma === 'transferencia';
+  const necesitaMonto = requiereMonto(seleccion.forma) && (!esQr || deuda !== null);
   const esTransferencia = seleccion.forma === 'transferencia';
   const analisis = necesitaMonto ? analizarMonto(seleccion.monto, deuda) : { tipo: 'vacio' };
   const atajos = necesitaMonto ? montosRapidos(deuda) : [];
@@ -162,8 +164,10 @@ export default function RegistroPagoModal({
 
             {necesitaMonto && (
               <div className="row g-3">
-                <div className="col-12 col-md-6">
-                  <label className="combustible-label" htmlFor={`${idBase}-monto`}>Monto recibido</label>
+                <div className={esManual ? 'col-12 col-md-6' : 'col-12'}>
+                  <label className="combustible-label" htmlFor={`${idBase}-monto`}>
+                    {esQr ? 'Monto a cobrar' : 'Monto recibido'}
+                  </label>
                   <div className="input-group input-group-lg">
                     <span className="input-group-text fw-bold">$</span>
                     <input
@@ -207,24 +211,26 @@ export default function RegistroPagoModal({
                   )}
                 </div>
 
-                <div className="col-12 col-md-6">
-                  <label className="combustible-label" htmlFor={`${idBase}-referencia`}>
-                    {esTransferencia ? 'N° de operación (opcional)' : 'Nota (opcional)'}
-                  </label>
-                  <input
-                    id={`${idBase}-referencia`}
-                    type="text"
-                    maxLength={100}
-                    className="form-control form-control-lg"
-                    value={seleccion.referencia}
-                    disabled={isSaving}
-                    placeholder={esTransferencia ? 'Ej: 884177' : 'Ej: pagó la señora'}
-                    onChange={(e) => cambiar({ ...seleccion, referencia: e.target.value })}
-                  />
-                  <div className="form-text">
-                    {esTransferencia ? 'Sirve para encontrar la transferencia en tu banco.' : 'Queda anotada junto al pago.'}
+                {esManual && (
+                  <div className="col-12 col-md-6">
+                    <label className="combustible-label" htmlFor={`${idBase}-referencia`}>
+                      {esTransferencia ? 'N° de operación (opcional)' : 'Nota (opcional)'}
+                    </label>
+                    <input
+                      id={`${idBase}-referencia`}
+                      type="text"
+                      maxLength={100}
+                      className="form-control form-control-lg"
+                      value={seleccion.referencia}
+                      disabled={isSaving}
+                      placeholder={esTransferencia ? 'Ej: 884177' : 'Ej: pagó la señora'}
+                      onChange={(e) => cambiar({ ...seleccion, referencia: e.target.value })}
+                    />
+                    <div className="form-text">
+                      {esTransferencia ? 'Sirve para encontrar la transferencia en tu banco.' : 'Queda anotada junto al pago.'}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -237,11 +243,10 @@ export default function RegistroPagoModal({
               )}
               {seleccion.forma === 'qr' && (
                 <p className="m-0">
-                  Se genera el QR de Mercado Pago{deuda !== null ? ` por ${formatearMontoARS(deuda)}` : ''}. El link vence a las
-                  24 horas y esta pantalla te avisa cuando el cliente paga.
+                  Se genera el QR de Mercado Pago. El link vence a las 24 horas y esta pantalla te avisa cuando el cliente paga.
                 </p>
               )}
-              {necesitaMonto && (
+              {esManual && (
                 <p className="m-0">
                   Un pago registrado <strong>no se puede borrar</strong>: si te equivocás, se corrige con un movimiento nuevo en la cuenta corriente.
                 </p>

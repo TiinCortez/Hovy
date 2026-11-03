@@ -96,7 +96,7 @@ export const crearCobro = async (idUsuario, body = {}) => {
 
   // A turno is charged from what the client owes in the account ledger.
   if (body.id_turno !== undefined && body.id_turno !== null && body.id_turno !== '') {
-    return crearCobroDeTurno(idUsuario, body.id_turno);
+    return crearCobroDeTurno(idUsuario, body.id_turno, { montoDeseado: body.monto });
   }
 
   let datos;
@@ -173,7 +173,7 @@ const emitirCobro = async (idUsuario, datos, publicBaseUrl) => {
 // partial payment), the stale pending link is cancelled locally and a new one is
 // created. An approved cobro, or a turno that is not Realizado or has no balance,
 // is a 409 with a message ready to show.
-export const crearCobroDeTurno = async (idUsuario, idTurnoRaw) => {
+export const crearCobroDeTurno = async (idUsuario, idTurnoRaw, { montoDeseado = null } = {}) => {
   const publicBaseUrl = process.env.MERCADOPAGO_PUBLIC_BASE_URL;
   if (!publicBaseUrl || !esUrlPublicaHttps(publicBaseUrl)) {
     return falla(503, 'El cobro con Mercado Pago no está configurado en el servidor.');
@@ -200,12 +200,16 @@ export const crearCobroDeTurno = async (idUsuario, idTurnoRaw) => {
     presupuesto: contexto.presupuesto,
     cobrosActivos: activos,
     servicio: contexto.servicio,
+    montoDeseado,
   });
   if (plan.error) return { error: plan.error };
 
   // The turno is shared by the whole crew, but each cobro is paid into one seller's
-  // Mercado Pago account: another seller's link is never reused or cancelled here.
-  if (activos.some((cobro) => cobro.id_usuario !== idUsuario)) {
+  // Mercado Pago account: another seller's in-progress link is never reused or cancelled here.
+  const enCurso = activos.filter(
+    (cobro) => cobro.estado === 'Pendiente' || (cobro.estado === 'Aprobado' && !cobro.id_pago)
+  );
+  if (enCurso.some((cobro) => cobro.id_usuario !== idUsuario)) {
     return falla(409, 'Este turno ya tiene un cobro generado desde otra cuenta de Mercado Pago.');
   }
 

@@ -83,6 +83,7 @@ export const planificarCobroTurno = ({
   presupuesto,
   cobrosActivos,
   servicio,
+  montoDeseado = null,
   ahora = Date.now(),
 }) => {
   if (!turno) return falla(404, 'No existe un turno con ese id.');
@@ -92,7 +93,12 @@ export const planificarCobroTurno = ({
   }
 
   const activos = Array.isArray(cobrosActivos) ? cobrosActivos : [];
-  if (turno.cobrado === true || activos.some((cobro) => cobro.estado === 'Aprobado')) {
+  // An approved cobro that has already impacted the ledger (id_pago != null) is
+  // reflected in `movimientos`: if the turno still owes money, a new QR can be created.
+  const enCurso = activos.filter(
+    (cobro) => cobro.estado === 'Pendiente' || (cobro.estado === 'Aprobado' && !cobro.id_pago)
+  );
+  if (turno.cobrado === true || enCurso.some((cobro) => cobro.estado === 'Aprobado')) {
     return falla(409, 'Este turno ya fue cobrado.');
   }
 
@@ -111,16 +117,33 @@ export const planificarCobroTurno = ({
     return falla(409, 'El saldo pendiente no es un monto válido para cobrar (hasta 2 decimales).');
   }
 
+  let montoACobrar = montoValido;
+
+  if (montoDeseado !== null && montoDeseado !== undefined && String(montoDeseado).trim() !== '') {
+    const parseado = Number(String(montoDeseado).replace(',', '.'));
+    if (!Number.isFinite(parseado) || parseado <= 0) {
+      return falla(400, 'El monto a cobrar por QR tiene que ser un número mayor a 0.');
+    }
+    const parseadoValido = validarMonto(parseado);
+    if (parseadoValido === null) {
+      return falla(400, 'El monto a cobrar por QR puede tener hasta 2 decimales.');
+    }
+    if (aCentavos(parseadoValido) > aCentavos(montoValido)) {
+      return falla(400, `El monto a cobrar por QR no puede superar lo que el cliente debe (${pesos(montoValido)}).`);
+    }
+    montoACobrar = parseadoValido;
+  }
+
   const pendientes = activos.filter((cobro) => cobro.estado === 'Pendiente');
   const reutilizable = pendientes.find(
-    (cobro) => linkVigente(cobro, ahora) && aCentavos(cobro.monto) === aCentavos(montoValido)
+    (cobro) => linkVigente(cobro, ahora) && aCentavos(cobro.monto) === aCentavos(montoACobrar)
   );
   if (reutilizable) return { accion: 'reutilizar', cobro: reutilizable };
 
   const descripcion = `Turno #${turno.id_turno}${servicio ? ` - ${servicio}` : ''}`.slice(0, MAX_DESCRIPCION);
   return {
     accion: 'crear',
-    monto: montoValido,
+    monto: montoACobrar,
     descripcion,
     cancelar: pendientes.map((cobro) => cobro.id),
   };

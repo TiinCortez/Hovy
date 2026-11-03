@@ -10,10 +10,12 @@ const CobroService = {
     return response.data;
   },
 
-  // Gets or creates the payment link of a turno for what the client still owes:
-  // the same link if it is still valid, a new one if the amount changed or it expired.
-  crearParaTurno: async (idTurno) => {
-    const response = await httpService.post('/cobros', { id_turno: idTurno });
+  // Gets or creates the payment link of a turno for what the client still owes (or a
+  // partial `monto`): the same link if it is still valid, a new one if the amount
+  // changed or it expired.
+  crearParaTurno: async (idTurno, monto = undefined) => {
+    const body = monto !== undefined && monto !== null ? { id_turno: idTurno, monto } : { id_turno: idTurno };
+    const response = await httpService.post('/cobros', body);
     return response.data;
   },
 
