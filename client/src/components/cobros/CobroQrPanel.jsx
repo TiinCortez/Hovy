@@ -66,12 +66,11 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     if (onCobrado) onCobrado();
   };
 
-  // Updates the cobro (Mercado Pago link) and, once its payment is recorded, the balance.
+  // Updates the cobro (Mercado Pago link) and, once its payment is recorded, reloads the balance.
   const actualizarCobro = (nuevo) => {
     setCobro(nuevo);
     if (nuevo?.impactado) {
       setVersionSaldo((v) => v + 1);
-      avisarCobrado();
     }
   };
 
@@ -90,9 +89,15 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
   useEffect(() => {
     let cancelled = false;
     PagoService.getSaldo(idTurno)
-      .then((res) => { if (!cancelled) setSaldo(res.data); })
+      .then((res) => {
+        if (cancelled) return;
+        setSaldo(res.data);
+        if (res.data?.cobrado) avisarCobrado();
+      })
       .catch(() => { /* the balance is a convenience: the panel still works without it */ });
     return () => { cancelled = true; };
+    // avisarCobrado only uses a ref and a stable prop callback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idTurno, versionSaldo]);
 
   // QR image of the pending cobro. The auth header is needed, so it is fetched as a
@@ -135,8 +140,6 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     };
     const intervalo = setInterval(consultar, INTERVALO_CONSULTA_MS);
     return () => clearInterval(intervalo);
-    // actualizarCobro only uses setters and a ref: it does not need to restart the polling.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seguir, cobroId]);
 
   // Runs an action and reports whether it worked (the dialog closes only on success).
@@ -155,9 +158,9 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     }
   };
 
-  const crearQr = () =>
+  const crearQr = (monto = undefined) =>
     ejecutar(async () => {
-      const res = await CobroService.crearParaTurno(idTurno);
+      const res = await CobroService.crearParaTurno(idTurno, monto);
       avisado.current = false;
       setPausado(false);
       setQr(null);
@@ -192,7 +195,7 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
     const temporizador = setTimeout(() => {
       if (preferenciaEjecutada.current) return;
       preferenciaEjecutada.current = true;
-      if (preferencia.forma === 'qr') crearQr();
+      if (preferencia.forma === 'qr') crearQr(preferencia.monto ? aNumero(preferencia.monto) : undefined);
       else registrarManual(preferencia);
     }, 0);
     return () => clearTimeout(temporizador);
@@ -201,7 +204,9 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
   }, [preferencia, yaCobrado, isLoading, saldo]);
 
   const handleConfirmar = async (eleccion) => {
-    const ok = eleccion.forma === 'qr' ? await crearQr() : await registrarManual(eleccion);
+    const ok = eleccion.forma === 'qr'
+      ? await crearQr(eleccion.monto ? aNumero(eleccion.monto) : undefined)
+      : await registrarManual(eleccion);
     if (ok) setModal(null);
   };
 
@@ -287,7 +292,7 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
       {mensajeOk && <div className="mb-3"><Aviso tipo="ok" icono={CheckCircle2}>{mensajeOk}</Aviso></div>}
       {error && !modal && <div className="mb-3"><Aviso tipo="error" icono={AlertCircle}>{error}</Aviso></div>}
 
-      {sinSaldo && !cobro ? (
+      {sinSaldo && (!cobro || cobro.impactado) ? (
         <Aviso tipo="ok" icono={CheckCircle2}>Este turno no tiene saldo pendiente de cobro.</Aviso>
       ) : elegirNuevo ? (
         <>
