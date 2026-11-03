@@ -23,3 +23,6 @@ odd
 # Documentación interna y privada del responsable
 documentacion/
 *.private.*
+
+# Codegraph local index
+.codegraph/
