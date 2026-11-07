@@ -7,12 +7,15 @@ import PerfilService from '../../services/api/perfil.service';
 import { getApiError } from '../visitas/visitaUtils';
 import { obtenerUbicacion } from './geolocalizacion';
 import ConfirmarUbicacionModal from './ConfirmarUbicacionModal';
+import IngresarDireccionModal from './IngresarDireccionModal';
+import ElegirEnMapaModal from './ElegirEnMapaModal';
 
 const VERDE = '#1B3006';
 
-// Optional departure point: the browser gives an approximate position (with the
-// user's permission), the user confirms it and from then on the distance of the
-// trips to the properties is measured from there.
+// Optional departure point: it comes from the browser's approximate position
+// (with the user's permission), a written address or a point on the map. The user
+// confirms it and from then on the distance of the trips to the properties is
+// measured from there.
 export default function SalidaCard() {
   const [salida, setSalida] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +27,7 @@ export default function SalidaCard() {
   const [errorModal, setErrorModal] = useState(null);
   const [guardado, setGuardado] = useState(false);
   const [confirmandoQuitar, setConfirmandoQuitar] = useState(false);
+  const [selector, setSelector] = useState(null); // 'direccion' | 'mapa' | null
 
   useEffect(() => {
     let cancelled = false;
@@ -36,16 +40,30 @@ export default function SalidaCard() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleUsarUbicacion = async () => {
+  const limpiarAvisos = () => {
     setError(null);
     setGuardado(false);
     setConfirmandoQuitar(false);
+  };
+
+  const abrirSelector = (tipo) => {
+    limpiarAvisos();
+    setSelector(tipo);
+  };
+
+  const proponer = (sugerencia) => {
+    setErrorModal(null);
+    setSelector(null);
+    setPropuesta(sugerencia);
+  };
+
+  const handleUsarUbicacion = async () => {
+    limpiarAvisos();
     setIsBuscando(true);
     try {
       const posicion = await obtenerUbicacion();
       const res = await PerfilService.sugerirSalida(posicion);
-      setErrorModal(null);
-      setPropuesta(res.data);
+      proponer(res.data);
     } catch (err) {
       setError(err.mensajeUsuario || getApiError(err, 'No se pudo obtener tu ubicación.'));
     } finally {
@@ -104,9 +122,10 @@ export default function SalidaCard() {
       <Card title="Dirección de salida (opcional)">
         <div className="d-flex flex-column gap-3">
           <p className="text-secondary small mb-0">
-            Es el punto desde donde salís hacia tus turnos. Con tu permiso, el navegador obtiene tu ubicación
-            aproximada y vos confirmás si querés guardarla. De esto dependen los cálculos de distancia y
-            el costo de traslado de los presupuestos.
+            Es el punto desde donde salís hacia tus turnos. Podés usar tu ubicación aproximada (con tu
+            permiso, la obtiene el navegador), escribir la dirección o marcarla en el mapa, y vos confirmás
+            si querés guardarla. De esto dependen los cálculos de distancia y el costo de traslado de los
+            presupuestos.
           </p>
 
           {error && <Aviso tipo="error" icono={AlertCircle}>{error}</Aviso>}
@@ -139,6 +158,14 @@ export default function SalidaCard() {
                 : (salida?.configurada ? 'Actualizar con mi ubicación' : 'Usar mi ubicación')}
             </Button>
 
+            <Button variant="outline-primary" onClick={() => abrirSelector('direccion')} disabled={isBuscando || isSaving}>
+              Ingresar ubicación de salida
+            </Button>
+
+            <Button variant="outline-primary" onClick={() => abrirSelector('mapa')} disabled={isBuscando || isSaving}>
+              Elegir desde el mapa
+            </Button>
+
             {salida?.configurada && !confirmandoQuitar && (
               <Button variant="outline-danger" onClick={() => setConfirmandoQuitar(true)} disabled={isBuscando || isSaving}>
                 Quitar
@@ -158,6 +185,14 @@ export default function SalidaCard() {
           </div>
         </div>
       </Card>
+
+      {selector === 'direccion' && (
+        <IngresarDireccionModal onElegida={proponer} onClose={() => setSelector(null)} />
+      )}
+
+      {selector === 'mapa' && (
+        <ElegirEnMapaModal salida={salida} onElegida={proponer} onClose={() => setSelector(null)} />
+      )}
 
       {propuesta && (
         <ConfirmarUbicacionModal
