@@ -295,6 +295,9 @@ export default function TurnosPage() {
       <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start align-items-xl-center gap-3">
         <div className="d-flex justify-content-between align-items-start w-100 w-xl-auto">
           <div>
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Planificación operativa</span>
+            </div>
             <h2 className="fw-bold fs-2 text-dark m-0" style={{ letterSpacing: '-0.02em' }}>Agenda de Turnos</h2>
             <p className="text-secondary small m-0 mt-1">Planificación, seguimiento operativo, clima y mapa.</p>
           </div>
