@@ -172,6 +172,9 @@ export default function ClientsPage() {
 
       <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
         <div>
+          <div className="d-flex align-items-center gap-2 mb-1">
+            <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Directorio de clientes</span>
+          </div>
           <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
           <p className="text-secondary small m-0">Directorio general de clientes y gestión integral de inmuebles vinculados.</p>
         </div>

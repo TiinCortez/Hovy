@@ -75,7 +75,12 @@ export default function MetricasPage() {
     <div className="d-flex flex-column gap-4 pb-5">
 
       <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-        <h2 className="fw-bold fs-2 text-dark m-0">Métricas</h2>
+        <div>
+          <div className="d-flex align-items-center gap-2 mb-1">
+            <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Salud financiera</span>
+          </div>
+          <h2 className="fw-bold fs-2 text-dark m-0">Métricas</h2>
+        </div>
         <PeriodoSelector periodo={periodo} etiqueta={rango.etiqueta} anios={anios} onChange={setPeriodo} />
       </div>
 

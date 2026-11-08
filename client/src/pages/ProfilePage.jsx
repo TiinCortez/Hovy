@@ -23,7 +23,12 @@ export default function ProfilePage() {
 
   return (
     <div className="d-flex flex-column gap-4 pb-5">
-      <h2 className="fw-bold fs-2 text-dark mb-1">Perfil</h2>
+      <div>
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Mi cuenta</span>
+        </div>
+        <h2 className="fw-bold fs-2 text-dark mb-1">Perfil</h2>
+      </div>
       <Card title="Datos de la cuenta">
         <div className="row g-3">
           <Dato label="Usuario" value={user?.usuario} />
