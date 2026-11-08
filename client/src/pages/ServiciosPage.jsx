@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import ServicioModal from '../components/ui/ServicioModal';
 import ServicioEliminarModal from '../components/ui/ServicioEliminarModal';
 import ServicioService from '../services/api/servicio.service';
+import ServiciosSkeleton from '../components/skeletons/ServiciosSkeleton';
 
 // Case- and accent-insensitive comparison for the search box
 const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -115,7 +116,7 @@ export default function ServiciosPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-5"><div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div></div>
+        <ServiciosSkeleton />
       ) : errorMessage ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <div className="d-flex align-items-center justify-content-center gap-2 text-danger mb-3" role="alert">
