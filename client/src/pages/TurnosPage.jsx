@@ -12,6 +12,7 @@ import useRelojTurnos from '../components/turnos/useRelojTurnos';
 import { fechaDesdeIso, obtenerAhoraTurnos, fechaAIso, PRIORIDADES_CONFIG } from '../components/turnos/agendaTurnos';
 import PanelClima from '../components/clima/PanelClima';
 import MapaAgenda from '../components/turnos/MapaAgenda';
+import TurnosSkeleton from '../components/skeletons/TurnosSkeleton';
 import '../components/turnos/turnos.scss';
 
 const PRIORIDADES_INICIALES = Object.keys(PRIORIDADES_CONFIG);
@@ -279,16 +280,6 @@ export default function TurnosPage() {
     return turnosFiltrados.filter((turno) => turno.fechaAsignada.startsWith(monthPrefix));
   }, [fechaActual, fechaIsoActual, turnosDiarios, turnosFiltrados, vistaActual]);
 
-  if (loading) {
-    return (
-      <div className="h-100 w-100 d-flex justify-content-center align-items-center">
-        <div className="spinner-border text-success" role="status">
-          <span className="visually-hidden">Cargando turnos...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="turnos-page d-flex flex-column gap-3 w-100 pb-4">
       
@@ -406,32 +397,38 @@ export default function TurnosPage() {
 
       <div className="row g-4 w-100 m-0">
         <div className="col-12 col-lg-8 col-xl-9 p-0 pe-lg-2">
-          {vistaActual === 'diaria' && (
-            <TurnosKanban
-              turnos={turnosDiarios}
-              onSelectTurno={handleSelectTurno}
-            />
-          )}
-          {vistaActual === 'semanal' && (
-            <TurnosSemanal
-              turnos={turnosFiltrados}
-              fechaReferencia={fechaActual}
-              ahora={ahora}
-              onSelectTurno={handleSelectTurno}
-              onCreateTurno={abrirNuevoTurno}
-            />
-          )}
-          {vistaActual === 'mensual' && (
-            <TurnosMensual
-              turnos={turnosFiltrados}
-              fechaReferencia={fechaActual}
-              hoyIsoStr={ahora.fecha}
-              onSelectTurno={handleSelectTurno}
-              onSwitchToDailyView={(isoDate) => {
-                setFechaActual(fechaDesdeIso(isoDate));
-                setVistaActual('diaria');
-              }}
-            />
+          {loading ? (
+            <TurnosSkeleton />
+          ) : (
+            <>
+              {vistaActual === 'diaria' && (
+                <TurnosKanban
+                  turnos={turnosDiarios}
+                  onSelectTurno={handleSelectTurno}
+                />
+              )}
+              {vistaActual === 'semanal' && (
+                <TurnosSemanal
+                  turnos={turnosFiltrados}
+                  fechaReferencia={fechaActual}
+                  ahora={ahora}
+                  onSelectTurno={handleSelectTurno}
+                  onCreateTurno={abrirNuevoTurno}
+                />
+              )}
+              {vistaActual === 'mensual' && (
+                <TurnosMensual
+                  turnos={turnosFiltrados}
+                  fechaReferencia={fechaActual}
+                  hoyIsoStr={ahora.fecha}
+                  onSelectTurno={handleSelectTurno}
+                  onSwitchToDailyView={(isoDate) => {
+                    setFechaActual(fechaDesdeIso(isoDate));
+                    setVistaActual('diaria');
+                  }}
+                />
+              )}
+            </>
           )}
         </div>
         

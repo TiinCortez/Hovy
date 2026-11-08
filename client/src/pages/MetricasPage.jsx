@@ -13,6 +13,7 @@ import {
   periodoPorDefecto, resolverPeriodo, aniosDisponibles, opcionesDeServicio,
   filtrarRealizados, resumirPeriodo, armarDetalleMensual, calcularVariacion,
 } from '../components/metricas/metricasUtils';
+import MetricasSkeleton from '../components/skeletons/MetricasSkeleton';
 import '../components/metricas/metricas.scss';
 
 export default function MetricasPage() {
@@ -85,7 +86,7 @@ export default function MetricasPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-5"><div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div></div>
+        <MetricasSkeleton />
       ) : errorMessage ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <div className="d-flex align-items-center justify-content-center gap-2 text-danger mb-3" role="alert">

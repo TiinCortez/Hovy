@@ -13,6 +13,7 @@ import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
 import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
+import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
@@ -327,7 +328,7 @@ export default function ClientsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-5"><div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div></div>
+        <ClientesSkeleton />
       ) : filteredClients.length === 0 ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4"><p className="text-secondary m-0">No se encontraron clientes con esos filtros.</p></Card>
       ) : (

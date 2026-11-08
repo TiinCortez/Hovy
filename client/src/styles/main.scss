@@ -1228,3 +1228,26 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @import './buttons';
+
+/* --- SKELETON DE CARGA (primera carga de cada página) --- */
+$hovy-skeleton: #E6E6D8;
+
+.hovy-skeleton {
+  display: block;
+  max-width: 100%;
+  background-color: $hovy-skeleton;
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: hovySkeletonShimmer 1.4s ease-in-out infinite;
+}
+
+// Brillo que se desplaza de izquierda a derecha
+@keyframes hovySkeletonShimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hovy-skeleton { animation: none; }
+}

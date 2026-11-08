@@ -12,6 +12,8 @@ import {
   COBROS_POR_PAGINA, ORDENES, normalizar, codigoOrden, etiquetaMes,
   montoFinal, cobroAtrasado, ordenarLiquidaciones, filtrarRealizadosDelMes,
 } from '../components/cobros/cobrosUtils';
+import CobrosResumenSkeleton from '../components/skeletons/CobrosResumenSkeleton';
+import CobrosTablaSkeleton from '../components/skeletons/CobrosTablaSkeleton';
 import '../components/cobros/cobros.scss';
 
 const TABS = [
@@ -221,7 +223,7 @@ export default function CobrosPage() {
         </div>
       </div>
 
-      {!loading && !errorMessage && <CobrosResumen resumen={resumen} />}
+      {loading ? <CobrosResumenSkeleton /> : !errorMessage && <CobrosResumen resumen={resumen} />}
 
       {/* Barra de filtros: en xl todo en una fila; debajo, el buscador arriba y
           pestañas + orden abajo. Las pestañas nunca se achican ni se recortan. */}
@@ -277,7 +279,7 @@ export default function CobrosPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-5"><div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div></div>
+        <CobrosTablaSkeleton />
       ) : errorMessage ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <div className="d-flex align-items-center justify-content-center gap-2 text-danger mb-3" role="alert">

@@ -16,6 +16,7 @@ import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
+import ClienteDetalleSkeleton from '../components/skeletons/ClienteDetalleSkeleton';
 
 export default function ClientInmueblesPage() {
   const { id } = useParams();
@@ -208,11 +209,7 @@ export default function ClientInmueblesPage() {
   });
 
   if (loading) {
-    return (
-      <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: '#F8F9FA' }}>
-        <div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div>
-      </div>
-    );
+    return <ClienteDetalleSkeleton />;
   }
 
   if (!cliente) {

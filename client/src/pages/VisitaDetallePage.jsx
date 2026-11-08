@@ -21,6 +21,7 @@ import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
 import { BADGE_CLASS, getEstadoLabel } from '../components/visitas/visitaUtils';
+import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
 
 const FRANJA_TEXTO = {
   Mañana: 'por la mañana',
@@ -97,11 +98,7 @@ export default function VisitaDetallePage() {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center py-5">
-        <div className="spinner-border" style={{ color: '#1B3006' }} role="status"></div>
-      </div>
-    );
+    return <VisitaDetalleSkeleton />;
   }
 
   if (error || !visita) {
