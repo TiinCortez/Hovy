@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
+import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
@@ -28,10 +28,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
         apellido: data.apellido.trim(),
         telefono: data.telefono.trim(),
         tipo_cliente: data.tipo_cliente,
-        email: data.email ? data.email.trim() : null,
-        domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
-        cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
-        razon_social: data.razon_social ? data.razon_social.trim() : null
+        email: data.email ? data.email.trim() : null
       };
 
       // Llamada al backend a través de nuestro servicio (Axios interceptará e inyectará el Bearer Token)
@@ -56,7 +53,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
           {/* Header */}
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
+          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold text-dark fs-4">Registrar Nuevo Cliente</h5>
             <CloseButton label="Cerrar nuevo cliente" onClick={() => { reset(); setErrorMessage(null); onClose(); }} />
           </div>
@@ -111,7 +108,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                 </div>
               </div>
 
-              <div className="row g-3 mb-4">
+              <div className="row g-3 mb-3">
                 <div className="col-12 col-md-6">
                   <label className="form-label small fw-bold text-secondary">Teléfono Celular *</label>
                   <div className="input-group">
@@ -148,14 +145,9 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                 </div>
               </div>
 
-              {/* Información Adicional / Facturación */}
-              <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
-                Datos de Facturación y Contacto (Opcional)
-              </p>
-
-              <div className="row g-3 mb-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Correo Electrónico</label>
+              <div className="row g-3">
+                <div className="col-12">
+                  <label className="form-label small fw-bold text-secondary">Correo Electrónico (Opcional)</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary">
                       <Mail size={16} />
@@ -169,52 +161,6 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                   </div>
                 </div>
 
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Domicilio Fiscal</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary">
-                      <MapPin size={16} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control bg-light border-start-0 rounded-end-3 small"
-                      placeholder="Calle y Número, Ciudad"
-                      {...register('domicilio_fiscal')}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="row g-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">CUIT / CUIL</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary">
-                      <FileText size={16} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control bg-light border-start-0 rounded-end-3 small"
-                      placeholder="20-12345678-9"
-                      {...register('cuit_cuil')}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Razón Social</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary">
-                      <Building size={16} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control bg-light border-start-0 rounded-end-3 small"
-                      placeholder="Razón Social S.A."
-                      {...register('razon_social')}
-                    />
-                  </div>
-                </div>
               </div>
 
             </form>

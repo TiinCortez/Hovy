@@ -1,7 +1,7 @@
 import Card from '../ui/Card';
 import Skeleton from '../ui/Skeleton';
 
-const TURNOS = 3;
+const ESTADOS = 4;
 
 // Esqueleto de la columna de turnos de la Agenda
 export default function TurnosSkeleton() {
@@ -9,22 +9,28 @@ export default function TurnosSkeleton() {
     <div role="status" aria-busy="true">
       <span className="visually-hidden">Cargando turnos...</span>
       <Card className="turnos-kanban-card p-0 shadow-sm border-0 rounded-4 bg-white overflow-hidden">
-        <div className="d-flex gap-2 pb-2 mb-3 overflow-hidden">
+        <div className="hovy-filter-group mb-3">
           {Array.from({ length: 5 }, (_, i) => (
-            <Skeleton key={i} width="6.5rem" height="2.2rem" radius="50rem" className="flex-shrink-0" />
+            <Skeleton key={i} width="6.5rem" height="2.2rem" radius="50rem" className="hovy-filter-placeholder" />
           ))}
         </div>
-        {Array.from({ length: TURNOS }, (_, i) => (
-          <div key={i} className="card rounded-4 mb-3 bg-white shadow-sm border p-3 ps-4">
-            <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-              <Skeleton width="5rem" height="1.3rem" radius="50rem" />
-              <Skeleton width="6rem" height="0.85rem" />
+        <div className="turnos-estados-grid">
+          {Array.from({ length: ESTADOS }, (_, i) => (
+            <div key={i} className="turnos-estado">
+              <div className="turnos-estado-header">
+                <Skeleton width="65%" height="1rem" />
+                <Skeleton width="1.5rem" height="1.5rem" radius="50rem" />
+              </div>
+              <div className="turnos-estado-lista">
+                <div className="card rounded-4 bg-white border p-3">
+                  <Skeleton width="55%" height="1rem" className="mb-3" />
+                  <Skeleton width="80%" height="0.8rem" className="mb-2" />
+                  <Skeleton width="70%" height="0.8rem" />
+                </div>
+              </div>
             </div>
-            <Skeleton width="45%" height="1rem" className="mb-2" />
-            <Skeleton width="70%" height="0.8rem" className="mb-3" />
-            <Skeleton width="35%" height="0.8rem" />
-          </div>
-        ))}
+          ))}
+        </div>
       </Card>
     </div>
   );

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, Map, Copy, Pencil, Check, DollarSign, RotateCcw, Home, Wrench, Search, Info, Maximize, Plus,
+  User, Map, MessageCircle, Pencil, Check, DollarSign, RotateCcw, Home, Wrench, Search, Info, Maximize, Plus,
   ClipboardList, CalendarDays, CheckCircle, XCircle, CalendarClock, MapPin, PlayCircle
 } from 'lucide-react';
 import Button from '../ui/Button';
 import CloseButton from '../ui/CloseButton';
+import { obtenerEnlaceUbicacionWhatsApp } from '../ui/inmuebleUbicacion';
 import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
 import InmuebleService from '../../services/api/inmueble.service';
@@ -44,6 +45,7 @@ export default function TurnoDetalleModal({
 
   const cliente = turnoData?.cliente || {};
   const inmueble = turnoData?.inmueble || {};
+  const enlaceUbicacionWhatsApp = obtenerEnlaceUbicacionWhatsApp(inmueble);
   const servicio = turnoData?.servicio || {};
   const presupuesto = turnoData?.presupuesto || null;
   const franja = turnoData?.franjaHoraria || {};
@@ -186,9 +188,10 @@ export default function TurnoDetalleModal({
     navigate('/servicios', { state: { openNewServiceModal: true } });
   };
 
-  const handleCopyLocation = () => {
-    const ubicacion = `${inmueble.direccion}, ${inmueble.barrio || ''}, ${inmueble.provincia || ''}`;
-    navigator.clipboard.writeText(ubicacion);
+  const handleCompartirUbicacion = () => {
+    if (enlaceUbicacionWhatsApp) {
+      window.open(enlaceUbicacionWhatsApp, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleOpenMaps = () => {
@@ -474,9 +477,15 @@ export default function TurnoDetalleModal({
                       <button onClick={handleOpenMaps} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
                         <Map size={14} /> Abrir en Maps
                       </button>
-                      <button onClick={handleCopyLocation} className="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-2 fw-semibold px-3">
-                        <Copy size={14} /> Copiar
-                      </button>
+                      <Button
+                        variant="success"
+                        className="btn-sm rounded-pill d-flex align-items-center gap-2 fw-semibold px-3"
+                        onClick={handleCompartirUbicacion}
+                        disabled={!enlaceUbicacionWhatsApp}
+                        title={enlaceUbicacionWhatsApp ? 'Compartir destino por WhatsApp' : 'Agregá la ubicación del inmueble para compartirla'}
+                      >
+                        <MessageCircle size={14} aria-hidden="true" /> Compartir ubicación
+                      </Button>
                     </div>
                   </div>
                 </div>

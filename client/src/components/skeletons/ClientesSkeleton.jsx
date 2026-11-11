@@ -19,9 +19,8 @@ export default function ClientesSkeleton() {
                   <Skeleton width="40%" height="0.7rem" />
                 </div>
               </div>
-              <div className="d-flex align-items-center justify-content-between mb-3">
+              <div className="d-flex align-items-center mb-3">
                 <Skeleton width="5rem" height="1.4rem" radius="50rem" />
-                <Skeleton width="2.5rem" height="0.85rem" />
               </div>
               <div className="d-flex flex-column gap-2 mb-3">
                 <Skeleton width="55%" height="0.8rem" />

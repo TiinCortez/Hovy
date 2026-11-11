@@ -117,17 +117,19 @@ export default function VisitasPage() {
         <p className="text-secondary small m-0">Todas las solicitudes de contacto, en cualquier estado.</p>
       </div>
 
-      <div className="d-flex align-items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Filtrar por estado">
+      <div className="hovy-filter-group" role="tablist" aria-label="Filtrar por estado">
         {TABS.map((tab) => (
           <Button
             key={tab}
             variant={activeTab === tab ? 'primary' : 'light'}
-            className="rounded-pill text-nowrap small fw-semibold"
+            size="sm"
+            className="rounded-pill fw-semibold"
             role="tab"
             aria-selected={activeTab === tab}
             onClick={() => setActiveTab(tab)}
           >
-            {tab} ({counts[tab]})
+            <span className="hovy-filter-label">{tab}</span>
+            <span className="hovy-filter-count">({counts[tab]})</span>
           </Button>
         ))}
       </div>

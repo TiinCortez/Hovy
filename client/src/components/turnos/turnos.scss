@@ -36,7 +36,79 @@
   .turnos-calendar-card > .card-body { overflow: hidden; }
   .turnos-week-grid { min-width: 0; }
   .turnos-week-grid > div { min-width: 950px; }
-  .turnos-kanban-card .row.flex-nowrap { margin-inline: 0; }
+}
+
+.turnos-estados-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  min-width: 0;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 1200px) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  &.is-filtered { grid-template-columns: minmax(0, 1fr); }
+}
+
+.turnos-estado {
+  min-width: 0;
+  background-color: #f8faf5;
+  border: 1px solid #e2e7dc;
+  border-radius: 1rem;
+}
+
+.turnos-estado-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0.75rem;
+  border-radius: 1rem 1rem 0 0;
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker { display: none; }
+  &:hover { background-color: #f0f4e9; }
+  &:focus-visible { outline: 2px solid #67884e; outline-offset: -2px; }
+}
+
+.turnos-estado-titulo {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: #34432c;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.turnos-estado-dot { flex-shrink: 0; width: 10px; height: 10px; }
+.turnos-estado-count { flex-shrink: 0; min-width: 1.5rem; padding: 0.25rem 0.4rem; font-size: 0.75rem; text-align: center; }
+.turnos-estado-chevron { flex-shrink: 0; color: #7a876e; transition: transform 180ms ease; }
+.turnos-estado[open] > .turnos-estado-header .turnos-estado-chevron { transform: rotate(180deg); }
+
+.turnos-estado-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.turnos-agenda-card {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+
+  .badge { max-width: 100%; white-space: normal; line-height: 1.4; }
+  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turnos-estado-chevron { transition: none; }
 }
 
 .turnos-periodo {

@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { Building2, MapPin, Map, Maximize, Clock, Leaf, AlertCircle, Navigation, Search } from 'lucide-react';
+import { Building2, MapPin, Map, Maximize, AlertCircle, Search } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
+import InmuebleMapa from './InmuebleMapa';
+import { obtenerCoordenadas } from './inmuebleUbicacion';
 import InmuebleService from '../../services/api/inmueble.service';
 
 const PROVINCIAS_ARG = [
@@ -17,11 +19,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const errorRef = useRef(null);
+  const geocodeRequestRef = useRef(null);
 
   const isEditMode = !!inmuebleData;
 
   // Extraemos 'control' en lugar de 'watch'
-  const { register, handleSubmit, reset, formState: { errors }, setValue, getValues, setError, setFocus, control } = useForm({
+  const { register, handleSubmit, reset, formState: { errors }, setValue, getValues, setError, clearErrors, setFocus, control } = useForm({
     defaultValues: {
       tipo_inmueble: 'Casa Habitada',
       provincia: 'Córdoba',
@@ -33,6 +36,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   const supTotal = useWatch({ control, name: 'superficie_total' }) || 0;
   const supConstruida = useWatch({ control, name: 'superficie_construida' }) || 0;
   const supMantenibleCalculada = Math.max(0, parseFloat(supTotal) - parseFloat(supConstruida)).toFixed(2);
+  const [latitud, longitud] = useWatch({ control, name: ['latitud', 'longitud'] });
+  const posicion = obtenerCoordenadas(latitud, longitud);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,13 +50,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
           manzana: inmuebleData.manzana || '',
           lote: inmuebleData.lote || '',
           tipo_inmueble: inmuebleData.tipo_inmueble || 'Casa Habitada',
-          superficie_total: inmuebleData.superficie_total || '',
-          superficie_construida: inmuebleData.superficie_construida || '',
-          estado_vegetacion: inmuebleData.estado_vegetacion || '',
-          altura_cesped_cm: inmuebleData.altura_cesped_cm || '',
-          tiempo_promedio_min: inmuebleData.tiempo_promedio_min || '',
-          latitud: inmuebleData.latitud || '',
-          longitud: inmuebleData.longitud || ''
+          superficie_total: inmuebleData.superficie_total ?? '',
+          superficie_construida: inmuebleData.superficie_construida ?? '',
+          latitud: inmuebleData.latitud ?? '',
+          longitud: inmuebleData.longitud ?? ''
         });
       } else {
         reset({
@@ -64,14 +66,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
           tipo_inmueble: 'Casa Habitada',
           superficie_total: '',
           superficie_construida: '',
-          estado_vegetacion: '',
-          altura_cesped_cm: '',
-          tiempo_promedio_min: '',
           latitud: '',
           longitud: ''
         });
       }
     }
+    return () => geocodeRequestRef.current?.abort();
   }, [isOpen, inmuebleData, reset, isEditMode]);
 
   // Los errores que no son de un campo (conexión, servidor) se muestran arriba: llevamos la vista hasta ahí
@@ -81,32 +81,53 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
   if (!isOpen) return null;
 
+  const handleUbicacionChange = ({ lat, lng }) => {
+    geocodeRequestRef.current?.abort();
+    clearErrors('root.ubicacion');
+    setValue('latitud', lat.toFixed(6), { shouldDirty: true });
+    setValue('longitud', lng.toFixed(6), { shouldDirty: true });
+  };
+
   const handleGeocode = async () => {
-    const dir = getValues('direccion');
-    const loc = getValues('localidad');
+    const dir = getValues('direccion')?.trim();
+    const loc = getValues('localidad')?.trim();
     const prov = getValues('provincia');
+    const barrio = getValues('barrio')?.trim();
     
     if (!dir) {
-      return alert('Por favor, ingresa una dirección primero.');
+      setError('direccion', { type: 'required', message: 'Ingresá una dirección para buscarla en el mapa' });
+      setFocus('direccion');
+      return;
     }
 
+    geocodeRequestRef.current?.abort();
+    const request = new AbortController();
+    geocodeRequestRef.current = request;
+    clearErrors(['direccion', 'root.ubicacion']);
     setIsGeocoding(true);
     try {
-      const query = `${dir}, ${loc ? loc + ', ' : ''}${prov}, Argentina`;
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+      const query = [dir, barrio, loc, prov, 'Argentina'].filter(Boolean).join(', ');
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q=${encodeURIComponent(query)}`, { signal: request.signal });
+      if (!res.ok) throw new Error('No se pudo consultar la dirección. Intentá nuevamente.');
       const data = await res.json();
-      
-      if (data && data.length > 0) {
-        setValue('latitud', data[0].lat, { shouldDirty: true });
-        setValue('longitud', data[0].lon, { shouldDirty: true });
+      if (request.signal.aborted) return;
+      const coordenadas = obtenerCoordenadas(data?.[0]?.lat, data?.[0]?.lon);
+
+      if (coordenadas) {
+        setValue('latitud', String(coordenadas[0]), { shouldDirty: true });
+        setValue('longitud', String(coordenadas[1]), { shouldDirty: true });
       } else {
-        alert('No pudimos encontrar coordenadas exactas para esta dirección. Intenta detallar más la localidad o el barrio.');
+        setError('root.ubicacion', { type: 'geocode', message: 'No encontramos esa dirección. Revisá los datos o marcá la ubicación directamente en el mapa.' });
       }
-    } catch (e) {
-      console.error(e); // Se imprime el error para dar uso a la variable 'e'
-      alert('Hubo un error de conexión al buscar las coordenadas.');
+    } catch (error) {
+      if (!request.signal.aborted) {
+        setError('root.ubicacion', { type: 'geocode', message: error.message === 'Failed to fetch' ? 'No se pudo conectar con el buscador. Podés marcar la ubicación en el mapa.' : error.message });
+      }
     } finally {
-      setIsGeocoding(false);
+      if (geocodeRequestRef.current === request) {
+        geocodeRequestRef.current = null;
+        setIsGeocoding(false);
+      }
     }
   };
 
@@ -115,20 +136,21 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
     setErrorMessage(null);
 
     try {
+      const coordenadas = obtenerCoordenadas(data.latitud, data.longitud);
       const payload = {
-        ...data,
+        direccion: data.direccion.trim(),
+        provincia: data.provincia,
+        barrio: data.barrio.trim(),
+        manzana: data.manzana?.trim() || null,
+        lote: data.lote?.trim() || null,
+        tipo_inmueble: data.tipo_inmueble,
         id_cliente: idCliente,
         superficie_total: data.superficie_total ? Number(data.superficie_total) : null,
         superficie_construida: data.superficie_construida ? Number(data.superficie_construida) : null,
         superficie_mantenible: Number(supMantenibleCalculada),
-        altura_cesped_cm: data.altura_cesped_cm ? Number(data.altura_cesped_cm) : null,
-        tiempo_promedio_min: data.tiempo_promedio_min ? Number(data.tiempo_promedio_min) : null,
-        latitud: data.latitud ? String(data.latitud) : null,
-        longitud: data.longitud ? String(data.longitud) : null,
+        latitud: coordenadas ? String(coordenadas[0]) : null,
+        longitud: coordenadas ? String(coordenadas[1]) : null,
       };
-
-      // Eliminamos el campo para no generar variable sin uso y evitar mandarlo al back
-      delete payload.localidad;
 
       let response;
       if (isEditMode) {
@@ -158,7 +180,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 flex-shrink-0">
+          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4 flex-shrink-0">
             <h5 className="modal-title fw-bold text-dark fs-4">
               {isEditMode ? 'Editar Inmueble' : 'Registrar Nuevo Inmueble'}
             </h5>
@@ -222,8 +244,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
               </div>
 
-              <div className="row g-3 mb-4">
-                <div className="col-12 col-md-6">
+              <div className="row g-3 mb-3">
+                <div className="col-12">
                   <label className="form-label small fw-bold text-secondary">Barrio *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Map size={16} /></span>
@@ -237,40 +259,42 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   {errors.barrio && <div className="text-danger small mt-1">{errors.barrio.message}</div>}
                 </div>
 
-                <div className="col-6 col-md-3">
-                  <label className="form-label small fw-bold text-secondary">Manzana</label>
-                  <input type="text" className="form-control bg-light small" placeholder="Ej: 12" {...register('manzana')} />
-                </div>
-
-                <div className="col-6 col-md-3">
-                  <label className="form-label small fw-bold text-secondary">Lote</label>
-                  <input type="text" className="form-control bg-light small" placeholder="Ej: 4B" {...register('lote')} />
-                </div>
               </div>
 
-              <div className="row g-3 mb-4 p-3 bg-light rounded-3 border">
-                <div className="col-12 d-flex justify-content-between align-items-center mb-2">
-                  <p className="text-secondary fw-semibold small text-uppercase m-0" style={{ letterSpacing: '0.05em' }}>
-                    <Navigation size={14} className="me-1 d-inline" /> Coordenadas GPS (Opcional)
-                  </p>
+              <details key={`${inmuebleData?.id_inmueble ?? 'nuevo'}-${isOpen}`} className="mb-4 p-3 bg-light rounded-3 border" open={Boolean(inmuebleData?.manzana || inmuebleData?.lote)}>
+                <summary className="small fw-semibold text-secondary">Referencias adicionales (opcional)</summary>
+                <div className="row g-3 mt-0">
+                  <div className="col-12 col-sm-6">
+                    <label className="form-label small fw-bold text-secondary">Manzana</label>
+                    <input type="text" className="form-control bg-white small" placeholder="Ej: 12" {...register('manzana')} />
+                  </div>
+                  <div className="col-12 col-sm-6">
+                    <label className="form-label small fw-bold text-secondary">Lote</label>
+                    <input type="text" className="form-control bg-white small" placeholder="Ej: 4B" {...register('lote')} />
+                  </div>
+                </div>
+              </details>
+
+              <div className="mb-4">
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <p className="text-secondary fw-semibold small text-uppercase m-0" style={{ letterSpacing: '0.05em' }}>Ubicación en el mapa (opcional)</p>
                   <button 
                     type="button" 
                     className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                     onClick={handleGeocode}
-                    disabled={isGeocoding}
+                    disabled={isGeocoding || isSubmitting}
                   >
-                    {isGeocoding ? 'Buscando...' : <><Search size={14} /> Buscar Automáticamente</>}
+                    {isGeocoding ? 'Buscando...' : <><Search size={14} /> Buscar dirección</>}
                   </button>
                 </div>
-                
-                <div className="col-6">
-                  <label className="form-label small fw-bold text-secondary">Latitud</label>
-                  <input type="text" className="form-control bg-white small" placeholder="-31.41910110" {...register('latitud')} />
-                </div>
-                <div className="col-6">
-                  <label className="form-label small fw-bold text-secondary">Longitud</label>
-                  <input type="text" className="form-control bg-white small" placeholder="-64.20893510" {...register('longitud')} />
-                </div>
+                <p className="small text-secondary mb-2">Buscá la dirección y verificá el punto. Podés tocar el mapa o arrastrar el marcador para ajustarlo.</p>
+                {errors.root?.ubicacion && <div className="alert alert-warning small py-2" role="alert">{errors.root.ubicacion.message}</div>}
+                <input type="hidden" {...register('latitud')} />
+                <input type="hidden" {...register('longitud')} />
+                <InmuebleMapa posicion={posicion} onChange={isSubmitting ? undefined : handleUbicacionChange} />
+                <p className={`small mt-2 mb-0 ${posicion ? 'text-success' : 'text-secondary'}`} aria-live="polite">
+                  {posicion ? 'Ubicación marcada. Se guardará al guardar el inmueble.' : 'Todavía no hay una ubicación marcada.'}
+                </p>
               </div>
 
               <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
@@ -294,7 +318,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
               </div>
 
-              <div className="row g-3 mb-4">
+              <div className="row g-3">
                 <div className="col-12 col-md-4">
                   <label className="form-label small fw-bold text-secondary">Sup. Total (m²) *</label>
                   <div className="input-group">
@@ -338,50 +362,6 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
               </div>
 
-              <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
-                Condiciones Operativas
-              </p>
-
-              <div className="row g-3">
-                <div className="col-12 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Estado Vegetación</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 text-secondary"><Leaf size={16} /></span>
-                    <select className="form-select bg-light border-start-0 small" {...register('estado_vegetacion')}>
-                      <option value="">Seleccione...</option>
-                      <option value="Bajo">Bajo</option>
-                      <option value="Medio">Medio</option>
-                      <option value="Alto">Alto</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="col-6 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Altura Césped (cm)</label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    className="form-control bg-light small" 
-                    placeholder="Ej: 15.50"
-                    {...register('altura_cesped_cm')} 
-                  />
-                </div>
-
-                <div className="col-6 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Tiempo Est. (min)</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 text-secondary"><Clock size={16} /></span>
-                    <input 
-                      type="number" 
-                      className={`form-control bg-light border-start-0 small ${errors.tiempo_promedio_min ? 'is-invalid' : ''}`}
-                      placeholder="Ej: 45" 
-                      {...register('tiempo_promedio_min', { min: { value: 1, message: 'Debe ser > 0'} })} 
-                    />
-                  </div>
-                  {errors.tiempo_promedio_min && <div className="text-danger small mt-1">{errors.tiempo_promedio_min.message}</div>}
-                </div>
-              </div>
-
             </form>
           </div>
 
@@ -390,7 +370,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
               <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary border" onClick={onClose} disabled={isSubmitting}>
                 Cancelar
               </button>
-              <Button type="submit" form="inmueble-form" variant="primary" disabled={isSubmitting}>
+              <Button type="submit" form="inmueble-form" variant="primary" disabled={isSubmitting || isGeocoding}>
                 {isSubmitting ? 'Guardando...' : 'Guardar Inmueble'}
               </Button>
             </div>
