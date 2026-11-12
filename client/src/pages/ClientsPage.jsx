@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Building2, CheckCircle2, Search,
-  UserPlus, Phone, Mail, Star, MoreVertical,
+  UserPlus, Phone, Mail, MoreVertical,
   Calendar, Briefcase, User, LayoutGrid, MessageCircle, Edit2, Trash2, RotateCcw
 } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -461,11 +461,6 @@ export default function ClientsPage() {
                       <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-medium d-flex align-items-center gap-1">
                         <ClientIcon size={12}/> {client.tipo_cliente}
                       </span>
-
-                      <div className="ms-auto d-flex align-items-center gap-1 text-warning small fw-bold">
-                        <Star size={13} fill="currentColor" />
-                        <span className="text-dark" style={{ fontSize: '0.8rem' }}>{Number(client.calificacion_promedio || 0).toFixed(1)}</span>
-                      </div>
                     </div>
 
                     <div className="d-flex flex-column gap-1 text-secondary small mb-3">

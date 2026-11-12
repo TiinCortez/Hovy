@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, MoreVertical, CheckCircle2, Shield, 
   Mail, FileText, Edit2, Phone, MapPin, Building2, Calendar,
-  Star, Search, Plus, Clock, User, RotateCcw, Trash2,
+  Search, Plus, Clock, User, RotateCcw, Trash2,
   ChevronDown, ChevronUp, Bell, AlertTriangle, MessageCircle, Filter
 } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -438,7 +438,7 @@ export default function ClientInmueblesPage() {
         </div>
 
         <div className="row g-3">
-          <div className="col-6 col-lg-3">
+          <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
               <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
                 Inmuebles <Building2 size={16} className="text-secondary"/>
@@ -446,7 +446,7 @@ export default function ClientInmueblesPage() {
               <div className="fs-3 fw-bold text-dark">{inmuebles.length} <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">predios</span></div>
             </div>
           </div>
-          <div className="col-6 col-lg-3">
+          <div className="col-12 col-sm-4">
             <div
               className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between"
               style={proximoTurno ? { cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' } : undefined}
@@ -479,23 +479,12 @@ export default function ClientInmueblesPage() {
               )}
             </div>
           </div>
-          <div className="col-6 col-lg-3">
+          <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
               <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
                 Estado de Cuenta <FileText size={16} className="text-secondary"/>
               </div>
               <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Activo'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.75rem'}}>$0 pend.</span></div>
-            </div>
-          </div>
-          <div className="col-6 col-lg-3">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
-                Satisfacción <Star size={16} className="text-secondary"/>
-              </div>
-              <div className="d-flex align-items-center flex-wrap gap-1 text-warning mt-1">
-                <span className="fs-3 fw-bold text-dark me-1">{Number(cliente.calificacion_promedio || 0).toFixed(1)}</span>
-                <div className="d-flex"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
-              </div>
             </div>
           </div>
         </div>
