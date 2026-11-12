@@ -10,7 +10,8 @@ import { alertaDesdeParams } from './mercadopagoMotivos';
 const formatFecha = (iso) =>
   iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
 
-export default function MercadoPagoConexionCard() {
+// onResumen (optional) receives the connection status for a collapsed section header.
+export default function MercadoPagoConexionCard({ onResumen }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [conexion, setConexion] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,6 +77,15 @@ export default function MercadoPagoConexionCard() {
   const reautorizar = conexion?.estado === 'Reautorizar';
   const conectada = conexion?.conectada === true;
   const vinculada = conectada || reautorizar;
+
+  useEffect(() => {
+    if (!onResumen) return;
+    if (isLoading) onResumen({ texto: 'Cargando...', tipo: 'neutro' });
+    else if (loadError) onResumen({ texto: 'No se pudo consultar', tipo: 'error' });
+    else if (conectada) onResumen({ texto: 'Conectada', tipo: 'ok' });
+    else if (reautorizar) onResumen({ texto: 'Requiere reautorizar', tipo: 'aviso' });
+    else onResumen({ texto: 'Sin vincular', tipo: 'neutro' });
+  }, [onResumen, isLoading, loadError, conectada, reautorizar]);
 
   return (
     <Card title="Mercado Pago">

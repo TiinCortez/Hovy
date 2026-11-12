@@ -1,9 +1,22 @@
+import { useContext } from 'react';
+import { CardEmbebidaContext } from './cardEmbebidaContext';
+
 export default function Card({ children, className = '', title, ...props }) {
+  const embebida = useContext(CardEmbebidaContext);
+
+  if (embebida) {
+    return (
+      <CardEmbebidaContext.Provider value={false}>
+        <div className={className} {...props}>{children}</div>
+      </CardEmbebidaContext.Provider>
+    );
+  }
+
   return (
     // Tarjeta con borde suave (Level 1 de elevación según el diseño)
-    <div 
-      className={`card border-0 shadow-sm rounded-4 ${className}`} 
-      style={{ backgroundColor: '#ffffff', border: '1px solid #D1D1C4' }} 
+    <div
+      className={`card border-0 shadow-sm rounded-4 ${className}`}
+      style={{ backgroundColor: '#ffffff', border: '1px solid #D1D1C4' }}
       {...props}
     >
       {title && (
@@ -12,7 +25,9 @@ export default function Card({ children, className = '', title, ...props }) {
         </div>
       )}
       <div className="card-body p-4">
-        {children}
+        <CardEmbebidaContext.Provider value={false}>
+          {children}
+        </CardEmbebidaContext.Provider>
       </div>
     </div>
   );

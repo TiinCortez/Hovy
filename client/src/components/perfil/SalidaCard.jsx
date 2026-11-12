@@ -16,7 +16,8 @@ const VERDE = '#1B3006';
 // (with the user's permission), a written address or a point on the map. The user
 // confirms it and from then on the distance of the trips to the properties is
 // measured from there.
-export default function SalidaCard() {
+// onResumen (optional) receives a one-line summary for a collapsed section header.
+export default function SalidaCard({ onResumen }) {
   const [salida, setSalida] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -39,6 +40,13 @@ export default function SalidaCard() {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!onResumen) return;
+    if (isLoading) onResumen('Cargando...');
+    else if (loadError) onResumen('No se pudo cargar');
+    else onResumen(salida?.configurada ? (salida.domicilio || 'Ubicación guardada') : 'Sin dirección de salida');
+  }, [onResumen, isLoading, loadError, salida]);
 
   const limpiarAvisos = () => {
     setError(null);
