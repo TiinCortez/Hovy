@@ -10,7 +10,7 @@ import TurnoService from '../services/api/turno.service';
 import { obtenerAhoraTurnos, cambiarMesTurnos } from '../components/turnos/agendaTurnos';
 import {
   COBROS_POR_PAGINA, ORDENES, normalizar, codigoOrden, etiquetaMes,
-  montoFinal, cobroAtrasado, ordenarLiquidaciones, filtrarRealizadosDelMes,
+  resumirCobros, ordenarLiquidaciones, filtrarRealizadosDelMes,
 } from '../components/cobros/cobrosUtils';
 import CobrosResumenSkeleton from '../components/skeletons/CobrosResumenSkeleton';
 import CobrosTablaSkeleton from '../components/skeletons/CobrosTablaSkeleton';
@@ -87,29 +87,7 @@ export default function CobrosPage() {
 
   const liquidaciones = useMemo(() => filtrarRealizadosDelMes(turnos, mes), [turnos, mes]);
 
-  const resumen = useMemo(() => {
-    let recaudado = 0;
-    let porCobrar = 0;
-    let cantidadCobrados = 0;
-    let cantidadPendientes = 0;
-    let cantidadAtrasados = 0;
-
-    liquidaciones.forEach((t) => {
-      if (t.cobrado) {
-        recaudado += montoFinal(t);
-        cantidadCobrados += 1;
-      } else {
-        porCobrar += montoFinal(t);
-        cantidadPendientes += 1;
-        if (cobroAtrasado(t, hoy)) cantidadAtrasados += 1;
-      }
-    });
-
-    const facturado = recaudado + porCobrar;
-    const porcentaje = facturado > 0 ? Math.round((recaudado / facturado) * 1000) / 10 : 0;
-
-    return { recaudado, porCobrar, porcentaje, cantidadCobrados, cantidadPendientes, cantidadAtrasados };
-  }, [liquidaciones, hoy]);
+  const resumen = useMemo(() => resumirCobros(liquidaciones, hoy), [liquidaciones, hoy]);
 
   const counts = {
     todos: liquidaciones.length,

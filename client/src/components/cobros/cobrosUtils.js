@@ -63,6 +63,32 @@ export const montoFinal = (turno) => Number(turno.presupuesto?.monto_total ?? 0)
 export const cobroAtrasado = (turno, hoyIso) =>
   !turno.cobrado && diasEntre(turno.fechaAsignada, hoyIso) > DIAS_ALERTA_COBRO;
 
+// Monthly collection summary. Shared by the Cobros page and the dashboard so
+// both always show the same "Total recaudado".
+export const resumirCobros = (liquidaciones, hoyIso) => {
+  let recaudado = 0;
+  let porCobrar = 0;
+  let cantidadCobrados = 0;
+  let cantidadPendientes = 0;
+  let cantidadAtrasados = 0;
+
+  liquidaciones.forEach((t) => {
+    if (t.cobrado) {
+      recaudado += montoFinal(t);
+      cantidadCobrados += 1;
+    } else {
+      porCobrar += montoFinal(t);
+      cantidadPendientes += 1;
+      if (cobroAtrasado(t, hoyIso)) cantidadAtrasados += 1;
+    }
+  });
+
+  const facturado = recaudado + porCobrar;
+  const porcentaje = facturado > 0 ? Math.round((recaudado / facturado) * 1000) / 10 : 0;
+
+  return { recaudado, porCobrar, porcentaje, cantidadCobrados, cantidadPendientes, cantidadAtrasados };
+};
+
 const compararFecha = (a, b) =>
   (a.fechaAsignada || '').localeCompare(b.fechaAsignada || '') || compararHorarioTurnos(a, b);
 
