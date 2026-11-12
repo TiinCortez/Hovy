@@ -11,6 +11,7 @@ import Button from '../components/ui/Button';
 import EditClientModal from '../components/ui/EditClientModal'; 
 import InmuebleModal from '../components/ui/InmuebleModal';
 import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
+import { obtenerEnlaceUbicacionWhatsApp } from '../components/ui/inmuebleUbicacion';
 import TurnoDetalleModal from '../components/turnos/TurnoDetalleModal';
 import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import ClienteService from '../services/api/cliente.service';
@@ -340,7 +341,7 @@ export default function ClientInmueblesPage() {
       {/* TARJETA DEL CLIENTE */}
       <Card className="p-3 p-md-4 shadow-sm border-0 rounded-4">
         <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-4 mb-4 pb-4 border-bottom">
-          <div className="d-flex gap-3 w-100 w-xl-auto">
+          <div className="d-flex gap-3 flex-grow-1 min-w-0">
             <div className="rounded-4 d-flex align-items-center justify-content-center fw-bold text-success flex-shrink-0"
                  style={{ width: '64px', height: '64px', backgroundColor: '#E8F5E9', fontSize: '1.5rem', border: '1px solid #C8E6C9' }}>
               {iniciales}
@@ -361,10 +362,10 @@ export default function ClientInmueblesPage() {
             </div>
           </div>
           
-          <div className="d-flex flex-row gap-2 w-100 w-xl-auto flex-wrap">
+          <div className="d-flex gap-2 flex-wrap flex-shrink-0 mw-100">
             <Button 
               variant="light" 
-              className="btn-sm border shadow-sm flex-grow-1 bg-white text-success fw-semibold px-4 py-2"
+              className="btn-sm border shadow-sm bg-white text-success fw-semibold"
               onClick={() => window.open(`https://wa.me/${String(cliente.telefono).replace(/\D/g,'')}`, '_blank')}
             >
               <MessageCircle size={16} /> WhatsApp
@@ -373,20 +374,17 @@ export default function ClientInmueblesPage() {
             {cliente.email && (
               <Button 
                 variant="light" 
-                className="btn-sm border shadow-sm flex-grow-1 bg-white text-primary fw-semibold px-4 py-2"
+                className="btn-sm border shadow-sm bg-white text-primary fw-semibold"
                 onClick={() => window.open(`mailto:${cliente.email}`, '_blank')}
               >
                 <Mail size={16} /> Correo
               </Button>
             )}
 
-            <Button variant="light" className="btn-sm border shadow-sm flex-grow-1 bg-white text-dark fw-semibold px-4 py-2">
-              <FileText size={16} /> Facturación
-            </Button>
             
             <Button 
               variant="light" 
-              className="btn-sm border shadow-sm bg-white text-dark fw-semibold px-4 py-2 flex-grow-1 flex-xl-grow-0"
+              className="btn-sm border shadow-sm bg-white text-dark fw-semibold"
               onClick={() => setIsEditModalOpen(true)}
             >
               <Edit2 size={16} className="me-2 d-inline d-xl-none" />
@@ -401,37 +399,23 @@ export default function ClientInmueblesPage() {
             className="d-flex d-md-none align-items-center justify-content-between w-100 btn btn-light bg-white border shadow-sm rounded-3 p-3 text-start fw-bold text-dark"
             onClick={() => setShowFichaMobile(!showFichaMobile)}
           >
-            <span className="d-flex align-items-center gap-2"><FileText size={18} className="text-secondary"/> Ficha Técnica y Fiscal</span>
+            <span className="d-flex align-items-center gap-2"><FileText size={18} className="text-secondary"/> Datos del cliente</span>
             {showFichaMobile ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
 
           <div className={`row g-3 mt-1 mt-md-0 ${showFichaMobile ? 'd-flex' : 'd-none d-md-flex'}`}>
-            <div className="col-12 col-sm-6 col-lg-3">
+            <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Phone size={18} className="text-secondary mb-1"/>
                 <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Teléfono</div>
                 <div className="fw-medium text-dark small">+{cliente.telefono}</div>
               </div>
             </div>
-            <div className="col-12 col-sm-6 col-lg-3">
+            <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Mail size={18} className="text-secondary mb-1"/>
                 <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Email Principal</div>
                 <div className="fw-medium text-dark small text-break">{cliente.email || 'No registrado'}</div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <FileText size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>NIF / CUIT</div>
-                <div className="fw-medium text-dark small">{cliente.cuit_cuil || 'No registrado'}</div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <MapPin size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Dirección Fiscal</div>
-                <div className="fw-medium text-dark small">{cliente.domicilio_fiscal || 'No registrada'}</div>
               </div>
             </div>
           </div>
@@ -584,6 +568,12 @@ export default function ClientInmueblesPage() {
             filteredInmuebles.map((inmueble) => {
               const defaultImg = inmueble.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
               const imgToRender = inmueble.img || defaultImg;
+              const enlaceUbicacionWhatsApp = obtenerEnlaceUbicacionWhatsApp(inmueble);
+              const compartirUbicacion = () => {
+                if (enlaceUbicacionWhatsApp) {
+                  window.open(enlaceUbicacionWhatsApp, '_blank', 'noopener,noreferrer');
+                }
+              };
 
               const estadoVeg = inmueble.estado_vegetacion || 'Sin Dato';
               const badgeClass = estadoVeg === 'Alto' ? 'bg-danger-subtle text-danger border-danger-subtle' :
@@ -602,8 +592,8 @@ export default function ClientInmueblesPage() {
                     </div>
                     
                     <div className="col-12 col-md-9 col-xl-10 p-3 p-md-4 d-flex flex-column justify-content-center bg-white">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div className="w-100">
+                      <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3 mb-2">
+                        <div className="flex-grow-1 min-w-0">
                           <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
                             <h5 className="fw-bold text-dark m-0 fs-5">{inmueble.direccion}</h5>
                             <span className={`badge ${badgeClass} rounded-pill px-2 py-1 d-flex align-items-center gap-1 border`}>
@@ -630,7 +620,7 @@ export default function ClientInmueblesPage() {
                           </div>
                         </div>
                         
-                        <div className="d-none d-md-flex gap-2 ms-3">
+                        <div className="d-none d-md-flex flex-wrap justify-content-xl-end gap-2 mw-100">
                           <Button 
                             variant="light" 
                             className="btn-sm bg-white border shadow-sm text-primary px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
@@ -643,6 +633,15 @@ export default function ClientInmueblesPage() {
                             }}
                           >
                             <MapPin size={14}/> Ver en Maps
+                          </Button>
+                          <Button
+                            variant="success"
+                            className="btn-sm shadow-sm text-nowrap d-flex align-items-center gap-2"
+                            onClick={compartirUbicacion}
+                            disabled={!enlaceUbicacionWhatsApp}
+                            title={enlaceUbicacionWhatsApp ? 'Compartir destino por WhatsApp' : 'Agregá la ubicación del inmueble para compartirla'}
+                          >
+                            <MessageCircle size={14} aria-hidden="true" /> Compartir ubicación
                           </Button>
                           <Button 
                             variant="light" 
@@ -674,6 +673,15 @@ export default function ClientInmueblesPage() {
                           }}
                         >
                           <MapPin size={16}/> Maps
+                        </Button>
+                        <Button
+                          variant="success"
+                          className="btn-sm flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
+                          onClick={compartirUbicacion}
+                          disabled={!enlaceUbicacionWhatsApp}
+                          title={enlaceUbicacionWhatsApp ? 'Compartir destino por WhatsApp' : 'Agregá la ubicación del inmueble para compartirla'}
+                        >
+                          <MessageCircle size={16} aria-hidden="true" /> Compartir ubicación
                         </Button>
                         <Button 
                           variant="light" 

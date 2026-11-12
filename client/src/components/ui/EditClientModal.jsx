@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { User, Phone, Mail, FileText, Building, MapPin, AlertCircle } from 'lucide-react';
+import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
@@ -17,12 +17,9 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
       reset({
         nombre: clientData.nombre || '',
         apellido: clientData.apellido || '',
-        telefono: clientData.telefono || '',
-        tipo_cliente: clientData.tipo_cliente || 'Casual',
-        email: clientData.email || '',
-        domicilio_fiscal: clientData.domicilio_fiscal || '',
-        cuit_cuil: clientData.cuit_cuil || '',
-        razon_social: clientData.razon_social || ''
+        telefono: String(clientData.telefono ?? ''),
+        tipo_cliente: clientData.tipo_cliente === 'EMPRESA' ? 'Empresa' : (clientData.tipo_cliente || 'Casual'),
+        email: clientData.email || ''
       });
     }
   }, [isOpen, clientData, reset]);
@@ -50,10 +47,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
         apellido: data.apellido.trim(),
         telefono: data.telefono.trim(),
         tipo_cliente: data.tipo_cliente,
-        email: data.email ? data.email.trim() : null,
-        domicilio_fiscal: data.domicilio_fiscal ? data.domicilio_fiscal.trim() : null,
-        cuit_cuil: data.cuit_cuil ? data.cuit_cuil.trim() : null,
-        razon_social: data.razon_social ? data.razon_social.trim() : null
+        email: data.email ? data.email.trim() : null
       };
 
       // El backend requiere el número actual (original) en la URL para actualizar.
@@ -76,9 +70,9 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
+          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4">
             <h5 className="modal-title fw-bold text-dark fs-4">Editar Cliente</h5>
-            <CloseButton label="Cerrar edición de cliente" onClick={() => { setErrorMessage(null); onClose(); }} />
+            <CloseButton label="Cerrar edición de cliente" onClick={() => { reset(); setErrorMessage(null); onClose(); }} />
           </div>
 
           <div className="modal-body p-4">
@@ -100,6 +94,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><User size={16} /></span>
                     <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.nombre ? 'is-invalid' : ''}`}
+                      placeholder="Ej: Juan"
                       {...register('nombre', { required: 'El nombre es obligatorio' })}
                     />
                   </div>
@@ -111,6 +106,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><User size={16} /></span>
                     <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`}
+                      placeholder="Ej: Pérez"
                       {...register('apellido', { required: 'El apellido es obligatorio' })}
                     />
                   </div>
@@ -118,65 +114,42 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                 </div>
               </div>
 
-              <div className="row g-3 mb-4">
+              <div className="row g-3 mb-3">
                 <div className="col-12 col-md-6">
                   <label className="form-label small fw-bold text-secondary">Teléfono Celular *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Phone size={16} /></span>
                     <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.telefono ? 'is-invalid' : ''}`}
-                      {...register('telefono', { required: 'El teléfono es obligatorio' })}
+                      placeholder="Ej: 3514330429"
+                      {...register('telefono', {
+                        required: 'El teléfono es obligatorio',
+                        pattern: {
+                          value: /^[0-9\s\-+]+$/,
+                          message: 'Ingrese solo números'
+                        }
+                      })}
                     />
                   </div>
                   {errors.telefono && <span className="text-danger small mt-1 d-block">{errors.telefono.message}</span>}
+                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>Sin 0 ni 15. Incluir código de área.</span>
                 </div>
 
                 <div className="col-12 col-md-6">
                   <label className="form-label small fw-bold text-secondary">Tipo de Cliente *</label>
-                  <select className="form-select bg-light border rounded-3 small" {...register('tipo_cliente')}>
+                  <select className="form-select bg-light border rounded-3 small" {...register('tipo_cliente', { required: true })}>
                     <option value="Casual">Casual</option>
                     <option value="Fijo">Fijo</option>
                     <option value="Empresa">Empresa</option>
-                    <option value="EMPRESA">EMPRESA (Corporativo)</option>
                   </select>
                 </div>
               </div>
 
-              <p className="text-secondary fw-semibold small text-uppercase mb-3 pt-2 border-top" style={{ letterSpacing: '0.05em' }}>
-                Datos de Facturación y Contacto (Opcional)
-              </p>
-
-              <div className="row g-3 mb-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Correo Electrónico</label>
+              <div className="row g-3">
+                <div className="col-12">
+                  <label className="form-label small fw-bold text-secondary">Correo Electrónico (Opcional)</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Mail size={16} /></span>
-                    <input type="email" className="form-control bg-light border-start-0 rounded-end-3 small" {...register('email')} />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Domicilio Fiscal</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><MapPin size={16} /></span>
-                    <input type="text" className="form-control bg-light border-start-0 rounded-end-3 small" {...register('domicilio_fiscal')} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="row g-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">CUIT / NIF</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><FileText size={16} /></span>
-                    <input type="text" className="form-control bg-light border-start-0 rounded-end-3 small" {...register('cuit_cuil')} />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Razón Social</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Building size={16} /></span>
-                    <input type="text" className="form-control bg-light border-start-0 rounded-end-3 small" {...register('razon_social')} />
+                    <input type="email" className="form-control bg-light border-start-0 rounded-end-3 small" placeholder="ejemplo@correo.com" {...register('email')} />
                   </div>
                 </div>
               </div>
@@ -184,7 +157,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
           </div>
 
           <div className="modal-footer border-top-0 pt-0 pb-4 px-4">
-            <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={() => onClose()} disabled={isSubmitting}>
+            <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={() => { reset(); setErrorMessage(null); onClose(); }} disabled={isSubmitting}>
               Cancelar
             </button>
             <Button type="submit" form="edit-client-form" variant="primary" disabled={isSubmitting}>

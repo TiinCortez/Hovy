@@ -327,7 +327,7 @@ export default function MapaAgenda({ turnos = [], onSelectTurno }) {
     <div
       className="card shadow-sm overflow-hidden p-0 h-100"
       style={{
-        minHeight: '400px',
+        minHeight: 'var(--agenda-map-min-height, 400px)',
         backgroundColor: '#FAF8F5',
         border: '1px solid #EAE6DF',
         borderRadius: '16px'
@@ -337,7 +337,7 @@ export default function MapaAgenda({ turnos = [], onSelectTurno }) {
         center={center}
         zoom={12}
         maxZoom={ZOOM_MAX_MAPA}
-        style={{ width: '100%', height: '100%', minHeight: '400px', zIndex: 0 }}
+        style={{ width: '100%', height: '100%', minHeight: 'var(--agenda-map-min-height, 400px)', zIndex: 0 }}
       >
         <AutoResize />
         <TileLayer

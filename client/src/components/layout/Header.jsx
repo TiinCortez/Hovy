@@ -1,36 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, UserCircle } from 'lucide-react';
-import VisitaService from '../../services/api/visita.service';
+import NotificacionService from '../../services/api/notificacion.service';
 import AuthService from '../../services/auth.service.js';
-import VisitasNotificacionesPopover from '../ui/VisitasNotificacionesPopover.jsx';
+import NotificacionesPopover from '../notificaciones/NotificacionesPopover.jsx';
+import { EVENTO_NOTIFICACIONES_ACTUALIZADAS } from '../notificaciones/notificacionesConfig.js';
 import UserMenuPopover from '../ui/UserMenuPopover.jsx';
 
 const INTERVALO_POLLING_MS = 60000;
 
 export default function Header() {
   const navigate = useNavigate();
-  const [visitasPendientes, setVisitasPendientes] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const notificacionesRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  // Trae las pendientes al montar y después cada INTERVALO_POLLING_MS: no hay
-  // WebSocket/SSE en el proyecto, así que el panel se refresca por polling.
+  // Trae las notificaciones activas al montar, cada INTERVALO_POLLING_MS y cuando
+  // otra pantalla avisa que cambiaron (cancelar/restaurar). No hay WebSocket/SSE.
   useEffect(() => {
-    const fetchPendientes = async () => {
+    const fetchNotificaciones = async () => {
       try {
-        const response = await VisitaService.getPendientes();
-        setVisitasPendientes(response.data ?? []);
+        const response = await NotificacionService.getActivas();
+        setNotificaciones(response.data ?? []);
       } catch (err) {
-        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+        console.error('No se pudieron obtener las notificaciones:', err);
       }
     };
 
-    fetchPendientes();
-    const intervalId = setInterval(fetchPendientes, INTERVALO_POLLING_MS);
-    return () => clearInterval(intervalId);
+    fetchNotificaciones();
+    const intervalId = setInterval(fetchNotificaciones, INTERVALO_POLLING_MS);
+    window.addEventListener(EVENTO_NOTIFICACIONES_ACTUALIZADAS, fetchNotificaciones);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener(EVENTO_NOTIFICACIONES_ACTUALIZADAS, fetchNotificaciones);
+    };
   }, []);
 
   // Cierra el popover al hacer click fuera.
@@ -89,9 +94,14 @@ export default function Header() {
     AuthService.logout(() => navigate('/login'));
   };
 
-  const handleVerDetalle =(idSolicitud) => {
+  const handleAbrirNotificacion = (destino) => {
     setIsPopoverOpen(false);
-    navigate(`/visitas/${idSolicitud}`);
+    navigate(destino.to, { state: destino.state });
+  };
+
+  const handleVerTodas = () => {
+    setIsPopoverOpen(false);
+    navigate('/dashboard#alertas-notificaciones');
   };
 
   return (
@@ -111,19 +121,20 @@ export default function Header() {
             onClick={handleToggleNotificaciones}
           >
             <Bell size={24} />
-            {visitasPendientes.length > 0 && (
+            {notificaciones.length > 0 && (
               <span
                 className="badge rounded-pill bg-danger position-absolute d-flex align-items-center justify-content-center"
                 style={{ top: 2, right: 2, minWidth: 18, height: 18, fontSize: '0.65rem', padding: 0 }}
               >
-                {visitasPendientes.length}
+                {notificaciones.length}
               </span>
             )}
           </button>
           {isPopoverOpen && (
-            <VisitasNotificacionesPopover
-              visitas={visitasPendientes}
-              onVerDetalle={handleVerDetalle}
+            <NotificacionesPopover
+              notificaciones={notificaciones}
+              onAbrir={handleAbrirNotificacion}
+              onVerTodas={handleVerTodas}
             />
           )}
         </div>

@@ -1,0 +1,120 @@
+// Notificaciones: campana del Header, tarjeta del Dashboard e historial.
+$notif-verde: #1B3006;
+$notif-borde: #D1D1C4;
+
+// Paginación
+.notificaciones-pagina-texto,
+.notificaciones-pagina-numero,
+.notificaciones-pagina-flecha {
+  border: 1px solid $notif-borde;
+  background-color: #ffffff;
+  color: #4A4A4A;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) { background-color: rgba(27, 48, 6, 0.05); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.notificaciones-pagina-texto { padding: 4px 10px; }
+
+.notificaciones-pagina-numero {
+  width: 28px;
+  height: 28px;
+
+  &.activa {
+    background-color: $notif-verde;
+    border-color: $notif-verde;
+    color: #ffffff;
+  }
+}
+
+.notificaciones-pagina-flecha {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Ícono redondo del tipo de alerta
+.notificacion-icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// X (cancelar) y restaurar
+.notificacion-accion {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  &.cancelar:hover { color: #dc3545; background-color: rgba(220, 53, 69, 0.08); }
+  &.restaurar:hover { color: $notif-verde; background-color: rgba(27, 48, 6, 0.08); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Badge de estado del historial
+.notificacion-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.resuelta { background-color: #EBF3E7; color: #1f5f2a; border-color: #D5E4CF; }
+  &.cancelada { background-color: #fff1f2; color: #be123c; border-color: #fecdd3; }
+}
+
+// Filtros del historial
+.notificaciones-chip {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #F4F6EF;
+  color: #556053;
+  transition: background-color 0.15s ease;
+
+  &:hover { background-color: #EAECE4; }
+  &.activo { background-color: #253923; color: #ffffff; }
+}
+
+.notificaciones-filtro-activo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background-color: #E9EDE5;
+  color: #344234;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  .punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #059669;
+  }
+}

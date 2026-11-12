@@ -5,17 +5,19 @@ import {
   AlertTriangle,
   MapPin,
   TrendingUp,
-  MoreVertical,
   ArrowRight,
   Clock,
   CheckCircle,
   PlayCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 import VisitaService from '../services/api/visita.service';
 import TurnoService from '../services/api/turno.service';
 import LogisticaService from '../services/api/logistica.service';
+import NotificacionService from '../services/api/notificacion.service';
+import AlertasNotificacionesCard from '../components/notificaciones/AlertasNotificacionesCard.jsx';
+import { avisarNotificacionesActualizadas } from '../components/notificaciones/notificacionesConfig.js';
 import { compararHorarioTurnos, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
 import {
   avisosLogistica, etiquetaConsumo, formatearConsumo, formatearCosto, formatearKm, SIN_DATO
@@ -41,13 +43,48 @@ const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !
 
 export default function Dashboard() {
   // Datos reales: solicitudes pendientes, turnos y logística del día (ruta, clientes
-  // y combustible). Ganancias y alertas del panel siguen mockeadas.
+  // y combustible). Ganancias sigue mockeada.
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
   const [turnos, setTurnos] = useState([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
   const [logistica, setLogistica] = useState(null);
   const [cargandoLogistica, setCargandoLogistica] = useState(true);
   const [errorLogistica, setErrorLogistica] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [cargandoNotificaciones, setCargandoNotificaciones] = useState(true);
+  const [errorNotificaciones, setErrorNotificaciones] = useState(false);
+  // Se incrementa para volver a pedir las notificaciones (tras eliminar una).
+  const [versionNotificaciones, setVersionNotificaciones] = useState(0);
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchNotificaciones = async () => {
+      try {
+        const response = await NotificacionService.getActivas();
+        setNotificaciones(response.data ?? []);
+        setErrorNotificaciones(false);
+      } catch (err) {
+        console.error('No se pudieron obtener las notificaciones:', err);
+        setErrorNotificaciones(true);
+      } finally {
+        setCargandoNotificaciones(false);
+      }
+    };
+
+    fetchNotificaciones();
+  }, [versionNotificaciones]);
+
+  // Tras eliminar una (X): recarga la lista y avisa a la campana del Header.
+  const handleNotificacionesActualizadas = () => {
+    setVersionNotificaciones((v) => v + 1);
+    avisarNotificacionesActualizadas();
+  };
+
+  // "Ver todas" desde la campana: baja hasta la sección de alertas.
+  useEffect(() => {
+    if (cargandoNotificaciones || location.hash !== '#alertas-notificaciones') return;
+    document.getElementById('alertas-notificaciones')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [cargandoNotificaciones, location.hash, location.key]);
 
   useEffect(() => {
     const fetchLogistica = async () => {
@@ -96,19 +133,10 @@ export default function Dashboard() {
   // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
   const mockData = {
     usuario: "Admin",
-    kpis: {
-      alertasPendientes: 3
-    },
     ganancias: {
       total: "1.250.000",
       variacion: "+12.5%"
-    },
-    // Épica 14 y 4: Notificaciones y Alertas del negocio
-    alertas: [
-      { id: 1, tipo: "Ciclo de corte", mensaje: "Césped en Residencia Lomas excede los 15 días sin corte.", severidad: "alta", fecha: "Hace 1 hora" },
-      { id: 2, tipo: "Altura límite", mensaje: "Lote 4B en Country Los Olivos reportado con maleza alta.", severidad: "media", fecha: "Hace 3 horas" },
-      { id: 3, tipo: "Nueva solicitud", mensaje: "Juan Pérez solicitó presupuesto para instalación de riego.", severidad: "baja", fecha: "Ayer, 16:00" }
-    ]
+    }
   };
 
   const hoy = obtenerAhoraTurnos().fecha;
@@ -135,16 +163,6 @@ export default function Dashboard() {
       case 'COORDINADO':
       default:
         return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Pendiente</span>;
-    }
-  };
-
-  // Función auxiliar para renderizar los íconos de las alertas según severidad
-  const getAlertaIcon = (severidad) => {
-    switch (severidad) {
-      case 'alta': return <div className="p-2 rounded-circle bg-danger bg-opacity-10 text-danger"><AlertTriangle size={20} /></div>;
-      case 'media': return <div className="p-2 rounded-circle bg-warning bg-opacity-10 text-warning"><AlertTriangle size={20} /></div>;
-      case 'baja': return <div className="p-2 rounded-circle bg-info bg-opacity-10 text-info"><ClipboardList size={20} /></div>;
-      default: return <AlertTriangle size={20} />;
     }
   };
 
@@ -195,7 +213,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-secondary small fw-semibold m-0">Alertas</p>
-                <h3 className="fw-bold m-0 text-dark">{mockData.kpis.alertasPendientes}</h3>
+                <h3 className="fw-bold m-0 text-dark">{cargandoNotificaciones ? '...' : notificaciones.length}</h3>
               </div>
             </div>
           </Card>
@@ -319,38 +337,12 @@ export default function Dashboard() {
       {/* Bottom Section: Notificaciones y Alertas (Épica 14) */}
       <div className="row mt-2">
         <div className="col-12">
-          <Card>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h4 className="fw-bold text-dark m-0 fs-5">Alertas y Notificaciones</h4>
-              <button type="button" className="btn btn-light btn-icon" aria-label="Opciones"><MoreVertical size={20}/></button>
-            </div>
-            
-            <div className="table-responsive">
-              <table className="table table-hover align-middle m-0">
-                <thead className="text-secondary small">
-                  <tr>
-                    <th className="border-0 pb-3 fw-semibold">Tipo de Alerta</th>
-                    <th className="border-0 pb-3 fw-semibold">Mensaje</th>
-                    <th className="border-0 pb-3 fw-semibold text-end">Tiempo</th>
-                  </tr>
-                </thead>
-                <tbody className="border-top">
-                  {mockData.alertas.map((alerta) => (
-                    <tr key={alerta.id}>
-                      <td className="py-3">
-                        <div className="d-flex align-items-center gap-3">
-                          {getAlertaIcon(alerta.severidad)}
-                          <span className="fw-bold text-dark">{alerta.tipo}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 text-secondary">{alerta.mensaje}</td>
-                      <td className="py-3 text-secondary text-end small">{alerta.fecha}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <AlertasNotificacionesCard
+            notificaciones={notificaciones}
+            cargando={cargandoNotificaciones}
+            error={errorNotificaciones}
+            onActualizar={handleNotificacionesActualizadas}
+          />
         </div>
       </div>
 

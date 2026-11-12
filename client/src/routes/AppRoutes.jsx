@@ -21,6 +21,7 @@ import CobrosPage from '../pages/CobrosPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import SettingsPage from '../pages/SettingsPage.jsx';
 import MetricasPage from '../pages/MetricasPage.jsx';
+import NotificacionesHistorialPage from '../pages/NotificacionesHistorialPage.jsx';
 
 export default function AppRoutes() {
   return (
@@ -41,6 +42,17 @@ export default function AppRoutes() {
               </DashboardLayout>
             </RequireAuth>
           } 
+        />
+
+        <Route
+          path="/notificaciones/historial"
+          element={
+            <RequireAuth>
+              <DashboardLayout>
+                <NotificacionesHistorialPage />
+              </DashboardLayout>
+            </RequireAuth>
+          }
         />
         
         <Route 

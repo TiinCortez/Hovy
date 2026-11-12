@@ -1,6 +1,8 @@
-import { MapPin, Maximize, Clock, Leaf, Trash2, Edit2, Navigation, Home, Grid } from 'lucide-react';
+import { MapPin, Maximize, Trash2, Edit2, Navigation, Home } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
+import InmuebleMapa from './InmuebleMapa';
+import { obtenerCoordenadas } from './inmuebleUbicacion';
 
 export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, onEdit, onDelete }) {
   if (!isOpen || !inmuebleData) return null;
@@ -8,19 +10,15 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
   // Imagen por defecto si el inmueble no tiene una cargada
   const defaultImg = inmuebleData.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
   const bgImage = inmuebleData.img || defaultImg;
+  const posicion = obtenerCoordenadas(inmuebleData.latitud, inmuebleData.longitud);
+  const manzana = String(inmuebleData.manzana ?? '').trim();
+  const lote = String(inmuebleData.lote ?? '').trim();
 
   const handleOpenMap = () => {
-    if (inmuebleData.latitud && inmuebleData.longitud) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${inmuebleData.latitud},${inmuebleData.longitud}`, '_blank');
+    if (posicion) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${posicion.join(',')}`, '_blank', 'noopener,noreferrer');
     }
   };
-
-  // Color de punto de Estado Vegetación
-  const estadoVeg = inmuebleData.estado_vegetacion || 'Sin Dato';
-  const dotClass = estadoVeg === 'Alto' ? 'bg-danger' : 
-                   estadoVeg === 'Medio' ? 'bg-warning' : 
-                   estadoVeg === 'Bajo' || estadoVeg === 'Controlado' ? 'bg-success' : 
-                   'bg-secondary';
 
   return (
     <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
@@ -28,9 +26,9 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           
           {/* HEADER */}
-          <div className="modal-header border-bottom-0 pb-3 pt-4 px-4">
+          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-3 pt-4 px-4">
             <h5 className="modal-title fw-bold text-dark fs-5 d-flex align-items-center gap-2">
-              <div className="p-2 bg-success-subtle rounded-3 d-flex align-items-center justify-content-center">
+              <div className="p-2 bg-success-subtle rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
                 <Home size={18} className="text-success" /> 
               </div>
               Detalle del Inmueble
@@ -50,11 +48,6 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
                   <Home size={14} /> {inmuebleData.tipo_inmueble || 'Sin tipo'}
                 </span>
               </div>
-              <div className="position-absolute top-0 end-0 p-3">
-                <span className="badge bg-white bg-opacity-75 text-dark rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-semibold" style={{ backdropFilter: 'blur(4px)' }}>
-                  <Grid size={14} className="text-secondary" /> Manzana {inmuebleData.manzana || '-'} • Lote {inmuebleData.lote || '-'}
-                </span>
-              </div>
               <div className="position-absolute bottom-0 start-0 p-3 w-100">
                 <span className="badge bg-dark bg-opacity-75 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 text-truncate border border-secondary border-opacity-25" style={{ backdropFilter: 'blur(4px)', maxWidth: '90%' }}>
                   <MapPin size={14} className="flex-shrink-0" /> {inmuebleData.direccion} • {inmuebleData.provincia}
@@ -62,34 +55,49 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               </div>
             </div>
 
-            {/* UBICACIÓN Y CATASTRO */}
+            {/* UBICACIÓN */}
             <div className="mb-4">
               <h6 className="text-secondary fw-bold small text-uppercase mb-3 d-flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
-                <MapPin size={16} /> Ubicación y Catastro
+                <MapPin size={16} /> Ubicación
               </h6>
               <div className="row g-3">
-                <div className="col-12 col-md-4">
+                <div className="col-12 col-md-6">
                   <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                     <span className="text-secondary d-block small mb-1">Dirección</span>
-                    <span className="fw-bold text-dark text-truncate d-block">{inmuebleData.direccion || 'Sin registro'}</span>
+                    <span className="fw-bold text-dark text-break d-block">{inmuebleData.direccion || 'Sin registro'}</span>
                     <span className="text-secondary small d-block">{inmuebleData.provincia}, Argentina</span>
                   </div>
                 </div>
-                <div className="col-12 col-md-4">
+                <div className="col-12 col-md-6">
                   <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                     <span className="text-secondary d-block small mb-1">Barrio</span>
-                    <span className="fw-bold text-dark d-block text-truncate">{inmuebleData.barrio || 'No especificado'}</span>
+                    <span className="fw-bold text-dark d-block text-break">{inmuebleData.barrio || 'No especificado'}</span>
                     {!inmuebleData.barrio && <span className="text-secondary small d-block">Sin registro</span>}
                   </div>
                 </div>
-                <div className="col-12 col-md-4">
-                  <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                    <span className="text-secondary d-block small mb-1">Manzana y Lote</span>
-                    <span className="fw-bold text-dark d-block">Mz {inmuebleData.manzana || '-'} | Lote {inmuebleData.lote || '-'}</span>
-                    <span className="text-secondary small d-block text-truncate">Tipo: {inmuebleData.tipo_inmueble || '-'}</span>
+              </div>
+              {(manzana || lote) && (
+                <div className="p-3 mt-3 bg-light rounded-4 border border-light-subtle">
+                  <span className="text-secondary d-block small mb-1">Referencias adicionales</span>
+                  <div className="d-flex flex-wrap gap-3 fw-bold text-dark small">
+                    {manzana && <span className="text-break">Manzana: {manzana}</span>}
+                    {lote && <span className="text-break">Lote: {lote}</span>}
                   </div>
                 </div>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <h6 className="text-secondary fw-bold small text-uppercase m-0 d-flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
+                  <MapPin size={16} /> Ubicación en el mapa
+                </h6>
+                <button type="button" onClick={handleOpenMap} disabled={!posicion} className="btn btn-sm btn-light border d-flex align-items-center gap-2">
+                  <Navigation size={16} /> Abrir en Mapa
+                </button>
               </div>
+              <InmuebleMapa posicion={posicion} />
+              {!posicion && <p className="small text-secondary mt-2 mb-0">Este inmueble todavía no tiene una ubicación marcada. Podés agregarla desde Editar Inmueble.</p>}
             </div>
 
             {/* SUPERFICIES */}
@@ -119,63 +127,6 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               </div>
             </div>
 
-            {/* CONDICIÓN Y TIEMPOS */}
-            <div className="mb-4">
-              <h6 className="text-secondary fw-bold small text-uppercase mb-3 d-flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
-                <Leaf size={16} /> Condición y Tiempos
-              </h6>
-              <div className="row g-3">
-                <div className="col-12 col-md-4">
-                  <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                    <span className="text-secondary d-block small mb-1">Estado de Vegetación</span>
-                    <div className="fw-bold text-dark d-flex align-items-center gap-2 mt-2">
-                      <div className={`rounded-circle ${dotClass}`} style={{width: 10, height: 10}}></div>
-                      {estadoVeg}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 col-md-4">
-                  <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                    <span className="text-secondary d-block small mb-1">Altura de Césped</span>
-                    <div className="fw-bold text-dark d-flex align-items-center flex-wrap gap-2 mt-1">
-                      {inmuebleData.altura_cesped_cm || '0.00'} cm
-                      {Number(inmuebleData.altura_cesped_cm) > 10 && (
-                        <span className="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">Corte</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 col-md-4">
-                  <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                    <span className="text-secondary d-block small mb-1">Tiempo Promedio Servicio</span>
-                    <div className="fw-bold text-dark d-flex align-items-center gap-2 mt-2">
-                      <Clock size={16} className="text-secondary" />
-                      {inmuebleData.tiempo_promedio_min || '0'} min
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* COORDENADAS GPS */}
-            <div className="p-3 bg-light rounded-4 border border-light-subtle d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <div className="bg-white p-2 rounded-circle border shadow-sm text-secondary">
-                  <MapPin size={20} />
-                </div>
-                <div>
-                  <span className="text-dark fw-bold small d-block">Coordenadas GPS (Provincia: {inmuebleData.provincia || 'N/A'})</span>
-                  <span className="text-secondary small font-monospace">Lat: {inmuebleData.latitud || 'N/A'} | Long: {inmuebleData.longitud || 'N/A'}</span>
-                </div>
-              </div>
-              <button 
-                onClick={handleOpenMap} 
-                disabled={!inmuebleData.latitud || !inmuebleData.longitud} 
-                className="btn btn-sm btn-light border shadow-sm fw-semibold text-dark px-3 py-2 d-flex align-items-center gap-2 rounded-3 bg-white"
-              >
-                <Navigation size={16} /> Abrir en Mapa
-              </button>
-            </div>
           </div>
 
           {/* FOOTER */}

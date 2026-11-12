@@ -38,7 +38,7 @@ Los scripts se aplican en orden numérico estricto indicado por su prefijo de 3 
 14. **`014_pago_manual_efectivo_transferencia.sql`**: Migración `pago manual efectivo transferencia`.
 15. **`015_drop_constraint_pagos_comprobante_uidx.sql`**: Migración `drop constraint pagos comprobante uidx`.
 16. **`016_permitir_multiples_qr_por_turno.sql`**: Migración `permitir multiples qr por turno`.
-17. **`017_historial_notificaciones.sql`**: Migración `historial notificaciones`.
+17. **`017_historial_notificaciones.sql`**: Tabla `notificaciones` (Activa/Resuelta/Cancelada) y funciones `fn_notificaciones_actuales` y `fn_sincronizar_notificaciones` para las alertas del panel (ciclo de corte, nueva solicitud, turno sin confirmar) con historial de 60 días.
 
 ---
 

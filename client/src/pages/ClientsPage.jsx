@@ -187,43 +187,43 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      <div className="row g-3 flex-nowrap flex-md-wrap overflow-x-auto pb-2 pb-md-0 scrollbar-none">
-        <div className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
-          <Card className="h-100 p-3 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between mb-2">
-              <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>TOTAL ACTIVOS</span>
-              <div className="text-success"><Users size={18} /></div>
+      <div className="row g-2 g-md-3 clientes-resumen">
+        <div className="col-6 col-xl-3">
+          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
+            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">TOTAL ACTIVOS</span>
+              <div className="clientes-resumen-icono text-success"><Users size={18} /></div>
             </div>
             <div>
-              <h3 className="fw-bold text-dark m-0 fs-3">{clientesActivos.length}</h3>
+              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">{clientesActivos.length}</h3>
               <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Clientes activos</span>
             </div>
           </Card>
         </div>
 
-        <div className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
-          <Card className="h-100 p-3 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between mb-2">
-              <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>EMPRESAS / FIJOS</span>
-              <div className="text-secondary"><Building2 size={18} /></div>
+        <div className="col-6 col-xl-3">
+          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
+            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">EMPRESAS / FIJOS</span>
+              <div className="clientes-resumen-icono text-secondary"><Building2 size={18} /></div>
             </div>
             <div>
-              <h3 className="fw-bold text-dark m-0 fs-3">
+              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
                 {clientesActivos.filter(c => c.tipo_cliente === 'Empresa' || c.tipo_cliente === 'EMPRESA' || c.tipo_cliente === 'Fijo').length}
               </h3>
-              <p className="text-secondary small m-0 mt-2">Cuentas corporativas y regulares</p>
+              <p className="clientes-resumen-detalle text-secondary m-0 mt-2">Cuentas corporativas y regulares</p>
             </div>
           </Card>
         </div>
 
-        <div className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
-          <Card className="h-100 p-3 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between mb-2">
-              <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>CASUALES</span>
-              <div className="text-success"><CheckCircle2 size={18} /></div>
+        <div className="col-6 col-xl-3">
+          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
+            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">CASUALES</span>
+              <div className="clientes-resumen-icono text-success"><CheckCircle2 size={18} /></div>
             </div>
             <div>
-              <h3 className="fw-bold text-dark m-0 fs-3">
+              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
                 {clientesActivos.filter(c => c.tipo_cliente === 'Casual').length}
               </h3>
               <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Servicios esporádicos</span>
@@ -231,15 +231,15 @@ export default function ClientsPage() {
           </Card>
         </div>
 
-        <div className="col-9 col-sm-6 col-xl-3 flex-shrink-0 flex-md-shrink-1">
-          <Card className="h-100 p-3 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between mb-2">
-              <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>CON PAGOS PENDIENTES</span>
-              <div className="text-danger"><Calendar size={18} /></div>
+        <div className="col-6 col-xl-3">
+          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
+            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">CON PAGOS PENDIENTES</span>
+              <div className="clientes-resumen-icono text-danger"><Calendar size={18} /></div>
             </div>
             <div>
-              <h3 className="fw-bold text-dark m-0 fs-3">0</h3>
-              <p className="text-danger small m-0 mt-2 fw-medium">$0 ARS <span className="text-secondary fw-normal">saldo acumulado</span></p>
+              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">0</h3>
+              <p className="clientes-resumen-detalle text-danger m-0 mt-2 fw-medium">$0 ARS <span className="text-secondary fw-normal">saldo acumulado</span></p>
             </div>
           </Card>
         </div>
@@ -289,7 +289,7 @@ export default function ClientsPage() {
 
         {/* Sub-filtros exclusivos dentro de Activos */}
         {estadoFiltro === 'Activos' && (
-          <div className="d-flex align-items-center gap-2 overflow-x-auto pb-1 pb-lg-0 scrollbar-none w-100 w-lg-auto flex-grow-1">
+          <div className="hovy-filter-group flex-grow-1" role="group" aria-label="Filtrar clientes por tipo">
             {['Todos', 'Empresas', 'Fijo', 'Casual'].map((filter) => {
               let count = 0;
               if (filter === 'Todos') count = clientesActivos.length;
@@ -301,15 +301,17 @@ export default function ClientsPage() {
                 <button
                   key={filter}
                   type="button"
+                  aria-pressed={activeFilter === filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`btn btn-sm rounded-pill text-nowrap px-3 py-2 fw-medium shadow-sm border ${
+                  className={`btn btn-sm rounded-pill fw-medium shadow-sm border ${
                     activeFilter === filter
                       ? 'btn-primary'
                       : 'bg-white text-secondary'
                   }`}
                   style={activeFilter === filter ? { backgroundColor: '#1B3006', borderColor: '#1B3006' } : {}}
                 >
-                  {filter} ({count})
+                  <span className="hovy-filter-label">{filter}</span>
+                  <span className="hovy-filter-count">({count})</span>
                 </button>
               );
             })}
