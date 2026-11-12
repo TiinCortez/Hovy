@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sun, CloudSun, Cloud, CloudRain, CloudLightning, Droplets, Wind, SunDim, AlertTriangle, Clock } from 'lucide-react';
 import ClimaService from '../../services/api/clima.service';
+import ClimaSkeleton from '../skeletons/ClimaSkeleton';
 
 export default function PanelClima() {
   const [clima, setClima] = useState(null);
@@ -53,7 +54,7 @@ export default function PanelClima() {
   };
 
   if (loading) {
-    return <div className="card border-0 shadow-sm rounded-4 p-3 text-center w-100">Cargando pronóstico...</div>;
+    return <ClimaSkeleton />;
   }
 
   if (!clima) {
