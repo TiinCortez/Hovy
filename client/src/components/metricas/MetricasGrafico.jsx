@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { formatearMontoARS } from '../turnos/agendaTurnos';
+import { formatearMontoARS, obtenerAhoraTurnos } from '../turnos/agendaTurnos';
 import { etiquetaMes } from '../cobros/cobrosUtils';
 import { calcularEscala, nombreMes, formatearPorcentaje, formatearKm } from './metricasUtils';
 
@@ -27,6 +27,23 @@ export default function MetricasGrafico({
   const [crecidas, setCrecidas] = useState(false);
   const [animando, setAnimando] = useState(true);
   const [activo, setActivo] = useState(null);
+  const scrollRef = useRef(null);
+
+  // When the chart is wider than the screen (mobile), start scrolled to the month
+  // that matters: the highlighted one, else the current one, else the last one.
+  // Only the chart's own scroll moves, never the page.
+  useEffect(() => {
+    const contenedor = scrollRef.current;
+    if (!contenedor || contenedor.scrollWidth <= contenedor.clientWidth) return;
+    const mesActual = obtenerAhoraTurnos().fecha.slice(0, 7);
+    const meses = detalle.map((fila) => fila.mes);
+    const objetivo = [mesDestacado, mesActual].find((mes) => mes && meses.includes(mes)) ?? meses[meses.length - 1];
+    const columna = objetivo && contenedor.querySelector(`[data-mes="${objetivo}"]`);
+    if (!columna) return;
+    const desplazamiento = columna.getBoundingClientRect().left - contenedor.getBoundingClientRect().left;
+    // Leave the target column close to the right edge so the previous months are visible too.
+    contenedor.scrollLeft += desplazamiento - (contenedor.clientWidth - columna.offsetWidth) + 16;
+  }, [detalle, mesDestacado]);
 
   useEffect(() => {
     let segundoFrame;
@@ -81,7 +98,7 @@ export default function MetricasGrafico({
         </div>
       </div>
 
-      <div className="metricas-grafico-scroll">
+      <div className="metricas-grafico-scroll" ref={scrollRef}>
         <div className={`metricas-grafico ${animando ? 'is-animando' : ''}`} style={{ minWidth: `${anchoMinimo}px` }}>
           {/* Eje Y: etiquetas y líneas comparten la misma base que las barras */}
           <div className="metricas-grafico-eje" aria-hidden="true">
@@ -107,6 +124,7 @@ export default function MetricasGrafico({
                 return (
                   <div
                     key={fila.mes}
+                    data-mes={fila.mes}
                     className={`metricas-grafico-columna ${activo === fila.mes ? 'is-activa' : ''} ${mesDestacado === fila.mes ? 'is-destacada' : ''}`}
                     tabIndex={0}
                     role="img"

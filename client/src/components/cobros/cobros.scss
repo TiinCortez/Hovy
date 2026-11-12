@@ -61,16 +61,25 @@ $cobros-superficie: #F5F3F0;
 
 .card:hover .cobros-kpi-deco { transform: scale(1.1); }
 
+// The Bootstrap badge module is not imported, so .badge brings no padding.
+.cobros-badge-verde,
+.cobros-badge-terracota {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .cobros-badge-verde {
   color: #4F6C4A;
   background-color: #CBECC1;
-  font-weight: 700;
 }
 
 .cobros-badge-terracota {
   color: #713714;
   background-color: #FFDBCB;
-  font-weight: 700;
 }
 
 .cobros-progreso {

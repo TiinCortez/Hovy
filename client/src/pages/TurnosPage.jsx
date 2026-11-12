@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search, Sun, Map } from 'lucide-react';
+import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
@@ -11,7 +11,7 @@ import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import TurnoService from '../services/api/turno.service';
 import useRelojTurnos from '../components/turnos/useRelojTurnos';
 import { fechaDesdeIso, obtenerAhoraTurnos, fechaAIso, PRIORIDADES_CONFIG } from '../components/turnos/agendaTurnos';
-import PanelHerramientasTurnos from '../components/turnos/PanelHerramientasTurnos';
+import WidgetsAgendaTurnos from '../components/turnos/WidgetsAgendaTurnos';
 import TurnosSkeleton from '../components/skeletons/TurnosSkeleton';
 import '../components/turnos/turnos.scss';
 
@@ -28,8 +28,6 @@ export default function TurnosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePriorities, setActivePriorities] = useState(PRIORIDADES_INICIALES);
   
-  const [herramientas, setHerramientas] = useState({ activa: null, clima: false, mapa: false });
-
   const [isNuevoTurnoOpen, setIsNuevoTurnoOpen] = useState(false);
   const [isDetalleOpen, setIsDetalleOpen] = useState(false);
   const [isModificarOpen, setIsModificarOpen] = useState(false);
@@ -58,14 +56,6 @@ export default function TurnosPage() {
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, []);
-
-  const abrirHerramienta = (activa) => {
-    setHerramientas(actuales => ({ ...actuales, activa, [activa]: true }));
-  };
-
-  const cerrarHerramientas = () => {
-    setHerramientas(actuales => ({ ...actuales, activa: null }));
-  };
 
   useEffect(() => {
     const fetchTurnos = async () => {
@@ -307,7 +297,7 @@ export default function TurnosPage() {
           </Button>
         </div>
 
-        <div className="turnos-navigation d-flex flex-wrap align-items-center gap-2 w-100 w-xl-auto mt-2 mt-xl-0">
+        <div className="turnos-navigation d-flex flex-wrap flex-xl-column align-items-center align-items-xl-end gap-2 w-100 w-xl-auto mt-2 mt-xl-0">
           <div className="turnos-date-control d-flex align-items-stretch bg-white border rounded-pill shadow-sm overflow-hidden">
             <button onClick={() => moverFecha(-1)} aria-label="Período anterior" className="btn btn-sm btn-light border-0 border-end text-dark px-3 rounded-0 flex-shrink-0"><ChevronLeft size={16}/></button>
             <button
@@ -332,7 +322,7 @@ export default function TurnosPage() {
           </div>
 
           <div className="turnos-view-actions d-flex align-items-stretch gap-2">
-            <div className="turnos-view-switcher bg-white p-1 rounded-pill shadow-sm border d-flex flex-row flex-nowrap overflow-x-auto scrollbar-none" style={{ minHeight: '38px' }}>
+            <div className="turnos-view-switcher bg-white p-1 rounded-pill shadow-sm border d-flex flex-row flex-nowrap justify-content-center overflow-x-auto scrollbar-none" style={{ minHeight: '38px' }}>
               <button 
                 className={`btn btn-sm rounded-pill fw-medium d-flex align-items-center gap-2 px-3 border-0 text-nowrap h-100 ${vistaActual === 'diaria' ? 'bg-light shadow-sm text-dark' : 'text-secondary bg-transparent'}`}
                 onClick={() => setVistaActual('diaria')}
@@ -358,31 +348,6 @@ export default function TurnosPage() {
                 <Plus size={16} className="me-1 d-inline" /> Turno
               </Button>
             </div>
-          </div>
-
-          <div className="turnos-tools-triggers" role="group" aria-label="Herramientas de la agenda">
-            <Button
-              variant="light"
-              size="sm"
-              className={`turnos-tool-trigger ${herramientas.activa === 'clima' ? 'is-active' : ''}`}
-              onClick={() => abrirHerramienta('clima')}
-              aria-haspopup="dialog"
-              aria-controls="turnos-tools-panel"
-              aria-expanded={herramientas.activa === 'clima'}
-            >
-              <Sun size={16} aria-hidden="true" /> Clima
-            </Button>
-            <Button
-              variant="light"
-              size="sm"
-              className={`turnos-tool-trigger ${herramientas.activa === 'mapa' ? 'is-active' : ''}`}
-              onClick={() => abrirHerramienta('mapa')}
-              aria-haspopup="dialog"
-              aria-controls="turnos-tools-panel"
-              aria-expanded={herramientas.activa === 'mapa'}
-            >
-              <Map size={16} aria-hidden="true" /> Mapa
-            </Button>
           </div>
         </div>
       </div>
@@ -430,6 +395,12 @@ export default function TurnosPage() {
         </div>
       </div>
 
+      <WidgetsAgendaTurnos
+        turnos={turnosVisibles}
+        periodo={getTextoFecha()}
+        onSelectTurno={handleSelectTurno}
+      />
+
       <div className="w-100 min-w-0">
         {loading ? (
           <TurnosSkeleton />
@@ -465,15 +436,6 @@ export default function TurnosPage() {
           </>
         )}
       </div>
-
-      <PanelHerramientasTurnos
-        herramientas={herramientas}
-        onChange={abrirHerramienta}
-        onClose={cerrarHerramientas}
-        turnos={turnosVisibles}
-        periodo={getTextoFecha()}
-        onSelectTurno={handleSelectTurno}
-      />
 
       {isNuevoTurnoOpen && (
         <NuevoTurnoModal

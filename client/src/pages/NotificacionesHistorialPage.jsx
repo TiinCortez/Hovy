@@ -170,7 +170,7 @@ export default function NotificacionesHistorialPage() {
           <p className="text-danger small m-0 mt-3" role="alert">No se pudo cargar el historial de notificaciones.</p>
         ) : (
           <div className="table-responsive">
-            <table className="table table-hover align-middle m-0">
+            <table className="table table-hover align-middle m-0 w-100 notificaciones-tabla">
               <thead className="text-secondary small">
                 <tr>
                   <th className="border-0 py-3 fw-semibold">Estado</th>
@@ -193,14 +193,14 @@ export default function NotificacionesHistorialPage() {
                   const cancelada = notificacion.estado === 'Cancelada';
                   return (
                     <tr key={notificacion.id_notificacion}>
-                      <td className="py-3">
+                      <td className="py-3 notif-td-estado">
                         {cancelada ? (
                           <span className="notificacion-estado cancelada"><X size={14} /> Cancelada</span>
                         ) : (
                           <span className="notificacion-estado resuelta"><Check size={14} /> Resuelto</span>
                         )}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 notif-td-tipo">
                         <div className="d-flex align-items-center gap-3">
                           <span className="notificacion-icono" style={{ backgroundColor: tipo.fondo, color: tipo.color }}>
                             <Icono size={16} />
@@ -208,11 +208,11 @@ export default function NotificacionesHistorialPage() {
                           <span className="fw-bold text-dark text-nowrap">{tipo.etiqueta}</span>
                         </div>
                       </td>
-                      <td className="py-3 text-secondary">{notificacion.mensaje}</td>
-                      <td className="py-3 text-secondary text-end small text-nowrap">
+                      <td className="py-3 text-secondary notif-td-mensaje">{notificacion.mensaje}</td>
+                      <td className="py-3 text-secondary text-end small text-nowrap notif-td-tiempo">
                         {formatearTiempo(notificacion.fecha_cierre)}
                       </td>
-                      <td className="py-3 text-end">
+                      <td className="py-3 text-end notif-td-acciones">
                         {cancelada && (
                           <button
                             type="button"

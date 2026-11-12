@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, AlertCircle, Phone, MapPin, Ruler, Wrench, CalendarDays, Clock, CalendarCheck } from 'lucide-react';
+import { Search, AlertCircle, Phone, MapPin, Ruler, Wrench, CalendarDays, Clock, CalendarCheck, UserPlus, Users, UserCheck, Inbox, History } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import VisitaService from '../services/api/visita.service';
@@ -24,7 +24,38 @@ const FRANJA_TEXTO = {
 // Backend state "Realizada" means "turno agendado": it is shown as Confirmada
 const getTab = (visita) => (visita.estado === 'Realizada' ? 'Confirmada' : visita.estado);
 
-const TABS = ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada'];
+// Requests still being worked on. Confirmed (or turno already scheduled) and
+// cancelled ones only show up in the history view.
+const ESTADOS_ACTIVOS = ['Pendiente', 'Contactada'];
+const esActiva = (visita) => ESTADOS_ACTIVOS.includes(visita.estado);
+
+const VISTAS = [
+  { value: 'activas', label: 'Pendientes', icon: Inbox },
+  { value: 'historial', label: 'Historial', icon: History },
+];
+
+const TABS_POR_VISTA = {
+  activas: ['Todas', 'Pendiente', 'Contactada'],
+  historial: ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada'],
+};
+
+const GRUPOS = [
+  { value: 'nuevas', label: 'Nuevas', icon: UserPlus, descripcion: 'Personas que todavía no son clientes.' },
+  { value: 'clientes', label: 'Clientes', icon: Users, descripcion: 'Pedidos de clientes existentes.' },
+];
+
+// The request is from an existing client when the bot flagged it at intake.
+// Until the backend sends tipo_solicitud, fall back to id_cliente only while
+// the request is active: confirming a new contact also fills id_cliente, so a
+// closed request with id_cliente is treated as a new contact that became a
+// client (that is the only intake flow the bot has today).
+const getGrupo = (visita) => {
+  if (visita.tipo_solicitud) return visita.tipo_solicitud === 'cliente' ? 'clientes' : 'nuevas';
+  return esActiva(visita) && visita.id_cliente != null ? 'clientes' : 'nuevas';
+};
+
+// A new contact that was confirmed is now a client.
+const yaEsCliente = (visita) => getGrupo(visita) === 'nuevas' && getTab(visita) === 'Confirmada';
 
 const BADGE_CLASS = {
   Pendiente: 'bg-warning-subtle text-warning border border-warning-subtle',
@@ -33,12 +64,19 @@ const BADGE_CLASS = {
   Cancelada: 'bg-danger-subtle text-danger border border-danger-subtle',
 };
 
+// Compact status badge (top right) and secondary chips (under the name)
+const ESTADO_BADGE_STYLE = { fontSize: '0.72rem', padding: '0.3rem 0.6rem' };
+const CHIP_STYLE = { fontSize: '0.68rem', padding: '0.15rem 0.5rem', border: '1px solid', whiteSpace: 'nowrap' };
+const CHIP_TURNO = { backgroundColor: 'rgba(27, 48, 6, 0.08)', color: '#1B3006', borderColor: 'rgba(27, 48, 6, 0.15)' };
+const CHIP_CLIENTE = { backgroundColor: 'rgba(121, 84, 45, 0.08)', color: '#79542D', borderColor: 'rgba(121, 84, 45, 0.2)' };
+
 const EMPTY_TEXT = {
-  Todas: 'Todavía no hay solicitudes de contacto.',
-  Pendiente: 'No hay solicitudes de contacto en estado Pendiente.',
-  Contactada: 'No hay solicitudes de contacto en estado Contactada.',
-  Confirmada: 'No hay solicitudes de contacto en estado Confirmada.',
-  Cancelada: 'No hay solicitudes de contacto en estado Cancelada.',
+  Todas: 'Todavía no hay solicitudes.',
+  TodasActivas: 'No hay solicitudes pendientes.',
+  Pendiente: 'No hay solicitudes en estado Pendiente.',
+  Contactada: 'No hay solicitudes en estado Contactada.',
+  Confirmada: 'No hay solicitudes en estado Confirmada.',
+  Cancelada: 'No hay solicitudes en estado Cancelada.',
 };
 
 const time = (visita) => new Date(visita.created_at).getTime() || 0;
@@ -49,6 +87,8 @@ export default function VisitasPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [grupo, setGrupo] = useState('nuevas');
+  const [vista, setVista] = useState('activas');
   const [activeTab, setActiveTab] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first
@@ -66,7 +106,7 @@ export default function VisitasPage() {
         setErrorMessage(null);
       })
       .catch((error) => {
-        if (isMounted) setErrorMessage(error.response?.data?.error || 'No se pudieron cargar las solicitudes de contacto.');
+        if (isMounted) setErrorMessage(error.response?.data?.error || 'No se pudieron cargar las solicitudes.');
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -75,25 +115,46 @@ export default function VisitasPage() {
     return () => { isMounted = false; };
   }, [reloadKey]);
 
+  // The group cards count only what still needs attention.
+  const countsGrupo = useMemo(() => {
+    const result = { nuevas: 0, clientes: 0 };
+    visitas.filter(esActiva).forEach((v) => { result[getGrupo(v)] += 1; });
+    return result;
+  }, [visitas]);
+
+  const delGrupo = useMemo(() => visitas.filter((v) => getGrupo(v) === grupo), [visitas, grupo]);
+
+  const countsVista = useMemo(() => ({
+    activas: delGrupo.filter(esActiva).length,
+    historial: delGrupo.length,
+  }), [delGrupo]);
+
+  const visitasDelGrupo = useMemo(
+    () => (vista === 'activas' ? delGrupo.filter(esActiva) : delGrupo),
+    [delGrupo, vista],
+  );
+
+  const tabs = TABS_POR_VISTA[vista];
+
   const counts = useMemo(() => {
-    const result = { Todas: visitas.length, Pendiente: 0, Contactada: 0, Confirmada: 0, Cancelada: 0 };
-    visitas.forEach((v) => {
+    const result = { Todas: visitasDelGrupo.length, Pendiente: 0, Contactada: 0, Confirmada: 0, Cancelada: 0 };
+    visitasDelGrupo.forEach((v) => {
       const tab = getTab(v);
       if (tab in result) result[tab] += 1;
     });
     return result;
-  }, [visitas]);
+  }, [visitasDelGrupo]);
 
   const filteredVisitas = useMemo(() => {
     const search = normalize(searchTerm.trim());
-    const list = visitas.filter((v) => {
+    const list = visitasDelGrupo.filter((v) => {
       if (activeTab !== 'Todas' && getTab(v) !== activeTab) return false;
       if (!search) return true;
       return [v.nombre, v.apellido, `${v.nombre || ''} ${v.apellido || ''}`, v.telefono, v.direccion]
         .some((field) => normalize(String(field ?? '')).includes(search));
     });
     return list.sort((a, b) => (sortOrder === 'desc' ? time(b) - time(a) : time(a) - time(b)));
-  }, [visitas, activeTab, searchTerm, sortOrder]);
+  }, [visitasDelGrupo, activeTab, searchTerm, sortOrder]);
 
   const handleRetry = () => {
     setLoading(true);
@@ -113,12 +174,44 @@ export default function VisitasPage() {
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Solicitudes</span>
         </div>
-        <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes de contacto</h2>
-        <p className="text-secondary small m-0">Todas las solicitudes de contacto, en cualquier estado.</p>
+        <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes</h2>
+        <p className="text-secondary small m-0">
+          {vista === 'activas'
+            ? 'Solicitudes pendientes de contactar o confirmar.'
+            : 'Historial: todas las solicitudes, en cualquier estado.'}
+        </p>
       </div>
 
+      <div className="row g-3" role="tablist" aria-label="Tipo de solicitud">
+        {GRUPOS.map(({ value, label, icon: Icon, descripcion }) => {
+          const activo = grupo === value;
+          return (
+            <div key={value} className="col-12 col-md-6">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activo}
+                onClick={() => { setGrupo(value); setActiveTab('Todas'); }}
+                className={`w-100 text-start rounded-4 p-3 d-flex align-items-center gap-3 shadow-sm border ${activo ? 'text-white' : 'bg-white text-dark'}`}
+                style={activo ? { backgroundColor: '#1B3006', borderColor: '#1B3006' } : undefined}
+              >
+                <span className={`p-3 rounded-circle d-flex ${activo ? 'bg-white bg-opacity-25' : 'bg-light'}`}>
+                  <Icon size={22} />
+                </span>
+                <span className="flex-grow-1">
+                  <span className="d-block fw-bold fs-5">{label}</span>
+                  <span className={`d-block small ${activo ? 'text-white-50' : 'text-secondary'}`}>{descripcion}</span>
+                </span>
+                <span className="fw-bold fs-3">{countsGrupo[value]}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
       <div className="hovy-filter-group" role="tablist" aria-label="Filtrar por estado">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <Button
             key={tab}
             variant={activeTab === tab ? 'primary' : 'light'}
@@ -134,6 +227,26 @@ export default function VisitasPage() {
         ))}
       </div>
 
+      <div className="btn-group bg-white rounded-pill border shadow-sm p-1 flex-shrink-0 align-self-start align-self-md-center" role="tablist" aria-label="Pendientes o historial">
+        {VISTAS.map(({ value, label, icon: Icon }) => {
+          const activo = vista === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={activo}
+              onClick={() => { setVista(value); setActiveTab('Todas'); }}
+              className={`btn btn-sm rounded-pill fw-semibold d-flex align-items-center gap-1 px-3 border-0 ${activo ? 'text-white' : 'text-secondary'}`}
+              style={activo ? { backgroundColor: '#1B3006' } : undefined}
+            >
+              <Icon size={14} /> {label} ({countsVista[value]})
+            </button>
+          );
+        })}
+      </div>
+      </div>
+
       <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-3">
         <div className="input-group bg-white rounded-pill px-3 py-2 border shadow-sm flex-grow-1" style={{ maxWidth: '360px' }}>
           <span className="input-group-text bg-transparent border-0 text-secondary p-0 me-2"><Search size={18} /></span>
@@ -141,7 +254,7 @@ export default function VisitasPage() {
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
             placeholder="Buscar por nombre, teléfono o dirección..."
-            aria-label="Buscar solicitudes de contacto"
+            aria-label="Buscar solicitudes"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -177,7 +290,9 @@ export default function VisitasPage() {
       ) : filteredVisitas.length === 0 ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <p className="text-secondary m-0">
-            {counts[activeTab] === 0 ? EMPTY_TEXT[activeTab] : 'No se encontraron solicitudes de contacto con esa búsqueda.'}
+            {counts[activeTab] === 0
+              ? EMPTY_TEXT[activeTab === 'Todas' && vista === 'activas' ? 'TodasActivas' : activeTab]
+              : 'No se encontraron solicitudes con esa búsqueda.'}
           </p>
         </Card>
       ) : (
@@ -189,23 +304,36 @@ export default function VisitasPage() {
               <div key={visita.id_solicitud} className="col-12 col-md-6 col-xl-4">
                 <Card className="h-100 p-4 shadow-sm border-0 rounded-4 d-flex flex-column bg-white">
 
-                  <div className="d-flex align-items-start justify-content-between gap-2 mb-3">
-                    <div className="overflow-hidden">
-                      <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={`${visita.nombre} ${visita.apellido}`}>
-                        {visita.nombre} {visita.apellido}
-                      </h5>
-                      <p className="text-secondary small m-0">Solicitud #{visita.id_solicitud}</p>
-                    </div>
-                    <div className="d-flex flex-column align-items-end gap-1">
-                      <span className={`badge rounded-pill px-3 py-2 fw-semibold ${BADGE_CLASS[tab] || 'bg-secondary-subtle text-secondary'}`}>
+                  <div className="mb-3 w-100">
+                    <div className="d-flex align-items-start justify-content-between gap-2">
+                      <div className="overflow-hidden" style={{ minWidth: 0 }}>
+                        <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={`${visita.nombre} ${visita.apellido}`}>
+                          {visita.nombre} {visita.apellido}
+                        </h5>
+                        <p className="text-secondary small m-0">Solicitud #{visita.id_solicitud}</p>
+                      </div>
+                      <span
+                        className={`badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-nowrap flex-shrink-0 ${BADGE_CLASS[tab] || 'bg-secondary-subtle text-secondary'}`}
+                        style={ESTADO_BADGE_STYLE}
+                      >
+                        <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: 'currentColor' }} aria-hidden="true"></span>
                         {tab}
                       </span>
-                      {visita.estado === 'Realizada' && (
-                        <span className="badge rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 bg-success text-white">
-                          <CalendarCheck size={12} /> Turno asignado
-                        </span>
-                      )}
                     </div>
+                    {(visita.estado === 'Realizada' || yaEsCliente(visita)) && (
+                      <div className="d-flex flex-wrap gap-1 mt-2">
+                        {visita.estado === 'Realizada' && (
+                          <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_TURNO }}>
+                            <CalendarCheck size={12} /> Turno asignado
+                          </span>
+                        )}
+                        {yaEsCliente(visita) && (
+                          <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_CLIENTE }}>
+                            <UserCheck size={12} /> Ya es cliente
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="d-flex flex-column gap-2 small text-dark mb-4">

@@ -118,3 +118,44 @@ $notif-borde: #D1D1C4;
     background-color: #059669;
   }
 }
+
+// Mobile: each notification row becomes a stacked block (type + time on top,
+// message below, actions at the end) instead of a table wider than the screen.
+@media (max-width: 767.98px) {
+  .notificaciones-tabla {
+    thead { display: none; }
+
+    tbody { border-top: 0 !important; }
+
+    // Each notification is its own soft block with breathing room
+    tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      padding: 0.875rem;
+      margin-bottom: 0.625rem;
+      background-color: #f7f7f4;
+      border: 1px solid #ececE7;
+      border-radius: 0.875rem;
+    }
+    tr:last-child { margin-bottom: 0; }
+
+    td {
+      display: block;
+      padding: 0 !important;
+      border: 0;
+      min-width: 0;
+    }
+
+    // Loading / empty rows (single cell with colSpan)
+    td:only-child { flex-basis: 100%; }
+    tr:has(> td:only-child) { background-color: transparent; border: 0; }
+
+    .notif-td-estado { order: 1; }
+    .notif-td-tipo { order: 2; flex: 1 1 auto; }
+    .notif-td-tiempo { order: 3; margin-left: auto; }
+    .notif-td-mensaje { order: 4; flex-basis: 100%; overflow-wrap: anywhere; font-size: 0.875rem; line-height: 1.4; }
+    .notif-td-acciones { order: 5; flex-basis: 100%; text-align: right; white-space: normal !important; }
+  }
+}

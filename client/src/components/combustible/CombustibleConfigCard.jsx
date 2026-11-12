@@ -22,7 +22,8 @@ const FORM_VACIO = { ciudad: '', tipo: 'nafta', empresa: '', producto: '', consu
 
 // Fuel settings: type, station and product (with live prices) and the vehicle's
 // consumption per 100 km, which the budget uses to price the trip.
-export default function CombustibleConfigCard() {
+// onResumen (optional) receives a one-line summary for a collapsed section header.
+export default function CombustibleConfigCard({ onResumen }) {
   const [ahora] = useState(() => Date.now());
   const [form, setForm] = useState(FORM_VACIO);
   const [ciudades, setCiudades] = useState([]);
@@ -76,6 +77,20 @@ export default function CombustibleConfigCard() {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!onResumen) return;
+    if (isLoading) { onResumen('Cargando...'); return; }
+    if (loadError) { onResumen('No se pudo cargar'); return; }
+    const tipo = TIPOS_COMBUSTIBLE.find((t) => t.valor === form.tipo)?.etiqueta ?? form.tipo;
+    const partes = [
+      tipo,
+      form.producto || null,
+      form.consumo ? `${form.consumo} ${UNIDADES[form.tipo]?.consumo ?? ''}`.trim() : null,
+      form.ciudad || null,
+    ].filter(Boolean);
+    onResumen(partes.join(' · '));
+  }, [onResumen, isLoading, loadError, form.tipo, form.producto, form.consumo, form.ciudad]);
 
   const cambiarCampo = (cambios) => {
     setForm((prev) => ({ ...prev, ...cambios }));

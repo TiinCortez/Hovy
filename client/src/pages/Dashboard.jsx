@@ -47,7 +47,8 @@ const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !
 
 export default function Dashboard() {
   // Datos reales: solicitudes pendientes, turnos y logística del día (ruta, clientes
-  // y combustible). Ganancias se calcula igual que en Métricas.
+  // y combustible). Ganancias se calcula igual que en Métricas (y coincide con el
+  // "Total recaudado" de Cobros: mismos turnos realizados del mes y mismo monto).
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
   const [turnos, setTurnos] = useState([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [cargandoNotificaciones, setCargandoNotificaciones] = useState(true);
   const [errorNotificaciones, setErrorNotificaciones] = useState(false);
+  const [historialNotificaciones, setHistorialNotificaciones] = useState([]);
   // Se incrementa para volver a pedir las notificaciones (tras eliminar una).
   const [versionNotificaciones, setVersionNotificaciones] = useState(0);
   const location = useLocation();
@@ -64,8 +66,17 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchNotificaciones = async () => {
       try {
-        const response = await NotificacionService.getActivas();
+        // The history (resolved / cancelled) only fills the card when there are few
+        // active ones, so if it fails the card still shows the active ones.
+        const [response, historial] = await Promise.all([
+          NotificacionService.getActivas(),
+          NotificacionService.getHistorial().catch((err) => {
+            console.error('No se pudo obtener el historial de notificaciones:', err);
+            return null;
+          }),
+        ]);
         setNotificaciones(response.data ?? []);
+        setHistorialNotificaciones(historial?.data ?? []);
         setErrorNotificaciones(false);
       } catch (err) {
         console.error('No se pudieron obtener las notificaciones:', err);
@@ -173,14 +184,14 @@ export default function Dashboard() {
   const getEstadoBadge = (estado) => {
     switch (estado) {
       case 'EN_EJECUCION':
-        return <span className="badge rounded-pill bg-warning text-dark px-3 py-2 fw-semibold d-flex align-items-center gap-1"><PlayCircle size={14}/> En curso</span>;
+        return <span className="badge rounded-pill bg-warning text-dark fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><PlayCircle size={12}/> En curso</span>;
       case 'REALIZADO':
-        return <span className="badge rounded-pill bg-success text-white px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Realizado</span>;
+        return <span className="badge rounded-pill bg-success text-white fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><CheckCircle size={12}/> Realizado</span>;
       case 'CONFIRMADO':
-        return <span className="badge rounded-pill bg-info bg-opacity-10 text-info border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><CheckCircle size={14}/> Confirmado</span>;
+        return <span className="badge rounded-pill bg-info bg-opacity-10 text-info border fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><CheckCircle size={12}/> Confirmado</span>;
       case 'COORDINADO':
       default:
-        return <span className="badge rounded-pill bg-light text-secondary border px-3 py-2 fw-semibold d-flex align-items-center gap-1"><Clock size={14}/> Pendiente</span>;
+        return <span className="badge rounded-pill bg-light text-secondary border fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><Clock size={12}/> Pendiente</span>;
     }
   };
 
@@ -198,7 +209,7 @@ export default function Dashboard() {
       {/* KPIs Top (4 columnas en desktop, 2 en móvil) */}
       <div className="row g-3">
         <div className="col-6 col-lg-3">
-          <Card className="h-100 p-2">
+          <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(170, 59, 255, 0.1)', color: '#1B3006' }}>
                 <CalendarCheck size={24} />
@@ -211,7 +222,7 @@ export default function Dashboard() {
           </Card>
         </div>
         <div className="col-6 col-lg-3">
-          <Card className="h-100 p-2">
+          <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: '#79542D' }}>
                 <ClipboardList size={24} />
@@ -224,7 +235,7 @@ export default function Dashboard() {
           </Card>
         </div>
         <div className="col-6 col-lg-3">
-          <Card className="h-100 p-2">
+          <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: '#ba1a1a' }}>
                 <AlertTriangle size={24} />
@@ -237,7 +248,7 @@ export default function Dashboard() {
           </Card>
         </div>
         <div className="col-6 col-lg-3">
-          <Card className="h-100 p-2">
+          <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(27, 48, 6, 0.1)', color: '#1B3006' }}>
                 <MapPin size={24} />
@@ -266,7 +277,8 @@ export default function Dashboard() {
               <h4 className="fw-bold text-dark m-0 fs-5">Resumen de Ganancias</h4>
               <TrendingUp size={24} className="text-secondary" />
             </div>
-            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: '3rem', color: '#1B3006', letterSpacing: '-0.02em' }}>
+            <p className="text-secondary small fw-semibold m-0 mb-1">Total recaudado este mes</p>
+            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: 'clamp(1.9rem, 8vw, 3rem)', color: '#1B3006', letterSpacing: '-0.02em', overflowWrap: 'anywhere' }}>
               {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
             </h2>
             <p className={`fw-semibold small mb-5 ${variacionGanancias.diferencia < 0 ? 'text-danger' : 'text-success'}`}>
@@ -277,8 +289,8 @@ export default function Dashboard() {
                 ? '...'
                 : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
             </p>
-            <Link to="/analytics" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
-              Ver estadísticas detalladas <ArrowRight size={18} className="ms-1" />
+            <Link to="/cobros" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
+              Ver cobros <ArrowRight size={18} className="ms-1" />
             </Link>
           </Card>
 
@@ -332,16 +344,20 @@ export default function Dashboard() {
                 const inmueble = turno.inmueble ?? {};
                 const direccion = [inmueble.direccion, inmueble.barrio].filter(Boolean).join(', ') || 'Sin dirección';
                 return (
-                  <div key={turno.idTurno} className="d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm" style={{ transition: 'all 0.2s' }}>
-                    <div className="p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#1B3006', color: 'white' }}>
-                      <CalendarCheck size={24} />
+                  // Day/time and state on the first line, then service and address: fits narrow screens.
+                  <div key={turno.idTurno} className="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white">
+                    <div className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1B3006', color: 'white' }}>
+                      <CalendarCheck size={20} />
                     </div>
-                    <div className="flex-grow-1">
-                      <h5 className="fw-bold text-dark m-0 fs-6">{etiquetaDia} · {hora} - {turno.servicio?.descripcion}</h5>
-                      <p className="text-secondary small m-0 d-flex align-items-center gap-1"><MapPin size={14} /> {direccion}</p>
-                    </div>
-                    <div>
-                      {getEstadoBadge(turno.estado)}
+                    <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                      <div className="d-flex flex-wrap align-items-center justify-content-between gap-1">
+                        <span className="fw-bold text-dark text-nowrap me-2">{etiquetaDia} · {hora}</span>
+                        {getEstadoBadge(turno.estado)}
+                      </div>
+                      <p className="fw-semibold text-dark small m-0 mt-1 text-break">{turno.servicio?.descripcion}</p>
+                      <p className="text-secondary small m-0 d-flex align-items-start gap-1">
+                        <MapPin size={13} className="flex-shrink-0 mt-1" /> <span className="text-break">{direccion}</span>
+                      </p>
                     </div>
                   </div>
                 );
@@ -362,6 +378,7 @@ export default function Dashboard() {
         <div className="col-12">
           <AlertasNotificacionesCard
             notificaciones={notificaciones}
+            historial={historialNotificaciones}
             cargando={cargandoNotificaciones}
             error={errorNotificaciones}
             onActualizar={handleNotificacionesActualizadas}
