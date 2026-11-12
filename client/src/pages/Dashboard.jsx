@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   MapPin,
   TrendingUp,
+  TrendingDown,
   ArrowRight,
   Clock,
   CheckCircle,
@@ -18,10 +19,13 @@ import LogisticaService from '../services/api/logistica.service';
 import NotificacionService from '../services/api/notificacion.service';
 import AlertasNotificacionesCard from '../components/notificaciones/AlertasNotificacionesCard.jsx';
 import { avisarNotificacionesActualizadas } from '../components/notificaciones/notificacionesConfig.js';
-import { compararHorarioTurnos, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+import { compararHorarioTurnos, formatearMontoARS, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
 import {
   avisosLogistica, etiquetaConsumo, formatearConsumo, formatearCosto, formatearKm, SIN_DATO
 } from '../components/dashboard/logisticaUtils';
+import {
+  resolverPeriodo, filtrarRealizados, resumirPeriodo, calcularVariacion, formatearPorcentaje
+} from '../components/metricas/metricasUtils';
 
 const MAX_TURNOS_PROXIMOS = 4;
 
@@ -43,7 +47,7 @@ const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !
 
 export default function Dashboard() {
   // Datos reales: solicitudes pendientes, turnos y logística del día (ruta, clientes
-  // y combustible). Ganancias sigue mockeada.
+  // y combustible). Ganancias se calcula igual que en Métricas.
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
   const [turnos, setTurnos] = useState([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
@@ -81,9 +85,19 @@ export default function Dashboard() {
   };
 
   // "Ver todas" desde la campana: baja hasta la sección de alertas.
+  // Solo se desplaza el <main> del layout (.hovy-content-wrapper): scrollIntoView
+  // también movería los contenedores con overflow-hidden del DashboardLayout y
+  // dejaría la pantalla cortada.
   useEffect(() => {
     if (cargandoNotificaciones || location.hash !== '#alertas-notificaciones') return;
-    document.getElementById('alertas-notificaciones')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const seccion = document.getElementById('alertas-notificaciones');
+    const contenedor = seccion?.closest('.hovy-content-wrapper');
+    if (!seccion || !contenedor) return;
+
+    const destino = seccion.getBoundingClientRect().top
+      - contenedor.getBoundingClientRect().top
+      + contenedor.scrollTop;
+    contenedor.scrollTo({ top: destino, behavior: 'smooth' });
   }, [cargandoNotificaciones, location.hash, location.key]);
 
   useEffect(() => {
@@ -130,16 +144,20 @@ export default function Dashboard() {
     fetchSolicitudesPendientes();
   }, []);
 
-  // Objeto JSON de prueba (Mock) realista basado en las Épicas 4, 5 y 14
+  // Objeto JSON de prueba (Mock): solo queda el nombre del saludo.
   const mockData = {
-    usuario: "Admin",
-    ganancias: {
-      total: "1.250.000",
-      variacion: "+12.5%"
-    }
+    usuario: "Admin"
   };
 
   const hoy = obtenerAhoraTurnos().fecha;
+
+  // Mismo cálculo que la tarjeta "Total cobrado" de Métricas en modo "Mes"
+  // (mes actual contra el anterior) y sin filtro de servicio.
+  const rangoGanancias = resolverPeriodo({ modo: 'mes', mes: hoy.slice(0, 7) });
+  const realizados = filtrarRealizados(turnos, '');
+  const cobradoActual = resumirPeriodo(realizados, rangoGanancias.meses, hoy).cobrado;
+  const cobradoAnterior = resumirPeriodo(realizados, rangoGanancias.mesesAnteriores, hoy).cobrado;
+  const variacionGanancias = calcularVariacion(cobradoActual, cobradoAnterior);
   const turnosVigentes = turnos.filter(esTurnoVigente);
 
   // Turnos de hoy sin cancelar (los realizados cuentan: ya se hicieron hoy).
@@ -249,14 +267,19 @@ export default function Dashboard() {
               <TrendingUp size={24} className="text-secondary" />
             </div>
             <h2 className="fw-bold m-0 mb-1" style={{ fontSize: '3rem', color: '#1B3006', letterSpacing: '-0.02em' }}>
-              ${mockData.ganancias.total}
+              {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
             </h2>
-            <p className="fw-semibold text-success small mb-5">
-              <TrendingUp size={16} className="me-1"/> {mockData.ganancias.variacion} respecto al mes pasado
+            <p className={`fw-semibold small mb-5 ${variacionGanancias.diferencia < 0 ? 'text-danger' : 'text-success'}`}>
+              {variacionGanancias.diferencia < 0
+                ? <TrendingDown size={16} className="me-1"/>
+                : <TrendingUp size={16} className="me-1"/>}
+              {cargandoTurnos
+                ? '...'
+                : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
             </p>
-            <a href="#estadisticas" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
+            <Link to="/analytics" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
               Ver estadísticas detalladas <ArrowRight size={18} className="ms-1" />
-            </a>
+            </Link>
           </Card>
 
           {/* Resumen Logística (Épica 5) */}
