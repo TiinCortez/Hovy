@@ -2,22 +2,30 @@ import { useEffect, useState } from 'react';
 import {
   CalendarCheck,
   ClipboardList,
+  AlertTriangle,
   MapPin,
   TrendingUp,
+  TrendingDown,
   ArrowRight,
   Clock,
   CheckCircle,
   PlayCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 import VisitaService from '../services/api/visita.service';
 import TurnoService from '../services/api/turno.service';
 import LogisticaService from '../services/api/logistica.service';
-import { compararHorarioTurnos, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+import NotificacionService from '../services/api/notificacion.service';
+import AlertasNotificacionesCard from '../components/notificaciones/AlertasNotificacionesCard.jsx';
+import { avisarNotificacionesActualizadas } from '../components/notificaciones/notificacionesConfig.js';
+import { compararHorarioTurnos, formatearMontoARS, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
 import {
   avisosLogistica, etiquetaConsumo, formatearConsumo, formatearCosto, formatearKm, SIN_DATO
 } from '../components/dashboard/logisticaUtils';
+import {
+  resolverPeriodo, filtrarRealizados, resumirPeriodo, calcularVariacion, formatearPorcentaje
+} from '../components/metricas/metricasUtils';
 
 const MAX_TURNOS_PROXIMOS = 4;
 
@@ -39,13 +47,58 @@ const esTurnoVigente = (turno) => turno.estado !== 'CANCELADO' && turno.estado !
 
 export default function Dashboard() {
   // Datos reales: solicitudes pendientes, turnos y logística del día (ruta, clientes
-  // y combustible). Ganancias del panel siguen mockeadas.
+  // y combustible). Ganancias se calcula igual que en Métricas.
   const [solicitudesNuevas, setSolicitudesNuevas] = useState(0);
   const [turnos, setTurnos] = useState([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
   const [logistica, setLogistica] = useState(null);
   const [cargandoLogistica, setCargandoLogistica] = useState(true);
   const [errorLogistica, setErrorLogistica] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [cargandoNotificaciones, setCargandoNotificaciones] = useState(true);
+  const [errorNotificaciones, setErrorNotificaciones] = useState(false);
+  // Se incrementa para volver a pedir las notificaciones (tras eliminar una).
+  const [versionNotificaciones, setVersionNotificaciones] = useState(0);
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchNotificaciones = async () => {
+      try {
+        const response = await NotificacionService.getActivas();
+        setNotificaciones(response.data ?? []);
+        setErrorNotificaciones(false);
+      } catch (err) {
+        console.error('No se pudieron obtener las notificaciones:', err);
+        setErrorNotificaciones(true);
+      } finally {
+        setCargandoNotificaciones(false);
+      }
+    };
+
+    fetchNotificaciones();
+  }, [versionNotificaciones]);
+
+  // Tras eliminar una (X): recarga la lista y avisa a la campana del Header.
+  const handleNotificacionesActualizadas = () => {
+    setVersionNotificaciones((v) => v + 1);
+    avisarNotificacionesActualizadas();
+  };
+
+  // "Ver todas" desde la campana: baja hasta la sección de alertas.
+  // Solo se desplaza el <main> del layout (.hovy-content-wrapper): scrollIntoView
+  // también movería los contenedores con overflow-hidden del DashboardLayout y
+  // dejaría la pantalla cortada.
+  useEffect(() => {
+    if (cargandoNotificaciones || location.hash !== '#alertas-notificaciones') return;
+    const seccion = document.getElementById('alertas-notificaciones');
+    const contenedor = seccion?.closest('.hovy-content-wrapper');
+    if (!seccion || !contenedor) return;
+
+    const destino = seccion.getBoundingClientRect().top
+      - contenedor.getBoundingClientRect().top
+      + contenedor.scrollTop;
+    contenedor.scrollTo({ top: destino, behavior: 'smooth' });
+  }, [cargandoNotificaciones, location.hash, location.key]);
 
   useEffect(() => {
     const fetchLogistica = async () => {
@@ -91,16 +144,20 @@ export default function Dashboard() {
     fetchSolicitudesPendientes();
   }, []);
 
-  // Datos de prueba restantes para el saludo y el resumen de ganancias.
+  // Objeto JSON de prueba (Mock): solo queda el nombre del saludo.
   const mockData = {
-    usuario: "Admin",
-    ganancias: {
-      total: "1.250.000",
-      variacion: "+12.5%"
-    }
+    usuario: "Admin"
   };
 
   const hoy = obtenerAhoraTurnos().fecha;
+
+  // Mismo cálculo que la tarjeta "Total cobrado" de Métricas en modo "Mes"
+  // (mes actual contra el anterior) y sin filtro de servicio.
+  const rangoGanancias = resolverPeriodo({ modo: 'mes', mes: hoy.slice(0, 7) });
+  const realizados = filtrarRealizados(turnos, '');
+  const cobradoActual = resumirPeriodo(realizados, rangoGanancias.meses, hoy).cobrado;
+  const cobradoAnterior = resumirPeriodo(realizados, rangoGanancias.mesesAnteriores, hoy).cobrado;
+  const variacionGanancias = calcularVariacion(cobradoActual, cobradoAnterior);
   const turnosVigentes = turnos.filter(esTurnoVigente);
 
   // Turnos de hoy sin cancelar (los realizados cuentan: ya se hicieron hoy).
@@ -138,9 +195,9 @@ export default function Dashboard() {
         <p className="text-secondary m-0">Aquí tienes el resumen de tu jardín para hoy.</p>
       </div>
 
-      {/* Tres indicadores: apilados en móvil y en fila en escritorio. */}
+      {/* KPIs Top (4 columnas en desktop, 2 en móvil) */}
       <div className="row g-3">
-        <div className="col-12 col-lg-4">
+        <div className="col-6 col-lg-3">
           <Card className="h-100 p-2">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(170, 59, 255, 0.1)', color: '#1B3006' }}>
@@ -153,7 +210,7 @@ export default function Dashboard() {
             </div>
           </Card>
         </div>
-        <div className="col-12 col-lg-4">
+        <div className="col-6 col-lg-3">
           <Card className="h-100 p-2">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: '#79542D' }}>
@@ -166,7 +223,20 @@ export default function Dashboard() {
             </div>
           </Card>
         </div>
-        <div className="col-12 col-lg-4">
+        <div className="col-6 col-lg-3">
+          <Card className="h-100 p-2">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: '#ba1a1a' }}>
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <p className="text-secondary small fw-semibold m-0">Alertas</p>
+                <h3 className="fw-bold m-0 text-dark">{cargandoNotificaciones ? '...' : notificaciones.length}</h3>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className="col-6 col-lg-3">
           <Card className="h-100 p-2">
             <div className="d-flex align-items-center gap-3">
               <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(27, 48, 6, 0.1)', color: '#1B3006' }}>
@@ -197,14 +267,19 @@ export default function Dashboard() {
               <TrendingUp size={24} className="text-secondary" />
             </div>
             <h2 className="fw-bold m-0 mb-1" style={{ fontSize: '3rem', color: '#1B3006', letterSpacing: '-0.02em' }}>
-              ${mockData.ganancias.total}
+              {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
             </h2>
-            <p className="fw-semibold text-success small mb-5">
-              <TrendingUp size={16} className="me-1"/> {mockData.ganancias.variacion} respecto al mes pasado
+            <p className={`fw-semibold small mb-5 ${variacionGanancias.diferencia < 0 ? 'text-danger' : 'text-success'}`}>
+              {variacionGanancias.diferencia < 0
+                ? <TrendingDown size={16} className="me-1"/>
+                : <TrendingUp size={16} className="me-1"/>}
+              {cargandoTurnos
+                ? '...'
+                : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
             </p>
-            <a href="#estadisticas" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
+            <Link to="/analytics" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
               Ver estadísticas detalladas <ArrowRight size={18} className="ms-1" />
-            </a>
+            </Link>
           </Card>
 
           {/* Resumen Logística (Épica 5) */}
@@ -279,6 +354,18 @@ export default function Dashboard() {
               </Link>
             </div>
           </Card>
+        </div>
+      </div>
+
+      {/* Bottom Section: Notificaciones y Alertas (Épica 14) */}
+      <div className="row mt-2">
+        <div className="col-12">
+          <AlertasNotificacionesCard
+            notificaciones={notificaciones}
+            cargando={cargandoNotificaciones}
+            error={errorNotificaciones}
+            onActualizar={handleNotificacionesActualizadas}
+          />
         </div>
       </div>
 

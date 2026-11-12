@@ -463,7 +463,6 @@ export default function ClientsPage() {
                       <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-medium d-flex align-items-center gap-1">
                         <ClientIcon size={12}/> {client.tipo_cliente}
                       </span>
-
                     </div>
 
                     <div className="d-flex flex-column gap-1 text-secondary small mb-3">

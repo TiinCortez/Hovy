@@ -15,6 +15,7 @@ import serviciosRoutes from './routes/servicios.routes.js';
 import combustibleRoutes from './routes/combustible.routes.js';
 import perfilRoutes from './routes/perfil.routes.js';
 import logisticaRoutes from './routes/logistica.routes.js';
+import notificacionesRoutes from './routes/notificaciones.routes.js';
 import { mercadopagoPublicRouter, mercadopagoAdminRouter } from './integrations/mercadopago/mercadopago.routes.js';
 import qrRoutes from './integrations/qr/qr.routes.js';
 import { cobrosRouter, webhookRouter } from './integrations/mercadopago/cobros/cobros.routes.js';
@@ -197,6 +198,7 @@ app.use('/api/servicios', authMiddleware, requireRole(['admin']), serviciosRoute
 app.use('/api/combustible', authMiddleware, requireRole(['admin']), combustibleRoutes);
 app.use('/api/perfil', authMiddleware, requireRole(['admin']), perfilRoutes);
 app.use('/api/logistica', authMiddleware, requireRole(['admin']), logisticaRoutes);
+app.use('/api/notificaciones', authMiddleware, requireRole(['admin']), notificacionesRoutes);
 
 // Servir frontend compilado de React (en server/public o client/dist)
 const publicDir = path.resolve(__dirname, '../public');

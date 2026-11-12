@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search, Sun, Map } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TurnosKanban from '../components/turnos/TurnosKanban';
@@ -79,6 +80,31 @@ export default function TurnosPage() {
     };
     fetchTurnos();
   }, []);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Viene de una notificación "Turno sin confirmar": va al día del turno y abre su detalle.
+  // Se procesa una sola vez por navegación (location.key).
+  const abrirTurnoId = location.state?.abrirTurnoId ?? null;
+  const [navegacionProcesada, setNavegacionProcesada] = useState(null);
+
+  if (abrirTurnoId && !loading && navegacionProcesada !== location.key) {
+    setNavegacionProcesada(location.key);
+    const turno = turnos.find((t) => t.idTurno === abrirTurnoId);
+    if (turno) {
+      setFechaActual(fechaDesdeIso(turno.fechaAsignada));
+      setTurnoSeleccionado(turno);
+      setIsDetalleOpen(true);
+    }
+  }
+
+  // Limpia el state para que no se vuelva a abrir al recargar.
+  useEffect(() => {
+    if (abrirTurnoId && navegacionProcesada === location.key) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [abrirTurnoId, navegacionProcesada, location.key, location.pathname, navigate]);
 
   const abrirNuevoTurno = (datos = {}) => {
     setDatosNuevoTurno(datos);
