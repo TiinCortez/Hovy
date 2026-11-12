@@ -78,7 +78,7 @@ export default function PanelClima() {
 
   return (
     <div 
-      className="card border-1 shadow-sm p-3 d-flex flex-column gap-3 w-100 mx-auto" 
+      className="clima-panel card border-1 shadow-sm p-3 d-flex flex-column gap-3 w-100 mx-auto"
       style={{ 
         backgroundColor: '#fcfcfc', 
         borderColor: '#f0f0f0', 
@@ -88,11 +88,11 @@ export default function PanelClima() {
     >
       
       {/* 1. CABECERA Y SELECTORES */}
-      <div className="d-flex align-items-start justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: '#f0f0f0' }}>
+      <div className="clima-header d-flex align-items-start justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: '#f0f0f0' }}>
         
         {/* Lado Izquierdo */}
-        <div className="d-flex align-items-center gap-2 flex-shrink-1" style={{ minWidth: 0 }}>
-          <div className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#eef6ec', color: '#3d6135' }}>
+        <div className="clima-ubicacion d-flex align-items-center gap-2 flex-shrink-1" style={{ minWidth: 0 }}>
+          <div className="clima-icono rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#eef6ec', color: '#3d6135' }}>
             <Sun size={16} />
           </div>
           <div className="lh-1 text-truncate">
@@ -102,7 +102,7 @@ export default function PanelClima() {
         </div>
         
         {/* Lado Derecho - Controles fluidos con límite de ancho */}
-        <div className="d-flex flex-column align-items-end gap-1 flex-shrink-1" style={{ minWidth: 0, maxWidth: '135px', flex: '1 1 auto' }}>
+        <div className="clima-selectores d-flex flex-column align-items-end gap-1 flex-shrink-1" style={{ minWidth: 0, maxWidth: '135px', flex: '1 1 auto' }}>
           <div className="badge rounded-pill fw-medium px-2 py-1 text-dark text-truncate w-100 text-end text-center" style={{ backgroundColor: '#eef6ec', border: '1px solid #d4ebd0', fontSize: '0.75rem' }}>
             {formatDayName(clima.daily.time[diaSeleccionado], diaSeleccionado)}
           </div>
@@ -129,7 +129,7 @@ export default function PanelClima() {
       <div className="d-flex justify-content-between align-items-center gap-2">
         <div className="flex-shrink-1" style={{ minWidth: 0 }}>
           <div className="d-flex align-items-start" style={{ color: '#093624' }}>
-            <span style={{ fontSize: '3rem', fontWeight: '800', lineHeight: '1' }}>{tempPrincipal}°</span>
+            <span style={{ fontSize: 'var(--clima-temperatura-size, 3rem)', fontWeight: '800', lineHeight: '1' }}>{tempPrincipal}°</span>
             <span className="fs-5 fw-bold mt-1">C</span>
           </div>
           <div className="d-flex align-items-center gap-1 mt-1 fw-medium text-dark text-truncate" style={{ fontSize: '0.8rem' }}>
@@ -144,7 +144,7 @@ export default function PanelClima() {
       </div>
 
       {/* 3. MÉTRICAS */}
-      <div className="row g-1 mt-0">
+      <div className="clima-metricas row g-1 mt-0">
         <div className="col-4">
           <div className="p-1 py-2 text-center rounded-3 border h-100 d-flex flex-column justify-content-center overflow-hidden" style={{ backgroundColor: '#faf9f6', borderColor: '#eaeaea' }}>
             <Droplets size={14} className="text-primary mx-auto mb-1 flex-shrink-0" />

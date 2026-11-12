@@ -1227,6 +1227,56 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 }
 
+/* --- RESUMEN DE CLIENTES --- */
+.clientes-resumen > div { min-width: 0; }
+
+.clientes-resumen-card {
+  min-width: 0;
+
+  > .card-body {
+    min-width: 0;
+    padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+  }
+
+  .clientes-resumen-titulo {
+    min-width: 0;
+    font-size: clamp(0.625rem, 1.8vw, 0.68rem);
+    letter-spacing: 0.05em;
+    overflow-wrap: anywhere;
+  }
+
+  .clientes-resumen-icono {
+    flex-shrink: 0;
+
+    svg {
+      display: block;
+      width: clamp(14px, 4vw, 18px);
+      height: clamp(14px, 4vw, 18px);
+    }
+  }
+
+  .clientes-resumen-cifra {
+    font-size: clamp(1.35rem, 5vw, 1.75rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .clientes-resumen-detalle {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .badge {
+    max-width: 100%;
+    font-size: clamp(0.6875rem, 1.8vw, 0.75rem);
+    line-height: 1.35;
+    white-space: normal;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+}
+
 @import './buttons';
 
 /* --- SKELETON DE CARGA (primera carga de cada página) --- */

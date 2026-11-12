@@ -30,7 +30,7 @@ export default function ClienteDetalleSkeleton() {
       {/* Tarjeta del cliente */}
       <Card className="p-3 p-md-4 shadow-sm border-0 rounded-4">
         <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-4 mb-4 pb-4 border-bottom">
-          <div className="d-flex gap-3 w-100 w-xl-auto">
+          <div className="d-flex gap-3 flex-grow-1 min-w-0">
             <Skeleton width="64px" height="64px" radius="1rem" className="flex-shrink-0" />
             <div className="flex-grow-1 d-flex flex-column gap-2 justify-content-center">
               <Skeleton width="14rem" height="1.5rem" style={{ maxWidth: '100%' }} />
@@ -40,23 +40,23 @@ export default function ClienteDetalleSkeleton() {
               </div>
             </div>
           </div>
-          <div className="d-flex flex-row gap-2 w-100 w-xl-auto flex-wrap">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} width="6.5rem" height="2.1rem" className="flex-grow-1 flex-xl-grow-0" />
+          <div className="d-flex gap-2 flex-wrap flex-shrink-0 mw-100">
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} width="6.5rem" height="2.1rem" />
             ))}
           </div>
         </div>
 
         <div className="row g-3 mb-4 d-none d-md-flex">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="col-12 col-sm-6 col-lg-3"><CajaFicha /></div>
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="col-12 col-sm-6"><CajaFicha /></div>
           ))}
         </div>
         <Skeleton height="3.25rem" className="d-md-none mb-4" />
 
         <div className="row g-3">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="col-6 col-lg-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="col-12 col-sm-4">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column gap-3">
                 <Skeleton width="60%" height="0.6rem" />
                 <Skeleton width="45%" height="1.6rem" />

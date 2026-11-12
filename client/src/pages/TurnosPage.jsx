@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search, Maximize2, Minimize2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search, Sun, Map } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
@@ -10,8 +10,7 @@ import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
 import TurnoService from '../services/api/turno.service';
 import useRelojTurnos from '../components/turnos/useRelojTurnos';
 import { fechaDesdeIso, obtenerAhoraTurnos, fechaAIso, PRIORIDADES_CONFIG } from '../components/turnos/agendaTurnos';
-import PanelClima from '../components/clima/PanelClima';
-import MapaAgenda from '../components/turnos/MapaAgenda';
+import PanelHerramientasTurnos from '../components/turnos/PanelHerramientasTurnos';
 import TurnosSkeleton from '../components/skeletons/TurnosSkeleton';
 import '../components/turnos/turnos.scss';
 
@@ -28,8 +27,7 @@ export default function TurnosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePriorities, setActivePriorities] = useState(PRIORIDADES_INICIALES);
   
-  const mapaRef = useRef(null);
-  const [mapaFullscreen, setMapaFullscreen] = useState(false);
+  const [herramientas, setHerramientas] = useState({ activa: null, clima: false, mapa: false });
 
   const [isNuevoTurnoOpen, setIsNuevoTurnoOpen] = useState(false);
   const [isDetalleOpen, setIsDetalleOpen] = useState(false);
@@ -60,23 +58,13 @@ export default function TurnosPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const onChange = () => setMapaFullscreen(document.fullscreenElement === mapaRef.current);
-    document.addEventListener('fullscreenchange', onChange);
-    return () => document.removeEventListener('fullscreenchange', onChange);
-  }, []);
+  const abrirHerramienta = (activa) => {
+    setHerramientas(actuales => ({ ...actuales, activa, [activa]: true }));
+  };
 
-  const toggleMapaFullscreen = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await mapaRef.current?.requestFullscreen();
-      }
-    } catch (err) {
-      console.error('No se pudo cambiar a pantalla completa', err);
-    }
-  }, []);
+  const cerrarHerramientas = () => {
+    setHerramientas(actuales => ({ ...actuales, activa: null }));
+  };
 
   useEffect(() => {
     const fetchTurnos = async () => {
@@ -97,11 +85,7 @@ export default function TurnosPage() {
     setIsNuevoTurnoOpen(true);
   };
 
-  const handleSelectTurno = async (idTurno) => {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    }
-
+  const handleSelectTurno = (idTurno) => {
     const turno = turnos.find(t => t.idTurno === idTurno);
     if (turno) {
       setTurnoSeleccionado(turno);
@@ -349,6 +333,31 @@ export default function TurnosPage() {
               </Button>
             </div>
           </div>
+
+          <div className="turnos-tools-triggers" role="group" aria-label="Herramientas de la agenda">
+            <Button
+              variant="light"
+              size="sm"
+              className={`turnos-tool-trigger ${herramientas.activa === 'clima' ? 'is-active' : ''}`}
+              onClick={() => abrirHerramienta('clima')}
+              aria-haspopup="dialog"
+              aria-controls="turnos-tools-panel"
+              aria-expanded={herramientas.activa === 'clima'}
+            >
+              <Sun size={16} aria-hidden="true" /> Clima
+            </Button>
+            <Button
+              variant="light"
+              size="sm"
+              className={`turnos-tool-trigger ${herramientas.activa === 'mapa' ? 'is-active' : ''}`}
+              onClick={() => abrirHerramienta('mapa')}
+              aria-haspopup="dialog"
+              aria-controls="turnos-tools-panel"
+              aria-expanded={herramientas.activa === 'mapa'}
+            >
+              <Map size={16} aria-hidden="true" /> Mapa
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -395,64 +404,50 @@ export default function TurnosPage() {
         </div>
       </div>
 
-      <div className="row g-4 w-100 m-0">
-        <div className="col-12 col-lg-8 col-xl-9 p-0 pe-lg-2">
-          {loading ? (
-            <TurnosSkeleton />
-          ) : (
-            <>
-              {vistaActual === 'diaria' && (
-                <TurnosKanban
-                  turnos={turnosDiarios}
-                  onSelectTurno={handleSelectTurno}
-                />
-              )}
-              {vistaActual === 'semanal' && (
-                <TurnosSemanal
-                  turnos={turnosFiltrados}
-                  fechaReferencia={fechaActual}
-                  ahora={ahora}
-                  onSelectTurno={handleSelectTurno}
-                  onCreateTurno={abrirNuevoTurno}
-                />
-              )}
-              {vistaActual === 'mensual' && (
-                <TurnosMensual
-                  turnos={turnosFiltrados}
-                  fechaReferencia={fechaActual}
-                  hoyIsoStr={ahora.fecha}
-                  onSelectTurno={handleSelectTurno}
-                  onSwitchToDailyView={(isoDate) => {
-                    setFechaActual(fechaDesdeIso(isoDate));
-                    setVistaActual('diaria');
-                  }}
-                />
-              )}
-            </>
-          )}
-        </div>
-        
-        <div className="col-12 col-lg-4 col-xl-3 p-0 ps-lg-2 d-flex flex-column gap-4">
-          <PanelClima />
-
-          <div
-            ref={mapaRef}
-            className={`position-relative ${mapaFullscreen ? 'mapa-fullscreen bg-white p-3' : ''}`}
-          >
-            <button
-              type="button"
-              onClick={toggleMapaFullscreen}
-              aria-label={mapaFullscreen ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
-              className="btn btn-sm btn-light border shadow-sm rounded-circle position-absolute d-flex align-items-center justify-content-center"
-              style={{ top: 10, right: 10, zIndex: 1000, width: 36, height: 36 }}
-            >
-              {mapaFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
-
-            <MapaAgenda turnos={turnosVisibles} onSelectTurno={handleSelectTurno} />
-          </div>
-        </div>
+      <div className="w-100 min-w-0">
+        {loading ? (
+          <TurnosSkeleton />
+        ) : (
+          <>
+            {vistaActual === 'diaria' && (
+              <TurnosKanban
+                turnos={turnosDiarios}
+                onSelectTurno={handleSelectTurno}
+              />
+            )}
+            {vistaActual === 'semanal' && (
+              <TurnosSemanal
+                turnos={turnosFiltrados}
+                fechaReferencia={fechaActual}
+                ahora={ahora}
+                onSelectTurno={handleSelectTurno}
+                onCreateTurno={abrirNuevoTurno}
+              />
+            )}
+            {vistaActual === 'mensual' && (
+              <TurnosMensual
+                turnos={turnosFiltrados}
+                fechaReferencia={fechaActual}
+                hoyIsoStr={ahora.fecha}
+                onSelectTurno={handleSelectTurno}
+                onSwitchToDailyView={(isoDate) => {
+                  setFechaActual(fechaDesdeIso(isoDate));
+                  setVistaActual('diaria');
+                }}
+              />
+            )}
+          </>
+        )}
       </div>
+
+      <PanelHerramientasTurnos
+        herramientas={herramientas}
+        onChange={abrirHerramienta}
+        onClose={cerrarHerramientas}
+        turnos={turnosVisibles}
+        periodo={getTextoFecha()}
+        onSelectTurno={handleSelectTurno}
+      />
 
       {isNuevoTurnoOpen && (
         <NuevoTurnoModal

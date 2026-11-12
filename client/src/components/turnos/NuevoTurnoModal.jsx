@@ -368,8 +368,8 @@ export default function NuevoTurnoModal({
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
 
           {/* Cabecera Principal */}
-          <div className="modal-header nuevo-turno-header align-items-start px-3 px-md-4 py-2 pt-3 border-bottom-0">
-            <div className="min-w-0">
+          <div className="modal-header nuevo-turno-header justify-content-between align-items-start px-3 px-md-4 py-2 pt-3 border-bottom-0">
+            <div className="min-w-0 flex-grow-1">
               <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
                 <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.68rem', letterSpacing: '0.06em' }}>
                   Etapa {pasoActual} de 4 · Programación de servicio

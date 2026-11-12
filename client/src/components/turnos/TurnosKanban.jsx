@@ -1,10 +1,17 @@
-import { useState } from 'react';
-import { MapPin, Clock, ChevronRight } from 'lucide-react';
+import { useId, useState } from 'react';
+import { MapPin, Clock, ChevronRight, ChevronDown } from 'lucide-react';
 import Card from '../ui/Card';
 import { PRIORIDADES_CONFIG as prioridadesConfig, compararHorarioTurnos, formatearHorarioTurno } from './agendaTurnos';
 
 export default function TurnosKanban({ turnos, onSelectTurno }) {
   const [colFiltro, setColFiltro] = useState('TODOS'); // Filtro de columnas activo restaurado
+  const [estadosAbiertos, setEstadosAbiertos] = useState({});
+  const idBase = useId();
+
+  const seleccionarEstado = (estado) => {
+    setColFiltro(estado);
+    if (estado !== 'TODOS') setEstadosAbiertos(actuales => ({ ...actuales, [estado]: true }));
+  };
 
   const columnasConfig = [
     { id: 'COORDINADO', title: 'COORDINADOS', dotColor: 'bg-warning', borderColor: 'border-warning' },
@@ -40,9 +47,18 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
     return (
       <div 
         key={turno.idTurno} 
-        className={`card rounded-4 overflow-hidden mb-3 bg-white shadow-sm border ${cardBorderColor} ${isEjecucion ? 'turno-en-curso-card' : ''}`}
+        className={`turnos-agenda-card card rounded-4 bg-white shadow-sm border ${cardBorderColor} ${isEjecucion ? 'turno-en-curso-card' : ''}`}
         style={{ cursor: 'pointer' }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Ver turno de ${turno.cliente.nombre}`}
         onClick={() => onSelectTurno(turno.idTurno)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onSelectTurno(turno.idTurno);
+          }
+        }}
       >
         <div className="row g-0 h-100 position-relative">
           {/* Borde indicador izquierdo (Azul si es en ejecución) */}
@@ -63,18 +79,18 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
             <h6 className={`fw-bold m-0 mb-1 fs-6 ${isEjecucion ? 'text-dark' : 'text-dark'}`}>{turno.cliente.nombre}</h6>
             <div className={`small d-flex align-items-start gap-1 mb-3 ${isEjecucion ? 'text-secondary' : 'text-secondary'}`}>
               <MapPin size={14} className="mt-1 flex-shrink-0"/> 
-              <span className="text-truncate">{turno.inmueble.direccion}</span>
+              <span className="min-w-0">{turno.inmueble.direccion}</span>
             </div>
 
             <hr className="my-0 mb-2 opacity-10" />
 
-            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-end gap-2 mt-auto">
-              <div className={`small fw-medium w-100 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
+            <div className="d-flex flex-column align-items-start gap-2 mt-auto">
+              <div className={`small fw-medium w-100 min-w-0 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
                 {turno.servicio.descripcion}
               </div>
               
               {isRealizado ? (
-                <div className="d-flex align-items-center gap-1 bg-light rounded-2 px-2 py-1 text-secondary small border flex-shrink-0 align-self-end">
+                <div className="d-flex flex-wrap align-items-center gap-1 bg-light rounded-2 px-2 py-1 text-secondary small border align-self-end">
                   <Clock size={12} /> Duración: <strong className="text-dark ms-1">{turno.duracionReal}</strong>
                 </div>
               ) : (
@@ -84,9 +100,6 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
               )}
             </div>
 
-            {isEjecucion && (
-              <div className="mt-2 text-dark small fw-medium text-truncate">{turno.servicio.descripcion}</div>
-            )}
           </div>
         </div>
       </div>
@@ -96,49 +109,65 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
   return (
     <Card className="turnos-kanban-card p-0 shadow-sm border-0 rounded-4 bg-white overflow-hidden">
       {/* Filtros exclusivos de estado del Kanban */}
-      <div className="d-flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none w-100">
+      <div className="hovy-filter-group mb-3" role="group" aria-label="Filtrar turnos por estado">
         <button 
-          onClick={() => setColFiltro('TODOS')} 
-          className={`btn btn-sm rounded-pill fw-bold px-3 py-2 text-nowrap d-flex align-items-center gap-2 border shadow-sm ${colFiltro === 'TODOS' ? 'bg-dark text-white border-dark' : 'bg-white text-secondary'}`}
+          type="button"
+          onClick={() => seleccionarEstado('TODOS')}
+          aria-pressed={colFiltro === 'TODOS'}
+          className={`btn btn-sm rounded-pill fw-bold border shadow-sm ${colFiltro === 'TODOS' ? 'bg-dark text-white border-dark' : 'bg-white text-secondary'}`}
         >
-          Todos <span className={`badge rounded-circle ${colFiltro === 'TODOS' ? 'bg-secondary' : 'bg-light text-secondary border'}`}>{turnos.length}</span>
+          <span className="hovy-filter-label">Todos</span>
+          <span className={`hovy-filter-count badge rounded-circle ${colFiltro === 'TODOS' ? 'bg-secondary' : 'bg-light text-secondary border'}`}>{turnos.length}</span>
         </button>
         {columnasConfig.map(col => {
           const count = getTurnosPorEstado(col.id).length;
           return (
             <button 
               key={col.id}
-              onClick={() => setColFiltro(col.id)}
-              className={`btn btn-sm rounded-pill fw-bold px-3 py-2 text-nowrap d-flex align-items-center gap-2 border shadow-sm ${colFiltro === col.id ? 'bg-white text-dark border-dark' : 'bg-white text-secondary'}`}
+              type="button"
+              onClick={() => seleccionarEstado(col.id)}
+              aria-pressed={colFiltro === col.id}
+              className={`btn btn-sm rounded-pill fw-bold border shadow-sm ${colFiltro === col.id ? 'bg-white text-dark border-dark' : 'bg-white text-secondary'}`}
             >
-              <span className={col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`} style={{width: 8, height: 8}}></span>
-              {col.title.charAt(0) + col.title.slice(1).toLowerCase()} <span className="badge bg-light text-secondary border rounded-circle">{count}</span>
+              <span className={`hovy-filter-dot ${col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`}`} style={{width: 8, height: 8}} aria-hidden="true"></span>
+              <span className="hovy-filter-label">{col.title.charAt(0) + col.title.slice(1).toLowerCase()}</span>
+              <span className="hovy-filter-count badge bg-light text-secondary border rounded-circle">{count}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Grilla Kanban */}
-      <div className="row g-4 flex-nowrap overflow-x-auto pb-3">
+      {/* Estados apilados en móvil; dos columnas en tablet y cuatro en escritorio. */}
+      <div className={`turnos-estados-grid ${colFiltro !== 'TODOS' ? 'is-filtered' : ''}`}>
         {columnasConfig.map(col => {
           const colTurnos = getTurnosPorEstado(col.id);
           
           // Ocultar si el filtro está activo en otra columna
           if (colFiltro !== 'TODOS' && colFiltro !== col.id) return null;
+          const abierto = estadosAbiertos[col.id] ?? colTurnos.length > 0;
           
           return (
-            // col-12 en móviles asegura que se apilen una debajo de la otra. col-xl-3 las pone en línea en PC.
-            <div key={col.id} className="col-11 col-md-5 col-xl-3 d-flex flex-column" style={{ minWidth: '260px' }}>
+            <details
+              key={col.id}
+              className="turnos-estado"
+              open={abierto}
+              onToggle={(event) => {
+                const nuevoEstado = event.currentTarget.open;
+                if (nuevoEstado === abierto) return;
+                setEstadosAbiertos(actuales => actuales[col.id] === nuevoEstado ? actuales : { ...actuales, [col.id]: nuevoEstado });
+              }}
+            >
               
               {/* Cabecera de Columna */}
-              <div className={`border-top border-2 pt-3 mb-3 d-flex align-items-center gap-2 ${col.borderColor}`}>
-                <span className={col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`} style={{width: 10, height: 10}}></span>
-                <h6 className="m-0 fw-bold text-dark">{col.title}</h6>
-                <span className="badge bg-warning bg-opacity-25 text-dark rounded-circle px-2 py-1 border border-warning border-opacity-50">{colTurnos.length}</span>
-              </div>
+              <summary className={`turnos-estado-header border-top border-2 ${col.borderColor}`} aria-controls={`${idBase}-${col.id}`}>
+                <span className={`turnos-estado-dot ${col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`}`} aria-hidden="true" />
+                <h3 className="turnos-estado-titulo">{col.title.charAt(0) + col.title.slice(1).toLowerCase()}</h3>
+                <span className="turnos-estado-count badge bg-white text-secondary border rounded-pill">{colTurnos.length}</span>
+                <ChevronDown size={16} className="turnos-estado-chevron" aria-hidden="true" />
+              </summary>
 
               {/* Contenedor de Tarjetas */}
-              <div className="flex-grow-1">
+              <div className="turnos-estado-lista" id={`${idBase}-${col.id}`}>
                 {colTurnos.length === 0 ? (
                   <div className="text-center p-3 text-secondary small fw-medium opacity-50 border border-dashed rounded-3">
                     Sin turnos en este estado
@@ -148,7 +177,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
                 )}
               </div>
 
-            </div>
+            </details>
           );
         })}
       </div>
