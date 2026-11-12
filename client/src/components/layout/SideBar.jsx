@@ -14,7 +14,7 @@ export default function Sidebar() {
 
   // Pestañas que en móvil se agrupan dentro del menú "Más"
   const moreItems = [
-    { path: '/visitas', label: 'Solicitudes de contacto', icon: <ClipboardList size={22} />, menuIcon: <ClipboardList size={16} />, color: 'solicitudes' },
+    { path: '/visitas', label: 'Solicitudes', icon: <ClipboardList size={22} />, menuIcon: <ClipboardList size={16} />, color: 'solicitudes' },
     { path: '/servicios', label: 'Servicios', icon: <Wrench size={22} />, menuIcon: <Wrench size={16} />, color: 'servicios' },
     { path: '/cobros', label: 'Cobros', icon: <Wallet size={22} />, menuIcon: <Wallet size={16} />, color: 'cobros' },
     { path: '/analytics', label: 'Métricas', icon: <BarChart3 size={22} />, menuIcon: <BarChart3 size={16} />, color: 'metricas' },
