@@ -35,20 +35,14 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
     const pConf = prioridadesConfig[turno.prioridad];
     const isRealizado = turno.estado === 'REALIZADO';
     const isEjecucion = turno.estado === 'EN_EJECUCION';
-
-    // Reglas estrictas de diseño para "En Ejecución" (todo azul) y "Realizado"
-    const cardBorderColor = isEjecucion ? 'border-primary' : 'border-light-subtle';
-    const badgeColor = isEjecucion ? 'primary' : pConf.color;
-    
-    let badgeText = pConf.short;
-    if (isRealizado) badgeText = pConf.short.replace(pConf.short.split('-')[1], ' COMPLETADO');
-    if (isEjecucion) badgeText = pConf.short.replace(pConf.short.split('-')[1], ' EN CURSO');
+    // Priority label: "P2 · Fijo". P1 (reasignado / urgente) is the only one highlighted.
+    const [, tipoPrioridad = ''] = pConf.short.split(' - ');
+    const etiquetaPrioridad = `${pConf.code} · ${tipoPrioridad.charAt(0)}${tipoPrioridad.slice(1).toLowerCase()}`;
 
     return (
-      <div 
-        key={turno.idTurno} 
-        className={`turnos-agenda-card card rounded-4 bg-white shadow-sm border ${cardBorderColor} ${isEjecucion ? 'turno-en-curso-card' : ''}`}
-        style={{ cursor: 'pointer' }}
+      <div
+        key={turno.idTurno}
+        className="turnos-agenda-card"
         role="button"
         tabIndex={0}
         aria-label={`Ver turno de ${turno.cliente.nombre}`}
@@ -60,47 +54,42 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
           }
         }}
       >
-        <div className="row g-0 h-100 position-relative">
-          {/* Borde indicador izquierdo (Azul si es en ejecución) */}
-          <div className={`position-absolute top-0 start-0 h-100 ${isEjecucion ? 'turno-en-curso-bg' : `bg-${pConf.color}`}`} style={{ width: '4px' }}></div>
-          
-          <div className="col-12 p-3 ps-4 d-flex flex-column">
-            
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-              <span className={`badge bg-${badgeColor}-subtle text-${badgeColor} border border-${badgeColor}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.65rem'}}>
-                {isEjecucion && <span className="turno-en-curso-dot me-1" />}
-                {badgeText}
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <span className="turnos-agenda-card-hora d-flex align-items-center gap-1">
+            <Clock size={14} className="text-secondary" aria-hidden="true" />
+            {formatearHorarioTurno(turno)}
+          </span>
+          <span className={`turnos-agenda-etiqueta ${pConf.code === 'P1' ? 'turnos-agenda-etiqueta--p1' : ''}`}>
+            {etiquetaPrioridad}
+          </span>
+        </div>
+
+        <h6 className="turnos-agenda-card-cliente">{turno.cliente.nombre}</h6>
+        <div className="turnos-agenda-card-direccion">
+          <MapPin size={13} className="mt-1 flex-shrink-0" aria-hidden="true" />
+          <span className="min-w-0">{turno.inmueble.direccion}</span>
+        </div>
+
+        {(isEjecucion || isRealizado) && (
+          <div className="mt-2">
+            {isEjecucion && (
+              <span className="turnos-agenda-etiqueta turnos-agenda-etiqueta--en-curso">
+                <span className="turno-en-curso-dot" aria-hidden="true" /> En curso
               </span>
-              <span className={`small fw-bold d-flex align-items-center gap-1 ${isRealizado ? 'text-success' : isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                {isRealizado && <Clock size={14} />} {formatearHorarioTurno(turno)}
+            )}
+            {isRealizado && (
+              <span className="turnos-agenda-etiqueta turnos-agenda-etiqueta--realizado">
+                Realizado · {turno.duracionReal}
               </span>
-            </div>
-
-            <h6 className={`fw-bold m-0 mb-1 fs-6 ${isEjecucion ? 'text-dark' : 'text-dark'}`}>{turno.cliente.nombre}</h6>
-            <div className={`small d-flex align-items-start gap-1 mb-3 ${isEjecucion ? 'text-secondary' : 'text-secondary'}`}>
-              <MapPin size={14} className="mt-1 flex-shrink-0"/> 
-              <span className="min-w-0">{turno.inmueble.direccion}</span>
-            </div>
-
-            <hr className="my-0 mb-2 opacity-10" />
-
-            <div className="d-flex flex-column align-items-start gap-2 mt-auto">
-              <div className={`small fw-medium w-100 min-w-0 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                {turno.servicio.descripcion}
-              </div>
-              
-              {isRealizado ? (
-                <div className="d-flex flex-wrap align-items-center gap-1 bg-light rounded-2 px-2 py-1 text-secondary small border align-self-end">
-                  <Clock size={12} /> Duración: <strong className="text-dark ms-1">{turno.duracionReal}</strong>
-                </div>
-              ) : (
-                <span className={`small fw-bold text-nowrap d-flex align-items-center gap-1 flex-shrink-0 align-self-end ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
-                  {isEjecucion ? 'Ver Ficha' : 'Detalle'} <ChevronRight size={14} />
-                </span>
-              )}
-            </div>
-
+            )}
           </div>
+        )}
+
+        <div className="turnos-agenda-card-pie">
+          <span className="fw-semibold text-dark min-w-0 text-break">{turno.servicio.descripcion}</span>
+          <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: '#1B3006' }}>
+            {isEjecucion ? 'Ver ficha' : 'Detalle'} <ChevronRight size={14} />
+          </span>
         </div>
       </div>
     );
@@ -159,7 +148,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
             >
               
               {/* Cabecera de Columna */}
-              <summary className={`turnos-estado-header border-top border-2 ${col.borderColor}`} aria-controls={`${idBase}-${col.id}`}>
+              <summary className="turnos-estado-header" aria-controls={`${idBase}-${col.id}`}>
                 <span className={`turnos-estado-dot ${col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`}`} aria-hidden="true" />
                 <h3 className="turnos-estado-titulo">{col.title.charAt(0) + col.title.slice(1).toLowerCase()}</h3>
                 <span className="turnos-estado-count badge bg-white text-secondary border rounded-pill">{colTurnos.length}</span>

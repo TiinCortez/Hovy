@@ -53,8 +53,8 @@
 
 .turnos-estado {
   min-width: 0;
-  background-color: #f8faf5;
-  border: 1px solid #e2e7dc;
+  background-color: #f6f6f3;
+  border: 1px solid #ebebe6;
   border-radius: 1rem;
 }
 
@@ -70,7 +70,7 @@
   cursor: pointer;
 
   &::-webkit-details-marker { display: none; }
-  &:hover { background-color: #f0f4e9; }
+  &:hover { background-color: #efefea; }
   &:focus-visible { outline: 2px solid #67884e; outline-offset: -2px; }
 }
 
@@ -78,7 +78,7 @@
   flex: 1;
   min-width: 0;
   margin: 0;
-  color: #34432c;
+  color: #212529;
   font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.4;
@@ -98,13 +98,73 @@
   padding: 0 0.75rem 0.75rem;
 }
 
+// Turno card: flat white surface with a thin border; state lives in small
+// badges instead of colored stripes.
 .turnos-agenda-card {
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
+  padding: 0.875rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e6e6e1;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-  .badge { max-width: 100%; white-space: normal; line-height: 1.4; }
+  &:hover { border-color: #c9c9c1; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
   &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+}
+
+.turnos-agenda-card-hora {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #212529;
+  font-variant-numeric: tabular-nums;
+}
+
+.turnos-agenda-card-cliente {
+  margin: 0.5rem 0 0.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.turnos-agenda-card-direccion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.turnos-agenda-card-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #f0f0ec;
+  font-size: 0.8rem;
+}
+
+// Small label used for the priority and the "en curso / realizado" states
+.turnos-agenda-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background-color: #f1f1ed;
+  color: #495057;
+
+  &--p1 { background-color: #fdecec; color: #b42318; }
+  &--en-curso { background-color: #e8f0fe; color: #1d4ed8; }
+  &--realizado { background-color: #e9f3e6; color: #2f5d27; }
 }
 
 @media (prefers-reduced-motion: reduce) {
