@@ -171,20 +171,18 @@ export default function ClientsPage() {
   return (
     <div className="d-flex flex-column gap-4 pb-5">
 
-      <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-        <div>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Directorio de clientes</span>
-          </div>
-          <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
-          <p className="text-secondary small m-0">Directorio general de clientes y gestión integral de inmuebles vinculados.</p>
+      {/* Title and main action share a row (also on mobile); the description goes below */}
+      <div>
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Directorio de clientes</span>
         </div>
-
-        <div className="d-flex align-items-center gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
-          <Button variant="primary" className="text-nowrap ms-auto ms-md-0" onClick={() => setIsModalOpen(true)}>
-            <UserPlus size={16} /> + Nuevo Cliente
+        <div className="d-flex align-items-center justify-content-between gap-3">
+          <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
+          <Button variant="primary" className="text-nowrap flex-shrink-0" onClick={() => setIsModalOpen(true)}>
+            <UserPlus size={16} /> Nuevo Cliente
           </Button>
         </div>
+        <p className="text-secondary small m-0 mt-1">Directorio general de clientes y gestión integral de inmuebles vinculados.</p>
       </div>
 
       <div className="row g-2 g-md-3 clientes-resumen">

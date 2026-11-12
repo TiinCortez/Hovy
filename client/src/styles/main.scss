@@ -255,6 +255,25 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   background-color: #ffffff;
   border-bottom: 1px solid $hovy-border;
   height: 72px;
+  padding-inline: 1.5rem;
+}
+
+// Dashboard KPI cards: on narrow screens the icon goes above the text so long
+// values ("2.089,4 km") stay inside the card.
+.dashboard-kpi {
+  .card-body > .d-flex > div:last-child { min-width: 0; }
+  h3 { overflow-wrap: anywhere; }
+
+  @media (max-width: 575.98px) {
+    .card-body { padding: 1rem !important; }
+    .card-body > .d-flex {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 0.5rem !important;
+    }
+    .card-body > .d-flex > .rounded-circle { padding: 0.6rem !important; }
+    h3 { font-size: 1.25rem; }
+  }
 }
 .hovy-header-brand {
   gap: 12px;
@@ -808,6 +827,15 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .nuevo-turno-footer .btn:first-child { padding-inline: 0.8rem !important; }
 }
 
+@media (min-width: 1200px) {
+  // Hug the content and pin the block to the right edge; the date stays centered over the view switcher.
+  .turnos-navigation {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 1199.98px) {
   .turnos-navigation {
     align-items: stretch !important;
@@ -1300,4 +1328,11 @@ $hovy-skeleton: #E6E6D8;
 
 @media (prefers-reduced-motion: reduce) {
   .hovy-skeleton { animation: none; }
+}
+
+// The Bootstrap tables module is not imported: restore the horizontal scroll of
+// .table-responsive so a wide table never pushes the whole page sideways.
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

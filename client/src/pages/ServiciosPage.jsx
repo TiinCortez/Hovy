@@ -80,25 +80,23 @@ export default function ServiciosPage() {
   return (
     <div className="d-flex flex-column gap-4 pb-5">
 
-      <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-        <div>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Catálogo Operativo</span>
-          </div>
-          <h2 className="fw-bold fs-2 text-dark m-0">Servicios</h2>
-          <p className="text-secondary small m-0">Servicios que ofrecés, con su precio por m² y límite operativo.</p>
+      {/* Title and main action share a row (also on mobile); the description goes below */}
+      <div>
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Catálogo Operativo</span>
         </div>
-
-        <div className="d-flex align-items-center gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
+        <div className="d-flex align-items-center justify-content-between gap-3">
+          <h2 className="fw-bold fs-2 text-dark m-0">Servicios</h2>
           <Button
             variant="primary"
-            className="text-nowrap ms-auto ms-md-0"
+            className="text-nowrap flex-shrink-0"
             onClick={() => setModal({ mode: 'add' })}
             disabled={loading || Boolean(errorMessage)}
           >
             <Plus size={16} /> Nuevo Servicio
           </Button>
         </div>
+        <p className="text-secondary small m-0 mt-1">Servicios que ofrecés, con su precio por m² y límite operativo.</p>
       </div>
 
       <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mt-2">
