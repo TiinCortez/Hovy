@@ -397,6 +397,41 @@ export const darDeBajaInmuebleBot = async (req, res) => {
   }
 };
 
+// POST /api/bot/ubicacion/directa
+//
+// Auxiliar del alta, sin tocar la base. Cuando el cliente no puede compartir el
+// pin y escribe la dirección, el bot la valida acá antes de proponer el alta:
+// con 'exacta' o 'calle' le muestra el punto en el mapa para que confirme que es
+// ahí; con 'zona' o sin resultado le pide la ubicación de WhatsApp.
+//
+// Si Nominatim no responde, devuelve 200 con todo en null: el alta igual puede
+// seguir sin coordenadas, como hasta ahora.
+export const validarDireccionEscrita = async (req, res) => {
+  const { direccion, localidad, barrio, provincia } = req.body ?? {};
+  const texto = (v) => (typeof v === 'string' ? v.trim() : '');
+
+  if (!texto(direccion) || !texto(provincia)) {
+    return res.status(400).json({ ok: false, error: 'Faltan la dirección o la provincia.' });
+  }
+
+  try {
+    const resultado = await geocodificarDireccion({
+      direccion: texto(direccion),
+      localidad: texto(localidad),
+      barrio: texto(barrio),
+      provincia: texto(provincia),
+    });
+
+    return res.status(200).json({ ok: true, data: resultado });
+  } catch (err) {
+    console.error('Error inesperado al validar la dirección:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'Ocurrió un error inesperado al validar la dirección.',
+    });
+  }
+};
+
 // POST /api/bot/ubicacion/reversa
 //
 // Auxiliar del alta, sin tocar la base. Recibe el pin que compartió el cliente
