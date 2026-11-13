@@ -13,8 +13,9 @@
 --     AND id_turno IS NULL
 --   GROUP BY id_inmueble
 --   HAVING count(*) > 1;
-
-BEGIN;
+--
+-- No BEGIN/COMMIT: db-migrate runs each file through the exec_migration RPC,
+-- which already wraps it in a transaction and rejects transaction commands.
 
 DROP INDEX IF EXISTS public.uq_solicitudes_visita_pedido_cliente_abierto;
 
@@ -23,5 +24,3 @@ CREATE UNIQUE INDEX uq_solicitudes_visita_pedido_cliente_abierto
   WHERE tipo_solicitud = 'cliente'
     AND estado IN ('Pendiente', 'Contactada', 'Confirmada')
     AND id_turno IS NULL;
-
-COMMIT;
