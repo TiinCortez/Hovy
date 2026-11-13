@@ -4,8 +4,8 @@ import Card from '../components/ui/Card';
 import SeccionDesplegable from '../components/ui/SeccionDesplegable';
 import SalidaCard from '../components/perfil/SalidaCard';
 import AuthService from '../services/auth.service';
+import { VERDE } from '../styles/colores';
 
-const VERDE = '#1B3006';
 
 const ROLES = {
   admin: 'Administrador',

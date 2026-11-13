@@ -14,6 +14,7 @@ import { fechaDesdeIso, obtenerAhoraTurnos, fechaAIso, PRIORIDADES_CONFIG } from
 import WidgetsAgendaTurnos from '../components/turnos/WidgetsAgendaTurnos';
 import TurnosSkeleton from '../components/skeletons/TurnosSkeleton';
 import '../components/turnos/turnos.scss';
+import { VERDE } from '../styles/colores';
 
 const PRIORIDADES_INICIALES = Object.keys(PRIORIDADES_CONFIG);
 
@@ -292,7 +293,7 @@ export default function TurnosPage() {
             <h2 className="fw-bold fs-2 text-dark m-0" style={{ letterSpacing: '-0.02em' }}>Agenda de Turnos</h2>
             <p className="text-secondary small m-0 mt-1">Planificación, seguimiento operativo, clima y mapa.</p>
           </div>
-          <Button onClick={() => abrirNuevoTurno()} variant="primary" className="d-flex d-xl-none btn-sm rounded-pill shadow-sm fw-bold px-3 py-2 flex-shrink-0 ms-3 mt-1" style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>
+          <Button onClick={() => abrirNuevoTurno()} variant="primary" className="d-flex d-xl-none btn-sm rounded-pill shadow-sm fw-bold px-3 py-2 flex-shrink-0 ms-3 mt-1" style={{backgroundColor: VERDE, borderColor: VERDE}}>
             <Plus size={16} className="me-1" /> Turno
           </Button>
         </div>
@@ -344,7 +345,7 @@ export default function TurnosPage() {
             </div>
 
             <div className="d-none d-xl-block flex-shrink-0">
-              <Button onClick={() => abrirNuevoTurno()} variant="primary" className="btn-sm rounded-pill shadow-sm fw-bold px-4 h-100 d-flex align-items-center" style={{backgroundColor: '#1B3006', borderColor: '#1B3006', height: '38px'}}>
+              <Button onClick={() => abrirNuevoTurno()} variant="primary" className="btn-sm rounded-pill shadow-sm fw-bold px-4 h-100 d-flex align-items-center" style={{backgroundColor: VERDE, borderColor: VERDE, height: '38px'}}>
                 <Plus size={16} className="me-1 d-inline" /> Turno
               </Button>
             </div>

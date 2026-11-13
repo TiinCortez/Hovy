@@ -6,6 +6,7 @@ import Paginacion from './Paginacion.jsx';
 import CancelarNotificacionModal from './CancelarNotificacionModal.jsx';
 import { obtenerTipo, destinoNotificacion, formatearTiempo } from './notificacionesConfig.js';
 import './notificaciones.scss';
+import { VERDE } from '../../styles/colores';
 
 const POR_PAGINA = 3;
 
@@ -105,7 +106,7 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
                             <button
                               type="button"
                               className="btn btn-light btn-sm border rounded-pill px-3 fw-semibold"
-                              style={{ color: '#1B3006' }}
+                              style={{ color: VERDE }}
                               onClick={() => irADestino(notificacion)}
                             >
                               {tipo.textoBoton}

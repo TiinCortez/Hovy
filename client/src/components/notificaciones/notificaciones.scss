@@ -1,6 +1,7 @@
+@use '../../styles/tokens' as *;
 // Notificaciones: campana del Header, tarjeta del Dashboard e historial.
-$notif-verde: #1B3006;
-$notif-borde: #D1D1C4;
+$notif-verde: $hovy-green;
+$notif-borde: $hovy-border;
 
 // Paginación
 .notificaciones-pagina-texto,

@@ -4,8 +4,10 @@ import { AlertCircle } from 'lucide-react';
 import Button from '../ui/Button';
 import CloseButton from '../ui/CloseButton';
 import MercadoPagoService from '../../services/api/mercadopago.service';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
 
 export default function DesvincularMercadoPagoModal({ isOpen, onClose, onUnlinked }) {
+  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -26,7 +28,7 @@ export default function DesvincularMercadoPagoModal({ isOpen, onClose, onUnlinke
   };
 
   return createPortal(
-    <div className="modal d-block bg-dark bg-opacity-50" style={{ zIndex: 1060 }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">

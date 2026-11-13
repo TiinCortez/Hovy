@@ -9,8 +9,8 @@ import { obtenerUbicacion } from './geolocalizacion';
 import ConfirmarUbicacionModal from './ConfirmarUbicacionModal';
 import IngresarDireccionModal from './IngresarDireccionModal';
 import ElegirEnMapaModal from './ElegirEnMapaModal';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 
 // Optional departure point: it comes from the browser's approximate position
 // (with the user's permission), a written address or a point on the map. The user

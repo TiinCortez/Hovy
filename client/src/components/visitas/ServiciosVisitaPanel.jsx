@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import ServicioService from '../../services/api/servicio.service';
 import VisitaService from '../../services/api/visita.service';
 import { getApiError, formatMoney } from './visitaUtils';
+import { VERDE } from '../../styles/colores';
 
 // Step 1 of Confirmada: pick services from the admin's active catalog and set m2 per service
 export default function ServiciosVisitaPanel({ visita, onSaved }) {
@@ -77,7 +78,7 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
       )}
 
       {loading ? (
-        <div className="text-center py-3"><div className="spinner-border spinner-border-sm" style={{ color: '#1B3006' }} role="status"></div></div>
+        <div className="text-center py-3"><div className="spinner-border spinner-border-sm" style={{ color: VERDE }} role="status"></div></div>
       ) : loadError ? (
         <p className="text-danger small m-0" role="alert">{loadError}</p>
       ) : catalogo.length === 0 ? (
@@ -124,7 +125,7 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
         variant="primary"
         onClick={handleSave}
         disabled={isSaving || loading || ids.length === 0 || invalid}
-        style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+        style={{ backgroundColor: VERDE, borderColor: VERDE }}
       >
         {isSaving ? 'Guardando...' : 'Guardar servicios'}
       </Button>

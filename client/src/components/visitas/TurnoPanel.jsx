@@ -4,6 +4,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import VisitaService from '../../services/api/visita.service';
 import { PRIORIDADES, getApiError, hhmm } from './visitaUtils';
+import { VERDE } from '../../styles/colores';
 
 const todayISO = () => {
   const d = new Date();
@@ -103,7 +104,7 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
             <div className="mb-3">
               <span className="form-label small fw-bold text-secondary d-block mb-2">Horarios disponibles</span>
               {loadingSlots ? (
-                <div className="spinner-border spinner-border-sm" style={{ color: '#1B3006' }} role="status"></div>
+                <div className="spinner-border spinner-border-sm" style={{ color: VERDE }} role="status"></div>
               ) : slots && (
                 <div className="d-flex flex-wrap gap-2">
                   <Button
@@ -136,7 +137,7 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
             variant="primary"
             onClick={handleAsignar}
             disabled={isSaving || !fecha}
-            style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+            style={{ backgroundColor: VERDE, borderColor: VERDE }}
           >
             {isSaving ? 'Asignando...' : 'Asignar turno'}
           </Button>

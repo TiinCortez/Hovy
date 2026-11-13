@@ -4,9 +4,9 @@ import Button from '../ui/Button';
 import Aviso from '../ui/Aviso';
 import ModalUbicacion from './ModalUbicacion';
 import { buscarDireccion } from './geolocalizacion';
+import { VERDE } from '../../styles/colores';
 
 const MAX_DOMICILIO = 200;
-const VERDE = '#1B3006';
 
 // Written address -> coordinates. Saves nothing: the point it finds goes on to
 // the confirmation step, where the user can open it on the map.

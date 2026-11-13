@@ -192,7 +192,7 @@ export default function CobrosPage() {
             <CalendarDays size={18} className="text-success flex-shrink-0" />
             <span className="fw-semibold text-dark small text-nowrap" aria-live="polite">{etiquetaMes(mes)}</span>
             {mes === mesActual && (
-              <span className="badge rounded-pill cobros-badge-verde text-nowrap">Mes actual</span>
+              <span className="badge rounded-pill cobros-badge-verde text-nowrap d-none d-sm-inline-block">Mes actual</span>
             )}
           </div>
           <Button variant="light" icon className="border-0" aria-label="Mes siguiente" onClick={() => cambiarMes(1)}>
@@ -218,7 +218,7 @@ export default function CobrosPage() {
           />
         </div>
 
-        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 gap-md-3 flex-shrink-0">
+        <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-3 flex-shrink-0">
           <div className="d-flex flex-wrap gap-2 flex-shrink-0" role="tablist" aria-label="Filtrar por estado de cobro">
             {TABS.map((tab) => (
               <Button

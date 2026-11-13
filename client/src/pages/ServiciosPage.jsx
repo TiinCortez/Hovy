@@ -132,7 +132,7 @@ export default function ServiciosPage() {
       ) : (
         <div className="row g-3">
           {filteredServicios.map((servicio) => (
-            <div key={servicio.id_usuario_servicio} className="col-12 col-md-6 col-xl-4">
+            <div key={servicio.id_usuario_servicio} className="col-12 col-lg-6 col-xl-4">
               <Card className="h-100 p-4 shadow-sm border-0 rounded-4 d-flex flex-column bg-white">
 
                 <div className="d-flex align-items-start gap-3 mb-3">

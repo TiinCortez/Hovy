@@ -1,3 +1,4 @@
+@use '../../styles/tokens' as *;
 // Estilos exclusivos del ABMC de turnos.
 .turnos-page {
   min-width: 0;
@@ -230,7 +231,7 @@
 
   .nuevo-turno-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #1b3006 0%, #2f520c 100%);
+    background: linear-gradient(90deg, $hovy-green 0%, #2f520c 100%);
     transition: width 0.25s ease;
   }
 
@@ -259,7 +260,7 @@
 
     &.is-active {
       background-color: #ffffff;
-      border-color: #1b3006;
+      border-color: $hovy-green;
       box-shadow: 0 2px 8px rgba(27, 48, 6, 0.08);
     }
 
@@ -289,7 +290,7 @@
     transition: all 0.18s ease;
 
     &.is-active {
-      background-color: #1b3006;
+      background-color: $hovy-green;
       color: #ffffff;
     }
 
@@ -312,9 +313,9 @@
   }
 
   &.is-selected {
-    border-color: #1b3006 !important;
+    border-color: $hovy-green !important;
     background-color: #f4f9ef !important;
-    box-shadow: inset 0 0 0 1px #1b3006, 0 4px 12px rgba(27, 48, 6, 0.06);
+    box-shadow: inset 0 0 0 1px $hovy-green, 0 4px 12px rgba(27, 48, 6, 0.06);
   }
 }
 
@@ -350,7 +351,7 @@
     cursor: pointer;
 
     span { overflow-wrap: anywhere; }
-    &:focus-within { outline: 2px solid #1b3006; outline-offset: -2px; }
+    &:focus-within { outline: 2px solid $hovy-green; outline-offset: -2px; }
 
     input {
       position: absolute;
@@ -387,7 +388,7 @@
 
   &:focus-visible,
   &:focus-within {
-    outline: 2px solid #1b3006;
+    outline: 2px solid $hovy-green;
     outline-offset: -2px;
   }
 

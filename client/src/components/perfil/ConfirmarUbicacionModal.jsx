@@ -3,9 +3,9 @@ import { AlertCircle, MapPin } from 'lucide-react';
 import Button from '../ui/Button';
 import Aviso from '../ui/Aviso';
 import ModalUbicacion from './ModalUbicacion';
+import { VERDE } from '../../styles/colores';
 
 const MAX_DOMICILIO = 200;
-const VERDE = '#1B3006';
 
 // Explicit confirmation of the departure point. Nothing is saved until the user
 // presses "Confirmar ubicación". The address is a suggestion and can be edited.

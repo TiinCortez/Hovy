@@ -11,13 +11,14 @@ import {
   obtenerAhoraTurnos,
   tieneHorarioTurno
 } from './agendaTurnos';
+import { VERDE } from '../../styles/colores';
 
 // Paleta del Design System "Organic Minimal Administrative"
-const COLOR_EJECUCION = '#2D4A27';
+const COLOR_EJECUCION = VERDE;
 const COLOR_P1 = '#C87D55';
 const COLOR_P2 = '#607D5A';
 const COLOR_DEFECTO = '#8D968B';
-const COLOR_GRUPO = '#2D4A27';
+const COLOR_GRUPO = VERDE;
 
 // Agrupación por cercanía: radio en píxeles de pantalla. Por encima de
 // ZOOM_MAX_AGRUPACION cada ubicación se ve sola (nivel calle).
@@ -89,7 +90,7 @@ const crearIconoCluster = (total) => {
 
 // Estilos de los chips de estado según DESIGN.md
 const getBadgeStyle = (estado) => {
-  if (estado === 'EN_EJECUCION') return { background: '#EAF2E8', color: '#2D4A27', border: '1px solid #D2E4CF' };
+  if (estado === 'EN_EJECUCION') return { background: '#EAF2E8', color: VERDE, border: '1px solid #D2E4CF' };
   if (estado === 'COORDINADO' || estado === 'CONFIRMADO') return { background: '#FDF0EB', color: '#C87D55', border: '1px solid #F8D8C9' };
   if (estado === 'REALIZADO') return { background: '#EAF2E8', color: '#3D6836', border: '1px solid #CCE0C9' };
   return { background: '#EFECE5', color: '#5F695D', border: '1px solid #EAE6DF' };
@@ -143,7 +144,7 @@ const estiloFlecha = {
   borderRadius: '50%',
   border: '1px solid #EAE6DF',
   background: '#FFFFFF',
-  color: '#2D4A27',
+  color: VERDE,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -183,7 +184,7 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
                     height: 6,
                     width: k === actual ? 14 : 6,
                     borderRadius: 3,
-                    background: k === actual ? '#2D4A27' : '#D2D6CC',
+                    background: k === actual ? VERDE : '#D2D6CC',
                     transition: 'width 0.2s'
                   }}
                 />
@@ -219,13 +220,13 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
       </div>
 
       <div className="d-flex justify-content-between align-items-center gap-2 pt-3" style={{ borderTop: '1px solid #EAE6DF' }}>
-        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: '0.7rem', background: '#2D4A27', color: '#FFFFFF' }}>
+        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: '0.7rem', background: VERDE, color: '#FFFFFF' }}>
           {formatearFechaCorta(turno.fechaAsignada)} · {formatearHorarioTurno(turno)}
         </span>
         <button
           type="button"
           className="btn btn-sm p-0 text-decoration-none fw-bold d-flex align-items-center gap-1"
-          style={{ fontSize: '0.75rem', color: '#2D4A27' }}
+          style={{ fontSize: '0.75rem', color: VERDE }}
           onClick={(e) => {
             e.stopPropagation();
             onSelectTurno?.(turno.idTurno);
