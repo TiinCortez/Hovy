@@ -23,7 +23,7 @@ import {
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
 import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
-import { crearSolicitudClienteBot } from '../controllers/botSolicitudesClienteController.js';
+import { crearSolicitudClienteBot, consultarDisponibilidadClienteBot } from '../controllers/botSolicitudesClienteController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { logisticaStaff } from '../controllers/logisticaController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
@@ -123,8 +123,14 @@ router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFu
 // Pedido de turno de un cliente existente: elige inmueble, servicio y fecha, y
 // llega a "Solicitudes -> Clientes" listo para presupuesto (estado Confirmada).
 // POST   /api/bot/clientes/:telefono/solicitudes
-// body: { id_inmueble, id_servicio, fecha_preferida?, franja_preferida?, nota_horario? }
+// body: { id_inmueble, id_servicio, fecha_preferida?, franja_preferida?, hora_desde?, hora_hasta?, nota_horario? }
 router.post('/clientes/:telefono/solicitudes', resolverClientePorTelefono, crearSolicitudClienteBot);
+
+// Horarios libres para el pedido de turno del cliente (solo libres, nunca datos de
+// otros clientes). Con fecha: los horarios de ese día; sin fecha: los próximos días
+// que tienen horarios libres (para la lista de días de WhatsApp).
+// GET    /api/bot/clientes/:telefono/disponibilidad?fecha=YYYY-MM-DD
+router.get('/clientes/:telefono/disponibilidad', resolverClientePorTelefono, consultarDisponibilidadClienteBot);
 
 
 // Solicitud de visita. No requiere registro, así que no monta
