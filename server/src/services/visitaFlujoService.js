@@ -228,29 +228,55 @@ export const confirmarVisita = async (idSolicitud, body) => {
     idCliente = clienteNuevo.id_cliente;
   }
 
-  // Inmueble: siempre uno NUEVO, con la dirección que trajo la solicitud.
-  // Nunca se busca "¿el cliente ya tiene algo parecido?": reusar un inmueble
-  // existente reintroduciría el mismo riesgo que esta cadena de FKs busca
-  // evitar (el turno terminaría en una propiedad vieja del cliente, no en
-  // la que se acaba de visitar).
-  const { data: inmueble, error: errorInmueble } = await supabaseAdmin
-    .from('inmuebles')
-    .insert({
-      id_cliente: idCliente,
-      direccion: solicitud.direccion,
-      barrio: solicitud.barrio,
-      provincia,
-      tipo_inmueble: body.tipo_inmueble,
-      superficie_total: Number(superficieTotal),
-      superficie_mantenible: null,
-      latitud: solicitud.latitud,
-      longitud: solicitud.longitud,
-    })
-    .select()
-    .single();
+  // Inmueble:
+  //  - Pedido de un cliente sobre un inmueble que ya cargó (primer turno de
+  //    ese inmueble): la solicitud ya trae id_inmueble. Se actualiza ESE
+  //    inmueble con la medida real de la visita; crear otro lo duplicaría.
+  //  - Solicitud de visita de siempre: uno NUEVO, con la dirección de la
+  //    solicitud. Nunca se busca "¿el cliente ya tiene algo parecido?": el
+  //    turno terminaría en una propiedad vieja, no en la que se visitó.
+  // superficie_mantenible va en null para que el trigger la recalcule.
+  let inmueble;
+  let errorInmueble;
+
+  if (solicitud.id_inmueble) {
+    ({ data: inmueble, error: errorInmueble } = await supabaseAdmin
+      .from('inmuebles')
+      .update({
+        tipo_inmueble: body.tipo_inmueble,
+        superficie_total: Number(superficieTotal),
+        superficie_mantenible: null,
+        provincia,
+      })
+      .eq('id_inmueble', solicitud.id_inmueble)
+      .eq('id_cliente', idCliente)
+      .eq('activo', true)
+      .select()
+      .maybeSingle());
+
+    if (!errorInmueble && !inmueble) {
+      return falla(409, 'El inmueble de la solicitud ya no pertenece al cliente o fue dado de baja. Revisá la solicitud antes de confirmarla.');
+    }
+  } else {
+    ({ data: inmueble, error: errorInmueble } = await supabaseAdmin
+      .from('inmuebles')
+      .insert({
+        id_cliente: idCliente,
+        direccion: solicitud.direccion,
+        barrio: solicitud.barrio,
+        provincia,
+        tipo_inmueble: body.tipo_inmueble,
+        superficie_total: Number(superficieTotal),
+        superficie_mantenible: null,
+        latitud: solicitud.latitud,
+        longitud: solicitud.longitud,
+      })
+      .select()
+      .single());
+  }
 
   if (errorInmueble) {
-    const { status, mensaje } = mapearErrorInmueble(errorInmueble, 'registrar');
+    const { status, mensaje } = mapearErrorInmueble(errorInmueble, solicitud.id_inmueble ? 'actualizar' : 'registrar');
     return falla(status, mensaje);
   }
 

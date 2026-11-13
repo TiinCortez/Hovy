@@ -58,6 +58,8 @@ const crearDb = (respuestas = {}) => {
 
 const respuestasOk = (extra = {}) => ({
   'inmuebles:select': { data: INMUEBLE, error: null },
+  // By default the property already had an accepted budget (its real m2 were measured).
+  'presupuestos:select': { data: [{ id_presupuesto: 1 }], error: null },
   'solicitudes_visita:select': { data: [], error: null },
   'solicitudes_visita:insert': (consulta) => ({
     data: { id_solicitud: 90, ...consulta.ops.find(([op]) => op === 'insert')[1] },
@@ -129,12 +131,57 @@ test('crearSolicitudCliente: si el inmueble ya tiene un pedido abierto devuelve 
   assert.equal(resultado.error.status, 409);
   assert.match(resultado.error.message, /#55/);
   const busqueda = db.consultas.find((c) => c.tabla === 'solicitudes_visita');
-  assert.deepEqual(busqueda.ops.filter(([op]) => op === 'eq' || op === 'is'), [
+  assert.deepEqual(busqueda.ops.filter(([op]) => op === 'eq' || op === 'is' || op === 'in'), [
     ['eq', 'id_inmueble', 7],
     ['eq', 'tipo_solicitud', 'cliente'],
-    ['eq', 'estado', 'Confirmada'],
+    ['in', 'estado', ['Pendiente', 'Contactada', 'Confirmada']],
     ['is', 'id_turno', null],
   ]);
+  assert.equal(insertDe(db, 'solicitudes_visita'), undefined);
+});
+
+test('crearSolicitudCliente: el 409 de un pedido que espera la visita habla de la visita', async () => {
+  const db = crearDb(respuestasOk({
+    'solicitudes_visita:select': { data: [{ id_solicitud: 55, id_presupuesto: null, estado: 'Pendiente' }], error: null },
+  }));
+  const resultado = await ejecutar(BODY_OK, db);
+  assert.equal(resultado.error.status, 409);
+  assert.match(resultado.error.message, /#55/);
+  assert.match(resultado.error.message, /visita/);
+});
+
+// ---- first turno on a property: physical visit first ----------------------------
+
+test('crearSolicitudCliente: busca un presupuesto Aceptado del inmueble para saber si ya se midió', async () => {
+  const db = crearDb(respuestasOk());
+  await ejecutar(BODY_OK, db);
+  const consulta = db.consultas.find((c) => c.tabla === 'presupuestos');
+  assert.ok(consulta, 'consulta presupuestos');
+  assert.deepEqual(consulta.ops.filter(([op]) => op === 'eq'), [
+    ['eq', 'id_inmueble', 7],
+    ['eq', 'estado', 'Aceptado'],
+  ]);
+});
+
+test('crearSolicitudCliente: un inmueble sin presupuesto aceptado pide visita (Pendiente, sin precarga de m²)', async () => {
+  const db = crearDb(respuestasOk({ 'presupuestos:select': { data: [], error: null } }));
+  const resultado = await ejecutar(BODY_OK, db);
+
+  assert.equal(resultado.error, undefined);
+  const insert = insertDe(db, 'solicitudes_visita');
+  assert.equal(insert.estado, 'Pendiente');
+  assert.equal(insert.tipo_solicitud, 'cliente');
+  assert.equal(insert.id_inmueble, 7);
+  assert.equal(insert.id_cliente, 42);
+  assert.equal(insertDe(db, 'solicitud_servicio'), undefined, 'no estima sobre m² declarados');
+  assert.equal(resultado.requiereVisita, true);
+  assert.equal(resultado.servicioCargado, false);
+});
+
+test('crearSolicitudCliente: si falla la consulta de presupuestos devuelve 500 y no crea la solicitud', async () => {
+  const db = crearDb(respuestasOk({ 'presupuestos:select': { data: null, error: { message: 'boom' } } }));
+  const resultado = await ejecutar(BODY_OK, db);
+  assert.equal(resultado.error.status, 500);
   assert.equal(insertDe(db, 'solicitudes_visita'), undefined);
 });
 
@@ -187,6 +234,7 @@ test('crearSolicitudCliente: crea la solicitud Confirmada de tipo cliente con lo
   assert.equal(resultado.solicitud.id_solicitud, 90);
   assert.equal(resultado.servicio.nombre, 'Cortar Pasto');
   assert.equal(resultado.servicioCargado, true);
+  assert.equal(resultado.requiereVisita, false);
 });
 
 test('crearSolicitudCliente: precarga el servicio con los m² mantenibles del inmueble', async () => {
@@ -291,6 +339,23 @@ test('crearSolicitudClienteBot: responde 201 con la solicitud y un mensaje para 
   assert.equal(res.body.servicio_cargado, true);
   assert.match(res.body.mensaje, /Cortar Pasto/);
   assert.match(res.body.mensaje, /Capitán Martel 1900/);
+  assert.match(res.body.mensaje, /presupuesto/);
+  assert.equal(res.body.requiere_visita, false);
+});
+
+test('crearSolicitudClienteBot: si el inmueble requiere visita el mensaje avisa que se coordina la visita', async () => {
+  const res = respuesta();
+  await crearSolicitudClienteBot(
+    { cliente: CLIENTE, body: BODY_OK },
+    res,
+    { crear: async () => ({ solicitud: { id_solicitud: 91, direccion: 'Capitán Martel 1900' }, servicio: SERVICIOS[0], servicioCargado: false, requiereVisita: true }) },
+  );
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.requiere_visita, true);
+  assert.match(res.body.mensaje, /Cortar Pasto/);
+  assert.match(res.body.mensaje, /Capitán Martel 1900/);
+  assert.match(res.body.mensaje, /visita/);
+  assert.match(res.body.mensaje, /medir/);
 });
 
 test('crearSolicitudClienteBot: traduce el error del servicio a { ok: false, error }', async () => {

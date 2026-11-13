@@ -66,11 +66,13 @@ export const consultarDisponibilidadCliente = async ({
 // Turno request of an EXISTING client from the WhatsApp bot.
 //
 // The client already has their properties loaded: they pick one property, a
-// service and (optionally) a preferred date / time slot. The request is created
-// directly in estado 'Confirmada' with id_cliente and id_inmueble, because that
-// is all the presupuesto -> turno chain needs (aceptarPresupuestoVisita,
-// reemplazarServiciosVisita, agendarTurnoVisita). It never goes through
-// confirmarVisita, so no duplicate property is created.
+// service and (optionally) a preferred date / time slot.
+//  - Property already measured (it has an accepted budget): the request is
+//    created directly in estado 'Confirmada' with id_cliente and id_inmueble,
+//    because that is all the presupuesto -> turno chain needs.
+//  - First turno on the property: the request is created 'Pendiente' and goes
+//    through the physical visit like a prospect. confirmarVisita updates this
+//    same property (id_inmueble already set) instead of creating a duplicate.
 //
 // The client comes from the phone number (resolverClientePorTelefono), never
 // from the body. Services never touch req/res: they return { error } or data.
@@ -81,11 +83,19 @@ const textoOpcional = (valor) => (estaVacio(valor) ? null : String(valor).trim()
 // only one open client request per property (closes the select/insert race).
 const UNIQUE_VIOLATION = '23505';
 
+// Open = client request still waiting for its turno. Pendiente / Contactada are
+// the requests that still need the physical visit (first turno on a property).
+const ESTADOS_PEDIDO_ABIERTO = ['Pendiente', 'Contactada', 'Confirmada'];
+
 const mensajePedidoEnCurso = (abierta) => {
   const numero = abierta?.id_solicitud ? ` (solicitud #${abierta.id_solicitud})` : '';
-  return abierta?.id_presupuesto
-    ? `Ya hay un pedido en curso para ese inmueble${numero} con el presupuesto cargado. Te vamos a confirmar el turno.`
-    : `Ya hay un pedido en curso para ese inmueble${numero}. Te vamos a enviar el presupuesto.`;
+  if (abierta?.id_presupuesto) {
+    return `Ya hay un pedido en curso para ese inmueble${numero} con el presupuesto cargado. Te vamos a confirmar el turno.`;
+  }
+  if (abierta?.estado === 'Pendiente' || abierta?.estado === 'Contactada') {
+    return `Ya hay un pedido en curso para ese inmueble${numero}. Te vamos a contactar para coordinar la visita.`;
+  }
+  return `Ya hay un pedido en curso para ese inmueble${numero}. Te vamos a enviar el presupuesto.`;
 };
 
 // Maintainable m2 when loaded, otherwise the total; null when neither is > 0.
@@ -171,10 +181,10 @@ export const crearSolicitudCliente = async ({
   // same property: open = client request still waiting for its turno.
   const { data: abiertas, error: errorAbiertas } = await db
     .from('solicitudes_visita')
-    .select('id_solicitud, id_presupuesto')
+    .select('id_solicitud, id_presupuesto, estado')
     .eq('id_inmueble', idInmueble)
     .eq('tipo_solicitud', 'cliente')
-    .eq('estado', 'Confirmada')
+    .in('estado', ESTADOS_PEDIDO_ABIERTO)
     .is('id_turno', null)
     .limit(1);
 
@@ -187,6 +197,24 @@ export const crearSolicitudCliente = async ({
     return falla(409, mensajePedidoEnCurso(abiertas[0]));
   }
 
+  // First turno on a property: the m2 we have are the ones the client declared,
+  // so there is nothing real to price on. Until the property has an accepted
+  // budget (which only exists after someone measured it), the request goes
+  // through the physical visit like a new prospect: Pendiente -> Contactada ->
+  // confirmarVisita (which updates this same property with the measured m2).
+  const { data: presupuestosPrevios, error: errorPresupuestos } = await db
+    .from('presupuestos')
+    .select('id_presupuesto')
+    .eq('id_inmueble', idInmueble)
+    .eq('estado', 'Aceptado')
+    .limit(1);
+
+  if (errorPresupuestos) {
+    console.error('Error al buscar presupuestos previos del inmueble:', errorPresupuestos);
+    return falla(500, 'No se pudo registrar el pedido. Intentá de nuevo más tarde.');
+  }
+
+  const requiereVisita = (presupuestosPrevios ?? []).length === 0;
   const superficie = superficieDelInmueble(inmueble);
 
   const { data: solicitud, error: errorSolicitud } = await db
@@ -207,7 +235,7 @@ export const crearSolicitudCliente = async ({
       nota_horario: notaConHorario(horario, textoOpcional(body.nota_horario)),
       id_cliente: cliente.id_cliente,
       id_inmueble: inmueble.id_inmueble,
-      estado: 'Confirmada',
+      estado: requiereVisita ? 'Pendiente' : 'Confirmada',
       tipo_solicitud: 'cliente',
     })
     .select()
@@ -225,9 +253,10 @@ export const crearSolicitudCliente = async ({
 
   // Preload the chosen service with the property's m2 so the internal estimate
   // is ready for the admin. If it fails the request is still valid: the admin
-  // loads the service by hand, as with any confirmed visit.
+  // loads the service by hand, as with any confirmed visit. With a pending visit
+  // there is no estimate yet: the declared m2 are not a basis to price on.
   let servicioCargado = false;
-  if (superficie !== null) {
+  if (superficie !== null && !requiereVisita) {
     const { error: errorServicio } = await db
       .from('solicitud_servicio')
       .insert({ id_solicitud: solicitud.id_solicitud, id_servicio: idServicio, superficie_m2: superficie });
@@ -239,5 +268,5 @@ export const crearSolicitudCliente = async ({
     }
   }
 
-  return { solicitud, servicio, servicioCargado };
+  return { solicitud, servicio, servicioCargado, requiereVisita };
 };
