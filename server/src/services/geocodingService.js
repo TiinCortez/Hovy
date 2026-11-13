@@ -75,33 +75,57 @@ const consultarNominatim = async (path, params) => {
 // Usa la búsqueda estructurada de Nominatim en vez del q= libre: es más precisa
 // y evita armar strings con comas colgando cuando falta un campo. El barrio va
 // en el slot `city` porque la búsqueda estructurada no tiene un parámetro de
-// barrio/suburbio y en la práctica es el que mejor lo matchea.
-export const geocodificarDireccion = async ({ direccion, provincia, barrio }) => {
+// barrio/suburbio y en la práctica es el que mejor lo matchea. Cuando viene la
+// localidad, va ella en `city`: es lo que evita que "San Martín 100" caiga en
+// otro pueblo de la misma provincia.
+//
+// Además de las coordenadas devuelve qué tan preciso es el punto:
+//  - 'exacta': Nominatim encontró la altura (house_number) o el edificio.
+//  - 'calle': encontró la calle pero no la altura; el punto es un tramo de calle.
+//  - 'zona': solo encontró barrio, ciudad o algo más grande.
+// El bot usa esto para decidir si muestra el pin o pide la ubicación de WhatsApp.
+const SIN_RESULTADO = { latitud: null, longitud: null, precision: null, direccion_encontrada: null };
+const TIPOS_CALLE = ['road', 'street', 'residential', 'pedestrian', 'footway', 'path', 'track', 'service'];
+const TIPOS_EXACTOS = ['building', 'house', 'place'];
+
+const calcularPrecision = (resultado) => {
+  if (resultado?.address?.house_number || TIPOS_EXACTOS.includes(resultado?.addresstype)) return 'exacta';
+  if (TIPOS_CALLE.includes(resultado?.addresstype) || TIPOS_CALLE.includes(resultado?.type)) return 'calle';
+  return 'zona';
+};
+
+export const geocodificarDireccion = async ({ direccion, provincia, barrio, localidad }) => {
   if (!direccion) {
-    return { latitud: null, longitud: null };
+    return { ...SIN_RESULTADO };
   }
 
   const data = await consultarNominatim('/search', {
     format: 'jsonv2',
     limit: 1,
+    addressdetails: 1,
     street: direccion,
-    city: barrio,
+    city: localidad || barrio,
     state: provincia,
     country: 'Argentina',
   });
 
   if (!Array.isArray(data) || data.length === 0) {
-    return { latitud: null, longitud: null };
+    return { ...SIN_RESULTADO };
   }
 
   const latitud = parseFloat(data[0].lat);
   const longitud = parseFloat(data[0].lon);
 
   if (!Number.isFinite(latitud) || !Number.isFinite(longitud)) {
-    return { latitud: null, longitud: null };
+    return { ...SIN_RESULTADO };
   }
 
-  return { latitud, longitud };
+  return {
+    latitud,
+    longitud,
+    precision: calcularPrecision(data[0]),
+    direccion_encontrada: data[0].display_name || null,
+  };
 };
 
 // Geocodificación inversa: coordenadas -> dirección aproximada.

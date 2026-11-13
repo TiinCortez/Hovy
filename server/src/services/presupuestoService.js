@@ -443,13 +443,21 @@ export const aceptarPresupuestoVisita = async ({ idSolicitud, idUsuario, montoTo
 // (solicitud_servicio), presupuestos and turnos are NOT touched and the row is
 // not deleted. WhatsApp session cleanup is deliberately NOT done here (deferred
 // to a bot branch). Returns { solicitud, cancelada } or { error }.
+const ESTADOS_CANCELABLES_CLIENTE = ['Pendiente', 'Contactada', 'Confirmada'];
+
 export const cancelarVisita = async (idSolicitud) => {
   const busqueda = await buscarSolicitud(idSolicitud, 'a cancelar');
   if (busqueda.error) return busqueda;
   const { solicitud } = busqueda;
 
-  if (solicitud.estado !== 'Confirmada') {
-    return falla(409, `Solo se puede cancelar una solicitud Confirmada (estado actual: ${solicitud.estado}).`);
+  // A client's request on a property nobody measured yet starts Pendiente and
+  // waits for the visit (see crearSolicitudCliente); it must be cancellable
+  // before it reaches Confirmada, otherwise it blocks new requests for the property.
+  const cancelables = solicitud.tipo_solicitud === 'cliente'
+    ? ESTADOS_CANCELABLES_CLIENTE
+    : ['Confirmada'];
+  if (!cancelables.includes(solicitud.estado)) {
+    return falla(409, `Solo se puede cancelar una solicitud ${cancelables.join(', ')} (estado actual: ${solicitud.estado}).`);
   }
 
   // Race guard, same as the other transitions.
@@ -457,7 +465,7 @@ export const cancelarVisita = async (idSolicitud) => {
     .from('solicitudes_visita')
     .update({ estado: 'Cancelada' })
     .eq('id_solicitud', idSolicitud)
-    .eq('estado', 'Confirmada')
+    .eq('estado', solicitud.estado)
     .select()
     .maybeSingle();
 
