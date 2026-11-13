@@ -17,7 +17,7 @@ const ESTADO_BADGE = {
 function Grupo({ titulo, children }) {
   return (
     <section className="d-flex flex-column gap-2">
-      <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>{titulo}</span>
+      <span className="text-secondary fw-bold text-uppercase" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>{titulo}</span>
       {children}
     </section>
   );
@@ -28,8 +28,8 @@ export default function SettingsPage() {
   // Coming back from the Mercado Pago authorization: open its section so the
   // result notice is visible.
   const [volviendoDeMercadoPago] = useState(() => searchParams.has('mercadopago'));
-  const [estadoMercadoPago, setEstadoMercadoPago] = useState({ texto: 'Cargando...', tipo: 'neutro' });
-  const [resumenCombustible, setResumenCombustible] = useState('Cargando...');
+  const [estadoMercadoPago, setEstadoMercadoPago] = useState({ texto: 'Cargando…', tipo: 'neutro' });
+  const [resumenCombustible, setResumenCombustible] = useState('Cargando…');
 
   return (
     <div className="d-flex flex-column gap-4 pb-5">

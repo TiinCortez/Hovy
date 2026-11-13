@@ -12,12 +12,13 @@ import {
   tieneHorarioTurno
 } from './agendaTurnos';
 import { VERDE } from '../../styles/colores';
+import { PALETA } from '../../styles/paleta';
 
-// Paleta del Design System "Organic Minimal Administrative"
+// Colores de los marcadores: Leaflet los usa como atributos SVG, así que van con su valor (PALETA).
 const COLOR_EJECUCION = VERDE;
-const COLOR_P1 = '#C87D55';
-const COLOR_P2 = '#607D5A';
-const COLOR_DEFECTO = '#8D968B';
+const COLOR_P1 = PALETA['terracota-500'];
+const COLOR_P2 = PALETA['verde-600'];
+const COLOR_DEFECTO = PALETA['oliva-500'];
 const COLOR_GRUPO = VERDE;
 
 // Agrupación por cercanía: radio en píxeles de pantalla. Por encima de
@@ -55,7 +56,7 @@ const colorDeGrupo = (turnos) =>
 
 const badgeCantidad = (cantidad) => `
   <span style="position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 4px;
-    border-radius:9px;background:${COLOR_GRUPO};color:#FFFFFF;border:1.5px solid #FFFFFF;
+    border-radius:9px;background:${COLOR_GRUPO};color:var(--hovy-blanco);border:1.5px solid var(--hovy-blanco);
     font:600 11px/15px 'Plus Jakarta Sans',sans-serif;text-align:center;box-sizing:border-box;">${cantidad}</span>`;
 
 const crearIconoPin = (colorHex, cantidad) => L.divIcon({
@@ -81,7 +82,7 @@ const crearIconoCluster = (total) => {
     html: `
       <div style="width:${lado}px;height:${lado}px;border-radius:50%;background:${COLOR_GRUPO};
         border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 0 4px rgba(45,74,39,0.25);
-        display:flex;align-items:center;justify-content:center;color:#FFFFFF;
+        display:flex;align-items:center;justify-content:center;color:var(--hovy-blanco);
         font:700 14px 'Plus Jakarta Sans',sans-serif;">${total}</div>`,
     iconSize: [lado, lado],
     iconAnchor: [lado / 2, lado / 2]
@@ -90,10 +91,10 @@ const crearIconoCluster = (total) => {
 
 // Estilos de los chips de estado según DESIGN.md
 const getBadgeStyle = (estado) => {
-  if (estado === 'EN_EJECUCION') return { background: '#EAF2E8', color: VERDE, border: '1px solid #D2E4CF' };
-  if (estado === 'COORDINADO' || estado === 'CONFIRMADO') return { background: '#FDF0EB', color: '#8F4C29', border: '1px solid #F8D8C9' };
-  if (estado === 'REALIZADO') return { background: '#EAF2E8', color: '#3D6836', border: '1px solid #CCE0C9' };
-  return { background: '#EFECE5', color: '#5F695D', border: '1px solid #EAE6DF' };
+  if (estado === 'EN_EJECUCION') return { background: 'var(--hovy-verde-100)', color: VERDE, border: '1px solid var(--hovy-oliva-300)' };
+  if (estado === 'COORDINADO' || estado === 'CONFIRMADO') return { background: 'var(--hovy-terracota-50)', color: 'var(--hovy-terracota-700)', border: '1px solid var(--hovy-terracota-200)' };
+  if (estado === 'REALIZADO') return { background: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)', border: '1px solid var(--hovy-verde-200)' };
+  return { background: 'var(--hovy-crema-300)', color: 'var(--hovy-oliva-700)', border: '1px solid var(--hovy-crema-300)' };
 };
 
 const formatearFechaCorta = (iso) => {
@@ -141,9 +142,9 @@ const indiceProximoTurno = (turnos, ahora = obtenerAhoraTurnos()) => {
 const estiloFlecha = {
   width: 30,
   height: 30,
-  borderRadius: '50%',
-  border: '1px solid #EAE6DF',
-  background: '#FFFFFF',
+  borderRadius: 'var(--hovy-radio-circulo)',
+  border: '1px solid var(--hovy-crema-300)',
+  background: 'var(--hovy-blanco)',
   color: VERDE,
   display: 'flex',
   alignItems: 'center',
@@ -168,12 +169,12 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
     <div className="p-2" style={{ minWidth: '230px', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
 
       {varios && (
-        <div className="d-flex justify-content-between align-items-center gap-2 pb-2 mb-3" style={{ borderBottom: '1px solid #EAE6DF' }}>
+        <div className="d-flex justify-content-between align-items-center gap-2 pb-2 mb-3" style={{ borderBottom: '1px solid var(--hovy-crema-300)' }}>
           <button type="button" style={estiloFlecha} aria-label="Turno anterior" onClick={() => mover(-1)}>
             <ChevronLeft size={16} />
           </button>
           <div className="text-center">
-            <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#1F291E' }}>
+            <div className="fw-semibold" style={{ fontSize: 'var(--hovy-texto-sm)', color: 'var(--hovy-oliva-950)' }}>
               Turno {actual + 1} de {turnos.length}
             </div>
             <div className="d-flex justify-content-center gap-1 mt-1">
@@ -184,8 +185,8 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
                     height: 6,
                     width: k === actual ? 14 : 6,
                     borderRadius: 3,
-                    background: k === actual ? VERDE : '#D2D6CC',
-                    transition: 'width 0.2s'
+                    background: k === actual ? VERDE : 'var(--hovy-oliva-300)',
+                    transition: 'width var(--hovy-duracion-media)'
                   }}
                 />
               ))}
@@ -198,35 +199,35 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
       )}
 
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em', background: '#F2EFE9', color: '#5F695D', border: '1px solid #EAE6DF' }}>
+        <span className="badge rounded-pill fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.02em', background: 'var(--hovy-crema-100)', color: 'var(--hovy-oliva-700)', border: '1px solid var(--hovy-crema-300)' }}>
           ID: {turno.idPresupuesto || turno.idTurno}
         </span>
-        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em', ...badgeStyle }}>
+        <span className="badge rounded-pill fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.02em', ...badgeStyle }}>
           {turno.estado.replace('_', ' ')}
         </span>
       </div>
 
-      <strong className="d-block mb-1 fs-6" style={{ color: '#1F291E', fontWeight: '700' }}>
+      <strong className="d-block mb-1 fs-6" style={{ color: 'var(--hovy-oliva-950)', fontWeight: '700' }}>
         {turno.cliente?.nombre} {turno.cliente?.apellido}
       </strong>
-      <span className="small d-block mb-3" style={{ color: '#5F695D', lineHeight: '1.4' }}>
+      <span className="small d-block mb-3" style={{ color: 'var(--hovy-oliva-700)', lineHeight: '1.4' }}>
         {turno.inmueble?.direccion}
       </span>
 
-      <div className="p-2 rounded-3 mb-3 small" style={{ backgroundColor: '#FAF8F5', border: '1px solid #EAE6DF' }}>
-        <span className="d-block fw-semibold" style={{ color: '#1F291E' }}>
+      <div className="p-2 rounded-3 mb-3 small" style={{ backgroundColor: 'var(--hovy-crema-50)', border: '1px solid var(--hovy-crema-300)' }}>
+        <span className="d-block fw-semibold" style={{ color: 'var(--hovy-oliva-950)' }}>
           {turno.servicio?.descripcion || 'Mantenimiento General'}
         </span>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center gap-2 pt-3" style={{ borderTop: '1px solid #EAE6DF' }}>
-        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: '0.75rem', background: VERDE, color: '#FFFFFF' }}>
+      <div className="d-flex justify-content-between align-items-center gap-2 pt-3" style={{ borderTop: '1px solid var(--hovy-crema-300)' }}>
+        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: 'var(--hovy-texto-xs)', background: VERDE, color: 'var(--hovy-blanco)' }}>
           {formatearFechaCorta(turno.fechaAsignada)} · {formatearHorarioTurno(turno)}
         </span>
         <button
           type="button"
           className="btn btn-sm p-0 text-decoration-none fw-bold d-flex align-items-center gap-1"
-          style={{ fontSize: '0.75rem', color: VERDE }}
+          style={{ fontSize: 'var(--hovy-texto-xs)', color: VERDE }}
           onClick={(e) => {
             e.stopPropagation();
             onSelectTurno?.(turno.idTurno);
@@ -329,9 +330,9 @@ export default function MapaAgenda({ turnos = [], onSelectTurno }) {
       className="card shadow-sm overflow-hidden p-0 h-100"
       style={{
         minHeight: 'var(--agenda-map-min-height, 400px)',
-        backgroundColor: '#FAF8F5',
-        border: '1px solid #EAE6DF',
-        borderRadius: '16px'
+        backgroundColor: 'var(--hovy-crema-50)',
+        border: '1px solid var(--hovy-crema-300)',
+        borderRadius: 'var(--hovy-radio-lg)'
       }}
     >
       <MapContainer

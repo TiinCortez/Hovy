@@ -8,7 +8,7 @@ const ANCHOS_DETALLE = ['45%', '80%', '35%', '60%', '50%'];
 export default function VisitasSkeleton() {
   return (
     <div role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando solicitudes...</span>
+      <span className="visually-hidden">Cargando solicitudes…</span>
       <div className="row g-3">
         {Array.from({ length: TARJETAS }, (_, i) => (
           <div key={i} className="col-12 col-md-6 col-xl-4">

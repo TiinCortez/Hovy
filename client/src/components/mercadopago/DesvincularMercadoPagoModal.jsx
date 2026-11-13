@@ -47,7 +47,7 @@ export default function DesvincularMercadoPagoModal({ isOpen, onClose, onUnlinke
               Cancelar
             </button>
             <Button variant="danger" onClick={handleConfirm} disabled={isSubmitting}>
-              {isSubmitting ? 'Desvinculando...' : 'Desvincular'}
+              {isSubmitting ? 'Desvinculando…' : 'Desvincular'}
             </Button>
           </div>
     </Modal>,

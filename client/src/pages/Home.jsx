@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Button from '../components/ui/Button.jsx';
 import { VERDE } from '../styles/colores';
+import { CAPAS } from '../styles/capas';
 
 export default function Home() {
   return (
@@ -41,8 +42,8 @@ export default function Home() {
       <main className="hero-section flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center px-3 py-4 w-100">
         <div className="container position-relative z-1 d-flex flex-column align-items-center px-2 px-sm-3">
           
-          <Leaf color="#ffffff" size={56} className="mb-3 opacity-75 d-none d-sm-block" />
-          <Leaf color="#ffffff" size={48} className="mb-3 opacity-75 d-block d-sm-none" />
+          <Leaf color="currentColor" size={56} className="mb-3 opacity-75 d-none d-sm-block" />
+          <Leaf color="currentColor" size={48} className="mb-3 opacity-75 d-block d-sm-none" />
           
           <h2 className="fs-5 fs-md-3 fw-light mb-3 mb-md-4 text-white">Valle La Armonía</h2>
           
@@ -73,7 +74,7 @@ export default function Home() {
               <MessageCircle size={16} /> WhatsApp
             </a>
           </div>
-          <p className="m-0 text-secondary opacity-75" style={{ fontSize: '0.75rem' }}>
+          <p className="m-0 text-secondary opacity-75" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
             © 2024 Valle La Armonía. Paisajismo Sustentable. Todos los derechos reservados.
           </p>
         </div>
@@ -83,23 +84,23 @@ export default function Home() {
       {/* Integrado al flujo natural para garantizar que todo encaje en el 100vh sin scroll */}
       <nav 
         className="d-md-none bg-white border-top d-flex justify-content-around align-items-center pt-2 shadow-lg w-100 flex-shrink-0"
-        style={{ zIndex: 1050, paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
+        style={{ zIndex: CAPAS.menu, paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
       >
         <a href="#inicio" className="text-decoration-none text-center text-dark d-flex flex-column align-items-center flex-grow-1 px-1">
           <HomeIcon size={22} className="mb-1" />
-          <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Inicio</span>
+          <span style={{ fontSize: 'var(--hovy-texto-xs)', fontWeight: '600' }}>Inicio</span>
         </a>
         <a href="#servicios" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <Leaf size={22} className="mb-1" />
-          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Servicios</span>
+          <span style={{ fontSize: 'var(--hovy-texto-xs)', fontWeight: '500' }}>Servicios</span>
         </a>
         <a href="#nosotros" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <Users size={22} className="mb-1" />
-          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Nosotros</span>
+          <span style={{ fontSize: 'var(--hovy-texto-xs)', fontWeight: '500' }}>Nosotros</span>
         </a>
         <a href="#contacto" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <MessageCircle size={22} className="mb-1" />
-          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Contacto</span>
+          <span style={{ fontSize: 'var(--hovy-texto-xs)', fontWeight: '500' }}>Contacto</span>
         </a>
       </nav>
 

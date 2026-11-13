@@ -14,6 +14,11 @@ $body-secondary-color: $hovy-texto-secundario; // .text-muted y .text-body-secon
 $success: $hovy-texto-exito;
 $headings-font-weight: 700;
 
+// Sombras y radios de Bootstrap tomados de la escala de Hovy
+$box-shadow-sm: $hovy-sombra-sm;
+$box-shadow: $hovy-sombra-md;
+$box-shadow-lg: $hovy-sombra-xl;
+
 // Campos: borde visible (3:1), foco con anillo y errores legibles
 $input-border-color: $hovy-borde-control;
 $input-focus-border-color: $hovy-green;
@@ -51,7 +56,7 @@ $form-invalid-border-color: $hovy-texto-error;
 
 /* --- HOME & HERO SECTION --- */
 .home-navbar {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-bottom: 1px solid $hovy-border;
   
   .nav-link {
@@ -99,7 +104,7 @@ $form-invalid-border-color: $hovy-texto-error;
 
   .container {
     position: relative;
-    z-index: 1;
+    z-index: $hovy-capa-base;
   }
   
   .hero-title {
@@ -152,31 +157,31 @@ $form-invalid-border-color: $hovy-texto-error;
   border: none;
   
   @media (min-width: 992px) {
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
     border: 1px solid $hovy-border;
-    border-radius: 1.5rem;
+    border-radius: $hovy-radio-xl;
     padding: 3rem !important;
-    box-shadow: 0px 10px 30px rgba(27, 48, 6, 0.05);
+    box-shadow: $hovy-sombra-xl;
   }
 }
 
 /* --- SIDEBAR & DASHBOARD --- */
 .hovy-sidebar {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-right: 1px solid $hovy-border;
   min-height: 100vh;
   .nav-link {
     color: $hovy-gray;
-    border-radius: 24px;
+    border-radius: $hovy-radio-xl;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: background-color $hovy-duracion-media ease, border-color $hovy-duracion-media ease, color $hovy-duracion-media ease, box-shadow $hovy-duracion-media ease, transform $hovy-duracion-media ease, opacity $hovy-duracion-media ease;
     &:hover,
     &:focus { text-decoration: none; }
-    &:hover { background-color: rgba(27, 48, 6, 0.05); }
+    &:hover { background-color: rgba($hovy-verde-900, 0.05); }
     &.active {
       background-color: $hovy-green;
-      color: #ffffff;
+      color: $hovy-blanco;
     }
   }
 }
@@ -190,14 +195,14 @@ $form-invalid-border-color: $hovy-texto-error;
     display: flex;
     position: fixed;
     bottom: 0; left: 0; width: 100%;
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
     border-top: 1px solid $hovy-border;
-    z-index: 1050;
-    box-shadow: 0px -4px 20px rgba(27, 48, 6, 0.05);
+    z-index: $hovy-capa-menu;
+    box-shadow: 0px -4px 20px rgba($hovy-verde-900, 0.05);
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
     
     .nav-link {
-      flex: 1; color: $hovy-gray; font-size: 0.75rem; border-radius: 12px;
+      flex: 1; color: $hovy-gray; font-size: $hovy-texto-xs; border-radius: $hovy-radio-md;
       &.active {
         color: $hovy-green; font-weight: bold; background-color: transparent;
         svg { stroke-width: 2.5; }
@@ -208,8 +213,8 @@ $form-invalid-border-color: $hovy-texto-error;
   .hovy-more-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1040;
-    background-color: rgba(27, 48, 6, 0.12);
+    z-index: $hovy-capa-barra;
+    background-color: rgba($hovy-verde-900, 0.12);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     animation: hovyFadeIn 0.2s ease;
@@ -225,12 +230,12 @@ $form-invalid-border-color: $hovy-texto-error;
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba($hovy-blanco, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid $hovy-border;
-    border-radius: 1rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border-radius: $hovy-radio-lg;
+    box-shadow: $hovy-sombra-lg, $hovy-sombra-md;
     transform-origin: bottom right;
     animation: hovyMoreMenuIn 0.2s ease;
   }
@@ -240,20 +245,20 @@ $form-invalid-border-color: $hovy-texto-error;
     align-items: center;
     gap: 0.625rem;
     padding: 0.5rem 0.75rem;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
+    border-radius: $hovy-radio-md;
+    font-size: $hovy-texto-md;
     font-weight: 500;
-    color: #44403C;
+    color: $hovy-gris-700;
     text-decoration: none;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    &:hover { background-color: rgba(245, 245, 244, 0.8); color: #0F172A; }
+    transition: background-color $hovy-duracion-media ease, color $hovy-duracion-media ease;
+    &:hover { background-color: rgba($hovy-gris-50, 0.8); color: $hovy-azul-900; }
     &.active { color: $hovy-green; font-weight: bold; }
 
     // Colores de los íconos según el diseño
-    &--solicitudes svg { color: #D97706; }
+    &--solicitudes svg { color: $hovy-naranja-500; }
     &--servicios svg { color: $hovy-green; }
-    &--cobros svg { color: #047857; }
-    &--metricas svg { color: #1D4ED8; }
+    &--cobros svg { color: $hovy-esmeralda-600; }
+    &--metricas svg { color: $hovy-azul-700; }
   }
   .hovy-content-wrapper {
     // Las utilidades p-4/p-md-5 de Bootstrap usan !important.
@@ -265,7 +270,7 @@ $form-invalid-border-color: $hovy-texto-error;
 }
 
 .hovy-header {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-bottom: 1px solid $hovy-border;
   height: 72px;
   padding-inline: 1.5rem;
@@ -285,7 +290,7 @@ $form-invalid-border-color: $hovy-texto-error;
       gap: 0.5rem !important;
     }
     .card-body > .d-flex > .rounded-circle { padding: 0.6rem !important; }
-    h3 { font-size: 1.25rem; }
+    h3 { font-size: $hovy-texto-xl; }
   }
 }
 .hovy-header-brand {
@@ -301,10 +306,10 @@ $form-invalid-border-color: $hovy-texto-error;
 .hovy-header-nombre {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  font-size: 28px;
+  font-size: $hovy-texto-3xl;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: #274922;
+  color: $hovy-verde-800;
 }
 .hovy-header-divisor {
   width: 1px;
@@ -312,10 +317,10 @@ $form-invalid-border-color: $hovy-texto-error;
   background-color: $hovy-border;
 }
 .hovy-header-subtitulo {
-  font-size: 12px;
+  font-size: $hovy-texto-xs;
   font-weight: 500;
   line-height: 1.25;
-  color: #6b7564;
+  color: $hovy-oliva-600;
 }
 .hovy-brand {
   font-weight: 800;
@@ -323,8 +328,8 @@ $form-invalid-border-color: $hovy-texto-error;
   letter-spacing: -0.02em;
 }
 .icon-button {
-  background: transparent; border: none; border-radius: 50%; color: $hovy-gray;
-  &:hover { background-color: rgba(27, 48, 6, 0.05); }
+  background: transparent; border: none; border-radius: $hovy-radio-circulo; color: $hovy-gray;
+  &:hover { background-color: rgba($hovy-verde-900, 0.05); }
 }
 .max-w-1280 { max-width: 1280px; }
 
@@ -338,7 +343,7 @@ $form-invalid-border-color: $hovy-texto-error;
   right: 0;
   width: 340px;
   max-width: 340px;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
 
   @media (max-width: 575.98px) {
@@ -351,8 +356,8 @@ $form-invalid-border-color: $hovy-texto-error;
   }
 }
 .visitas-popover-item {
-  transition: background-color 0.15s ease;
-  &:hover, &:focus-visible { background-color: rgba(27, 48, 6, 0.05); }
+  transition: background-color $hovy-duracion-rapida ease;
+  &:hover, &:focus-visible { background-color: rgba($hovy-verde-900, 0.05); }
   &:last-child { border-bottom: none !important; }
 }
 
@@ -363,7 +368,7 @@ $form-invalid-border-color: $hovy-texto-error;
   top: calc(100% + 8px);
   right: 0;
   width: 220px;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
 }
 
@@ -373,12 +378,12 @@ $form-invalid-border-color: $hovy-texto-error;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e5efe3;
+  background-color: $hovy-verde-100;
   padding: 1.5rem;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   
   @media (max-width: 575.98px) {
-    background: radial-gradient(circle at 50% 30%, #EEF5ED 0%, #DCE8DB 100%);
+    background: radial-gradient(circle at 50% 30%, $hovy-verde-100 0%, $hovy-oliva-100 100%);
     padding: 1rem;
   }
 }
@@ -386,17 +391,17 @@ $form-invalid-border-color: $hovy-texto-error;
 .register-card {
   width: 100%;
   max-width: 620px;
-  background-color: #f7f3ec;
-  border-radius: 32px;
-  box-shadow: 0 12px 36px -8px rgba(35, 60, 30, 0.08);
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-2xl;
+  box-shadow: $hovy-sombra-xl;
   position: relative;
   overflow: hidden;
   padding: 2.5rem 3.5rem;
 
   @media (max-width: 575.98px) {
     max-width: 420px;
-    background-color: #F8F5EE;
-    border-radius: 2.25rem;
+    background-color: $hovy-crema-100;
+    border-radius: $hovy-radio-2xl;
     padding: 2rem 1.5rem;
   }
 }
@@ -405,7 +410,7 @@ $form-invalid-border-color: $hovy-texto-error;
   position: absolute;
   top: 0; right: 0;
   width: 140px; height: 140px;
-  background-color: #eee7da;
+  background-color: $hovy-crema-400;
   border-bottom-left-radius: 100%;
   pointer-events: none;
   
@@ -420,7 +425,7 @@ $form-invalid-border-color: $hovy-texto-error;
     position: absolute;
     top: 0; right: 0;
     width: 144px; height: 144px;
-    background: linear-gradient(to bottom left, #EFE9DF, transparent);
+    background: linear-gradient(to bottom left, $hovy-crema-300, transparent);
     border-bottom-left-radius: 4.5rem;
     opacity: 0.6;
     pointer-events: none;
@@ -429,9 +434,9 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .register-logo-badge {
   width: 84px; height: 84px;
-  border-radius: 50%;
-  background-color: #fbf9f4;
-  border: 1px solid #eee8dc;
+  border-radius: $hovy-radio-circulo;
+  background-color: $hovy-crema-50;
+  border: 1px solid $hovy-crema-400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -440,48 +445,48 @@ $form-invalid-border-color: $hovy-texto-error;
   @media (max-width: 575.98px) { width: 64px; height: 64px; }
 }
 // Nombre del logo debajo del círculo, legible (antes 5,5 a 8 px dentro del círculo)
-.register-logo-nombre { margin: 0; font-size: 0.875rem; font-weight: 800; color: #22391e; text-transform: uppercase; letter-spacing: 0.02em; }
-.register-logo-bajada { margin: 0 0 1rem; font-size: 0.75rem; font-weight: 500; color: #5f695d; letter-spacing: 0.1em; text-transform: uppercase; }
+.register-logo-nombre { margin: 0; font-size: $hovy-texto-md; font-weight: 800; color: $hovy-verde-850; text-transform: uppercase; letter-spacing: 0.02em; }
+.register-logo-bajada { margin: 0 0 1rem; font-size: $hovy-texto-xs; font-weight: 500; color: $hovy-oliva-700; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .register-title {
-  font-size: 2.125rem;
+  font-size: $hovy-texto-4xl;
   font-weight: 800;
-  color: #173812;
+  color: $hovy-verde-850;
   letter-spacing: -0.025em;
   margin-bottom: 0.25rem;
   
-  @media (max-width: 575.98px) { font-size: 1.875rem; color: #1C3A13; }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-4xl; color: $hovy-verde-850; }
 }
 
 .register-subtitle {
-  font-size: 0.9375rem;
-  color: #4b5563;
+  font-size: $hovy-texto-base;
+  color: $hovy-gris-600;
   
-  @media (max-width: 575.98px) { font-size: 0.875rem; color: rgba(87, 83, 78, 0.9); }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-md; color: rgba(87, 83, 78, 0.9); }
 }
 
 .register-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: $hovy-texto-sm;
   font-weight: 700;
-  color: #1f2937;
+  color: $hovy-gris-900;
   margin-bottom: 0.375rem;
   
-  @media (max-width: 575.98px) { font-size: 0.75rem; color: #2B2B2B; }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-xs; color: $hovy-gris-900; }
 }
 
 .register-input-group {
   display: flex;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid rgba(107, 114, 128, 0.7);
-  border-radius: 0.75rem;
+  border-radius: $hovy-radio-md;
   padding: 0.625rem 0.875rem;
-  transition: all 0.15s ease-in-out;
+  transition: background-color $hovy-duracion-rapida ease-in-out, border-color $hovy-duracion-rapida ease-in-out, color $hovy-duracion-rapida ease-in-out, box-shadow $hovy-duracion-rapida ease-in-out, transform $hovy-duracion-rapida ease-in-out, opacity $hovy-duracion-rapida ease-in-out;
   
   &:focus-within {
-    border-color: #183c13;
-    box-shadow: 0 0 0 1px #183c13;
+    border-color: $hovy-verde-850;
+    box-shadow: 0 0 0 1px $hovy-verde-850;
   }
   
   input {
@@ -489,20 +494,20 @@ $form-invalid-border-color: $hovy-texto-error;
     outline: none;
     background: transparent;
     width: 100%;
-    font-size: 0.875rem;
-    color: #111827;
+    font-size: $hovy-texto-md;
+    color: $hovy-azul-900;
     margin-left: 0.625rem;
     
-    &::placeholder { color: #6b7280; }
+    &::placeholder { color: $hovy-gris-500; }
   }
 
   @media (max-width: 575.98px) {
-    border-color: #CFD3D1;
+    border-color: $hovy-gris-300;
     padding: 0.625rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    box-shadow: $hovy-sombra-xs;
     
-    &:focus-within { border-color: #1C3A13; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
-    input { font-size: 0.75rem; margin-left: 0.5rem; color: #292524; }
+    &:focus-within { border-color: $hovy-verde-850; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
+    input { font-size: $hovy-texto-xs; margin-left: 0.5rem; color: $hovy-gris-900; }
   }
 }
 
@@ -569,45 +574,45 @@ $form-invalid-border-color: $hovy-texto-error;
   width: 0.5rem;
   height: 0.5rem;
   flex: 0 0 auto;
-  border-radius: 50%;
-  background-color: #2563eb;
-  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+  border-radius: $hovy-radio-circulo;
+  background-color: $hovy-azul-600;
+  box-shadow: 0 0 0 0.2rem rgba($hovy-azul-600, 0.12);
   animation: turnoEnCursoPulse 1.6s ease-in-out infinite;
 }
 
 .turno-en-curso-dot--light {
-  background-color: #b8d2ff;
-  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.16);
+  background-color: $hovy-azul-200;
+  box-shadow: 0 0 0 0.2rem rgba($hovy-blanco, 0.16);
 }
 
 .turno-en-curso-card {
-  border-color: #60a5fa !important;
-  border-left-color: #2563eb !important;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 0.35rem 0.9rem rgba(37, 99, 235, 0.12) !important;
+  border-color: $hovy-azul-400 !important;
+  border-left-color: $hovy-azul-600 !important;
+  box-shadow: 0 0 0 1px rgba($hovy-azul-600, 0.1), $hovy-sombra-lg !important;
 }
 
 .turno-en-curso-bg {
-  background-color: #2563eb !important;
+  background-color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-text {
-  color: #2563eb !important;
+  color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-border {
-  border-color: #2563eb !important;
+  border-color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-subtle {
-  color: #1d4ed8 !important;
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
+  color: $hovy-azul-700 !important;
+  background-color: $hovy-azul-50 !important;
+  border-color: $hovy-azul-200 !important;
 }
 
 .turno-en-curso-solid {
-  color: #ffffff !important;
-  background-color: #2563eb !important;
-  border-color: #2563eb !important;
+  color: $hovy-blanco !important;
+  background-color: $hovy-azul-600 !important;
+  border-color: $hovy-azul-600 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -629,7 +634,7 @@ $form-invalid-border-color: $hovy-texto-error;
 
   .modal-content {
     max-height: calc(100dvh - 2rem);
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
   }
 
   .modal-content > form {
@@ -641,7 +646,7 @@ $form-invalid-border-color: $hovy-texto-error;
 }
 
 .nuevo-turno-header {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
 
   .modal-title {
     font-size: clamp(1.35rem, 2.5vw, 1.8rem);
@@ -650,22 +655,22 @@ $form-invalid-border-color: $hovy-texto-error;
 }
 
 .nuevo-turno-close {
-  color: #7b8178;
-  background-color: #f4f4ef;
+  color: $hovy-oliva-600;
+  background-color: $hovy-crema-100;
 
-  &:hover { background-color: #e9eadf; color: $hovy-green; }
+  &:hover { background-color: $hovy-oliva-100; color: $hovy-green; }
 }
 
 .nuevo-turno-status {
-  color: #8a5b00;
-  background-color: #fff9e8;
-  border: 1px solid #f4d77b;
+  color: $hovy-ambar-700;
+  background-color: $hovy-ambar-50;
+  border: 1px solid $hovy-ambar-200;
 }
 
 .nuevo-turno-label {
   display: block;
-  color: #454a43;
-  font-size: 0.75rem;
+  color: $hovy-gris-700;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -675,30 +680,30 @@ $form-invalid-border-color: $hovy-texto-error;
   .input-group-text,
   .form-select {
     min-height: 46px;
-    border-color: #d8d9d1;
+    border-color: $hovy-oliva-300;
   }
 
   .input-group-text {
-    color: #70766d;
-    border-radius: 0.8rem 0 0 0.8rem;
+    color: $hovy-oliva-600;
+    border-radius: $hovy-radio-md 0 0 $hovy-radio-md;
   }
 
-  .form-select { border-radius: 0 0.8rem 0.8rem 0; }
+  .form-select { border-radius: 0 $hovy-radio-md $hovy-radio-md 0; }
 }
 
 .nuevo-turno-budget-card {
-  background-color: #fbfaf7;
-  border-color: #dedfd7 !important;
-  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+  background-color: $hovy-crema-50;
+  border-color: $hovy-oliva-200 !important;
+  box-shadow: $hovy-sombra-md;
 }
 
 .nuevo-turno-approved {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: #08775b;
-  background-color: #eafff6;
-  border: 1px solid #8ee5c6;
+  color: $hovy-esmeralda-600;
+  background-color: $hovy-esmeralda-50;
+  border: 1px solid $hovy-esmeralda-200;
 }
 
 .nuevo-turno-icon {
@@ -708,51 +713,51 @@ $form-invalid-border-color: $hovy-texto-error;
   width: 30px;
   height: 30px;
   flex: 0 0 auto;
-  color: #747a72;
-  background-color: #f1f1ec;
-  border-radius: 50%;
+  color: $hovy-oliva-600;
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-circulo;
 }
 
-.nuevo-turno-property { background-color: #ffffff; border-color: #e1e2da !important; }
+.nuevo-turno-property { background-color: $hovy-blanco; border-color: $hovy-oliva-200 !important; }
 
 .nuevo-turno-surface {
-  color: #294b15;
-  background-color: #f0f8e9;
-  border: 1px solid #d5e9c6;
+  color: $hovy-verde-800;
+  background-color: $hovy-verde-50;
+  border: 1px solid $hovy-verde-200;
 }
 
 .nuevo-turno-priority,
 .nuevo-turno-slot {
-  color: #343934;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  color: $hovy-oliva-900;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease, transform $hovy-duracion-rapida ease;
 
   &:not(:disabled):hover {
-    border-color: #9eab96;
+    border-color: $hovy-oliva-400;
     transform: translateY(-1px);
   }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
   }
 }
 
 .nuevo-turno-rule,
 .nuevo-turno-weather {
-  color: #62675f;
-  background-color: #f6f5f0;
-  border: 1px solid #e5e3da;
+  color: $hovy-oliva-700;
+  background-color: $hovy-crema-100;
+  border: 1px solid $hovy-crema-300;
 }
 
 .nuevo-turno-date {
   position: relative;
   min-height: 46px;
-  color: #535a52;
-  background-color: #ffffff;
-  border-color: #d8d9d1 !important;
+  color: $hovy-oliva-800;
+  background-color: $hovy-blanco;
+  border-color: $hovy-oliva-300 !important;
 }
 
 .nuevo-turno-date-input {
@@ -767,20 +772,20 @@ $form-invalid-border-color: $hovy-texto-error;
   min-height: 88px;
 
   &.is-occupied {
-    color: #9ba09a;
-    background-color: #f5f5f5;
+    color: $hovy-oliva-500;
+    background-color: $hovy-gris-50;
     border-style: dashed;
     cursor: not-allowed;
-    text-decoration-color: #b4b8b3;
+    text-decoration-color: $hovy-crema-600;
   }
 }
 
-.nuevo-turno-empty { background-color: #fafaf7; border-color: #dedfd7 !important; }
+.nuevo-turno-empty { background-color: $hovy-crema-50; border-color: $hovy-oliva-200 !important; }
 
 .nuevo-turno-footer {
   flex: 0 0 auto;
-  background-color: #ffffff;
-  box-shadow: 0 -6px 18px rgba(27, 48, 6, 0.035);
+  background-color: $hovy-blanco;
+  box-shadow: 0 -6px 18px rgba($hovy-verde-900, 0.035);
 }
 
 .leaflet-container {
@@ -788,7 +793,7 @@ $form-invalid-border-color: $hovy-texto-error;
   width: 100%;
   height: 320px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: $hovy-radio-md;
 }
 .mapa-fullscreen {
   width: 100vw;
@@ -830,8 +835,8 @@ $form-invalid-border-color: $hovy-texto-error;
   }
 }
 
-@media (max-width: 420px) {
-  .nuevo-turno-footer .btn { font-size: 0.78rem; }
+@media (max-width: #{$hovy-bp-telefono}) {
+  .nuevo-turno-footer .btn { font-size: $hovy-texto-xs; }
   .nuevo-turno-footer .btn:first-child { padding-inline: 0.8rem !important; }
 }
 
@@ -885,8 +890,8 @@ $form-invalid-border-color: $hovy-texto-error;
 .combustible-label {
   display: block;
   margin-bottom: 0.4rem;
-  color: #454a43;
-  font-size: 0.75rem;
+  color: $hovy-gris-700;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -896,8 +901,8 @@ $form-invalid-border-color: $hovy-texto-error;
   display: inline-flex;
   gap: 0.25rem;
   padding: 0.25rem;
-  background-color: #f1f1ec;
-  border-radius: 999px;
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-pill;
 }
 
 .combustible-tipo {
@@ -906,16 +911,16 @@ $form-invalid-border-color: $hovy-texto-error;
   font-weight: 600;
   background: transparent;
   border: 0;
-  border-radius: 999px;
-  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  border-radius: $hovy-radio-pill;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  &:hover:not(.is-selected) { background-color: rgba(27, 48, 6, 0.07); }
+  &:hover:not(.is-selected) { background-color: rgba($hovy-verde-900, 0.07); }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
 
   &.is-selected {
-    color: #ffffff;
+    color: $hovy-blanco;
     background-color: $hovy-green;
-    box-shadow: 0 2px 6px rgba(27, 48, 6, 0.22);
+    box-shadow: $hovy-sombra-md;
   }
 }
 
@@ -927,7 +932,7 @@ $form-invalid-border-color: $hovy-texto-error;
     top: 50%;
     left: 0.9rem;
     transform: translateY(-50%);
-    color: #8a9086;
+    color: $hovy-oliva-500;
     pointer-events: none;
   }
 
@@ -939,27 +944,27 @@ $form-invalid-border-color: $hovy-texto-error;
   top: calc(100% + 6px);
   right: 0;
   left: 0;
-  z-index: 10;
+  z-index: $hovy-capa-elevada;
   padding: 0.35rem;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
-  border-radius: 0.9rem;
-  box-shadow: 0 12px 28px rgba(27, 48, 6, 0.12);
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-lg;
 }
 
 .combustible-sugerencia {
   display: block;
   width: 100%;
   padding: 0.55rem 0.75rem;
-  color: #343934;
-  font-size: 0.9rem;
+  color: $hovy-oliva-900;
+  font-size: $hovy-texto-md;
   text-align: left;
   background: transparent;
   border: 0;
-  border-radius: 0.6rem;
+  border-radius: $hovy-radio-sm;
 
   &:hover,
-  &.is-activa { background-color: rgba(27, 48, 6, 0.07); }
+  &.is-activa { background-color: rgba($hovy-verde-900, 0.07); }
 
   mark {
     padding: 0;
@@ -971,14 +976,14 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .combustible-sugerencias-pie {
   padding: 0.45rem 0.75rem 0.25rem;
-  color: #70766d;
-  font-size: 0.78rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-xs;
 }
 
 .combustible-marca {
   margin: 0 0 0.5rem;
   color: $hovy-green;
-  font-size: 0.78rem;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -990,11 +995,11 @@ $form-invalid-border-color: $hovy-texto-error;
   gap: 0.9rem;
   margin-bottom: 0.5rem;
   padding: 0.8rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 0.9rem;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
   cursor: pointer;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
   input {
     flex: 0 0 auto;
@@ -1004,25 +1009,25 @@ $form-invalid-border-color: $hovy-texto-error;
     accent-color: $hovy-green;
   }
 
-  &:hover { border-color: #9eab96; }
+  &:hover { border-color: $hovy-oliva-400; }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
   }
 }
 
 .combustible-precio {
-  font-size: 1.05rem;
+  font-size: $hovy-texto-base;
   font-weight: 800;
-  color: #1f2a14;
+  color: $hovy-verde-950;
   white-space: nowrap;
 
   small {
     margin-left: 0.15rem;
-    color: #70766d;
-    font-size: 0.75rem;
+    color: $hovy-oliva-600;
+    font-size: $hovy-texto-xs;
     font-weight: 600;
   }
 }
@@ -1031,13 +1036,13 @@ $form-invalid-border-color: $hovy-texto-error;
   display: inline-block;
   margin-left: 0.5rem;
   padding: 0.1rem 0.55rem;
-  color: #08775b;
-  font-size: 0.75rem;
+  color: $hovy-esmeralda-600;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   vertical-align: middle;
-  background-color: #eafff6;
-  border: 1px solid #8ee5c6;
-  border-radius: 999px;
+  background-color: $hovy-esmeralda-50;
+  border: 1px solid $hovy-esmeralda-200;
+  border-radius: $hovy-radio-pill;
 }
 
 .hovy-aviso {
@@ -1045,14 +1050,14 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 0.9rem;
-  font-size: 0.85rem;
+  font-size: $hovy-texto-md;
   font-weight: 600;
-  border-radius: 0.8rem;
+  border-radius: $hovy-radio-md;
 
-  &.is-error { color: #a12626; background-color: #fdecec; border: 1px solid #f5b5b5; }
-  &.is-ok { color: #08775b; background-color: #eafff6; border: 1px solid #8ee5c6; }
-  &.is-aviso { color: #8a5b00; background-color: #fff9e8; border: 1px solid #f4d77b; }
-  &.is-espera { color: #294b15; background-color: #f0f8e9; border: 1px solid #d5e9c6; }
+  &.is-error { color: $hovy-rojo-700; background-color: $hovy-rojo-50; border: 1px solid $hovy-rojo-100; }
+  &.is-ok { color: $hovy-esmeralda-600; background-color: $hovy-esmeralda-50; border: 1px solid $hovy-esmeralda-200; }
+  &.is-aviso { color: $hovy-ambar-700; background-color: $hovy-ambar-50; border: 1px solid $hovy-ambar-200; }
+  &.is-espera { color: $hovy-verde-800; background-color: $hovy-verde-50; border: 1px solid $hovy-verde-200; }
 }
 
 // Las clases .alert de Bootstrap (módulo no importado) se usan en varios
@@ -1080,10 +1085,25 @@ $form-invalid-border-color: $hovy-texto-error;
   .bg-#{$color}-subtle .text-#{$color} { color: var(--bs-#{$color}-text-emphasis) !important; }
 }
 
+// La paleta y las escalas como variables CSS, para estilos inline en JSX: var(--hovy-verde-900)
+:root {
+  @each $nombre, $valor in $hovy-paleta {
+    --hovy-#{$nombre}: #{$valor};
+  }
+  @each $nombre, $valor in $hovy-escalas {
+    --hovy-#{$nombre}: #{$valor};
+  }
+}
+
+// Controles táctiles sin la demora del doble toque, y el scroll de un modal no
+// arrastra a la página de atrás.
+a, button, input, select, textarea, label, [role="button"] { touch-action: manipulation; }
+.modal { overscroll-behavior: contain; }
+
 /* --- RÓTULO SOBRE EL TÍTULO DE PANTALLA --- */
 .hovy-rotulo {
   display: block;
-  font-size: 0.75rem;
+  font-size: $hovy-texto-xs;
   font-weight: 600;
   line-height: 1.5;
   letter-spacing: 0.05em;
@@ -1097,27 +1117,27 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
+  font-size: $hovy-texto-xs;
   font-weight: 600;
   line-height: 1.25;
   white-space: nowrap;
-  border-radius: 50rem;
+  border-radius: $hovy-radio-pill;
 
   &::before {
     content: "";
     flex: 0 0 auto;
     width: 0.375rem;
     height: 0.375rem;
-    border-radius: 50%;
+    border-radius: $hovy-radio-circulo;
     background-color: currentColor;
   }
   &.sin-punto::before { display: none; }
 
-  &.is-exito { color: $hovy-texto-exito; background-color: #eafff6; }
-  &.is-pendiente { color: #8f4c29; background-color: #fbe9df; }
-  &.is-info { color: #055160; background-color: #e7fafe; }
-  &.is-en-curso { color: #1d4ed8; background-color: #e8f0fe; }
-  &.is-neutro { color: $hovy-texto-secundario; background-color: #f8f9fa; }
+  &.is-exito { color: $hovy-texto-exito; background-color: $hovy-esmeralda-50; }
+  &.is-pendiente { color: $hovy-terracota-700; background-color: $hovy-terracota-100; }
+  &.is-info { color: $hovy-celeste-800; background-color: $hovy-celeste-50; }
+  &.is-en-curso { color: $hovy-azul-700; background-color: $hovy-azul-50; }
+  &.is-neutro { color: $hovy-texto-secundario; background-color: $hovy-gris-50; }
 }
 
 /* --- COBRO CON QR --- */
@@ -1128,9 +1148,9 @@ $form-invalid-border-color: $hovy-texto-error;
   flex: 0 0 auto;
   width: 1.1rem;
   height: 1.1rem;
-  border: 2px solid rgba(27, 48, 6, 0.2);
+  border: 2px solid rgba($hovy-verde-900, 0.2);
   border-top-color: $hovy-green;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   animation: hovySpin 0.8s linear infinite;
 }
 
@@ -1140,10 +1160,10 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .cobro-qr {
   padding: 1.25rem;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 1rem;
-  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-md;
 }
 
 .cobro-qr-imagen {
@@ -1151,9 +1171,9 @@ $form-invalid-border-color: $hovy-texto-error;
   width: 100%;
   max-width: 240px;
   height: auto;
-  background-color: #ffffff;
-  border: 1px solid #e5e3da;
-  border-radius: 0.75rem;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-md;
 }
 
 .forma-pago-grid {
@@ -1168,26 +1188,26 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: flex-start;
   gap: 0.15rem;
   padding: 0.85rem 0.95rem;
-  color: #343934;
+  color: $hovy-oliva-900;
   text-align: left;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 1rem;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  strong { display: block; font-size: 0.95rem; }
-  small { display: block; color: #5f695d; font-size: 0.75rem; line-height: 1.25; }
+  strong { display: block; font-size: $hovy-texto-base; }
+  small { display: block; color: $hovy-oliva-700; font-size: $hovy-texto-xs; line-height: 1.25; }
 
-  &:hover:not(:disabled):not(.is-selected) { border-color: #9eab96; }
+  &:hover:not(:disabled):not(.is-selected) { border-color: $hovy-oliva-400; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
 
-    .forma-pago-icono { color: #ffffff; background-color: $hovy-green; }
+    .forma-pago-icono { color: $hovy-blanco; background-color: $hovy-green; }
   }
 }
 
@@ -1199,9 +1219,9 @@ $form-invalid-border-color: $hovy-texto-error;
   height: 2.1rem;
   margin-bottom: 0.35rem;
   color: $hovy-green;
-  background-color: rgba(27, 48, 6, 0.08);
-  border-radius: 50%;
-  transition: background-color 0.16s ease, color 0.16s ease;
+  background-color: rgba($hovy-verde-900, 0.08);
+  border-radius: $hovy-radio-circulo;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
 }
 
 /* Resumen de lo que se debe, arriba del modal de pago */
@@ -1211,9 +1231,9 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: flex-end;
   gap: 1rem 2rem;
   padding: 1rem 1.25rem;
-  background-color: #f6f5f0;
-  border: 1px solid #e5e3da;
-  border-radius: 1rem;
+  background-color: $hovy-crema-100;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
 
   > div { display: flex; flex-direction: column; }
 }
@@ -1221,18 +1241,18 @@ $form-invalid-border-color: $hovy-texto-error;
 .pago-resumen-principal { margin-left: auto; text-align: right; }
 
 .pago-resumen-etiqueta {
-  color: #70766d;
-  font-size: 0.75rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.pago-resumen-cifra { color: #343934; font-size: 1.05rem; font-weight: 700; }
+.pago-resumen-cifra { color: $hovy-oliva-900; font-size: $hovy-texto-base; font-weight: 700; }
 
 .pago-resumen-total {
   color: $hovy-green;
-  font-size: 1.9rem;
+  font-size: $hovy-texto-4xl;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -1245,14 +1265,14 @@ $form-invalid-border-color: $hovy-texto-error;
 .pago-chip {
   padding: 0.3rem 0.8rem;
   color: $hovy-green;
-  font-size: 0.8rem;
+  font-size: $hovy-texto-sm;
   font-weight: 600;
-  background-color: #ffffff;
-  border: 1px solid #cdd7c4;
-  border-radius: 999px;
-  transition: background-color 0.16s ease, border-color 0.16s ease;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-300;
+  border-radius: $hovy-radio-pill;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease;
 
-  &:hover:not(:disabled) { background-color: #f4f9ef; border-color: $hovy-green; }
+  &:hover:not(:disabled) { background-color: $hovy-verde-50; border-color: $hovy-green; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
@@ -1263,21 +1283,21 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: center;
   gap: 0.4rem;
   margin: 0.6rem 0 0;
-  font-size: 0.85rem;
+  font-size: $hovy-texto-md;
   font-weight: 600;
 
-  &.is-salda { color: #08775b; }
-  &.is-parcial { color: #8a5b00; }
-  &.is-excede { color: #a12626; }
+  &.is-salda { color: $hovy-esmeralda-600; }
+  &.is-parcial { color: $hovy-ambar-700; }
+  &.is-excede { color: $hovy-rojo-700; }
 }
 
 .pago-nota {
   padding: 0.75rem 1rem;
-  color: #62675f;
-  font-size: 0.85rem;
-  background-color: #fafaf7;
-  border-left: 3px solid #cfd2c8;
-  border-radius: 0.5rem;
+  color: $hovy-oliva-700;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-crema-50;
+  border-left: 3px solid $hovy-crema-500;
+  border-radius: $hovy-radio-sm;
 }
 
 .cobro-qr-vacio {
@@ -1287,44 +1307,44 @@ $form-invalid-border-color: $hovy-texto-error;
   width: 240px;
   max-width: 100%;
   aspect-ratio: 1;
-  color: #70766d;
-  font-size: 0.85rem;
-  background-color: #fafaf7;
-  border: 1px dashed #cfd2c8;
-  border-radius: 0.75rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-crema-50;
+  border: 1px dashed $hovy-crema-500;
+  border-radius: $hovy-radio-md;
 }
 
 .combustible-vacio {
   padding: 1.25rem;
-  color: #70766d;
-  font-size: 0.9rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-md;
   text-align: center;
-  background-color: #fafaf7;
-  border: 1px dashed #cfd2c8;
-  border-radius: 0.9rem;
+  background-color: $hovy-crema-50;
+  border: 1px dashed $hovy-crema-500;
+  border-radius: $hovy-radio-lg;
 }
 
 .combustible-ejemplo {
   padding: 0.75rem 1rem;
-  color: #294b15;
-  font-size: 0.88rem;
-  background-color: #f0f8e9;
-  border: 1px solid #d5e9c6;
-  border-radius: 0.8rem;
+  color: $hovy-verde-800;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-verde-50;
+  border: 1px solid $hovy-verde-200;
+  border-radius: $hovy-radio-md;
 }
 
 .combustible-ayuda {
   summary {
     color: $hovy-green;
-    font-size: 0.82rem;
+    font-size: $hovy-texto-sm;
     font-weight: 600;
     cursor: pointer;
   }
 
   p {
     margin: 0.4rem 0 0;
-    color: #62675f;
-    font-size: 0.82rem;
+    color: $hovy-oliva-700;
+    font-size: $hovy-texto-sm;
   }
 }
 
@@ -1341,7 +1361,7 @@ $form-invalid-border-color: $hovy-texto-error;
 
   .clientes-resumen-titulo {
     min-width: 0;
-    font-size: 0.75rem;
+    font-size: $hovy-texto-xs;
     letter-spacing: 0.05em;
     overflow-wrap: anywhere;
   }
@@ -1370,7 +1390,7 @@ $form-invalid-border-color: $hovy-texto-error;
 
   .badge {
     max-width: 100%;
-    font-size: 0.75rem;
+    font-size: $hovy-texto-xs;
     line-height: 1.35;
     white-space: normal;
     text-align: left;
@@ -1386,7 +1406,7 @@ $form-invalid-border-color: $hovy-texto-error;
   display: block;
   max-width: 100%;
   background-color: $hovy-skeleton;
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  background-image: linear-gradient(90deg, rgba($hovy-blanco, 0) 0%, rgba($hovy-blanco, 0.55) 50%, rgba($hovy-blanco, 0) 100%);
   background-size: 200% 100%;
   background-repeat: no-repeat;
   animation: hovySkeletonShimmer 1.4s ease-in-out infinite;

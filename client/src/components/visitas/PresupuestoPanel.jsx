@@ -76,15 +76,15 @@ export function DiferenciaPrecio({ estimado, final }) {
   return (
     <div className="row g-0 bg-light rounded-3 border overflow-hidden small presupuesto-comparacion">
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.75rem' }}>Estimado</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Estimado</span>
         <span className="fw-bold text-dark">{formatMoney(estimado)}</span>
       </div>
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.75rem' }}>Precio final</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Precio final</span>
         <span className="fw-bold text-dark">{formatMoney(final)}</span>
       </div>
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.75rem' }}>Diferencia</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Diferencia</span>
         <span className={`fw-bold ${color}`}>{diff > 0 ? '+' : ''}{formatMoney(diff)}</span>
       </div>
     </div>
@@ -218,7 +218,7 @@ export default function PresupuestoPanel({ visita, onSaved }) {
                 disabled={isSaving || !montoValido}
                 style={{ backgroundColor: VERDE, borderColor: VERDE }}
               >
-                {isSaving ? 'Guardando...' : accepted ? 'Actualizar precio final' : 'Aceptar precio final'}
+                {isSaving ? 'Guardando…' : accepted ? 'Actualizar precio final' : 'Aceptar precio final'}
               </Button>
               {accepted && (
                 <span className="text-success small fw-semibold d-flex align-items-center gap-1">

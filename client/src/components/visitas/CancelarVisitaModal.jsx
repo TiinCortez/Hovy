@@ -40,7 +40,7 @@ export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled 
             <div className="d-flex justify-content-end gap-2">
               <Button variant="light" onClick={onClose} disabled={isSubmitting}>Volver</Button>
               <Button variant="danger" onClick={handleConfirm} disabled={isSubmitting}>
-                {isSubmitting ? 'Cancelando...' : 'Cancelar visita'}
+                {isSubmitting ? 'Cancelando…' : 'Cancelar visita'}
               </Button>
             </div>
           </div>

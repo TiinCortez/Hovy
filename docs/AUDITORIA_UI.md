@@ -247,5 +247,23 @@ Tercera tanda, en la misma rama:
 | Mensajes vacíos y separadores con `opacity-50` | Hecho |
 | Logo de Registro con texto de 5 a 8 px | Hecho: el nombre pasa debajo del círculo, a 14 y 12 px |
 
-Pendiente: el resto de la paleta, C3 y C6. Sin probar en pantalla: dos modales encimados (Registrar pago sobre Detalle del turno).
+Cuarta tanda, en la misma rama: base para escalar.
+
+| Ítem | Estado |
+|---|---|
+| C2: paleta por escalas | Hecho. `styles/_paleta.scss` (75 tonos en 12 escalas) es el único lugar con valores de color; se publica como variables CSS `--hovy-*` y en `styles/paleta.js` para SVG y Leaflet. Quedan en hex solo los dibujos SVG (logo de Registro, marcadores) |
+| C3: escalas | Hecho en `_tokens.scss`: texto (10 tamaños), radios (9), sombras (5), capas z-index (10, también en `styles/capas.js`), duraciones (4) y cortes de pantalla propios |
+| C5: cortes 420 y 359.98 px | Con nombre: `$hovy-bp-telefono` y `$hovy-bp-telefono-chico` |
+| C6: `transition: all` | Hecho: propiedades explícitas |
+| C6: navegación con `onClick` | Hecho: enlaces (`Link`) en Login, Inmuebles, Detalle de solicitud y Solicitudes |
+| C6: teléfono del cliente en la URL | Hecho: la ruta usa el número de cliente |
+| C6: `window.confirm` | Hecho: `ConfirmarModal` (cancelar turno, dar de baja inmueble) |
+| C6: `...` en textos | Hecho: 81 reemplazos por `…` |
+| C6: imágenes sin tamaño | Hecho; el avatar externo (ui-avatars) pasa a iniciales locales |
+| C6: fechas a mano y `es-ES` | Hecho con `Intl` en `es-AR` |
+| C6: cambios sin guardar | Hecho en 4 formularios y Registro (`useAvisoCambiosSinGuardar`) |
+| C6: `theme-color`, `touch-action`, `overscroll-behavior`, `spellCheck` en correos | Hecho |
+| Dos modales encimados | Probado en pantalla con Cancelar turno sobre Detalle del turno |
+
+Pendiente: los `alert()` de error que quedan en 4 pantallas, y el espaciado (paddings y gaps sueltos).
 

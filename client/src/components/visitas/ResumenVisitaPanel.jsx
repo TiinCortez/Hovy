@@ -39,21 +39,21 @@ export default function ResumenVisitaPanel({ visita }) {
       </div>
 
       <div className="p-3 bg-light rounded-4 border border-light-subtle mb-3">
-        <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Turno</div>
+        <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Turno</div>
         {turno ? (
           <div className="fw-medium text-dark small">
             {formatDia(turno.fechaAsignada)}
             {franja?.horaInicio && franja?.horaFin ? `, de ${hhmm(franja.horaInicio)} a ${hhmm(franja.horaFin)}` : ', sin horario específico'}
           </div>
         ) : (
-          <div className="text-secondary small">{turnoError ? 'No se pudo cargar el detalle del turno.' : 'Cargando turno...'}</div>
+          <div className="text-secondary small">{turnoError ? 'No se pudo cargar el detalle del turno.' : 'Cargando turno…'}</div>
         )}
       </div>
 
       {servicios.length > 0 && (
         <div className="mb-3">
           <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
-            <span className="text-secondary text-uppercase fw-bold" style={{ fontSize: '0.75rem' }}>Servicios y estimado</span>
+            <span className="text-secondary text-uppercase fw-bold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Servicios y estimado</span>
             <Badge tipo="pendiente" conPunto={false} className="text-wrap">
               <Lock size={12} aria-hidden="true" /> {INTERNAL_NOTICE}
             </Badge>
@@ -64,7 +64,7 @@ export default function ResumenVisitaPanel({ visita }) {
 
       {presupuesto && (
         <div>
-          <div className="text-secondary text-uppercase fw-bold mb-2" style={{ fontSize: '0.75rem' }}>Precio final ({presupuesto.estado})</div>
+          <div className="text-secondary text-uppercase fw-bold mb-2" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Precio final ({presupuesto.estado})</div>
           {servicios.length > 0 ? (
             <DiferenciaPrecio estimado={totalEstimado} final={presupuesto.monto_total} />
           ) : (

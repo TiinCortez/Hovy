@@ -4,16 +4,18 @@ import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import ClienteService from '../../services/api/cliente.service';
 import Modal from './Modal';
+import useAvisoCambiosSinGuardar from './useAvisoCambiosSinGuardar';
 
 export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm({
     defaultValues: {
       tipo_cliente: 'Casual'
     }
   });
+  useAvisoCambiosSinGuardar(isDirty);
 
   if (!isOpen) return null;
 
@@ -126,7 +128,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                     />
                   </div>
                   {errors.telefono && <span id="nuevo-cliente-telefono-error" className="invalid-feedback d-block">{errors.telefono.message}</span>}
-                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>Sin 0 ni 15. Incluir código de área.</span>
+                  <span className="text-muted" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Sin 0 ni 15. Incluir código de área.</span>
                 </div>
 
                 <div className="col-12 col-md-6">
@@ -150,7 +152,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                       <Mail size={16} />
                     </span>
                     <input id="nuevo-cliente-email"
-                      type="email"
+                      type="email" spellCheck={false} autoCapitalize="none"
                       className="form-control bg-light border-start-0 rounded-end-3 small"
                       placeholder="ejemplo@correo.com"
                       {...register('email')}
@@ -179,7 +181,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
               variant="primary" 
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Guardando...' : 'Guardar Cliente'}
+              {isSubmitting ? 'Guardando…' : 'Guardar Cliente'}
             </Button>
           </div>
 

@@ -105,7 +105,7 @@ export default function ServiciosPage() {
           <input
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre…"
             aria-label="Buscar servicio por nombre"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -138,7 +138,7 @@ export default function ServiciosPage() {
                 <div className="d-flex align-items-start gap-3 mb-3">
                   <div
                     className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 text-success"
-                    style={{ width: '48px', height: '48px', backgroundColor: '#E8F5E9' }}
+                    style={{ width: '48px', height: '48px', backgroundColor: 'var(--hovy-verde-100)' }}
                   >
                     <Wrench size={22} />
                   </div>
@@ -152,11 +152,11 @@ export default function ServiciosPage() {
 
                 <div className="row g-0 mb-4 bg-light rounded-3 border overflow-hidden">
                   <div className="col-6 p-2 px-3 border-end">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Precio por m²</span>
+                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Precio por m²</span>
                     <span className="fw-bold text-dark small">{formatPrice(servicio.precio_base)}</span>
                   </div>
                   <div className="col-6 p-2 px-3">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Límite operativo</span>
+                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Límite operativo</span>
                     <span className="fw-bold text-dark small">{servicio.limite_operativo ?? '-'}</span>
                   </div>
                 </div>

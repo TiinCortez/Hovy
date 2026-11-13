@@ -44,7 +44,7 @@ export default function IngresarDireccionModal({ onElegida, onClose }) {
           disabled={isBuscando || !texto}
           style={{ backgroundColor: VERDE, borderColor: VERDE }}
         >
-          {isBuscando ? 'Buscando...' : 'Buscar dirección'}
+          {isBuscando ? 'Buscando…' : 'Buscar dirección'}
         </Button>
       )}
     >

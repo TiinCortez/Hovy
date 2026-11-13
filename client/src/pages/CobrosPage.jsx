@@ -212,7 +212,7 @@ export default function CobrosPage() {
           <input
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-            placeholder="Buscar por cliente, predio, servicio u orden (#OT)..."
+            placeholder="Buscar por cliente, predio, servicio u orden (#OT)…"
             aria-label="Buscar turnos a cobrar"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setPagina(1); }}

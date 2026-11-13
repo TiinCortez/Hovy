@@ -15,6 +15,7 @@ import {
 } from './formaDePago';
 import { VERDE } from '../../styles/colores';
 import Modal from '../ui/Modal';
+import { CAPAS } from '../../styles/capas';
 
 const ICONOS = { anotar: NotebookPen, efectivo: Banknote, transferencia: Landmark, qr: QrCode };
 
@@ -84,7 +85,7 @@ export default function RegistroPagoModal({
       onCerrar={onClose}
       bloqueado={isSaving}
       tamano="lg"
-      zIndex={1070}
+      zIndex={CAPAS.modalEncima}
     >
 
           <div className="modal-body p-4 d-flex flex-column gap-4">
@@ -242,7 +243,7 @@ export default function RegistroPagoModal({
               disabled={confirmarDeshabilitado}
               style={{ backgroundColor: VERDE, borderColor: VERDE }}
             >
-              {isSaving ? (finalizando ? 'Finalizando...' : 'Procesando...') : textoConfirmar(seleccion.forma, finalizando)}
+              {isSaving ? (finalizando ? 'Finalizando…' : 'Procesando…') : textoConfirmar(seleccion.forma, finalizando)}
             </Button>
           </div>
     </Modal>,

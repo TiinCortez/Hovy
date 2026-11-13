@@ -1,7 +1,7 @@
 // Base común para Button y los botones nativos que usan las clases btn.
 :root {
   --hovy-button-radius: 10px;
-  --hovy-button-focus: #67884e;
+  --hovy-button-focus: #{$hovy-verde-500};
 }
 
 .btn:not(.hovy-calendar-day),
@@ -12,7 +12,7 @@
   min-height: 40px;
   max-width: 100%;
   font-family: inherit;
-  font-size: 0.875rem !important;
+  font-size: $hovy-texto-md !important;
   font-weight: 600 !important;
   line-height: 1.25;
   // Sustituye las utilidades de aspecto que antes variaban entre vistas.
@@ -20,7 +20,7 @@
   border-radius: var(--hovy-button-radius) !important;
   box-shadow: none !important;
   text-decoration: none;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
 
   svg { flex-shrink: 0; }
   &:focus-visible { outline: 2px solid var(--hovy-button-focus); outline-offset: 2px; }
@@ -31,21 +31,21 @@
 
 .btn.btn-sm {
   min-height: 36px;
-  font-size: 0.8125rem !important;
+  font-size: $hovy-texto-sm !important;
   padding: 0.4rem 0.7rem !important;
 }
 
 .btn-primary {
-  --bs-btn-color: #fff;
+  --bs-btn-color: #{$hovy-blanco};
   --bs-btn-bg: #{$hovy-green};
   --bs-btn-border-color: #{$hovy-green};
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #122104;
-  --bs-btn-hover-border-color: #122104;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #122104;
-  --bs-btn-active-border-color: #122104;
-  --bs-btn-disabled-color: #fff;
+  --bs-btn-hover-color: #{$hovy-blanco};
+  --bs-btn-hover-bg: #{$hovy-verde-950};
+  --bs-btn-hover-border-color: #{$hovy-verde-950};
+  --bs-btn-active-color: #{$hovy-blanco};
+  --bs-btn-active-bg: #{$hovy-verde-950};
+  --bs-btn-active-border-color: #{$hovy-verde-950};
+  --bs-btn-disabled-color: #{$hovy-blanco};
   --bs-btn-disabled-bg: #{$hovy-green};
   --bs-btn-disabled-border-color: #{$hovy-green};
 }
@@ -54,18 +54,18 @@
 .btn-white,
 .btn-outline-secondary,
 .btn-outline-dark {
-  --bs-btn-color: #495244;
-  --bs-btn-bg: #fff;
-  --bs-btn-border-color: #d5dace;
-  --bs-btn-hover-color: #263320;
-  --bs-btn-hover-bg: #f0f3eb;
-  --bs-btn-hover-border-color: #aab69e;
-  --bs-btn-active-color: #263320;
-  --bs-btn-active-bg: #e6ebde;
-  --bs-btn-active-border-color: #aab69e;
-  --bs-btn-disabled-color: #495244;
-  --bs-btn-disabled-bg: #fff;
-  --bs-btn-disabled-border-color: #d5dace;
+  --bs-btn-color: #{$hovy-oliva-800};
+  --bs-btn-bg: #{$hovy-blanco};
+  --bs-btn-border-color: #{$hovy-oliva-300};
+  --bs-btn-hover-color: #{$hovy-oliva-950};
+  --bs-btn-hover-bg: #{$hovy-verde-100};
+  --bs-btn-hover-border-color: #{$hovy-oliva-400};
+  --bs-btn-active-color: #{$hovy-oliva-950};
+  --bs-btn-active-bg: #{$hovy-oliva-100};
+  --bs-btn-active-border-color: #{$hovy-oliva-400};
+  --bs-btn-disabled-color: #{$hovy-oliva-800};
+  --bs-btn-disabled-bg: #{$hovy-blanco};
+  --bs-btn-disabled-border-color: #{$hovy-oliva-300};
 }
 
 .btn-outline-primary {
@@ -73,10 +73,10 @@
   --bs-btn-bg: transparent;
   --bs-btn-border-color: #{$hovy-foco}; // 4:1 sobre blanco (antes #aab69e, 2.1:1)
   --bs-btn-hover-color: #{$hovy-green};
-  --bs-btn-hover-bg: #edf2e7;
-  --bs-btn-hover-border-color: #67884e;
+  --bs-btn-hover-bg: #{$hovy-verde-100};
+  --bs-btn-hover-border-color: #{$hovy-verde-500};
   --bs-btn-active-color: #{$hovy-green};
-  --bs-btn-active-bg: #e1e9d7;
+  --bs-btn-active-bg: #{$hovy-crema-400};
 }
 
 // Las variantes controlan el color incluso en vistas con utilidades antiguas.
@@ -106,15 +106,15 @@
 }
 
 .btn-info {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: #2563eb;
-  --bs-btn-border-color: #2563eb;
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #1d4ed8;
-  --bs-btn-hover-border-color: #1d4ed8;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #1d4ed8;
-  --bs-btn-active-border-color: #1d4ed8;
+  --bs-btn-color: #{$hovy-blanco};
+  --bs-btn-bg: #{$hovy-azul-600};
+  --bs-btn-border-color: #{$hovy-azul-600};
+  --bs-btn-hover-color: #{$hovy-blanco};
+  --bs-btn-hover-bg: #{$hovy-azul-700};
+  --bs-btn-hover-border-color: #{$hovy-azul-700};
+  --bs-btn-active-color: #{$hovy-blanco};
+  --bs-btn-active-bg: #{$hovy-azul-700};
+  --bs-btn-active-border-color: #{$hovy-azul-700};
 }
 
 .btn.btn-link { padding-inline: 0.5rem !important; }
@@ -130,22 +130,22 @@
 
 .btn.hovy-close-button {
   margin: 0 !important;
-  --bs-btn-border-color: #e0e4da;
-  --bs-btn-bg: #f5f7f1;
-  --bs-btn-color: #59634e;
-  --bs-btn-hover-bg: #e9efdf;
+  --bs-btn-border-color: #{$hovy-crema-400};
+  --bs-btn-bg: #{$hovy-crema-100};
+  --bs-btn-color: #{$hovy-oliva-700};
+  --bs-btn-hover-bg: #{$hovy-verde-100};
   --bs-btn-hover-color: #{$hovy-green};
 }
 
 .btn.btn-segment {
   min-height: 32px;
   border: 0;
-  border-radius: 7px !important;
+  border-radius: $hovy-radio-sm !important;
   background-color: transparent;
-  color: #6b7267;
+  color: $hovy-oliva-600;
 
-  &:hover { background-color: #f0f2ec; color: #263320; }
-  &.is-active { background-color: #263320; color: #fff; }
+  &:hover { background-color: $hovy-crema-100; color: $hovy-oliva-950; }
+  &.is-active { background-color: $hovy-oliva-950; color: $hovy-blanco; }
 }
 
 .modal-header {
@@ -218,7 +218,7 @@
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: #{$hovy-bp-telefono}) {
   .modal-footer > .btn,
   .modal-footer > .d-flex > .btn { flex: 1 1 100%; }
   .modal-footer > .d-flex { width: 100%; }

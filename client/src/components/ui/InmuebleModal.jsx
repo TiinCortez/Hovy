@@ -6,6 +6,7 @@ import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import InmuebleService from '../../services/api/inmueble.service';
 import Modal from './Modal';
+import useAvisoCambiosSinGuardar from './useAvisoCambiosSinGuardar';
 
 const PROVINCIAS_ARG = [
   "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Ciudad Autónoma de Buenos Aires", 
@@ -24,13 +25,14 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   const isEditMode = !!inmuebleData;
 
   // Extraemos 'control' en lugar de 'watch'
-  const { register, handleSubmit, reset, formState: { errors }, setValue, getValues, setError, clearErrors, setFocus, control } = useForm({
+  const { register, handleSubmit, reset, formState: { errors, isDirty }, setValue, getValues, setError, clearErrors, setFocus, control } = useForm({
     defaultValues: {
       tipo_inmueble: 'Casa Habitada',
       provincia: 'Córdoba',
       localidad: 'Córdoba Capital'
     }
   });
+  useAvisoCambiosSinGuardar(isDirty);
 
   // Usamos el hook useWatch (recomendado por React Hook Form para evitar problemas de memoización)
   const supTotal = useWatch({ control, name: 'superficie_total' }) || 0;
@@ -221,7 +223,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     className={`form-select bg-light small ${errors.provincia ? 'is-invalid' : ''}`} aria-invalid={errors.provincia ? 'true' : undefined} aria-describedby={errors.provincia ? 'inmueble-provincia-error' : undefined}
                     {...register('provincia', { required: 'Provincia obligatoria' })}
                   >
-                    <option value="">Seleccione...</option>
+                    <option value="">Seleccione…</option>
                     {PROVINCIAS_ARG.map(prov => (
                       <option key={prov} value={prov}>{prov}</option>
                     ))}
@@ -234,10 +236,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   <input id="inmueble-localidad" 
                     type="text" 
                     className="form-control bg-light small border-primary-subtle"
-                    placeholder="Ej: Córdoba Capital, San Francisco..."
+                    placeholder="Ej: Córdoba Capital, San Francisco…"
                     {...register('localidad')}
                   />
-                  <div className="form-text" style={{fontSize: '0.75rem'}}>Dato usado solo para ayudar al GPS.</div>
+                  <div className="form-text" style={{fontSize: 'var(--hovy-texto-xs)'}}>Dato usado solo para ayudar al GPS.</div>
                 </div>
               </div>
 
@@ -281,7 +283,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     onClick={handleGeocode}
                     disabled={isGeocoding || isSubmitting}
                   >
-                    {isGeocoding ? 'Buscando...' : <><Search size={14} /> Buscar dirección</>}
+                    {isGeocoding ? 'Buscando…' : <><Search size={14} /> Buscar dirección</>}
                   </button>
                 </div>
                 <p className="small text-secondary mb-2">Buscá la dirección y verificá el punto. Podés tocar el mapa o arrastrar el marcador para ajustarlo.</p>
@@ -368,7 +370,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 Cancelar
               </button>
               <Button type="submit" form="inmueble-form" variant="primary" disabled={isSubmitting || isGeocoding}>
-                {isSubmitting ? 'Guardando...' : 'Guardar Inmueble'}
+                {isSubmitting ? 'Guardando…' : 'Guardar Inmueble'}
               </Button>
             </div>
           </div>

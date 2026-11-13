@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { User, MapPin, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import AuthService from '../../services/auth.service.js';
 import Button from '../../components/ui/Button';
+import useAvisoCambiosSinGuardar from '../../components/ui/useAvisoCambiosSinGuardar';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ export default function Register() {
   const [successMessage, setSuccessMessage] = useState(null); // <--- NUEVO ESTADO PARA EL ÉXITO
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm();
+  const { register, handleSubmit, getValues, formState: { errors, isDirty } } = useForm();
+  useAvisoCambiosSinGuardar(isDirty);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -26,7 +28,7 @@ export default function Register() {
       
       await AuthService.registerUser(data.email, data.password, userData, () => {
         // 1. Mostramos el mensaje de éxito
-        setSuccessMessage('Usuario creado con éxito. Redirigiendo...');
+        setSuccessMessage('Usuario creado con éxito. Redirigiendo…');
         
         // 2. Esperamos 2 segundos (2000 ms) antes de mandarlo al login
         setTimeout(() => {
@@ -129,7 +131,7 @@ export default function Register() {
                     aria-invalid={errors.email ? 'true' : undefined}
                     aria-describedby={errors.email ? 'registro-email-error' : undefined}
                     
-                  type="email" 
+                  type="email" spellCheck={false} autoCapitalize="none" 
                   placeholder="correo@ejemplo.com" 
                   {...register("email", { 
                     required: "El correo electrónico es obligatorio",
@@ -193,14 +195,14 @@ export default function Register() {
             <div className="pt-3">
               {/* Deshabilitamos el botón si está cargando O si ya fue exitoso */}
               <Button type="submit" variant="primary" className="w-100" disabled={Boolean(isLoading || successMessage)}>
-                {isLoading ? 'Registrando...' : <>Crear Cuenta <ArrowRight size={18} className="ms-1 d-inline" /></>}
+                {isLoading ? 'Registrando…' : <>Crear Cuenta <ArrowRight size={18} className="ms-1 d-inline" /></>}
               </Button>
             </div>
           </form>
 
           <footer className="text-center mt-4">
             <p className="small text-secondary mb-0">
-              ¿Ya tienes una cuenta? <Link to="/login" className="fw-bold text-decoration-none" style={{ color: '#183c13' }}>Iniciar Sesión</Link>
+              ¿Ya tienes una cuenta? <Link to="/login" className="fw-bold text-decoration-none" style={{ color: 'var(--hovy-verde-850)' }}>Iniciar Sesión</Link>
             </p>
           </footer>
         </div>

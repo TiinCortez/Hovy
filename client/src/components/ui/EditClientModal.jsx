@@ -4,12 +4,14 @@ import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import ClienteService from '../../services/api/cliente.service';
 import Modal from './Modal';
+import useAvisoCambiosSinGuardar from './useAvisoCambiosSinGuardar';
 
 export default function EditClientModal({ isOpen, onClose, clientData, onClientUpdated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm();
+  useAvisoCambiosSinGuardar(isDirty);
 
   // Precargar los datos del cliente cuando se abre el modal
   useEffect(() => {
@@ -129,7 +131,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                     />
                   </div>
                   {errors.telefono && <span id="editar-cliente-telefono-error" className="invalid-feedback d-block">{errors.telefono.message}</span>}
-                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>Sin 0 ni 15. Incluir código de área.</span>
+                  <span className="text-muted" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Sin 0 ni 15. Incluir código de área.</span>
                 </div>
 
                 <div className="col-12 col-md-6">
@@ -147,7 +149,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                   <label htmlFor="editar-cliente-email" className="form-label small fw-bold text-secondary">Correo Electrónico (Opcional)</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Mail size={16} /></span>
-                    <input id="editar-cliente-email" type="email" className="form-control bg-light border-start-0 rounded-end-3 small" placeholder="ejemplo@correo.com" {...register('email')} />
+                    <input id="editar-cliente-email" type="email" spellCheck={false} autoCapitalize="none" className="form-control bg-light border-start-0 rounded-end-3 small" placeholder="ejemplo@correo.com" {...register('email')} />
                   </div>
                 </div>
               </div>
@@ -159,7 +161,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
               Cancelar
             </button>
             <Button type="submit" form="edit-client-form" variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+              {isSubmitting ? 'Guardando…' : 'Guardar Cambios'}
             </Button>
           </div>
 

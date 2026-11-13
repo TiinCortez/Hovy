@@ -81,7 +81,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
 
   useEffect(() => {
     if (!onResumen) return;
-    if (isLoading) onResumen({ texto: 'Cargando...', tipo: 'neutro' });
+    if (isLoading) onResumen({ texto: 'Cargando…', tipo: 'neutro' });
     else if (loadError) onResumen({ texto: 'No se pudo consultar', tipo: 'error' });
     else if (conectada) onResumen({ texto: 'Conectada', tipo: 'ok' });
     else if (reautorizar) onResumen({ texto: 'Requiere reautorizar', tipo: 'aviso' });
@@ -106,7 +106,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
           </div>
         )}
 
-        {isLoading && <p className="text-secondary mb-0">Cargando estado de la conexión...</p>}
+        {isLoading && <p className="text-secondary mb-0">Cargando estado de la conexión…</p>}
 
         {!isLoading && loadError && (
           <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -136,7 +136,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
 
             <div className="d-flex gap-2 flex-wrap">
               <Button onClick={handleVincular} disabled={isLinking}>
-                {isLinking ? 'Redirigiendo...' : (reautorizar ? 'Volver a vincular' : 'Vincular Mercado Pago')}
+                {isLinking ? 'Redirigiendo…' : (reautorizar ? 'Volver a vincular' : 'Vincular Mercado Pago')}
               </Button>
               {vinculada && (
                 <Button variant="outline-danger" onClick={() => setShowModal(true)} disabled={isLinking}>

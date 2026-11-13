@@ -34,7 +34,7 @@ export default function TrasladoDetalle({ traslado, formatMonto, className = '' 
         </small>
       )}
       {traslado.desactualizado && (
-        <small className="d-block" style={{ color: '#8a5b00' }}>
+        <small className="d-block" style={{ color: 'var(--hovy-ambar-700)' }}>
           El precio del combustible podría estar desactualizado.
         </small>
       )}

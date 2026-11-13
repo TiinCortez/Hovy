@@ -7,7 +7,7 @@ const TARJETAS = 6;
 export default function ServiciosSkeleton() {
   return (
     <div role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando servicios...</span>
+      <span className="visually-hidden">Cargando servicios…</span>
       <div className="row g-3">
         {Array.from({ length: TARJETAS }, (_, i) => (
           <div key={i} className="col-12 col-md-6 col-xl-4">

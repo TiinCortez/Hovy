@@ -226,7 +226,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: '#79542D' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: 'var(--hovy-ambar-800)' }}>
                 <ClipboardList size={24} />
               </div>
               <div>
@@ -239,7 +239,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: '#ba1a1a' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: 'var(--hovy-rojo-600)' }}>
                 <AlertTriangle size={24} />
               </div>
               <div>
@@ -336,7 +336,7 @@ export default function Dashboard() {
             </div>
 
             <div className="d-flex flex-column gap-3">
-              {cargandoTurnos && <p className="text-secondary small m-0">Cargando turnos...</p>}
+              {cargandoTurnos && <p className="text-secondary small m-0">Cargando turnos…</p>}
               {!cargandoTurnos && proximosTurnos.length === 0 && (
                 <p className="text-secondary small m-0">No hay turnos próximos.</p>
               )}

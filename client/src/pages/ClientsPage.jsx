@@ -16,6 +16,7 @@ import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
 import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
 import { VERDE } from '../styles/colores';
 import Badge from '../components/ui/Badge';
+import { CAPAS } from '../styles/capas';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
@@ -124,9 +125,9 @@ export default function ClientsPage() {
   };
 
   const getClientColor = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return '#E8F5E9';
-    if (tipo === 'Fijo') return '#F1F8E9';
-    return '#FFEBEE';
+    if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'var(--hovy-verde-100)';
+    if (tipo === 'Fijo') return 'var(--hovy-verde-50)';
+    return 'var(--hovy-rojo-50)';
   };
 
   const getClientTextColor = (tipo) => {
@@ -269,7 +270,7 @@ export default function ClientsPage() {
                   ? 'bg-warning-subtle border border-warning-subtle shadow-sm'
                   : 'text-secondary bg-transparent'
               }`}
-              style={estadoFiltro === 'Inactivos' ? { color: '#856404' } : {}}
+              style={estadoFiltro === 'Inactivos' ? { color: 'var(--hovy-ambar-700)' } : {}}
             >
               Inactivos ({clientesInactivos.length})
             </button>
@@ -280,7 +281,7 @@ export default function ClientsPage() {
             <input
               type="text"
               className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-              placeholder={estadoFiltro === 'Inactivos' ? 'Buscar en inactivos...' : 'Buscar en activos...'}
+              placeholder={estadoFiltro === 'Inactivos' ? 'Buscar en inactivos…' : 'Buscar en activos…'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -376,14 +377,14 @@ export default function ClientsPage() {
               <div key={clientKey} className="col-12 col-md-6 col-xl-4">
                 <Card
                   className="h-100 p-3 shadow-sm border-0 rounded-4 d-flex flex-column justify-content-between bg-white position-relative"
-                  style={{ cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
-                  onClick={() => navigate(`/clients/${client.telefono}/inmuebles`)}
+                  style={{ cursor: 'pointer', transition: 'transform var(--hovy-duracion-rapida) ease, box-shadow var(--hovy-duracion-rapida) ease' }}
+                  onClick={() => navigate(`/clients/${client.id_cliente}/inmuebles`)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      navigate(`/clients/${client.telefono}/inmuebles`);
+                      navigate(`/clients/${client.id_cliente}/inmuebles`);
                     }
                   }}
                 >
@@ -415,7 +416,7 @@ export default function ClientsPage() {
                             {isMenuOpen && (
                               <div
                                 className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
-                                style={{ minWidth: '175px', zIndex: 1050 }}
+                                style={{ minWidth: '175px', zIndex: CAPAS.menu }}
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
@@ -455,7 +456,7 @@ export default function ClientsPage() {
                             )}
                           </div>
                         </div>
-                        <p className="text-secondary small m-0 text-truncate" style={{ fontSize: '0.78rem' }}>{client.razon_social || 'Cliente Estándar'}</p>
+                        <p className="text-secondary small m-0 text-truncate" style={{ fontSize: 'var(--hovy-texto-xs)' }}>{client.razon_social || 'Cliente Estándar'}</p>
                       </div>
                     </div>
 
@@ -477,7 +478,7 @@ export default function ClientsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-sm btn-outline-success border-0 p-1 px-2 d-inline-flex align-items-center gap-1 text-decoration-none rounded-pill flex-shrink-0"
-                            style={{ fontSize: '0.75rem', backgroundColor: '#eaf8ef' }}
+                            style={{ fontSize: 'var(--hovy-texto-xs)', backgroundColor: 'var(--hovy-verde-100)' }}
                             title={`Contactar a ${fullName} por WhatsApp`}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -497,17 +498,17 @@ export default function ClientsPage() {
 
                   <div className="row g-0 bg-light rounded-3 border overflow-hidden mt-auto">
                     <div className="col-5 p-2 px-2 border-end">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Inmuebles</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Inmuebles</span>
                       <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                         <Building2 size={13} className="text-secondary" /> {cantidadInmuebles > 0 ? cantidadInmuebles : '-'}
                       </span>
                     </div>
                     <div className="col-7 p-2 px-2">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Próximo servicio</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Próximo servicio</span>
                       <div className="d-flex flex-column">
                         <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                           <Calendar size={13} className={fechaProximoTurno ? 'text-success' : 'text-secondary'} /> {fechaProximoTurno || '-'}
-                          {proximoTurno?.franjaHoraria?.horaInicio && (<span className="text-secondary" style={{ fontSize: '0.92rem' }}>{proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs</span>)}
+                          {proximoTurno?.franjaHoraria?.horaInicio && (<span className="text-secondary" style={{ fontSize: 'var(--hovy-texto-md)' }}>{proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs</span>)}
                         </span>
                       </div>
                     </div>

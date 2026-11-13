@@ -26,7 +26,7 @@ export const describirCobro = (cobro, formatMonto) => {
     case 'Aprobado':
       if (cobro.impactado) return { tipo: 'ok', mensaje: 'Pago recibido y registrado en la cuenta corriente del cliente.' };
       return cobro.id_turno
-        ? { tipo: 'espera', mensaje: 'Pago recibido. Registrándolo en la cuenta corriente...' }
+        ? { tipo: 'espera', mensaje: 'Pago recibido. Registrándolo en la cuenta corriente…' }
         : { tipo: 'ok', mensaje: 'Pago recibido.' };
     case 'Rechazado':
       return { tipo: 'error', mensaje: 'Mercado Pago rechazó el pago. Podés generar un nuevo QR.' };

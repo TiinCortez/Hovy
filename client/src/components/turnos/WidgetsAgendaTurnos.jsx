@@ -91,7 +91,7 @@ export default function WidgetsAgendaTurnos({ turnos, periodo, onSelectTurno }) 
           >
             {mapaExpandido ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
           </Button>
-          <Suspense fallback={<div className="turnos-tools-loading" role="status">Cargando mapa...</div>}>
+          <Suspense fallback={<div className="turnos-tools-loading" role="status">Cargando mapa…</div>}>
             <MapaAgenda turnos={turnos} onSelectTurno={seleccionarTurno} />
           </Suspense>
         </div>

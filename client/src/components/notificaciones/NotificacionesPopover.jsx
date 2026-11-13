@@ -4,6 +4,7 @@ import Paginacion from './Paginacion.jsx';
 import { obtenerTipo, destinoNotificacion, formatearTiempo } from './notificacionesConfig.js';
 import './notificaciones.scss';
 import { VERDE } from '../../styles/colores';
+import { CAPAS } from '../../styles/capas';
 
 const POR_PAGINA = 2;
 
@@ -16,15 +17,15 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
   const visibles = notificaciones.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
 
   return (
-    <div className="visitas-popover shadow-lg rounded-4 p-0 overflow-hidden" style={{ zIndex: 1050 }}>
-      <div className="px-3 py-3 border-bottom d-flex align-items-center justify-content-between" style={{ borderColor: '#D1D1C4' }}>
+    <div className="visitas-popover shadow-lg rounded-4 p-0 overflow-hidden" style={{ zIndex: CAPAS.menu }}>
+      <div className="px-3 py-3 border-bottom d-flex align-items-center justify-content-between" style={{ borderColor: 'var(--hovy-crema-500)' }}>
         <h6 className="fw-bold text-dark m-0">Notificaciones</h6>
         {notificaciones.length > 0 && (
           <span className="small text-secondary">{notificaciones.length} sin resolver</span>
         )}
       </div>
 
-      <div style={{ backgroundColor: '#ffffff' }}>
+      <div style={{ backgroundColor: 'var(--hovy-blanco)' }}>
         {notificaciones.length === 0 && (
           <div className="d-flex flex-column align-items-center text-center gap-2 py-5 px-3 text-secondary">
             <Inbox size={28} />
@@ -43,7 +44,7 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
               onClick={() => destino && onAbrir(destino)}
               disabled={!destino}
               className="visitas-popover-item w-100 text-start bg-transparent border-0 border-bottom px-3 py-3 d-flex align-items-center gap-3"
-              style={{ borderColor: '#D1D1C4' }}
+              style={{ borderColor: 'var(--hovy-crema-500)' }}
             >
               <span className="notificacion-icono" style={{ backgroundColor: tipo.fondo, color: tipo.color }}>
                 <Icono size={16} />
@@ -51,7 +52,7 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
               <span className="flex-grow-1">
                 <span className="small fw-bold text-dark d-block">{tipo.etiqueta}</span>
                 <span className="small text-secondary d-block">{notificacion.mensaje}</span>
-                <span className="text-secondary d-block" style={{ fontSize: '0.75rem' }}>
+                <span className="text-secondary d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                   {formatearTiempo(notificacion.fecha_notificacion)}
                 </span>
               </span>
@@ -60,13 +61,13 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
         })}
       </div>
 
-      <div className="px-3 py-2 border-top d-flex align-items-center justify-content-between gap-2" style={{ borderColor: '#D1D1C4' }}>
+      <div className="px-3 py-2 border-top d-flex align-items-center justify-content-between gap-2" style={{ borderColor: 'var(--hovy-crema-500)' }}>
         <Paginacion pagina={paginaActual} totalPaginas={totalPaginas} onCambiar={setPagina} compacta />
         <button
           type="button"
           onClick={onVerTodas}
           className="btn btn-link p-0 ms-auto small fw-semibold text-decoration-none d-flex align-items-center gap-1"
-          style={{ color: VERDE, fontSize: '0.8rem' }}
+          style={{ color: VERDE, fontSize: 'var(--hovy-texto-sm)' }}
         >
           Ver todas <ArrowRight size={14} />
         </button>

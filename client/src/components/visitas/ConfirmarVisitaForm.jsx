@@ -66,7 +66,7 @@ export default function ConfirmarVisitaForm({ visita, onDone, embedded = false }
               className={`form-select bg-light rounded-3 ${errors.tipo_inmueble ? 'is-invalid' : ''}`}
               {...register('tipo_inmueble', { required: 'Elegí el tipo de inmueble' })}
             >
-              <option value="">Seleccionar...</option>
+              <option value="">Seleccionar…</option>
               {TIPOS_INMUEBLE.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
             {errors.tipo_inmueble && <span className="text-danger small mt-1 d-block">{errors.tipo_inmueble.message}</span>}
@@ -105,7 +105,7 @@ export default function ConfirmarVisitaForm({ visita, onDone, embedded = false }
           )}
         </div>
         <Button type="submit" variant="primary" disabled={isSubmitting} style={{ backgroundColor: VERDE, borderColor: VERDE }}>
-          {isSubmitting ? 'Confirmando...' : 'Confirmar visita'}
+          {isSubmitting ? 'Confirmando…' : 'Confirmar visita'}
         </Button>
       </form>
     </Wrapper>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { User, Lock, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
@@ -47,11 +47,13 @@ export default function Login() {
                 <div className="mb-4">
                   <img
                     src="/hovy.webp"
-                    alt="Hovy Logo"
+                    alt="Hovy"
+                    width="778"
+                    height="305"
                     style={{ maxHeight: '122px', maxWidth: '100%', width: 'auto', objectFit: 'contain' }}
                   />
                 </div>
-                <h1 className="fw-bold" style={{ color: VERDE, fontSize: '2.5rem' }}>Bienvenido</h1>
+                <h1 className="fw-bold" style={{ color: VERDE, fontSize: 'var(--hovy-texto-5xl)' }}>Bienvenido</h1>
               </div>
 
               {/* Manejo de error general de autenticación */}
@@ -72,7 +74,7 @@ export default function Login() {
                       <User size={20} />
                     </span>
                     <input
-                      type="email"
+                      type="email" spellCheck={false} autoCapitalize="none"
                       className={`form-control border-start-0 rounded-end-pill py-2 ${errors.email ? 'is-invalid' : ''}`}
                       placeholder="Ingrese su correo"
                       {...register("email", { 
@@ -120,7 +122,7 @@ export default function Login() {
 
                 {/* Botón Principal */}
                 <Button type="submit" variant="primary" className="w-100 py-3 mb-4 shadow-sm fs-5" disabled={isLoading}>
-                  {isLoading ? 'Verificando...' : (
+                  {isLoading ? 'Verificando…' : (
                     <>Iniciar Sesión <ArrowRight size={20} /></>
                   )}
                 </Button>
@@ -130,13 +132,12 @@ export default function Login() {
                {/* Crear Cuenta */}
               <div className="text-center">
                 <p className="text-secondary small mb-2">¿No tienes una cuenta?</p>
-                <Button 
-                  variant="outline-primary" 
-                  className="w-100 py-2 rounded-pill bg-transparent border-secondary text-dark fw-semibold"
-                  onClick={() => navigate('/register')}
+                <Link
+                  to="/register"
+                  className="btn btn-outline-primary w-100 py-2 rounded-pill bg-transparent border-secondary text-dark fw-semibold"
                 >
-                  Crear Cuenta <UserPlus size={18} className="ms-1" />
-                </Button>
+                  Crear Cuenta <UserPlus size={18} className="ms-1" aria-hidden="true" />
+                </Link>
               </div>
                 
 

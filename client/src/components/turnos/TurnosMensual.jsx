@@ -137,8 +137,8 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                       style={{width: '14.28%', cursor: 'pointer', height: '48px'}}
                       onClick={() => setDiaSeleccionadoMobile(dia.iso)}
                     >
-                      {dia.isToday && <span style={{fontSize: '0.75rem', fontWeight: 800, marginTop: '-2px'}}>HOY</span>}
-                      <span className={`fw-bold ${isSelected ? 'text-white' : dia.isToday ? 'text-success' : 'text-secondary'}`} style={{fontSize: '1rem', lineHeight: '1.2'}}>
+                      {dia.isToday && <span style={{fontSize: 'var(--hovy-texto-xs)', fontWeight: 800, marginTop: '-2px'}}>HOY</span>}
+                      <span className={`fw-bold ${isSelected ? 'text-white' : dia.isToday ? 'text-success' : 'text-secondary'}`} style={{fontSize: 'var(--hovy-texto-base)', lineHeight: '1.2'}}>
                         {dia.diaNumero}
                       </span>
                       {/* Puntitos de turnos */}
@@ -190,7 +190,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                           <span className="fw-bold bg-light rounded-2 px-2 py-1 border">{tieneHorarioTurno(turno) ? `${formatearHoraCorta(turno.franjaHoraria.horaInicio)} hs` : 'Sin horario'}</span>
                           <h6 className="fw-bold m-0 text-dark fs-6">{turno.cliente.nombre}</h6>
                         </div>
-                        <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.75rem'}}>
+                        <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: 'var(--hovy-texto-xs)'}}>
                           <span className={`${isEjecucion ? 'turno-en-curso-bg' : `bg-${pConf.color}`} rounded-circle d-inline-block me-1`} style={{width: 6, height: 6}}></span>
                           {isEjecucion ? `${pConf.code} - En curso` : pConf.label}
                         </span>
@@ -242,7 +242,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                   <div
                     key={dia.iso}
                     className="border-end border-bottom d-flex flex-column p-1 position-relative"
-                    style={{ width: '14.28%', minHeight: '110px', backgroundColor: dia.isCurrentMonth ? '#ffffff' : '#f8f9fa' }}
+                    style={{ width: '14.28%', minHeight: '110px', backgroundColor: dia.isCurrentMonth ? 'var(--hovy-blanco)' : 'var(--hovy-gris-50)' }}
                     onDoubleClick={() => onSwitchToDailyView(dia.iso)}
                   >
                     {/* Número de día */}
@@ -267,7 +267,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                             key={t.idTurno}
                             onClick={(e) => { e.stopPropagation(); onSelectTurno(t.idTurno); }}
                             className={`badge border ${bg} ${border} rounded-2 text-start p-1 px-2 d-flex align-items-center w-100 shadow-sm hover-opacity ${isEjecucion ? 'turno-en-curso-solid' : ''}`}
-                            style={{ cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                            style={{ cursor: 'pointer', fontSize: 'var(--hovy-texto-xs)', fontWeight: 600 }}
                             title={`${tieneHorarioTurno(t) ? formatearHoraCorta(t.franjaHoraria.horaInicio) : 'Sin horario'} ${t.cliente.nombre}`}
                           >
                             <span className="me-1 flex-shrink-0 d-flex align-items-center gap-1">
@@ -284,7 +284,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                       {desborde > 0 && (
                         <div
                           className="text-secondary small fw-bold ps-1 mt-auto pb-1 hover-opacity"
-                          style={{fontSize: '0.75rem', cursor: 'pointer'}}
+                          style={{fontSize: 'var(--hovy-texto-xs)', cursor: 'pointer'}}
                           onClick={(e) => { e.stopPropagation(); onSwitchToDailyView(dia.iso); }}
                         >
                           +{desborde} más

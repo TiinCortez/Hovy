@@ -6,6 +6,7 @@ import TurnoFechaSelector from './TurnoFechaSelector';
 import useRelojTurnos from './useRelojTurnos';
 import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos, formatearHoraCorta } from './agendaTurnos';
 import Modal from '../ui/Modal';
+import { CAPAS } from '../../styles/capas';
 
 export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurnoUpdated, turnosExistentes = [] }) {
   const ahora = useRelojTurnos();
@@ -92,7 +93,7 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
       onCerrar={onClose}
       tamano="xl"
       desplazable
-      zIndex={1080}
+      zIndex={CAPAS.modalSuperior}
       claseRaiz="modificar-turno-modal"
       claseContenido="overflow-hidden"
       claseCabecera="px-3 px-md-4 py-3 border-bottom"
@@ -191,7 +192,7 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
             <div className="turnos-modificar-footer modal-footer border-top px-3 px-md-4 py-3 d-flex justify-content-end gap-2">
               <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
               <Button type="submit" variant="primary" disabled={fechaInvalida || horarioInvalido || Boolean(franjaActiva?.turnoSolapado) || isSubmitting}>
-                <Check size={17} /> {isSubmitting ? 'Guardando...' : 'Guardar Modificación'}
+                <Check size={17} /> {isSubmitting ? 'Guardando…' : 'Guardar Modificación'}
               </Button>
             </div>
           </form>

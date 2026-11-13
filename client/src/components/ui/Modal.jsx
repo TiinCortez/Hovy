@@ -1,5 +1,6 @@
 import { useId, useRef } from 'react';
 import CloseButton from './CloseButton';
+import { CAPAS } from '../../styles/capas';
 import useCerrarConEscape from './useCerrarConEscape';
 import useFocoModal from './useFocoModal';
 
@@ -26,7 +27,7 @@ export default function Modal({
   tamano,
   desplazable = false,
   cerrarAlTocarFondo = false,
-  zIndex = 1060,
+  zIndex = CAPAS.modal,
   claseRaiz = '',
   claseDialogo = '',
   claseContenido = '',

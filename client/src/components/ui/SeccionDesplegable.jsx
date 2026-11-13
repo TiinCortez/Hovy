@@ -19,7 +19,7 @@ export default function SeccionDesplegable({
   const idCuerpo = useId();
 
   return (
-    <div className="card border-0 shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+    <div className="card border-0 shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: 'var(--hovy-blanco)' }}>
       <button
         type="button"
         className="btn w-100 text-start d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 p-3 p-md-4 border-0 rounded-0"
@@ -43,7 +43,7 @@ export default function SeccionDesplegable({
         <ChevronDown
           size={20}
           className="text-secondary flex-shrink-0"
-          style={{ transition: 'transform 0.2s', transform: abierta ? 'rotate(180deg)' : 'none' }}
+          style={{ transition: 'transform var(--hovy-duracion-media)', transform: abierta ? 'rotate(180deg)' : 'none' }}
           aria-hidden="true"
         />
       </button>

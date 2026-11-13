@@ -7,7 +7,7 @@ const TARJETAS = 6;
 export default function ClientesSkeleton() {
   return (
     <div role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando clientes...</span>
+      <span className="visually-hidden">Cargando clientes…</span>
       <div className="row g-3">
         {Array.from({ length: TARJETAS }, (_, i) => (
           <div key={i} className="col-12 col-md-6 col-xl-4">

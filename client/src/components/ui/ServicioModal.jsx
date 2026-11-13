@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import Button from './Button';
 import ServicioService from '../../services/api/servicio.service';
 import Modal from './Modal';
+import useAvisoCambiosSinGuardar from './useAvisoCambiosSinGuardar';
 
 // Mirrors server rule: finite number >= 0
 const nonNegative = (value) => {
@@ -21,7 +22,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   // The parent mounts this modal only while open, so defaultValues are fresh each time
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm({
     defaultValues: {
       nombre: '',
       descripcion: '',
@@ -29,6 +30,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
       limite_operativo: isEdit && servicio.limite_operativo != null ? String(servicio.limite_operativo) : '',
     },
   });
+  useAvisoCambiosSinGuardar(isDirty);
 
   if (!isOpen) return null;
 
@@ -155,7 +157,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
               Cancelar
             </button>
             <Button type="submit" form={formId} variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Agregar'}
+              {isSubmitting ? 'Guardando…' : isEdit ? 'Guardar Cambios' : 'Agregar'}
             </Button>
           </div>
     </Modal>,

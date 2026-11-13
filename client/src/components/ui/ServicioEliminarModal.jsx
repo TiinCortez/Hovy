@@ -45,7 +45,7 @@ export default function ServicioEliminarModal({ isOpen, onClose, servicio, onDel
               Cancelar
             </button>
             <Button variant="danger" onClick={handleConfirm} disabled={isSubmitting}>
-              {isSubmitting ? 'Eliminando...' : 'Eliminar'}
+              {isSubmitting ? 'Eliminando…' : 'Eliminar'}
             </Button>
           </div>
     </Modal>,

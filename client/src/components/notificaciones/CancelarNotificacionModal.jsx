@@ -52,7 +52,7 @@ export default function CancelarNotificacionModal({ isOpen, onClose, notificacio
               Cancelar
             </button>
             <Button variant="danger" onClick={handleConfirm} disabled={isSubmitting}>
-              {isSubmitting ? 'Eliminando...' : 'Eliminar'}
+              {isSubmitting ? 'Eliminando…' : 'Eliminar'}
             </Button>
           </div>
     </Modal>,

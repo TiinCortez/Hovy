@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Button from './Button';
 import { VERDE } from '../../styles/colores';
+import { CAPAS } from '../../styles/capas';
 
 const CENTRO_ARGENTINA = [-38.4161, -63.6167];
 const ICONO_INMUEBLE = L.divIcon({
@@ -94,7 +95,7 @@ export default function InmuebleMapa({ posicion, onChange }) {
           aria-label={mapaFullscreen ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
           title={mapaFullscreen ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
           aria-pressed={mapaFullscreen}
-          style={{ top: 10, right: 10, zIndex: 1000 }}
+          style={{ top: 10, right: 10, zIndex: CAPAS.fija }}
         >
           {mapaFullscreen ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
         </Button>

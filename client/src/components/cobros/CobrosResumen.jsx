@@ -4,7 +4,7 @@ import { formatearMontoARS } from '../turnos/agendaTurnos';
 import { DIAS_ALERTA_COBRO } from './cobrosUtils';
 import Badge from '../ui/Badge';
 
-const etiquetaStyle = { fontSize: '0.75rem', letterSpacing: '0.05em' };
+const etiquetaStyle = { fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' };
 
 // Tarjetas de resumen del mes: recaudado, saldo por cobrar y turnos ejecutados
 export default function CobrosResumen({ resumen }) {
@@ -25,7 +25,7 @@ export default function CobrosResumen({ resumen }) {
               <div className="cobros-kpi-icono cobros-kpi-icono--verde"><BadgeCheck size={20} /></div>
             </div>
             <div className="d-flex align-items-baseline flex-wrap gap-2">
-              <span className="cobros-kpi-valor" style={{ color: '#496544' }}>{formatearMontoARS(recaudado)}</span>
+              <span className="cobros-kpi-valor" style={{ color: 'var(--hovy-verde-600)' }}>{formatearMontoARS(recaudado)}</span>
               <Badge tipo="exito" conPunto={false}>{porcentaje.toLocaleString('es-AR')}%</Badge>
             </div>
             <div className="cobros-progreso mt-3" role="progressbar" aria-valuenow={porcentaje} aria-valuemin={0} aria-valuemax={100} aria-label="Porcentaje recaudado">
@@ -44,7 +44,7 @@ export default function CobrosResumen({ resumen }) {
               <div className="cobros-kpi-icono cobros-kpi-icono--terracota"><Hourglass size={20} /></div>
             </div>
             <div className="d-flex align-items-baseline flex-wrap gap-2">
-              <span className="cobros-kpi-valor" style={{ color: '#A35A34' }}>{formatearMontoARS(porCobrar)}</span>
+              <span className="cobros-kpi-valor" style={{ color: 'var(--hovy-terracota-600)' }}>{formatearMontoARS(porCobrar)}</span>
               <Badge tipo="pendiente" conPunto={false}>
                 {cantidadPendientes} {cantidadPendientes === 1 ? 'turno' : 'turnos'}
               </Badge>
@@ -68,15 +68,15 @@ export default function CobrosResumen({ resumen }) {
               <div className="cobros-kpi-icono cobros-kpi-icono--neutro"><CheckCircle size={20} /></div>
             </div>
             <div className="d-flex align-items-baseline gap-2">
-              <span className="cobros-kpi-valor" style={{ color: '#173313' }}>{cantidadTotal}</span>
+              <span className="cobros-kpi-valor" style={{ color: 'var(--hovy-verde-850)' }}>{cantidadTotal}</span>
               <span className="small text-secondary fw-medium">
                 {cantidadTotal === 1 ? 'turno finalizado' : 'turnos finalizados'}
               </span>
             </div>
             <div className="d-flex align-items-center gap-2 mt-2 small fw-semibold">
-              <span style={{ color: '#496544' }}>{cantidadCobrados} cobrados</span>
+              <span style={{ color: 'var(--hovy-verde-600)' }}>{cantidadCobrados} cobrados</span>
               <span className="text-secondary" aria-hidden="true">•</span>
-              <span style={{ color: '#A35A34' }}>{cantidadPendientes} pendientes</span>
+              <span style={{ color: 'var(--hovy-terracota-600)' }}>{cantidadPendientes} pendientes</span>
             </div>
           </div>
         </Card>

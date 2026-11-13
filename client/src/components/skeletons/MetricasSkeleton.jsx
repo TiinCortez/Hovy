@@ -8,7 +8,7 @@ const FILAS_TABLA = 5;
 export default function MetricasSkeleton() {
   return (
     <div className="d-flex flex-column gap-4" role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando métricas...</span>
+      <span className="visually-hidden">Cargando métricas…</span>
 
       {/* KPIs principales */}
       <div className="row g-4">

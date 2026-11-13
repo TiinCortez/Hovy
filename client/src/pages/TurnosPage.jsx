@@ -383,11 +383,11 @@ export default function TurnosPage() {
             <input
               type="search"
               className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-              placeholder="Buscar por cliente o predio..."
+              placeholder="Buscar por cliente o predio…"
               aria-label="Buscar turnos"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              style={{ fontSize: '0.85rem' }}
+              style={{ fontSize: 'var(--hovy-texto-md)' }}
             />
           </div>
           <span className="badge bg-light text-dark border rounded-pill px-3 py-2 fw-medium text-nowrap">
