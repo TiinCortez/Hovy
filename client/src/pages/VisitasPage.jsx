@@ -25,10 +25,17 @@ const FRANJA_TEXTO = {
 // Backend state "Realizada" means "turno agendado": it is shown as Confirmada
 const getTab = (visita) => (visita.estado === 'Realizada' ? 'Confirmada' : visita.estado);
 
-// Requests still being worked on. Confirmed (or turno already scheduled) and
-// cancelled ones only show up in the history view.
+// A turno request from an existing client (bot) is created already Confirmada:
+// it stays pending until the admin assigns the budget and books the turno.
+const esPedidoClienteEnCurso = (visita) => visita.tipo_solicitud === 'cliente' && visita.estado === 'Confirmada';
+
+// Requests still being worked on. Confirmed new contacts (or turno already
+// scheduled) and cancelled ones only show up in the history view.
 const ESTADOS_ACTIVOS = ['Pendiente', 'Contactada'];
-const esActiva = (visita) => ESTADOS_ACTIVOS.includes(visita.estado);
+const esActiva = (visita) => ESTADOS_ACTIVOS.includes(visita.estado) || esPedidoClienteEnCurso(visita);
+
+// What an open client request is waiting for.
+const pasoPendienteCliente = (visita) => (visita.id_presupuesto ? 'Falta turno' : 'Falta presupuesto');
 
 const VISTAS = [
   { value: 'activas', label: 'Pendientes', icon: Inbox },
@@ -39,6 +46,11 @@ const TABS_POR_VISTA = {
   activas: ['Todas', 'Pendiente', 'Contactada'],
   historial: ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada'],
 };
+
+// Client requests arrive Confirmada, so their pending view also needs that tab.
+const tabsDe = (vista, grupo) => (
+  vista === 'activas' && grupo === 'clientes' ? ['Todas', 'Confirmada'] : TABS_POR_VISTA[vista]
+);
 
 const GRUPOS = [
   { value: 'nuevas', label: 'Nuevas', icon: UserPlus, descripcion: 'Personas que todavía no son clientes.' },
@@ -135,7 +147,7 @@ export default function VisitasPage() {
     [delGrupo, vista],
   );
 
-  const tabs = TABS_POR_VISTA[vista];
+  const tabs = tabsDe(vista, grupo);
 
   const counts = useMemo(() => {
     const result = { Todas: visitasDelGrupo.length, Pendiente: 0, Contactada: 0, Confirmada: 0, Cancelada: 0 };
@@ -178,7 +190,7 @@ export default function VisitasPage() {
         <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes</h2>
         <p className="text-secondary small m-0">
           {vista === 'activas'
-            ? 'Solicitudes pendientes de contactar o confirmar.'
+            ? 'Solicitudes que todavía hay que atender.'
             : 'Historial: todas las solicitudes, en cualquier estado.'}
         </p>
       </div>
@@ -321,7 +333,7 @@ export default function VisitasPage() {
                         {tab}
                       </span>
                     </div>
-                    {(visita.estado === 'Realizada' || yaEsCliente(visita)) && (
+                    {(visita.estado === 'Realizada' || yaEsCliente(visita) || esPedidoClienteEnCurso(visita)) && (
                       <div className="d-flex flex-wrap gap-1 mt-2">
                         {visita.estado === 'Realizada' && (
                           <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_TURNO }}>
@@ -331,6 +343,11 @@ export default function VisitasPage() {
                         {yaEsCliente(visita) && (
                           <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_CLIENTE }}>
                             <UserCheck size={12} /> Ya es cliente
+                          </span>
+                        )}
+                        {esPedidoClienteEnCurso(visita) && (
+                          <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_CLIENTE }}>
+                            <Clock size={12} /> {pasoPendienteCliente(visita)}
                           </span>
                         )}
                       </div>

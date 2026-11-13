@@ -23,6 +23,7 @@ import {
   sugerirUbicacion,
 } from '../controllers/botInmueblesController.js';
 import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
+import { crearSolicitudClienteBot } from '../controllers/botSolicitudesClienteController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { logisticaStaff } from '../controllers/logisticaController.js';
 import { crearSolicitudVisita } from '../controllers/botVisitasController.js';
@@ -118,6 +119,12 @@ router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefo
 // Turnos futuros del cliente (Coordinado, Confirmado, En ejecución).
 // GET    /api/bot/clientes/:telefono/turnos?limite=20
 router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFuturosDelCliente);
+
+// Pedido de turno de un cliente existente: elige inmueble, servicio y fecha, y
+// llega a "Solicitudes -> Clientes" listo para presupuesto (estado Confirmada).
+// POST   /api/bot/clientes/:telefono/solicitudes
+// body: { id_inmueble, id_servicio, fecha_preferida?, franja_preferida?, nota_horario? }
+router.post('/clientes/:telefono/solicitudes', resolverClientePorTelefono, crearSolicitudClienteBot);
 
 
 // Solicitud de visita. No requiere registro, así que no monta
