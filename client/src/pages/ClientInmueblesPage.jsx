@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, MoreVertical, CheckCircle2, Shield, 
   Mail, FileText, Edit2, Phone, MapPin, Building2, Calendar,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import EditClientModal from '../components/ui/EditClientModal'; 
 import InmuebleModal from '../components/ui/InmuebleModal';
 import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
@@ -19,12 +20,18 @@ import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
 import ClienteDetalleSkeleton from '../components/skeletons/ClienteDetalleSkeleton';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
+import { CAPAS } from '../styles/capas';
+import ConfirmarModal from '../components/ui/ConfirmarModal';
 
 export default function ClientInmueblesPage() {
+  const { avisar } = useAvisos();
   const { id } = useParams();
-  const navigate = useNavigate();
   
   const [showFichaMobile, setShowFichaMobile] = useState(false);
+  const [inmuebleABorrar, setInmuebleABorrar] = useState(null);
+  const [borrandoInmueble, setBorrandoInmueble] = useState(false);
+  const [errorBaja, setErrorBaja] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isClientMenuOpen, setIsClientMenuOpen] = useState(false);
   
@@ -112,7 +119,7 @@ export default function ClientInmueblesPage() {
       setCliente(prev => ({ ...prev, estado: nuevoEstado }));
     } catch (error) {
       console.error('Error al cambiar el estado del cliente:', error);
-      alert('Hubo un error al actualizar el estado.');
+      avisar('No se pudo cambiar el estado del cliente. Intentá de nuevo.');
     }
   };
 
@@ -127,7 +134,7 @@ export default function ClientInmueblesPage() {
       setIsTurnoDetalleOpen(false);
     } catch (error) {
       console.error('Error al cancelar el turno:', error);
-      alert('Ocurrió un error al intentar cancelar el turno. Verifique su conexión.');
+      avisar('No se pudo cancelar el turno. Revisá tu conexión e intentá de nuevo.');
     }
   };
 
@@ -146,7 +153,7 @@ export default function ClientInmueblesPage() {
       return true;
     } catch (error) {
       console.error(`Error al cambiar el estado a ${newState}:`, error);
-      alert('Ocurrió un error al actualizar el estado del turno.');
+      avisar('No se pudo cambiar el estado del turno. Intentá de nuevo.');
       return false;
     }
   };
@@ -174,14 +181,24 @@ export default function ClientInmueblesPage() {
     if (isDetalleModalOpen) setSelectedInmueble(savedInmueble);
   };
 
-  const handleInmuebleDeleted = async (inmuebleData) => {
-    if (!window.confirm('¿Está seguro de que desea dar de baja este inmueble? Esta acción no se puede deshacer.')) return;
+  // Pide confirmación en un modal antes de dar de baja (no se puede deshacer)
+  const handleInmuebleDeleted = (inmuebleData) => {
+    setErrorBaja(null);
+    setInmuebleABorrar(inmuebleData);
+  };
+
+  const confirmarBajaInmueble = async () => {
+    setBorrandoInmueble(true);
+    setErrorBaja(null);
     try {
-      await InmuebleService.delete(inmuebleData.id_inmueble);
-      setInmuebles(prev => prev.filter(i => i.id_inmueble !== inmuebleData.id_inmueble));
+      await InmuebleService.delete(inmuebleABorrar.id_inmueble);
+      setInmuebles(prev => prev.filter(i => i.id_inmueble !== inmuebleABorrar.id_inmueble));
+      setInmuebleABorrar(null);
     } catch (error) {
       console.error('Error al eliminar inmueble:', error);
-      alert(error.response?.data?.error || 'Ocurrió un error al intentar eliminar el inmueble.');
+      setErrorBaja(error.response?.data?.error || 'No se pudo dar de baja el inmueble. Probá de nuevo en unos minutos.');
+    } finally {
+      setBorrandoInmueble(false);
     }
   };
 
@@ -220,9 +237,9 @@ export default function ClientInmueblesPage() {
         <AlertTriangle size={48} className="text-warning mb-3 mx-auto" />
         <h3 className="fw-bold text-dark">Cliente no encontrado</h3>
         <p className="text-secondary">Es posible que el cliente haya sido eliminado o el enlace sea incorrecto.</p>
-        <Button onClick={() => navigate('/clients')} variant="outline-primary" className="mt-3 bg-white text-dark border-secondary">
+        <Link to="/clients" className="btn btn-outline-primary mt-3 bg-white text-dark border-secondary">
           Volver a Clientes
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -251,12 +268,14 @@ export default function ClientInmueblesPage() {
     : null;
 
   return (
-    <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', margin: '-1.5rem', padding: '1.5rem' }}>
+    <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: 'var(--hovy-gris-50)', minHeight: '100vh', margin: 'calc(-1 * var(--hovy-espacio-24))', padding: 'var(--hovy-espacio-24)' }}>
       
       {/* HEADER MÓVIL */}
       <div className="d-flex d-md-none align-items-center justify-content-between mb-3 px-2">
         <div className="d-flex align-items-center gap-3">
-          <ArrowLeft size={24} className="text-dark" onClick={() => navigate('/clients')} />
+          <Link to="/clients" className="text-dark d-inline-flex" aria-label="Volver a Clientes">
+            <ArrowLeft size={24} aria-hidden="true" />
+          </Link>
           <div className="d-flex align-items-center gap-2">
             <Shield size={18} className="text-success" />
             <h1 className="fw-bold m-0 fs-5 text-dark">Detalle De Cliente</h1>
@@ -264,16 +283,16 @@ export default function ClientInmueblesPage() {
         </div>
         <div className="d-flex align-items-center gap-3">
           <Bell size={20} className="text-secondary" />
-          <img src={`https://ui-avatars.com/api/?name=${iniciales}&background=random`} alt="User" className="rounded-circle border" width="32" height="32" />
+          <span className="rounded-circle border d-inline-flex align-items-center justify-content-center fw-bold small text-white" style={{ width: 32, height: 32, backgroundColor: 'var(--hovy-verde-600)' }} aria-hidden="true">{iniciales}</span>
         </div>
       </div>
 
       {/* BREADCRUMB DESKTOP */}
       <div className="d-none d-md-flex align-items-center justify-content-between mb-2">
         <div className="d-flex align-items-center gap-2 text-secondary small fw-medium">
-          <button onClick={() => navigate('/clients')} className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 fw-semibold hover-opacity">
-            <ArrowLeft size={16} /> Volver a Clientes
-          </button>
+          <Link to="/clients" className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 fw-semibold">
+            <ArrowLeft size={16} aria-hidden="true" /> Volver a Clientes
+          </Link>
           <span className="text-muted">/</span>
           <span className="text-muted">Clientes</span>
           <span className="text-muted">/</span>
@@ -299,7 +318,7 @@ export default function ClientInmueblesPage() {
             {isClientMenuOpen && (
               <div
                 className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
-                style={{ minWidth: '175px', zIndex: 1050 }}
+                style={{ minWidth: '175px', zIndex: CAPAS.menu }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -344,17 +363,17 @@ export default function ClientInmueblesPage() {
         <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-4 mb-4 pb-4 border-bottom">
           <div className="d-flex gap-3 flex-grow-1 min-w-0">
             <div className="rounded-4 d-flex align-items-center justify-content-center fw-bold text-success flex-shrink-0"
-                 style={{ width: '64px', height: '64px', backgroundColor: '#E8F5E9', fontSize: '1.5rem', border: '1px solid #C8E6C9' }}>
+                 style={{ width: '64px', height: '64px', backgroundColor: 'var(--hovy-verde-100)', fontSize: 'var(--hovy-texto-2xl)', border: '1px solid var(--hovy-verde-200)' }}>
               {iniciales}
             </div>
             
             <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <h2 className="fw-bold text-dark m-0 fs-4">{nombreMostrar}</h2>
-                <span className="badge bg-light text-secondary border text-uppercase" style={{ fontSize: '0.65rem' }}>{cliente.tipo_cliente}</span>
-                <span className={`badge rounded-pill d-flex align-items-center gap-1 border ${isInactivo ? 'bg-warning-subtle text-warning-emphasis border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'}`}>
-                  <CheckCircle2 size={12} /> {cliente.estado || 'Activo'}
-                </span>
+                <Badge tipo="neutro" conPunto={false}>{cliente.tipo_cliente}</Badge>
+                <Badge tipo={isInactivo ? 'pendiente' : 'exito'} conPunto={false}>
+                  <CheckCircle2 size={12} aria-hidden="true" /> {cliente.estado || 'Activo'}
+                </Badge>
               </div>
               
               <div className="d-block d-md-none text-secondary small mb-2 d-flex align-items-center gap-1">
@@ -408,14 +427,14 @@ export default function ClientInmueblesPage() {
             <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Phone size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Teléfono</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: 'var(--hovy-texto-xs)'}}>Teléfono</div>
                 <div className="fw-medium text-dark small">+{cliente.telefono}</div>
               </div>
             </div>
             <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Mail size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Email Principal</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: 'var(--hovy-texto-xs)'}}>Email Principal</div>
                 <div className="fw-medium text-dark small text-break">{cliente.email || 'No registrado'}</div>
               </div>
             </div>
@@ -425,7 +444,7 @@ export default function ClientInmueblesPage() {
         <div className="row g-3">
           <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: 'var(--hovy-texto-xs)'}}>
                 Inmuebles <Building2 size={16} className="text-secondary"/>
               </div>
               <div className="fs-3 fw-bold text-dark">{inmuebles.length} <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">predios</span></div>
@@ -434,7 +453,7 @@ export default function ClientInmueblesPage() {
           <div className="col-12 col-sm-4">
             <div
               className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between"
-              style={proximoTurno ? { cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' } : undefined}
+              style={proximoTurno ? { cursor: 'pointer', transition: 'transform var(--hovy-duracion-rapida) ease, box-shadow var(--hovy-duracion-rapida) ease' } : undefined}
               onClick={() => {
                 if (proximoTurno) setIsTurnoDetalleOpen(true);
               }}
@@ -447,14 +466,14 @@ export default function ClientInmueblesPage() {
                 }
               }}
             >
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: 'var(--hovy-texto-xs)'}}>
                 Turnos <Calendar size={16} className={proximoTurno ? 'text-success' : 'text-secondary'}/>
               </div>
               {proximoTurno ? (
                 <div>
                   <div className="fs-4 fw-bold text-dark">{fechaProximoTurno}</div>
                   {proximoTurno.franjaHoraria?.horaInicio && (
-                    <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.85rem'}}>
+                    <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: 'var(--hovy-texto-md)'}}>
                       {proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs
                     </span>
                   )}
@@ -466,10 +485,10 @@ export default function ClientInmueblesPage() {
           </div>
           <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: 'var(--hovy-texto-xs)'}}>
                 Estado de Cuenta <FileText size={16} className="text-secondary"/>
               </div>
-              <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Activo'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.75rem'}}>$0 pend.</span></div>
+              <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Activo'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: 'var(--hovy-texto-xs)'}}>$0 pend.</span></div>
             </div>
           </div>
         </div>
@@ -480,7 +499,7 @@ export default function ClientInmueblesPage() {
           <div className="w-100">
             <h3 className="fw-bold fs-4 text-dark mb-1 d-flex align-items-center">
               Inmuebles Asociados
-              <span className="badge bg-dark rounded-circle ms-2 p-2 d-none d-md-flex align-items-center justify-content-center" style={{fontSize: '1.2rem', width: '28px', height: '28px', color: 'white'}}>{inmuebles.length}</span>
+              <span className="badge bg-dark rounded-circle ms-2 p-2 d-none d-md-flex align-items-center justify-content-center" style={{fontSize: 'var(--hovy-texto-xl)', width: '28px', height: '28px', color: 'white'}}>{inmuebles.length}</span>
             </h3>
             <p className="text-secondary small m-0 d-none d-md-block">Gestión integral de parcelas vinculadas y estados operativos.</p>
             <Button 
@@ -500,7 +519,7 @@ export default function ClientInmueblesPage() {
                 <input 
                   type="text" 
                   className="form-control border-0 bg-transparent shadow-none small p-0" 
-                  placeholder="Buscar por predio o calle..."
+                  placeholder="Buscar por predio o calle…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -522,7 +541,7 @@ export default function ClientInmueblesPage() {
                   className="form-select bg-white rounded-pill border shadow-sm text-secondary py-1 px-3 w-auto flex-shrink-0"
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  style={{ fontSize: '0.80rem' }}
+                  style={{ fontSize: 'var(--hovy-texto-sm)' }}
                 >
                   <option value="Todos">Tipo: Todos</option>
                   <option value="Casa Habitada">Casa Habitada</option>
@@ -532,7 +551,7 @@ export default function ClientInmueblesPage() {
                   className="form-select bg-white rounded-pill border shadow-sm text-secondary py-1 px-3 w-auto flex-shrink-0"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  style={{ fontSize: '0.80rem' }}
+                  style={{ fontSize: 'var(--hovy-texto-sm)' }}
                 >
                   <option value="recientes">Más recientes</option>
                   <option value="antiguos">Más antiguos</option>
@@ -570,6 +589,10 @@ export default function ClientInmueblesPage() {
               const defaultImg = inmueble.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
               const imgToRender = inmueble.img || defaultImg;
               const enlaceUbicacionWhatsApp = obtenerEnlaceUbicacionWhatsApp(inmueble);
+              const enlaceMaps = inmueble.latitud && inmueble.longitud
+                ? `https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`
+                : null;
+              const abrirMaps = () => window.open(enlaceMaps, '_blank', 'noopener,noreferrer');
               const compartirUbicacion = () => {
                 if (enlaceUbicacionWhatsApp) {
                   window.open(enlaceUbicacionWhatsApp, '_blank', 'noopener,noreferrer');
@@ -585,8 +608,8 @@ export default function ClientInmueblesPage() {
               return (
                 <Card key={inmueble.id_inmueble} className="border-0 shadow-sm rounded-4 overflow-hidden p-0">
                   <div className="row g-0 h-100">
-                    <div className="col-12 col-md-3 col-xl-2 position-relative" style={{ minHeight: '160px', backgroundColor: '#e9ecef' }}>
-                      <img src={imgToRender} alt="Inmueble" className="w-100 h-100 object-fit-cover position-absolute" />
+                    <div className="col-12 col-md-3 col-xl-2 position-relative" style={{ minHeight: '160px', backgroundColor: 'var(--hovy-gris-200)' }}>
+                      <img src={imgToRender} alt="" loading="lazy" decoding="async" width="320" height="240" className="w-100 h-100 object-fit-cover position-absolute" />
                       <span className="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white fw-medium px-2 py-1">
                         {inmueble.tipo_inmueble || 'General'}
                       </span>
@@ -625,13 +648,9 @@ export default function ClientInmueblesPage() {
                           <Button 
                             variant="light" 
                             className="btn-sm bg-white border shadow-sm text-primary px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
-                            onClick={() => {
-                              if (inmueble.latitud && inmueble.longitud) {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
-                              } else {
-                                alert('Este inmueble no tiene coordenadas registradas.');
-                              }
-                            }}
+                            onClick={abrirMaps}
+                            disabled={!enlaceMaps}
+                            title={enlaceMaps ? 'Ver el inmueble en Google Maps' : 'Agregá la ubicación del inmueble para verla en Maps'}
                           >
                             <MapPin size={14}/> Ver en Maps
                           </Button>
@@ -665,13 +684,9 @@ export default function ClientInmueblesPage() {
                         <Button 
                           variant="light" 
                           className="btn-sm bg-white border text-primary flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
-                          onClick={() => {
-                            if (inmueble.latitud && inmueble.longitud) {
-                              window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
-                            } else {
-                              alert('No hay coordenadas.');
-                            }
-                          }}
+                          onClick={abrirMaps}
+                          disabled={!enlaceMaps}
+                          title={enlaceMaps ? 'Ver el inmueble en Google Maps' : 'Agregá la ubicación del inmueble para verla en Maps'}
                         >
                           <MapPin size={16}/> Maps
                         </Button>
@@ -749,7 +764,18 @@ export default function ClientInmueblesPage() {
         }}
         onChangeState={handleChangeTurnoState}
       />
-      
+
+      {inmuebleABorrar && (
+        <ConfirmarModal
+          titulo="Dar de baja el inmueble"
+          mensaje={`¿Querés dar de baja ${inmuebleABorrar.direccion || 'este inmueble'}? No se puede deshacer.`}
+          textoConfirmar="Dar de baja"
+          procesando={borrandoInmueble}
+          error={errorBaja}
+          onCancelar={() => setInmuebleABorrar(null)}
+          onConfirmar={confirmarBajaInmueble}
+        />
+      )}
     </div>
   );
 }

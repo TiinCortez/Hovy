@@ -80,7 +80,7 @@ export default function CombustibleConfigCard({ onResumen }) {
 
   useEffect(() => {
     if (!onResumen) return;
-    if (isLoading) { onResumen('Cargando...'); return; }
+    if (isLoading) { onResumen('Cargando…'); return; }
     if (loadError) { onResumen('No se pudo cargar'); return; }
     const tipo = TIPOS_COMBUSTIBLE.find((t) => t.valor === form.tipo)?.etiqueta ?? form.tipo;
     const partes = [
@@ -144,7 +144,7 @@ export default function CombustibleConfigCard({ onResumen }) {
   };
 
   if (isLoading) {
-    return <Card><p className="text-secondary mb-0">Cargando configuración de combustible...</p></Card>;
+    return <Card><p className="text-secondary mb-0">Cargando configuración de combustible…</p></Card>;
   }
 
   if (loadError) {
@@ -220,7 +220,7 @@ export default function CombustibleConfigCard({ onResumen }) {
         <div>
           <span className="combustible-label">Estación y producto</span>
 
-          {isLoadingPrecios && <div className="combustible-vacio">Buscando precios...</div>}
+          {isLoadingPrecios && <div className="combustible-vacio">Buscando precios…</div>}
           {!isLoadingPrecios && !precios && (
             <div className="combustible-vacio">Elegí tu ciudad para ver los precios disponibles.</div>
           )}
@@ -285,7 +285,7 @@ export default function CombustibleConfigCard({ onResumen }) {
             disabled={!puedeGuardar}
             style={{ backgroundColor: VERDE, borderColor: VERDE }}
           >
-            {isSaving ? 'Guardando...' : 'Guardar'}
+            {isSaving ? 'Guardando…' : 'Guardar'}
           </Button>
         </div>
       </div>

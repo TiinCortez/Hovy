@@ -139,7 +139,7 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
             disabled={isSaving || !fecha}
             style={{ backgroundColor: VERDE, borderColor: VERDE }}
           >
-            {isSaving ? 'Asignando...' : 'Asignar turno'}
+            {isSaving ? 'Asignando…' : 'Asignar turno'}
           </Button>
         </>
       )}

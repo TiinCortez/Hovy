@@ -12,12 +12,12 @@
     flex: 0 1 21rem;
     width: 21rem;
     min-width: 0;
-    gap: 0.25rem;
-    padding: 4px;
-    background-color: #fff;
-    border: 1px solid #dadcd4;
-    border-radius: 11px;
-    box-shadow: 0 1px 3px rgba(27, 48, 6, 0.06);
+    gap: $hovy-espacio-4;
+    padding: $hovy-espacio-4;
+    background-color: $hovy-blanco;
+    border: 1px solid $hovy-oliva-200;
+    border-radius: $hovy-radio-md;
+    box-shadow: $hovy-sombra-sm;
   }
 
   .turnos-view-option {
@@ -43,7 +43,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 1rem;
+  gap: $hovy-espacio-16;
   min-width: 0;
 
   @media (min-width: 768px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -54,49 +54,49 @@
 
 .turnos-estado {
   min-width: 0;
-  background-color: #f6f6f3;
-  border: 1px solid #ebebe6;
-  border-radius: 1rem;
+  background-color: $hovy-crema-100;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
 }
 
 .turnos-estado-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: $hovy-espacio-8;
   min-width: 0;
   min-height: 56px;
-  padding: 0.75rem;
-  border-radius: 1rem 1rem 0 0;
+  padding: $hovy-espacio-12;
+  border-radius: $hovy-radio-lg $hovy-radio-lg 0 0;
   list-style: none;
   cursor: pointer;
 
   &::-webkit-details-marker { display: none; }
-  &:hover { background-color: #efefea; }
-  &:focus-visible { outline: 2px solid #67884e; outline-offset: -2px; }
+  &:hover { background-color: $hovy-crema-100; }
+  &:focus-visible { outline: 2px solid $hovy-verde-500; outline-offset: -2px; }
 }
 
 .turnos-estado-titulo {
   flex: 1;
   min-width: 0;
   margin: 0;
-  color: #212529;
-  font-size: 0.8125rem;
+  color: $hovy-gris-900;
+  font-size: $hovy-texto-sm;
   font-weight: 700;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .turnos-estado-dot { flex-shrink: 0; width: 10px; height: 10px; }
-.turnos-estado-count { flex-shrink: 0; min-width: 1.5rem; padding: 0.25rem 0.4rem; font-size: 0.75rem; text-align: center; }
-.turnos-estado-chevron { flex-shrink: 0; color: #7a876e; transition: transform 180ms ease; }
+.turnos-estado-count { flex-shrink: 0; min-width: 1.5rem; padding: 0.25rem 0.4rem; font-size: $hovy-texto-xs; text-align: center; }
+.turnos-estado-chevron { flex-shrink: 0; color: $hovy-oliva-500; transition: transform $hovy-duracion-media ease; }
 .turnos-estado[open] > .turnos-estado-header .turnos-estado-chevron { transform: rotate(180deg); }
 
 .turnos-estado-lista {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: $hovy-espacio-12;
   min-width: 0;
-  padding: 0 0.75rem 0.75rem;
+  padding: 0 $hovy-espacio-12 $hovy-espacio-12;
 }
 
 // Turno card: flat white surface with a thin border; state lives in small
@@ -105,67 +105,67 @@
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
-  padding: 0.875rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #e6e6e1;
-  border-radius: 0.875rem;
+  padding: $hovy-espacio-14 $hovy-espacio-16;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  &:hover { border-color: #c9c9c1; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
-  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+  &:hover { border-color: $hovy-crema-600; box-shadow: $hovy-sombra-md; }
+  &:focus-visible { outline: 2px solid $hovy-verde-500; outline-offset: 2px; }
 }
 
 .turnos-agenda-card-hora {
-  font-size: 0.95rem;
+  font-size: $hovy-texto-base;
   font-weight: 700;
-  color: #212529;
+  color: $hovy-gris-900;
   font-variant-numeric: tabular-nums;
 }
 
 .turnos-agenda-card-cliente {
-  margin: 0.5rem 0 0.15rem;
-  font-size: 0.95rem;
+  margin: $hovy-espacio-8 0 $hovy-espacio-2;
+  font-size: $hovy-texto-base;
   font-weight: 700;
-  color: #212529;
+  color: $hovy-gris-900;
 }
 
 .turnos-agenda-card-direccion {
   display: flex;
   align-items: flex-start;
-  gap: 0.3rem;
-  font-size: 0.8rem;
-  color: #6c757d;
+  gap: $hovy-espacio-4;
+  font-size: $hovy-texto-sm;
+  color: $hovy-gris-500;
 }
 
 .turnos-agenda-card-pie {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid #f0f0ec;
-  font-size: 0.8rem;
+  gap: $hovy-espacio-8;
+  margin-top: $hovy-espacio-12;
+  padding-top: $hovy-espacio-10;
+  border-top: 1px solid $hovy-crema-100;
+  font-size: $hovy-texto-sm;
 }
 
 // Small label used for the priority and the "en curso / realizado" states
 .turnos-agenda-etiqueta {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
+  gap: $hovy-espacio-4;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
+  border-radius: $hovy-radio-pill;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  background-color: #f1f1ed;
-  color: #495057;
+  background-color: $hovy-crema-100;
+  color: $hovy-gris-700;
 
-  &--p1 { background-color: #fdecec; color: #b42318; }
-  &--en-curso { background-color: #e8f0fe; color: #1d4ed8; }
-  &--realizado { background-color: #e9f3e6; color: #2f5d27; }
+  &--p1 { background-color: $hovy-rojo-50; color: $hovy-rojo-600; }
+  &--en-curso { background-color: $hovy-azul-50; color: $hovy-azul-700; }
+  &--realizado { background-color: $hovy-verde-100; color: $hovy-verde-700; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,17 +177,17 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: $hovy-espacio-12;
   min-width: 0;
 
   .turnos-periodo-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
     flex: 1 1 22rem;
     min-width: 0;
   }
-  .turnos-periodo-title { flex: 1; min-width: 0; font-size: 0.9rem; }
+  .turnos-periodo-title { flex: 1; min-width: 0; font-size: $hovy-texto-md; }
   .turnos-nav-arrow {
     display: inline-flex;
     align-items: center;
@@ -200,7 +200,7 @@
   .turnos-periodo-input {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
     min-width: 0;
     margin: 0;
   }
@@ -219,54 +219,54 @@
 }
 
 .nuevo-turno-stepper {
-  background-color: #fbfbf8;
-  border-bottom: 1px solid #e6e7df;
+  background-color: $hovy-crema-50;
+  border-bottom: 1px solid $hovy-crema-300;
   flex-shrink: 0;
 
   .nuevo-turno-progress-track {
     height: 4px;
-    background-color: #e9eadf;
+    background-color: $hovy-oliva-100;
     overflow: hidden;
   }
 
   .nuevo-turno-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, $hovy-green 0%, #2f520c 100%);
-    transition: width 0.25s ease;
+    background: linear-gradient(90deg, $hovy-green 0%, $hovy-verde-800 100%);
+    transition: width $hovy-duracion-lenta ease;
   }
 
   .nuevo-turno-steps-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
   }
 
   .nuevo-turno-step-btn {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: $hovy-espacio-10;
     width: 100%;
     min-width: 0;
-    padding: 0.65rem 0.75rem;
-    border-radius: 0.85rem;
+    padding: $hovy-espacio-10 $hovy-espacio-12;
+    border-radius: $hovy-radio-md;
     border: 1px solid transparent;
     background-color: transparent;
     text-align: left;
-    transition: all 0.18s ease;
+    transition: background-color $hovy-duracion-media ease, border-color $hovy-duracion-media ease, color $hovy-duracion-media ease, box-shadow $hovy-duracion-media ease, transform $hovy-duracion-media ease, opacity $hovy-duracion-media ease;
 
     &:not(:disabled):hover {
-      background-color: #f2f4ed;
+      background-color: $hovy-crema-100;
     }
 
     &.is-active {
-      background-color: #ffffff;
+      background-color: $hovy-blanco;
       border-color: $hovy-green;
-      box-shadow: 0 2px 8px rgba(27, 48, 6, 0.08);
+      box-shadow: $hovy-sombra-md;
     }
 
     &.is-completed:not(.is-active) {
-      background-color: #f4f8ef;
-      border-color: #d6e5c8;
+      background-color: $hovy-verde-50;
+      border-color: $hovy-verde-200;
     }
 
     &:disabled {
@@ -278,59 +278,59 @@
   .nuevo-turno-step-badge {
     width: 28px;
     height: 28px;
-    border-radius: 50%;
+    border-radius: $hovy-radio-circulo;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.78rem;
+    font-size: $hovy-texto-xs;
     font-weight: 800;
     flex-shrink: 0;
-    background-color: #e9eadf;
-    color: #5c6259;
-    transition: all 0.18s ease;
+    background-color: $hovy-oliva-100;
+    color: $hovy-oliva-700;
+    transition: background-color $hovy-duracion-media ease, border-color $hovy-duracion-media ease, color $hovy-duracion-media ease, box-shadow $hovy-duracion-media ease, transform $hovy-duracion-media ease, opacity $hovy-duracion-media ease;
 
     &.is-active {
       background-color: $hovy-green;
-      color: #ffffff;
+      color: $hovy-blanco;
     }
 
     &.is-completed {
-      background-color: #198754;
-      color: #ffffff;
+      background-color: $hovy-esmeralda-600;
+      color: $hovy-blanco;
     }
   }
 }
 
 .nuevo-turno-option-card {
-  border: 1px solid #dfe1dc;
-  background-color: #ffffff;
-  transition: all 0.16s ease;
+  border: 1px solid $hovy-oliva-200;
+  background-color: $hovy-blanco;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease, transform $hovy-duracion-rapida ease, opacity $hovy-duracion-rapida ease;
   cursor: pointer;
 
   &:hover {
-    border-color: #9eab96;
-    background-color: #fafcf8;
+    border-color: $hovy-oliva-400;
+    background-color: $hovy-crema-50;
   }
 
   &.is-selected {
     border-color: $hovy-green !important;
-    background-color: #f4f9ef !important;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 4px 12px rgba(27, 48, 6, 0.06);
+    background-color: $hovy-verde-50 !important;
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
   }
 }
 
 @media (max-width: 767.98px) {
   .nuevo-turno-stepper .nuevo-turno-steps-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.35rem;
+    gap: $hovy-espacio-6;
   }
 
   .nuevo-turno-stepper .nuevo-turno-step-btn {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 0.5rem 0.25rem;
-    gap: 0.25rem;
+    padding: $hovy-espacio-8 $hovy-espacio-4;
+    gap: $hovy-espacio-4;
   }
 }
 
@@ -380,10 +380,10 @@
   position: relative;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.15s ease;
+  transition: background-color $hovy-duracion-rapida ease;
 
   &:hover {
-    background-color: #f8f9fa !important;
+    background-color: $hovy-gris-50 !important;
   }
 
   &:focus-visible,
@@ -398,7 +398,7 @@
     left: 0;
     width: 100%;
     height: 1px;
-    margin-top: 8px;
+    margin-top: $hovy-espacio-8;
     opacity: 0;
     pointer-events: none;
     border: none;
@@ -409,12 +409,12 @@
 .turnos-page .turnos-hueco {
   line-height: 1.3;
   overflow: hidden;
-  padding: 0.25rem;
+  padding: $hovy-espacio-4;
 
   &.turnos-hueco-inhabilitado {
-    color: #343a40;
-    background: repeating-linear-gradient(135deg, #d4d8dc, #d4d8dc 8px, #c6cbd0 8px, #c6cbd0 16px);
-    border-color: #8b949e !important;
+    color: $hovy-gris-800;
+    background: repeating-linear-gradient(135deg, $hovy-gris-300, $hovy-gris-300 8px, $hovy-gris-300 8px, $hovy-gris-300 16px);
+    border-color: $hovy-gris-400 !important;
     cursor: not-allowed;
     opacity: 1;
   }
@@ -442,18 +442,18 @@
   .turnos-page .turnos-create-button { width: 100%; }
 }
 
-@media (max-width: 420px) {
+@media (max-width: #{$hovy-bp-telefono}) {
   .turnos-page .turnos-view-option {
-    gap: 0.3rem;
-    padding-inline: 0.4rem !important;
+    gap: $hovy-espacio-4;
+    padding-inline: $hovy-espacio-6 !important;
   }
-  .turnos-periodo .turnos-periodo-title { font-size: 0.8rem; }
+  .turnos-periodo .turnos-periodo-title { font-size: $hovy-texto-sm; }
 }
 
-@media (max-width: 359.98px) {
+@media (max-width: #{$hovy-bp-telefono-chico}) {
   .turnos-page .turnos-view-option {
-    font-size: 0.75rem !important;
-    padding-inline: 0.2rem !important;
+    font-size: $hovy-texto-xs !important;
+    padding-inline: $hovy-espacio-4 !important;
     svg { width: 14px; height: 14px; }
   }
 }

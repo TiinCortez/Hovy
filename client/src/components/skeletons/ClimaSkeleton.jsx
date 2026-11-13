@@ -5,11 +5,11 @@ export default function ClimaSkeleton() {
   return (
     <div
       className="clima-panel card border-1 shadow-sm p-3 d-flex flex-column gap-3 w-100"
-      style={{ backgroundColor: '#fcfcfc', borderColor: '#f0f0f0', borderRadius: '1.25rem' }}
+      style={{ backgroundColor: 'var(--hovy-blanco)', borderColor: 'var(--hovy-gris-100)', borderRadius: 'var(--hovy-radio-xl)' }}
       role="status"
       aria-label="Cargando pronóstico"
     >
-      <div className="d-flex align-items-center justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: '#f0f0f0' }}>
+      <div className="d-flex align-items-center justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: 'var(--hovy-gris-100)' }}>
         <div className="d-flex align-items-center gap-2 flex-grow-1">
           <Skeleton width="32px" height="32px" radius="50%" />
           <div className="d-flex flex-column gap-1 flex-grow-1">

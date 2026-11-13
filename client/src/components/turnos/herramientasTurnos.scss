@@ -1,7 +1,8 @@
+@use '../../styles/tokens' as *;
 .turnos-widgets {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: 1rem;
+  gap: $hovy-espacio-16;
   align-items: stretch;
 }
 
@@ -12,31 +13,31 @@
 }
 
 .turnos-widget-map {
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: #ffffff;
-  border: 1px solid #e4e7da;
-  border-radius: 1rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  background: $hovy-blanco;
+  border: 1px solid $hovy-crema-400;
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-sm;
 }
 
 .turnos-widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: $hovy-espacio-16;
 
   h3 {
     margin: 0;
-    color: #093624;
-    font-size: 1rem;
+    color: $hovy-esmeralda-900;
+    font-size: $hovy-texto-base;
     font-weight: 700;
   }
 
   p {
     margin: 0;
-    color: #717968;
-    font-size: 0.75rem;
+    color: $hovy-oliva-600;
+    font-size: $hovy-texto-xs;
   }
 }
 
@@ -47,15 +48,15 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: #3d6135;
-  background: #eef6ec;
-  border-radius: 50%;
+  color: $hovy-verde-700;
+  background: $hovy-verde-100;
+  border-radius: $hovy-radio-circulo;
 }
 
 .turnos-widget-clima .clima-panel {
   height: 100%;
-  gap: 0.6rem !important;
-  padding: 0.75rem 1rem !important;
+  gap: $hovy-espacio-10 !important;
+  padding: $hovy-espacio-12 $hovy-espacio-16 !important;
 }
 
 .turnos-tools-map {
@@ -68,22 +69,22 @@
     --agenda-map-min-height: 0px;
     width: 100vw;
     height: 100dvh;
-    padding: 1rem;
-    background: #f8f8f1;
+    padding: $hovy-espacio-16;
+    background: $hovy-crema-100;
   }
 
   &.is-expanded {
     position: fixed;
     inset: 0;
-    z-index: 1100;
+    z-index: $hovy-capa-aviso;
   }
 }
 
 .turnos-tools-expand.btn {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 1000;
+  top: $hovy-espacio-12;
+  right: $hovy-espacio-12;
+  z-index: $hovy-capa-fija;
 }
 
 .turnos-tools-loading {
@@ -91,19 +92,19 @@
   place-items: center;
   min-height: 12rem;
   height: 100%;
-  padding: 1.5rem;
-  color: #637156;
-  font-size: 0.85rem;
-  background: #f1f4e9;
-  border: 1px dashed #d5dfc7;
-  border-radius: 1rem;
+  padding: $hovy-espacio-24;
+  color: $hovy-oliva-700;
+  font-size: $hovy-texto-md;
+  background: $hovy-crema-200;
+  border: 1px dashed $hovy-oliva-300;
+  border-radius: $hovy-radio-lg;
 }
 
 .turnos-tools-hint {
   flex-shrink: 0;
   margin: 0;
-  color: #77816c;
-  font-size: 0.75rem;
+  color: $hovy-gris-600;
+  font-size: $hovy-texto-xs;
   line-height: 1.5;
 }
 

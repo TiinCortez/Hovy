@@ -1,3 +1,4 @@
-// Colores de marca para usar desde JSX (estilos inline, íconos, mapas).
-// Deben coincidir con styles/_tokens.scss.
-export const VERDE = '#1B3006';
+// Colores de marca para usar desde JSX (íconos, mapas, SVG): salen de la paleta.
+import { PALETA } from './paleta';
+
+export const VERDE = PALETA['verde-900'];

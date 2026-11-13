@@ -7,6 +7,7 @@ import TrasladoDetalle from '../combustible/TrasladoDetalle';
 import { formulaTraslado } from '../combustible/combustibleUtils';
 import { getApiError, formatMoney, INTERNAL_NOTICE } from './visitaUtils';
 import { VERDE } from '../../styles/colores';
+import Badge from '../ui/Badge';
 
 // Estimate lines table. Internal only: it is never meant to be sent to the client.
 // The trip cost (fuel to the property) comes either as the full `traslado` answer
@@ -75,15 +76,15 @@ export function DiferenciaPrecio({ estimado, final }) {
   return (
     <div className="row g-0 bg-light rounded-3 border overflow-hidden small presupuesto-comparacion">
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Estimado</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Estimado</span>
         <span className="fw-bold text-dark">{formatMoney(estimado)}</span>
       </div>
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Precio final</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Precio final</span>
         <span className="fw-bold text-dark">{formatMoney(final)}</span>
       </div>
       <div className="col-12 col-sm-4 p-2 px-3">
-        <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Diferencia</span>
+        <span className="text-secondary d-block fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Diferencia</span>
         <span className={`fw-bold ${color}`}>{diff > 0 ? '+' : ''}{formatMoney(diff)}</span>
       </div>
     </div>
@@ -149,9 +150,9 @@ export default function PresupuestoPanel({ visita, onSaved }) {
       <Card className={`p-4 ${hasServicios ? '' : 'opacity-50'}`}>
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
           <h5 className="fw-bold text-dark m-0">2. Presupuesto propuesto</h5>
-          <span className="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 d-flex align-items-center gap-1">
-            <Lock size={12} /> {INTERNAL_NOTICE}
-          </span>
+          <Badge tipo="pendiente" conPunto={false} className="text-wrap">
+            <Lock size={12} aria-hidden="true" /> {INTERNAL_NOTICE}
+          </Badge>
         </div>
         {!hasServicios ? (
           <p className="text-secondary small m-0">Guardá los servicios para ver el presupuesto propuesto.</p>
@@ -217,7 +218,7 @@ export default function PresupuestoPanel({ visita, onSaved }) {
                 disabled={isSaving || !montoValido}
                 style={{ backgroundColor: VERDE, borderColor: VERDE }}
               >
-                {isSaving ? 'Guardando...' : accepted ? 'Actualizar precio final' : 'Aceptar precio final'}
+                {isSaving ? 'Guardando…' : accepted ? 'Actualizar precio final' : 'Aceptar precio final'}
               </Button>
               {accepted && (
                 <span className="text-success small fw-semibold d-flex align-items-center gap-1">

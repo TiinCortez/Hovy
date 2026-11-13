@@ -43,9 +43,9 @@ export default function RequireAuth({ children }) {
 
   if (loading) {
     return (
-      <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: '#F2F2E6' }}>
+      <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'var(--hovy-crema-200)' }}>
         <div className="spinner-border" style={{ color: VERDE }} role="status">
-          <span className="visually-hidden">Cargando...</span>
+          <span className="visually-hidden">Cargando…</span>
         </div>
       </div>
     );

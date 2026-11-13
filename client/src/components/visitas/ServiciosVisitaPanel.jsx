@@ -127,7 +127,7 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
         disabled={isSaving || loading || ids.length === 0 || invalid}
         style={{ backgroundColor: VERDE, borderColor: VERDE }}
       >
-        {isSaving ? 'Guardando...' : 'Guardar servicios'}
+        {isSaving ? 'Guardando…' : 'Guardar servicios'}
       </Button>
       {ids.length > 0 && invalid && <p className="text-danger small mt-2 mb-0">Cada servicio necesita m² mayores a 0.</p>}
     </Card>

@@ -7,7 +7,7 @@ const ESTADOS = 4;
 export default function TurnosSkeleton() {
   return (
     <div role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando turnos...</span>
+      <span className="visually-hidden">Cargando turnos…</span>
       <Card className="turnos-kanban-card p-0 shadow-sm border-0 rounded-4 bg-white overflow-hidden">
         <div className="hovy-filter-group mb-3">
           {Array.from({ length: 5 }, (_, i) => (

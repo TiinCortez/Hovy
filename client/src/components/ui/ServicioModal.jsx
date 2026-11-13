@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import ServicioService from '../../services/api/servicio.service';
-import useCerrarConEscape from './useCerrarConEscape';
+import Modal from './Modal';
+import useAvisoCambiosSinGuardar from './useAvisoCambiosSinGuardar';
 
 // Mirrors server rule: finite number >= 0
 const nonNegative = (value) => {
@@ -18,12 +18,11 @@ const nonNegative = (value) => {
  * tipos: global catalog of service types, used only as name suggestions.
  */
 export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSaved }) {
-  useCerrarConEscape(isOpen, onClose);
   const isEdit = Boolean(servicio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   // The parent mounts this modal only while open, so defaultValues are fresh each time
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors, isDirty } } = useForm({
     defaultValues: {
       nombre: '',
       descripcion: '',
@@ -31,6 +30,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
       limite_operativo: isEdit && servicio.limite_operativo != null ? String(servicio.limite_operativo) : '',
     },
   });
+  useAvisoCambiosSinGuardar(isDirty);
 
   if (!isOpen) return null;
 
@@ -64,13 +64,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
   const formId = 'servicio-form';
 
   return createPortal(
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">{isEdit ? 'Editar Servicio' : 'Agregar Servicio'}</h5>
-            <CloseButton label="Cerrar" onClick={onClose} disabled={isSubmitting} />
-          </div>
+    <Modal titulo={isEdit ? 'Editar Servicio' : 'Agregar Servicio'} onCerrar={onClose} bloqueado={isSubmitting}>
 
           <div className="modal-body p-4">
             {errorMessage && (
@@ -92,7 +86,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                       type="text"
                       list="servicio-sugerencias"
                       autoComplete="off"
-                      className={`form-control bg-light rounded-3 ${errors.nombre ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light rounded-3 ${errors.nombre ? 'is-invalid' : ''}`} aria-invalid={errors.nombre ? 'true' : undefined} aria-describedby={errors.nombre ? 'servicio-nombre-error' : undefined}
                       {...register('nombre', {
                         required: 'El nombre es obligatorio',
                         validate: (v) => {
@@ -106,7 +100,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                         <option key={t.id_servicio} value={t.nombre} />
                       ))}
                     </datalist>
-                    {errors.nombre && <span className="text-danger small mt-1 d-block">{errors.nombre.message}</span>}
+                    {errors.nombre && <span id="servicio-nombre-error" className="invalid-feedback d-block">{errors.nombre.message}</span>}
                   </>
                 )}
               </div>
@@ -131,13 +125,13 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                   min="0"
                   step="any"
                   inputMode="decimal"
-                  className={`form-control bg-light rounded-3 ${errors.precio_base ? 'is-invalid' : ''}`}
+                  className={`form-control bg-light rounded-3 ${errors.precio_base ? 'is-invalid' : ''}`} aria-invalid={errors.precio_base ? 'true' : undefined} aria-describedby={errors.precio_base ? 'servicio-precio-base-error' : undefined}
                   {...register('precio_base', {
                     required: 'El precio por m² es obligatorio',
                     validate: nonNegative,
                   })}
                 />
-                {errors.precio_base && <span className="text-danger small mt-1 d-block">{errors.precio_base.message}</span>}
+                {errors.precio_base && <span id="servicio-precio-base-error" className="invalid-feedback d-block">{errors.precio_base.message}</span>}
               </div>
 
               <div>
@@ -148,12 +142,12 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                   min="0"
                   step="any"
                   inputMode="decimal"
-                  className={`form-control bg-light rounded-3 ${errors.limite_operativo ? 'is-invalid' : ''}`}
+                  className={`form-control bg-light rounded-3 ${errors.limite_operativo ? 'is-invalid' : ''}`} aria-invalid={errors.limite_operativo ? 'true' : undefined} aria-describedby={errors.limite_operativo ? 'servicio-limite-operativo-error' : undefined}
                   {...register('limite_operativo', {
                     validate: (v) => String(v).trim() === '' || nonNegative(v),
                   })}
                 />
-                {errors.limite_operativo && <span className="text-danger small mt-1 d-block">{errors.limite_operativo.message}</span>}
+                {errors.limite_operativo && <span id="servicio-limite-operativo-error" className="invalid-feedback d-block">{errors.limite_operativo.message}</span>}
               </div>
             </form>
           </div>
@@ -163,12 +157,10 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
               Cancelar
             </button>
             <Button type="submit" form={formId} variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Agregar'}
+              {isSubmitting ? 'Guardando…' : isEdit ? 'Guardar Cambios' : 'Agregar'}
             </Button>
           </div>
-        </div>
-      </div>
-    </div>,
+    </Modal>,
     document.body
   );
 }

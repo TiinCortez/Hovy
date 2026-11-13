@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { User, MapPin, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import AuthService from '../../services/auth.service.js';
 import Button from '../../components/ui/Button';
+import useAvisoCambiosSinGuardar from '../../components/ui/useAvisoCambiosSinGuardar';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ export default function Register() {
   const [successMessage, setSuccessMessage] = useState(null); // <--- NUEVO ESTADO PARA EL ÉXITO
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm();
+  const { register, handleSubmit, getValues, formState: { errors, isDirty } } = useForm();
+  useAvisoCambiosSinGuardar(isDirty);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -26,7 +28,7 @@ export default function Register() {
       
       await AuthService.registerUser(data.email, data.password, userData, () => {
         // 1. Mostramos el mensaje de éxito
-        setSuccessMessage('Usuario creado con éxito. Redirigiendo...');
+        setSuccessMessage('Usuario creado con éxito. Redirigiendo…');
         
         // 2. Esperamos 2 segundos (2000 ms) antes de mandarlo al login
         setTimeout(() => {
@@ -50,7 +52,7 @@ export default function Register() {
         <div className="position-relative z-1">
           <header className="text-center mb-4">
             <div className="register-logo-badge">
-              <svg className="mb-1" width="28" height="28" fill="none" viewBox="0 0 40 40">
+              <svg width="34" height="34" aria-hidden="true" fill="none" viewBox="0 0 40 40">
                 <path d="M20 28C20 28 12 26 12 17C12 11 19 8 20 8C20 8 20 16 20 28Z" fill="#2d5231" stroke="#2d5231" strokeWidth="1.5"/>
                 <path d="M15 19L20 24" stroke="#e8ede4" strokeWidth="1.2"/>
                 <path d="M14 14L19 19" stroke="#e8ede4" strokeWidth="1.2"/>
@@ -58,9 +60,9 @@ export default function Register() {
                 <path d="M25 19L20 24" stroke="#faeee7" strokeWidth="1.2"/>
                 <path d="M26 14L21 19" stroke="#faeee7" strokeWidth="1.2"/>
               </svg>
-              <span className="logo-text">Valle La Armonía</span>
-              <span className="logo-subtext">Gardening</span>
             </div>
+            <p className="register-logo-nombre">Valle La Armonía</p>
+            <p className="register-logo-bajada">Gardening</p>
             <h1 className="register-title">Crear Cuenta</h1>
             <p className="register-subtitle">Únete a nuestra comunidad botánica.</p>
           </header>
@@ -83,38 +85,53 @@ export default function Register() {
           <form onSubmit={handleSubmit(onSubmit)} className="d-flex flex-column gap-3">
             <div className="row g-3">
               <div className="col-12 col-sm-6">
-                <label className="register-label">Nombre</label>
+                <label htmlFor="registro-nombre" className="register-label">Nombre</label>
                 <div className={`register-input-group ${errors.nombre ? 'border-danger' : ''}`}>
                   <User size={18} className="text-secondary flex-shrink-0" />
-                  <input type="text" placeholder="Tu nombre" {...register("nombre", { required: "El nombre es obligatorio" })} />
+                  <input
+                    id="registro-nombre"
+                    autoComplete="given-name"
+                    aria-invalid={errors.nombre ? 'true' : undefined}
+                    aria-describedby={errors.nombre ? 'registro-nombre-error' : undefined}
+                    type="text" placeholder="Tu nombre" {...register("nombre", { required: "El nombre es obligatorio" })} />
                 </div>
-                {errors.nombre && <span className="text-danger small mt-1 d-block ps-2">{errors.nombre.message}</span>}
+                {errors.nombre && <span id="registro-nombre-error" className="invalid-feedback d-block ps-2">{errors.nombre.message}</span>}
               </div>
               
               <div className="col-12 col-sm-6">
-                <label className="register-label">Apellido</label>
+                <label htmlFor="registro-apellido" className="register-label">Apellido</label>
                 <div className={`register-input-group ${errors.apellido ? 'border-danger' : ''}`}>
                   <User size={18} className="text-secondary flex-shrink-0" />
-                  <input type="text" placeholder="Tu apellido" {...register("apellido", { required: "El apellido es obligatorio" })} />
+                  <input
+                    id="registro-apellido"
+                    autoComplete="family-name"
+                    aria-invalid={errors.apellido ? 'true' : undefined}
+                    aria-describedby={errors.apellido ? 'registro-apellido-error' : undefined}
+                    type="text" placeholder="Tu apellido" {...register("apellido", { required: "El apellido es obligatorio" })} />
                 </div>
-                {errors.apellido && <span className="text-danger small mt-1 d-block ps-2">{errors.apellido.message}</span>}
+                {errors.apellido && <span id="registro-apellido-error" className="invalid-feedback d-block ps-2">{errors.apellido.message}</span>}
               </div>
             </div>
 
             <div>
-              <label className="register-label">Provincia - Ciudad</label>
+              <label htmlFor="registro-ubicacion" className="register-label">Provincia - Ciudad</label>
               <div className="register-input-group">
                 <MapPin size={18} className="text-secondary flex-shrink-0" />
-                <input type="text" placeholder="Ej. Mendoza - San Rafael" {...register("ubicacion")} />
+                <input id="registro-ubicacion" type="text" autoComplete="address-level2" placeholder="Ej. Mendoza - San Rafael" {...register("ubicacion")} />
               </div>
             </div>
 
             <div>
-              <label className="register-label">Email</label>
+              <label htmlFor="registro-email" className="register-label">Email</label>
               <div className={`register-input-group ${errors.email ? 'border-danger' : ''}`}>
                 <Mail size={18} className="text-secondary flex-shrink-0" />
-                <input 
-                  type="email" 
+                <input
+                    id="registro-email"
+                    autoComplete="email"
+                    aria-invalid={errors.email ? 'true' : undefined}
+                    aria-describedby={errors.email ? 'registro-email-error' : undefined}
+                    
+                  type="email" spellCheck={false} autoCapitalize="none" 
                   placeholder="correo@ejemplo.com" 
                   {...register("email", { 
                     required: "El correo electrónico es obligatorio",
@@ -122,15 +139,20 @@ export default function Register() {
                   })} 
                 />
               </div>
-              {errors.email && <span className="text-danger small mt-1 d-block ps-2">{errors.email.message}</span>}
+              {errors.email && <span id="registro-email-error" className="invalid-feedback d-block ps-2">{errors.email.message}</span>}
             </div>
 
             <div className="row g-3">
               <div className="col-12 col-sm-6">
-                <label className="register-label">Contraseña</label>
+                <label htmlFor="registro-password" className="register-label">Contraseña</label>
                 <div className={`register-input-group ${errors.password ? 'border-danger' : ''}`}>
                   <Lock size={18} className="text-secondary flex-shrink-0" />
-                  <input 
+                  <input
+                    id="registro-password"
+                    autoComplete="new-password"
+                    aria-invalid={errors.password ? 'true' : undefined}
+                    aria-describedby={errors.password ? 'registro-password-error' : undefined}
+                    
                     type={showPassword ? "text" : "password"} 
                     placeholder="••••••••" 
                     {...register("password", { 
@@ -142,14 +164,19 @@ export default function Register() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.password && <span className="text-danger small mt-1 d-block ps-2">{errors.password.message}</span>}
+                {errors.password && <span id="registro-password-error" className="invalid-feedback d-block ps-2">{errors.password.message}</span>}
               </div>
 
               <div className="col-12 col-sm-6">
-                <label className="register-label">Confirmar Contraseña</label>
+                <label htmlFor="registro-confirm-password" className="register-label">Confirmar Contraseña</label>
                 <div className={`register-input-group ${errors.confirmPassword ? 'border-danger' : ''}`}>
                   <Lock size={18} className="text-secondary flex-shrink-0" />
-                  <input 
+                  <input
+                    id="registro-confirm-password"
+                    autoComplete="new-password"
+                    aria-invalid={errors.confirmPassword ? 'true' : undefined}
+                    aria-describedby={errors.confirmPassword ? 'registro-confirm-password-error' : undefined}
+                    
                     type={showConfirmPassword ? "text" : "password"} 
                     placeholder="••••••••" 
                     {...register("confirmPassword", { 
@@ -161,21 +188,21 @@ export default function Register() {
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.confirmPassword && <span className="text-danger small mt-1 d-block ps-2">{errors.confirmPassword.message}</span>}
+                {errors.confirmPassword && <span id="registro-confirm-password-error" className="invalid-feedback d-block ps-2">{errors.confirmPassword.message}</span>}
               </div>
             </div>
 
             <div className="pt-3">
               {/* Deshabilitamos el botón si está cargando O si ya fue exitoso */}
               <Button type="submit" variant="primary" className="w-100" disabled={Boolean(isLoading || successMessage)}>
-                {isLoading ? 'Registrando...' : <>Crear Cuenta <ArrowRight size={18} className="ms-1 d-inline" /></>}
+                {isLoading ? 'Registrando…' : <>Crear Cuenta <ArrowRight size={18} className="ms-1 d-inline" /></>}
               </Button>
             </div>
           </form>
 
           <footer className="text-center mt-4">
             <p className="small text-secondary mb-0">
-              ¿Ya tienes una cuenta? <Link to="/login" className="fw-bold text-decoration-none" style={{ color: '#183c13' }}>Iniciar Sesión</Link>
+              ¿Ya tienes una cuenta? <Link to="/login" className="fw-bold text-decoration-none" style={{ color: 'var(--hovy-verde-850)' }}>Iniciar Sesión</Link>
             </p>
           </footer>
         </div>

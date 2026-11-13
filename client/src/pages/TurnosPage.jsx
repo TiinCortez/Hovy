@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
 import TurnosMensual from '../components/turnos/TurnosMensual';
@@ -19,6 +20,7 @@ import { VERDE } from '../styles/colores';
 const PRIORIDADES_INICIALES = Object.keys(PRIORIDADES_CONFIG);
 
 export default function TurnosPage() {
+  const { avisar } = useAvisos();
   const [vistaActual, setVistaActual] = useState('diaria');
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ export default function TurnosPage() {
       setIsDetalleOpen(false);
     } catch (error) {
       console.error("Error al cancelar el turno:", error);
-      alert("Ocurrió un error al intentar cancelar el turno. Verifique su conexión.");
+      avisar('No se pudo cancelar el turno. Revisá tu conexión e intentá de nuevo.');
     }
   };
 
@@ -151,7 +153,7 @@ export default function TurnosPage() {
       return true;
     } catch (error) {
       console.error(`Error al cambiar el estado a ${newState}:`, error);
-      alert("Ocurrió un error al actualizar el estado del turno.");
+      avisar('No se pudo cambiar el estado del turno. Intentá de nuevo.');
       return false;
     }
   };
@@ -288,7 +290,7 @@ export default function TurnosPage() {
         <div className="d-flex justify-content-between align-items-start w-100 w-xl-auto">
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
-              <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Planificación operativa</span>
+              <span className="hovy-rotulo">Planificación operativa</span>
             </div>
             <h2 className="fw-bold fs-2 text-dark m-0" style={{ letterSpacing: '-0.02em' }}>Agenda de Turnos</h2>
             <p className="text-secondary small m-0 mt-1">Planificación, seguimiento operativo, clima y mapa.</p>
@@ -383,11 +385,11 @@ export default function TurnosPage() {
             <input
               type="search"
               className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-              placeholder="Buscar por cliente o predio..."
+              placeholder="Buscar por cliente o predio…"
               aria-label="Buscar turnos"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              style={{ fontSize: '0.85rem' }}
+              style={{ fontSize: 'var(--hovy-texto-md)' }}
             />
           </div>
           <span className="badge bg-light text-dark border rounded-pill px-3 py-2 fw-medium text-nowrap">

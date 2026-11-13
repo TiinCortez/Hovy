@@ -10,21 +10,21 @@ export const TIPOS_NOTIFICACION = {
   ciclo_corte: {
     etiqueta: 'Ciclo de corte',
     Icono: AlertTriangle,
-    color: '#dc3545',
+    color: 'var(--hovy-rojo-500)',
     fondo: 'rgba(220, 53, 69, 0.1)',
     textoBoton: 'Ver cliente',
   },
   nueva_solicitud: {
     etiqueta: 'Nueva solicitud',
     Icono: ClipboardList,
-    color: '#0ea5e9',
+    color: 'var(--hovy-celeste-500)',
     fondo: 'rgba(14, 165, 233, 0.1)',
     textoBoton: 'Ver solicitud',
   },
   turno_sin_confirmar: {
     etiqueta: 'Turno sin confirmar',
     Icono: AlertTriangle,
-    color: '#f59e0b',
+    color: 'var(--hovy-ambar-400)',
     fondo: 'rgba(245, 158, 11, 0.12)',
     textoBoton: 'Ver turno',
   },
@@ -46,15 +46,20 @@ export const destinoNotificacion = (notificacion) => {
   }
 };
 
-const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-const dosDigitos = (n) => String(n).padStart(2, '0');
+// Formatos con Intl en es-AR. El mes va abreviado y con mayúscula: "24 Oct".
+const FORMATO_HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+const FORMATO_MES = new Intl.DateTimeFormat('es-AR', { month: 'short' });
+const mesCorto = (fecha) => {
+  const mes = FORMATO_MES.format(fecha).replace('.', '');
+  return mes.charAt(0).toUpperCase() + mes.slice(1, 3);
+};
 
 // "Hace 5 min" / "Hace 3 horas" / "Ayer, 16:00" / "24 Oct, 09:15"
 export const formatearTiempo = (fechaIso, ahora = new Date()) => {
   if (!fechaIso) return '';
   const fecha = new Date(fechaIso);
   const minutos = Math.floor((ahora - fecha) / 60000);
-  const hora = `${dosDigitos(fecha.getHours())}:${dosDigitos(fecha.getMinutes())}`;
+  const hora = FORMATO_HORA.format(fecha);
 
   const inicioHoy = new Date(ahora);
   inicioHoy.setHours(0, 0, 0, 0);
@@ -68,9 +73,9 @@ export const formatearTiempo = (fechaIso, ahora = new Date()) => {
     return horas === 1 ? 'Hace 1 hora' : `Hace ${horas} horas`;
   }
   if (fecha >= inicioAyer) return `Ayer, ${hora}`;
-  return `${fecha.getDate()} ${MESES[fecha.getMonth()]}, ${hora}`;
+  return `${fecha.getDate()} ${mesCorto(fecha)}, ${hora}`;
 };
 
 // "28 Ago 2026"
 export const formatearFechaLarga = (fecha) =>
-  `${fecha.getDate()} ${MESES[fecha.getMonth()]} ${fecha.getFullYear()}`;
+  `${fecha.getDate()} ${mesCorto(fecha)} ${fecha.getFullYear()}`;

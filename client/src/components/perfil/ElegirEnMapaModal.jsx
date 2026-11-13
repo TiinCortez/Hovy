@@ -81,7 +81,7 @@ export default function ElegirEnMapaModal({ salida, onElegida, onClose }) {
           disabled={isBuscando || !posicion || fueraDeArgentina}
           style={{ backgroundColor: VERDE, borderColor: VERDE }}
         >
-          {isBuscando ? 'Buscando dirección...' : 'Usar este punto'}
+          {isBuscando ? 'Buscando dirección…' : 'Usar este punto'}
         </Button>
       )}
     >
@@ -92,7 +92,7 @@ export default function ElegirEnMapaModal({ salida, onElegida, onClose }) {
         Tocá el mapa para marcar tu punto de salida. Podés arrastrar el pin para ajustarlo.
       </p>
 
-      <div className="rounded-3 overflow-hidden" style={{ border: '1px solid #EAE6DF' }}>
+      <div className="rounded-3 overflow-hidden" style={{ border: '1px solid var(--hovy-crema-300)' }}>
         <MapContainer
           center={posicion ?? CENTRO_POR_DEFECTO}
           zoom={posicion ? ZOOM_CON_SALIDA : ZOOM_SIN_SALIDA}

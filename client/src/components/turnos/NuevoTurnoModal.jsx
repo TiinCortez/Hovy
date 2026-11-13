@@ -5,7 +5,6 @@ import {
   Info, MapPin, Maximize, MessageCircle, Phone, Search, Sun, User, Home, Wrench, Plus
 } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
@@ -20,6 +19,8 @@ import {
   horaAMinutos, obtenerFranjasTurnos, formatearHoraCorta, calcularEstimadoTurno,
   formatearMontoARS, fechaDesdeIso
 } from './agendaTurnos';
+import Modal from '../ui/Modal';
+import { CAPAS } from '../../styles/capas';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
@@ -134,19 +135,6 @@ export default function NuevoTurnoModal({
     return () => { vigente = false; };
   }, [isOpen, idInmueble]);
 
-  // Bloquear scroll de fondo
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const handleKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
 
   const clienteSeleccionado = clientes.find(c => String(c.id_cliente) === String(idCliente));
   const enlaceWhatsApp = obtenerEnlaceWhatsApp(clienteSeleccionado?.telefono);
@@ -363,26 +351,27 @@ export default function NuevoTurnoModal({
     : '';
 
   return (
-    <div className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-
-          {/* Cabecera Principal */}
-          <div className="modal-header nuevo-turno-header justify-content-between align-items-start px-3 px-md-4 py-2 pt-3 border-bottom-0">
-            <div className="min-w-0 flex-grow-1">
-              <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.68rem', letterSpacing: '0.06em' }}>
+    <Modal
+      titulo="Coordinar nuevo turno"
+      antetitulo={<div className="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.06em' }}>
                   Etapa {pasoActual} de 4 · Programación de servicio
                 </span>
-                <span className="badge rounded-pill nuevo-turno-status px-2 py-1 fw-semibold" style={{ fontSize: '0.68rem' }}>
+                <span className="badge rounded-pill nuevo-turno-status px-2 py-1 fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                   <span className="rounded-circle bg-warning d-inline-block me-1" style={{ width: 6, height: 6 }} />
                   Estado inicial: Coordinado
                 </span>
-              </div>
-              <h2 className="modal-title fw-bold text-dark mb-0 fs-4">Coordinar nuevo turno</h2>
-            </div>
-            <CloseButton label="Cerrar nuevo turno" onClick={onClose} />
-          </div>
+              </div>}
+      etiquetaCerrar="Cerrar nuevo turno"
+      onCerrar={onClose}
+      cerrarAlTocarFondo
+      tamano="xl"
+      desplazable
+      zIndex={CAPAS.modalEncima}
+      claseRaiz="nuevo-turno-modal"
+      claseContenido="overflow-hidden"
+      claseCabecera="nuevo-turno-header border-bottom-0 px-3 px-md-4 py-2 pt-3"
+    >
 
           {/* Barra de Pestañas Progresivas (Stepper) */}
           <div className="nuevo-turno-stepper">
@@ -413,13 +402,13 @@ export default function NuevoTurnoModal({
                       {mostrarCheck ? <Check size={14} strokeWidth={3} /> : step.id}
                     </span>
                     <div className="min-w-0 flex-grow-1">
-                      <div className="fw-bold text-dark d-none d-md-block text-truncate" style={{ fontSize: '0.78rem' }}>
+                      <div className="fw-bold text-dark d-none d-md-block text-truncate" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                         {step.titulo}
                       </div>
-                      <div className="fw-bold text-dark d-block d-md-none text-truncate" style={{ fontSize: '0.7rem' }}>
+                      <div className="fw-bold text-dark d-block d-md-none text-truncate" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                         {step.tituloCorto}
                       </div>
-                      <div className="text-secondary text-truncate d-none d-sm-block" style={{ fontSize: '0.67rem' }}>
+                      <div className="text-secondary text-truncate d-none d-sm-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                         {step.resumen}
                       </div>
                     </div>
@@ -438,7 +427,7 @@ export default function NuevoTurnoModal({
           >
             <div className="modal-body p-3 px-md-4 py-md-3">
               {error && (
-                <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-3">
+                <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-3" role="alert">
                   <Info size={16} className="flex-shrink-0" />
                   <span className="small fw-medium">{error}</span>
                 </div>
@@ -475,6 +464,7 @@ export default function NuevoTurnoModal({
                         </label>
                         <select
                           id="turnos-nuevo-cliente"
+                          aria-required="true"
                           className="form-select form-select-sm shadow-none fw-semibold"
                           value={idCliente}
                           onChange={(e) => {
@@ -486,7 +476,7 @@ export default function NuevoTurnoModal({
                           }}
                           disabled={isLoadingData}
                         >
-                          <option value="">{isLoadingData ? 'Cargando clientes...' : clientesFiltrados.length ? 'Seleccionar cliente...' : 'Sin coincidencias'}</option>
+                          <option value="">{isLoadingData ? 'Cargando clientes…' : clientesFiltrados.length ? 'Seleccionar cliente…' : 'Sin coincidencias'}</option>
                           {seleccionadoFueraDelFiltro && <option value={idCliente}>#{clienteSeleccionado.id_cliente} — {clienteSeleccionado.nombre} {clienteSeleccionado.apellido}</option>}
                           {clientesFiltrados.map((c) => (
                             <option key={c.id_cliente} value={c.id_cliente}>
@@ -494,8 +484,8 @@ export default function NuevoTurnoModal({
                             </option>
                           ))}
                         </select>
-                        <div className="text-secondary mt-1" style={{ fontSize: '0.72rem' }} role="status">
-                          {isLoadingData ? 'Cargando clientes...' : `${clientesFiltrados.length} cliente${clientesFiltrados.length === 1 ? '' : 's'} disponible${clientesFiltrados.length === 1 ? '' : 's'}`}
+                        <div className="text-secondary mt-1" style={{ fontSize: 'var(--hovy-texto-xs)' }} role="status">
+                          {isLoadingData ? 'Cargando clientes…' : `${clientesFiltrados.length} cliente${clientesFiltrados.length === 1 ? '' : 's'} disponible${clientesFiltrados.length === 1 ? '' : 's'}`}
                         </div>
                       </div>
                     </div>
@@ -507,7 +497,7 @@ export default function NuevoTurnoModal({
                             <div className="d-flex gap-2 min-w-0 align-items-center">
                               <span className="bg-light p-2 rounded-circle border text-dark flex-shrink-0"><User size={18} /></span>
                               <div className="min-w-0">
-                                <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                                <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                                   Ficha del cliente #{clienteSeleccionado.id_cliente}
                                 </span>
                                 <div className="fw-bold text-dark text-break">{clienteSeleccionado.nombre} {clienteSeleccionado.apellido}</div>
@@ -517,11 +507,11 @@ export default function NuevoTurnoModal({
                               </div>
                             </div>
                             <div className="d-flex align-items-center gap-2">
-                              <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.7rem' }}>
+                              <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                                 {clienteSeleccionado.tipo_cliente?.toUpperCase() || 'FIJO'}
                               </span>
                               {enlaceWhatsApp ? (
-                                <a className="btn btn-outline-primary btn-sm rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }} href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer">
+                                <a className="btn btn-outline-primary btn-sm rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1" style={{ fontSize: 'var(--hovy-texto-xs)' }} href={enlaceWhatsApp} target="_blank" rel="noopener noreferrer">
                                   <MessageCircle size={14} aria-hidden="true" /> WhatsApp
                                 </a>
                               ) : (
@@ -551,6 +541,7 @@ export default function NuevoTurnoModal({
                           <span className="input-group-text bg-white border-end-0"><Home size={14} /></span>
                           <select
                             id="turnos-nuevo-inmueble"
+                          aria-required="true"
                             className="form-select form-select-sm border-start-0 shadow-none fw-semibold"
                             value={idInmueble}
                             onChange={(e) => { setIdInmueble(e.target.value); setMontoFinalEditado(null); setError(''); }}
@@ -560,10 +551,10 @@ export default function NuevoTurnoModal({
                               {!clienteSeleccionado
                                 ? 'Primero seleccioná un cliente'
                                 : isLoadingInmuebles
-                                  ? 'Cargando inmuebles...'
+                                  ? 'Cargando inmuebles…'
                                   : inmuebles.length === 0
                                     ? 'Sin inmuebles registrados'
-                                    : 'Seleccionar inmueble...'}
+                                    : 'Seleccionar inmueble…'}
                             </option>
                             {inmuebles.map((i) => (
                               <option key={i.id_inmueble} value={i.id_inmueble}>
@@ -572,7 +563,7 @@ export default function NuevoTurnoModal({
                             ))}
                           </select>
                         </div>
-                        <div className="text-secondary mt-1" style={{ fontSize: '0.72rem' }}>
+                        <div className="text-secondary mt-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                           {clienteSeleccionado
                             ? `${inmuebles.length} inmueble${inmuebles.length === 1 ? '' : 's'} vinculado${inmuebles.length === 1 ? '' : 's'}`
                             : 'Se habilita al elegir cliente'}
@@ -585,14 +576,14 @@ export default function NuevoTurnoModal({
                         <div className="border rounded-3 p-3 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
                           <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <div className="min-w-0">
-                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                                 Predio seleccionado
                               </span>
                               <div className="fw-bold text-dark small d-flex align-items-center gap-1 mt-1 text-break">
                                 <MapPin size={14} className="text-success flex-shrink-0" />
                                 {inmuebleSeleccionado.direccion}
                               </div>
-                              <div className="text-secondary ms-4" style={{ fontSize: '0.75rem' }}>
+                              <div className="text-secondary ms-4" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                                 {inmuebleSeleccionado.barrio || inmuebleSeleccionado.provincia || 'Ubicación registrada'}
                               </div>
                             </div>
@@ -632,19 +623,19 @@ export default function NuevoTurnoModal({
                         {isLoadingServicios ? (
                           <div className="input-group input-group-sm">
                             <span className="input-group-text bg-white border-end-0"><Wrench size={14} /></span>
-                            <select id="turnos-nuevo-servicio" className="form-select form-select-sm border-start-0 shadow-none fw-semibold" disabled value="">
-                              <option value="">Cargando servicios...</option>
+                            <select id="turnos-nuevo-servicio" aria-required="true" className="form-select form-select-sm border-start-0 shadow-none fw-semibold" disabled value="">
+                              <option value="">Cargando servicios…</option>
                             </select>
                           </div>
                         ) : errorServicios ? (
-                          <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-0">
+                          <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-0" role="alert">
                             <Info size={15} className="flex-shrink-0" />
                             <span className="small fw-medium">{errorServicios}</span>
                           </div>
                         ) : servicios.length === 0 ? (
                           <div className="border rounded-3 p-3 bg-white">
                             <div className="fw-bold text-dark small mb-1">Aún no vinculaste servicios con precios propios</div>
-                            <p className="text-secondary mb-2" style={{ fontSize: '0.75rem' }}>
+                            <p className="text-secondary mb-2" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                               Necesitás tener al menos un servicio activo con su precio por m² en tu catálogo operativo.
                             </p>
                             <Button type="button" variant="primary" size="sm" className="w-100 justify-content-center" onClick={handleIrACargarServicio}>
@@ -655,12 +646,12 @@ export default function NuevoTurnoModal({
                           <div className="input-group input-group-sm">
                             <span className="input-group-text bg-white border-end-0"><Wrench size={14} /></span>
                             <select
-                              id="turnos-nuevo-servicio"
+                              id="turnos-nuevo-servicio" aria-required="true"
                               className="form-select form-select-sm border-start-0 shadow-none fw-semibold"
                               value={idServicio}
                               onChange={(e) => { setIdServicio(e.target.value); setMontoFinalEditado(null); setError(''); }}
                             >
-                              <option value="">Seleccionar servicio...</option>
+                              <option value="">Seleccionar servicio…</option>
                               {servicios.map((s) => (
                                 <option key={s.id_servicio} value={s.id_servicio}>
                                   {s.servicio?.nombre || `Servicio #${s.id_servicio}`} — ${Number(s.precio_base || 0).toLocaleString('es-AR')}/m²
@@ -672,9 +663,9 @@ export default function NuevoTurnoModal({
                       </div>
 
                       <div className="border rounded-3 p-2 px-3 bg-white mt-3">
-                        <span className="text-secondary d-block" style={{ fontSize: '0.68rem' }}>Predio seleccionado</span>
+                        <span className="text-secondary d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Predio seleccionado</span>
                         <div className="fw-semibold text-dark small text-truncate">{inmuebleSeleccionado?.direccion}</div>
-                        <div className="text-success fw-bold" style={{ fontSize: '0.75rem' }}>
+                        <div className="text-success fw-bold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                           Superficie mantenible: {inmuebleSeleccionado?.superficie_mantenible || 0} m²
                         </div>
                       </div>
@@ -687,7 +678,7 @@ export default function NuevoTurnoModal({
                         <div>
                           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 pb-2 mb-2 border-bottom">
                             <div className="min-w-0">
-                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                                 Tarjeta del servicio y presupuesto
                               </span>
                               <div className="fw-bold text-dark text-break">{servicioSeleccionado.servicio?.nombre || `Servicio #${idServicio}`}</div>
@@ -703,7 +694,7 @@ export default function NuevoTurnoModal({
                               <span>{formatearMontoARS(calculoPresupuesto.montoEstimado)}</span>
                             </div>
                             {cargandoTraslado ? (
-                              <div className="small text-secondary mb-2">Calculando traslado...</div>
+                              <div className="small text-secondary mb-2">Calculando traslado…</div>
                             ) : (
                               <TrasladoDetalle traslado={traslado} formatMonto={formatearMontoARS} className="small mb-2" />
                             )}
@@ -725,7 +716,7 @@ export default function NuevoTurnoModal({
                               <button
                                 type="button"
                                 className="btn btn-link btn-sm p-0 text-decoration-none d-inline-flex align-items-center gap-1 fw-semibold"
-                                style={{ fontSize: '0.75rem' }}
+                                style={{ fontSize: 'var(--hovy-texto-xs)' }}
                                 onClick={() => setMontoFinalEditado(null)}
                               >
                                 <RotateCcw size={12} /> Restaurar estimado
@@ -736,6 +727,7 @@ export default function NuevoTurnoModal({
                             <span className="input-group-text bg-white border-end-0 fw-bold text-success"><DollarSign size={15} /></span>
                             <input
                               id="turnos-nuevo-monto-final"
+                          aria-required="true"
                               type="number"
                               min="0.01"
                               step="0.01"
@@ -745,7 +737,7 @@ export default function NuevoTurnoModal({
                               placeholder="0.00"
                             />
                           </div>
-                          <small className="text-secondary d-block mt-1" style={{ fontSize: '0.7rem' }}>
+                          <small className="text-secondary d-block mt-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                             {montoEsPersonalizado
                               ? `Se guardará ${formatearMontoARS(montoFinalNumero)} como monto final.`
                               : 'Podés mantener el valor estimado o ajustarlo manualmente.'}
@@ -779,6 +771,7 @@ export default function NuevoTurnoModal({
                             <button
                               key={item.value}
                               type="button"
+                              aria-pressed={isSelected}
                               className={`w-100 text-start rounded-3 p-2 px-3 border ${isSelected ? 'border-dark bg-dark text-white' : 'border-light-subtle bg-white text-dark'}`}
                               onClick={() => { setPrioridad(item.value); setError(''); }}
                             >
@@ -786,7 +779,7 @@ export default function NuevoTurnoModal({
                                 <span className={`rounded-circle bg-${item.color}`} style={{ width: 8, height: 8 }} />
                                 {item.title}
                               </span>
-                              <span className={`d-block mt-1 ${isSelected ? 'text-light' : 'text-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                              <span className={`d-block mt-1 ${isSelected ? 'text-light' : 'text-secondary'}`} style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                                 {item.description}
                               </span>
                             </button>
@@ -830,6 +823,7 @@ export default function NuevoTurnoModal({
                                 <button
                                   type="button"
                                   disabled={isOccupied || isPast}
+                                  aria-pressed={isSelected}
                                   onClick={() => { setFranjaSeleccionada(slot.horaInicio); setError(''); }}
                                   className={`w-100 rounded-3 p-2 px-3 text-start border ${isPast ? 'border-light-subtle bg-light text-secondary opacity-75' : isSelected ? 'border-primary bg-primary text-white' : isOccupied ? 'border-danger-subtle bg-danger-subtle text-danger opacity-75' : 'border-light-subtle bg-white text-dark'}`}
                                 >
@@ -837,7 +831,7 @@ export default function NuevoTurnoModal({
                                     <span>{formatearHoraCorta(slot.horaInicio)} – {formatearHoraCorta(slot.horaFin)} hs</span>
                                     <span className={`rounded-circle flex-shrink-0 ${isPast ? 'bg-secondary' : isOccupied ? 'bg-danger' : isSelected ? 'bg-white' : 'bg-success'}`} style={{ width: 8, height: 8 }} />
                                   </span>
-                                  <span className={`d-flex justify-content-between gap-2 mt-1 ${isSelected ? 'text-light' : isOccupied ? 'text-danger' : 'text-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                                  <span className={`d-flex justify-content-between gap-2 mt-1 ${isSelected ? 'text-light' : isOccupied ? 'text-danger' : 'text-secondary'}`} style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                                     <span>{isPast ? 'Horario pasado' : isOccupied ? 'Ocupado' : 'Disponible'}</span>
                                     <span>{isOccupied || isPast ? 'No disp.' : `${Math.floor(duration / 60)}h ${String(duration % 60).padStart(2, '0')}m`}</span>
                                   </span>
@@ -862,14 +856,14 @@ export default function NuevoTurnoModal({
                     <div className="border rounded-3 p-3 h-100 bg-white shadow-sm d-flex flex-column justify-content-between">
                       <div>
                         <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
-                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                             <User size={13} /> Cliente e Inmueble
                           </span>
                           <button
                             type="button"
                             onClick={() => irAPaso(1)}
                             className="btn btn-sm btn-light border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                            style={{ fontSize: '0.7rem' }}
+                            style={{ fontSize: 'var(--hovy-texto-xs)' }}
                           >
                             <Pencil size={11} /> Editar
                           </button>
@@ -898,14 +892,14 @@ export default function NuevoTurnoModal({
                     <div className="border rounded-3 p-3 h-100 bg-white shadow-sm d-flex flex-column justify-content-between">
                       <div>
                         <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
-                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                             <Wrench size={13} /> Servicio y Presupuesto
                           </span>
                           <button
                             type="button"
                             onClick={() => irAPaso(2)}
                             className="btn btn-sm btn-light border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                            style={{ fontSize: '0.7rem' }}
+                            style={{ fontSize: 'var(--hovy-texto-xs)' }}
                           >
                             <Pencil size={11} /> Editar
                           </button>
@@ -946,14 +940,14 @@ export default function NuevoTurnoModal({
                   <div className="col-12">
                     <div className="border rounded-3 p-3 bg-light shadow-sm">
                       <div className="d-flex justify-content-between align-items-center gap-2 mb-1">
-                        <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                        <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
                           <CalendarDays size={13} /> Fecha, Horario y Prioridad
                         </span>
                         <button
                           type="button"
                           onClick={() => irAPaso(3)}
                           className="btn btn-sm btn-white bg-white border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                          style={{ fontSize: '0.7rem' }}
+                          style={{ fontSize: 'var(--hovy-texto-xs)' }}
                         >
                           <Pencil size={11} /> Editar
                         </button>
@@ -1020,13 +1014,11 @@ export default function NuevoTurnoModal({
                   disabled={!paso3Completo || isSubmitting}
                   onClick={handleConfirmarTurno}
                 >
-                  <Check size={16} /> {isSubmitting ? 'Guardando turno...' : 'Confirmar y guardar turno'}
+                  <Check size={16} /> {isSubmitting ? 'Guardando turno…' : 'Confirmar y guardar turno'}
                 </Button>
               )}
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

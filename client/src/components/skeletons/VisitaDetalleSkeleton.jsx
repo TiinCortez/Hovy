@@ -8,7 +8,7 @@ const COLUMNAS = ['col-12 col-md-6', 'col-12 col-md-6', 'col-12', 'col-12 col-md
 export default function VisitaDetalleSkeleton() {
   return (
     <div className="d-flex flex-column gap-4 pb-5" role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando solicitud...</span>
+      <span className="visually-hidden">Cargando solicitud…</span>
 
       <Skeleton width="7rem" height="1rem" />
 

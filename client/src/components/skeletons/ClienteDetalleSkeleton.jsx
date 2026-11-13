@@ -17,11 +17,11 @@ export default function ClienteDetalleSkeleton() {
   return (
     <div
       className="d-flex flex-column gap-3 pb-5"
-      style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', margin: '-1.5rem', padding: '1.5rem' }}
+      style={{ backgroundColor: 'var(--hovy-gris-50)', minHeight: '100vh', margin: 'calc(-1 * var(--hovy-espacio-24))', padding: 'var(--hovy-espacio-24)' }}
       role="status"
       aria-busy="true"
     >
-      <span className="visually-hidden">Cargando cliente...</span>
+      <span className="visually-hidden">Cargando cliente…</span>
 
       {/* Navegación superior */}
       <Skeleton width="12rem" height="1.25rem" className="d-md-none mb-3" />

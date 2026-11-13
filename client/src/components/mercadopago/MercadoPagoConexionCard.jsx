@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import MercadoPagoService from '../../services/api/mercadopago.service';
 import DesvincularMercadoPagoModal from './DesvincularMercadoPagoModal';
 import { alertaDesdeParams } from './mercadopagoMotivos';
+import Badge from '../ui/Badge';
 
 const formatFecha = (iso) =>
   iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
@@ -80,7 +81,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
 
   useEffect(() => {
     if (!onResumen) return;
-    if (isLoading) onResumen({ texto: 'Cargando...', tipo: 'neutro' });
+    if (isLoading) onResumen({ texto: 'Cargando…', tipo: 'neutro' });
     else if (loadError) onResumen({ texto: 'No se pudo consultar', tipo: 'error' });
     else if (conectada) onResumen({ texto: 'Conectada', tipo: 'ok' });
     else if (reautorizar) onResumen({ texto: 'Requiere reautorizar', tipo: 'aviso' });
@@ -105,7 +106,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
           </div>
         )}
 
-        {isLoading && <p className="text-secondary mb-0">Cargando estado de la conexión...</p>}
+        {isLoading && <p className="text-secondary mb-0">Cargando estado de la conexión…</p>}
 
         {!isLoading && loadError && (
           <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -118,14 +119,14 @@ export default function MercadoPagoConexionCard({ onResumen }) {
           <>
             {conectada && (
               <div>
-                <span className="badge text-bg-success rounded-pill mb-2">Conectada</span>
+                <Badge tipo="exito" className="mb-2">Conectada</Badge>
                 <p className="mb-1">Cuenta de Mercado Pago vinculada (ID {conexion.mp_user_id}).</p>
                 <p className="small text-secondary mb-0">Autorización vigente hasta {formatFecha(conexion.expira_en)}. Se renueva automáticamente.</p>
               </div>
             )}
             {reautorizar && (
               <div>
-                <span className="badge text-bg-warning rounded-pill mb-2">Reautorizar</span>
+                <Badge tipo="pendiente" className="mb-2">Reautorizar</Badge>
                 <p className="mb-0">La vinculación con Mercado Pago venció o fue revocada. Volvé a vincular tu cuenta para seguir cobrando.</p>
               </div>
             )}
@@ -135,7 +136,7 @@ export default function MercadoPagoConexionCard({ onResumen }) {
 
             <div className="d-flex gap-2 flex-wrap">
               <Button onClick={handleVincular} disabled={isLinking}>
-                {isLinking ? 'Redirigiendo...' : (reautorizar ? 'Volver a vincular' : 'Vincular Mercado Pago')}
+                {isLinking ? 'Redirigiendo…' : (reautorizar ? 'Volver a vincular' : 'Vincular Mercado Pago')}
               </Button>
               {vinculada && (
                 <Button variant="outline-danger" onClick={() => setShowModal(true)} disabled={isLinking}>

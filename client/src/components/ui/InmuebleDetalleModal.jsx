@@ -1,13 +1,11 @@
 import { MapPin, Maximize, Trash2, Edit2, Navigation, Home } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import { VERDE } from '../../styles/colores';
-import useCerrarConEscape from './useCerrarConEscape';
+import Modal from './Modal';
 
 export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, onEdit, onDelete }) {
-  useCerrarConEscape(isOpen, onClose);
   if (!isOpen || !inmuebleData) return null;
 
   // Imagen por defecto si el inmueble no tiene una cargada
@@ -24,20 +22,23 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg my-4">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
-          
-          {/* HEADER */}
-          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-3 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-5 d-flex align-items-center gap-2">
-              <div className="p-2 bg-success-subtle rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
-                <Home size={18} className="text-success" /> 
-              </div>
-              Detalle del Inmueble
-            </h5>
-            <CloseButton label="Cerrar detalle del inmueble" onClick={onClose} />
-          </div>
+    <Modal
+      titulo={(
+        <span className="d-flex align-items-center gap-2">
+          <span className="p-2 bg-success-subtle rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
+            <Home size={18} className="text-success" aria-hidden="true" />
+          </span>
+          Detalle del Inmueble
+        </span>
+      )}
+      claseTitulo="fs-5"
+      etiquetaCerrar="Cerrar detalle del inmueble"
+      onCerrar={onClose}
+      tamano="lg"
+      claseDialogo="my-4"
+      claseContenido="overflow-hidden bg-white"
+      claseCabecera="border-bottom-0 pb-3 pt-4 px-4"
+    >
 
           <div className="modal-body p-4 pt-0">
             {/* HERO BANNER CON IMAGEN */}
@@ -160,8 +161,6 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
             </div>
           </div>
           
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

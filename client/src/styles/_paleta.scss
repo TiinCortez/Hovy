@@ -1,0 +1,158 @@
+// Paleta de Hovy por escalas: el único lugar con valores de color.
+// Para usar un color: en SCSS $hovy-<nombre>; en JSX var(--hovy-<nombre>)
+// (main.scss publica la paleta como variables CSS); en SVG o Leaflet, PALETA de paleta.js.
+// Los colores por rol (texto-secundario, borde-control…) están en _tokens.scss.
+
+$hovy-verde-50: #F4F9EF;
+$hovy-verde-100: #EAF2E8;
+$hovy-verde-200: #D5E9C6;
+$hovy-verde-300: #CBECC1;
+$hovy-verde-400: #97B98C;
+$hovy-verde-500: #67884E;
+$hovy-verde-600: #496544;
+$hovy-verde-700: #3D6135;
+$hovy-verde-800: #294B15;
+$hovy-verde-850: #173313;
+$hovy-verde-900: #1B3006;
+$hovy-verde-950: #122104;
+$hovy-crema-50: #FBF9F6;
+$hovy-crema-100: #F6F5F0;
+$hovy-crema-200: #F2F2E6;
+$hovy-crema-300: #EAE6DF;
+$hovy-crema-400: #E6E6D8;
+$hovy-crema-500: #D1D1C4;
+$hovy-crema-600: #C9C9C1;
+$hovy-oliva-100: #E8EDE4;
+$hovy-oliva-200: #DFE1DC;
+$hovy-oliva-300: #D5DACE;
+$hovy-oliva-400: #AAB69E;
+$hovy-oliva-500: #8D968B;
+$hovy-oliva-600: #70766D;
+$hovy-oliva-700: #5F695D;
+$hovy-oliva-800: #495244;
+$hovy-oliva-900: #343934;
+$hovy-oliva-950: #1F291E;
+$hovy-gris-50: #F8F9FA;
+$hovy-gris-100: #F0F0F0;
+$hovy-gris-200: #E9ECEF;
+$hovy-gris-300: #D4D8DC;
+$hovy-gris-400: #9CA3AF;
+$hovy-gris-500: #6C757D;
+$hovy-gris-600: #5C636A;
+$hovy-gris-700: #4A4A4A;
+$hovy-gris-800: #343A40;
+$hovy-gris-900: #212529;
+$hovy-terracota-50: #FDF0EB;
+$hovy-terracota-100: #FBE9DF;
+$hovy-terracota-200: #FFDBCB;
+$hovy-terracota-300: #FFB691;
+$hovy-terracota-500: #C87D55;
+$hovy-terracota-600: #A35A34;
+$hovy-terracota-700: #8F4C29;
+$hovy-terracota-900: #4F1E00;
+$hovy-naranja-500: #D97706;
+$hovy-naranja-600: #C25E00;
+$hovy-ambar-50: #FFF9E8;
+$hovy-ambar-200: #F4D77B;
+$hovy-ambar-400: #F59E0B;
+$hovy-ambar-700: #8A5B00;
+$hovy-rojo-50: #FDECEC;
+$hovy-rojo-100: #F5B5B5;
+$hovy-rojo-500: #DC3545;
+$hovy-rojo-600: #BA1A1A;
+$hovy-rojo-700: #A12626;
+$hovy-esmeralda-50: #EAFFF6;
+$hovy-esmeralda-200: #8EE5C6;
+$hovy-esmeralda-600: #08775B;
+$hovy-esmeralda-900: #093624;
+$hovy-azul-50: #E8F0FE;
+$hovy-azul-200: #BFDBFE;
+$hovy-azul-400: #60A5FA;
+$hovy-azul-600: #2563EB;
+$hovy-azul-700: #1D4ED8;
+$hovy-azul-900: #111827;
+$hovy-celeste-50: #E7FAFE;
+$hovy-celeste-500: #0EA5E9;
+$hovy-celeste-800: #055160;
+$hovy-blanco: #FFFFFF;
+$hovy-terracota-800: #713714;
+$hovy-ambar-800: #79542D;
+$hovy-marron-600: #8C4A3B;
+
+$hovy-paleta: (
+  'verde-50': $hovy-verde-50,
+  'verde-100': $hovy-verde-100,
+  'verde-200': $hovy-verde-200,
+  'verde-300': $hovy-verde-300,
+  'verde-400': $hovy-verde-400,
+  'verde-500': $hovy-verde-500,
+  'verde-600': $hovy-verde-600,
+  'verde-700': $hovy-verde-700,
+  'verde-800': $hovy-verde-800,
+  'verde-850': $hovy-verde-850,
+  'verde-900': $hovy-verde-900,
+  'verde-950': $hovy-verde-950,
+  'crema-50': $hovy-crema-50,
+  'crema-100': $hovy-crema-100,
+  'crema-200': $hovy-crema-200,
+  'crema-300': $hovy-crema-300,
+  'crema-400': $hovy-crema-400,
+  'crema-500': $hovy-crema-500,
+  'crema-600': $hovy-crema-600,
+  'oliva-100': $hovy-oliva-100,
+  'oliva-200': $hovy-oliva-200,
+  'oliva-300': $hovy-oliva-300,
+  'oliva-400': $hovy-oliva-400,
+  'oliva-500': $hovy-oliva-500,
+  'oliva-600': $hovy-oliva-600,
+  'oliva-700': $hovy-oliva-700,
+  'oliva-800': $hovy-oliva-800,
+  'oliva-900': $hovy-oliva-900,
+  'oliva-950': $hovy-oliva-950,
+  'gris-50': $hovy-gris-50,
+  'gris-100': $hovy-gris-100,
+  'gris-200': $hovy-gris-200,
+  'gris-300': $hovy-gris-300,
+  'gris-400': $hovy-gris-400,
+  'gris-500': $hovy-gris-500,
+  'gris-600': $hovy-gris-600,
+  'gris-700': $hovy-gris-700,
+  'gris-800': $hovy-gris-800,
+  'gris-900': $hovy-gris-900,
+  'terracota-50': $hovy-terracota-50,
+  'terracota-100': $hovy-terracota-100,
+  'terracota-200': $hovy-terracota-200,
+  'terracota-300': $hovy-terracota-300,
+  'terracota-500': $hovy-terracota-500,
+  'terracota-600': $hovy-terracota-600,
+  'terracota-700': $hovy-terracota-700,
+  'terracota-900': $hovy-terracota-900,
+  'naranja-500': $hovy-naranja-500,
+  'naranja-600': $hovy-naranja-600,
+  'ambar-50': $hovy-ambar-50,
+  'ambar-200': $hovy-ambar-200,
+  'ambar-400': $hovy-ambar-400,
+  'ambar-700': $hovy-ambar-700,
+  'rojo-50': $hovy-rojo-50,
+  'rojo-100': $hovy-rojo-100,
+  'rojo-500': $hovy-rojo-500,
+  'rojo-600': $hovy-rojo-600,
+  'rojo-700': $hovy-rojo-700,
+  'esmeralda-50': $hovy-esmeralda-50,
+  'esmeralda-200': $hovy-esmeralda-200,
+  'esmeralda-600': $hovy-esmeralda-600,
+  'esmeralda-900': $hovy-esmeralda-900,
+  'azul-50': $hovy-azul-50,
+  'azul-200': $hovy-azul-200,
+  'azul-400': $hovy-azul-400,
+  'azul-600': $hovy-azul-600,
+  'azul-700': $hovy-azul-700,
+  'azul-900': $hovy-azul-900,
+  'celeste-50': $hovy-celeste-50,
+  'celeste-500': $hovy-celeste-500,
+  'celeste-800': $hovy-celeste-800,
+  'blanco': $hovy-blanco,
+  'terracota-800': $hovy-terracota-800,
+  'ambar-800': $hovy-ambar-800,
+  'marron-600': $hovy-marron-600,
+);

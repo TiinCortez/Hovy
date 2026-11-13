@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   MessageCircle,
@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
+import { useAvisos } from '../components/ui/avisosContext';
 import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import CancelarVisitaModal from '../components/visitas/CancelarVisitaModal.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
-import { BADGE_CLASS, getEstadoLabel } from '../components/visitas/visitaUtils';
+import { BADGE_TIPO, getEstadoLabel } from '../components/visitas/visitaUtils';
+import Badge from '../components/ui/Badge';
 import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
 import { VERDE } from '../styles/colores';
 
@@ -41,8 +43,8 @@ const formatFecha = (valor) => {
 };
 
 export default function VisitaDetallePage() {
+  const { avisar } = useAvisos();
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [visita, setVisita] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function VisitaDetallePage() {
       setVisita(response.data);
     } catch (err) {
       console.error('No se pudo marcar la solicitud como contactada:', err);
-      alert(err.response?.data?.error || 'No se pudo marcar la solicitud como contactada.');
+      avisar(err.response?.data?.error || 'No se pudo marcar la solicitud como contactada.');
     } finally {
       setContactando(false);
     }
@@ -111,9 +113,9 @@ export default function VisitaDetallePage() {
         <AlertTriangle size={48} className="text-warning mb-3 mx-auto" />
         <h3 className="fw-bold text-dark">Solicitud no encontrada</h3>
         <p className="text-secondary">{error || 'Es posible que el enlace sea incorrecto.'}</p>
-        <Button onClick={() => navigate('/dashboard')} variant="outline-primary" className="mt-3 bg-white text-dark border-secondary">
+        <Link to="/dashboard" className="btn btn-outline-primary mt-3 bg-white text-dark border-secondary">
           Volver al inicio
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -125,12 +127,12 @@ export default function VisitaDetallePage() {
   return (
     <div className="d-flex flex-column gap-4 pb-5">
       <div>
-        <button
-          onClick={() => navigate('/dashboard')}
+        <Link
+          to="/dashboard"
           className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 fw-semibold"
         >
-          <ArrowLeft size={18} /> Volver al inicio
-        </button>
+          <ArrowLeft size={18} aria-hidden="true" /> Volver al inicio
+        </Link>
       </div>
 
       <Card className="p-4">
@@ -138,7 +140,7 @@ export default function VisitaDetallePage() {
           <div className="d-flex align-items-center gap-3">
             <div
               className="rounded-4 d-flex align-items-center justify-content-center fw-bold text-success flex-shrink-0"
-              style={{ width: 56, height: 56, backgroundColor: '#E8F5E9', fontSize: '1.25rem', border: '1px solid #C8E6C9' }}
+              style={{ width: 56, height: 56, backgroundColor: 'var(--hovy-verde-100)', fontSize: 'var(--hovy-texto-xl)', border: '1px solid var(--hovy-verde-200)' }}
             >
               {visita.nombre?.[0]?.toUpperCase()}{visita.apellido?.[0]?.toUpperCase()}
             </div>
@@ -149,14 +151,10 @@ export default function VisitaDetallePage() {
           </div>
 
           <div className="d-flex flex-column align-items-end gap-1">
-            <span
-              className={`badge rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 ${
-                BADGE_CLASS[estadoLabel] || BADGE_CLASS.Pendiente
-              }`}
-            >
-              {yaContactada ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+            <Badge tipo={BADGE_TIPO[estadoLabel] || 'pendiente'} conPunto={false}>
+              {yaContactada ? <CheckCircle2 size={14} aria-hidden="true" /> : <Clock size={14} aria-hidden="true" />}
               {estadoLabel}
-            </span>
+            </Badge>
             {visita.estado === 'Realizada' && (
               <span className="badge rounded-pill px-3 py-2 fw-semibold bg-success text-white">Turno asignado</span>
             )}
@@ -167,21 +165,21 @@ export default function VisitaDetallePage() {
           <div className="col-12 col-md-6">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <Phone size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Teléfono</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Teléfono</div>
               <div className="fw-medium text-dark small">+{visita.telefono}</div>
             </div>
           </div>
           <div className="col-12 col-md-6">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <User size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Disponibilidad</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Disponibilidad</div>
               <div className="fw-medium text-dark small text-capitalize">{franja}</div>
             </div>
           </div>
           <div className="col-12">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <MapPin size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Dirección</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Dirección</div>
               <div className="fw-medium text-dark small">
                 {visita.direccion}
                 {visita.barrio && `, ${visita.barrio}`}
@@ -193,7 +191,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Ruler size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Superficie aproximada</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Superficie aproximada</div>
                 <div className="fw-medium text-dark small">{visita.superficie_aproximada} m²</div>
               </div>
             </div>
@@ -202,7 +200,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Wrench size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Servicio solicitado</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Servicio solicitado</div>
                 <div className="fw-medium text-dark small">{visita.servicio}</div>
               </div>
             </div>
@@ -211,7 +209,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <CalendarDays size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Fecha preferida</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Fecha preferida</div>
                 <div className="fw-medium text-dark small">{visita.fecha_preferida}</div>
               </div>
             </div>
@@ -220,7 +218,7 @@ export default function VisitaDetallePage() {
             <div className="col-12">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <StickyNote size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Nota sobre el horario</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Nota sobre el horario</div>
                 <div className="fw-medium text-dark small">{visita.nota_horario}</div>
               </div>
             </div>
@@ -228,7 +226,7 @@ export default function VisitaDetallePage() {
           <div className="col-12">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <Clock size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Solicitada el</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Solicitada el</div>
               <div className="fw-medium text-dark small">{formatFecha(visita.created_at)}</div>
             </div>
           </div>
@@ -244,9 +242,9 @@ export default function VisitaDetallePage() {
               disabled={contactando}
             >
               <MessageCircle size={18} />
-              {contactando ? 'Abriendo WhatsApp...' : 'Contactar'}
+              {contactando ? 'Abriendo WhatsApp…' : 'Contactar'}
             </Button>
-            <p className="text-secondary text-center mt-2 mb-0" style={{ fontSize: '0.75rem' }}>
+            <p className="text-secondary text-center mt-2 mb-0" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
               Al presionar Contactar, la solicitud pasará a "Contactada" automáticamente.
             </p>
           </>

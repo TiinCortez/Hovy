@@ -6,7 +6,7 @@ const FILAS = 6;
 export default function CobrosTablaSkeleton() {
   return (
     <div className="bg-white border rounded-4 shadow-sm" role="status" aria-busy="true">
-      <span className="visually-hidden">Cargando turnos a liquidar...</span>
+      <span className="visually-hidden">Cargando turnos a liquidar…</span>
 
       <div className="cobros-fila cobros-encabezado d-none d-lg-grid">
         <div className="cobros-celda-turno"><Skeleton width="60%" height="0.7rem" /></div>

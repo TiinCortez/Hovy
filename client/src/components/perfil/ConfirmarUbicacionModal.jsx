@@ -28,7 +28,7 @@ export default function ConfirmarUbicacionModal({ propuesta, isSaving, error, on
           disabled={isSaving}
           style={{ backgroundColor: VERDE, borderColor: VERDE }}
         >
-          {isSaving ? 'Guardando...' : 'Confirmar ubicación'}
+          {isSaving ? 'Guardando…' : 'Confirmar ubicación'}
         </Button>
       )}
     >

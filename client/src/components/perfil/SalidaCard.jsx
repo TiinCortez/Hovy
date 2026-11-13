@@ -43,7 +43,7 @@ export default function SalidaCard({ onResumen }) {
 
   useEffect(() => {
     if (!onResumen) return;
-    if (isLoading) onResumen('Cargando...');
+    if (isLoading) onResumen('Cargando…');
     else if (loadError) onResumen('No se pudo cargar');
     else onResumen(salida?.configurada ? (salida.domicilio || 'Ubicación guardada') : 'Sin dirección de salida');
   }, [onResumen, isLoading, loadError, salida]);
@@ -114,7 +114,7 @@ export default function SalidaCard({ onResumen }) {
   };
 
   if (isLoading) {
-    return <Card title="Dirección de salida"><p className="text-secondary mb-0">Cargando...</p></Card>;
+    return <Card title="Dirección de salida"><p className="text-secondary mb-0">Cargando…</p></Card>;
   }
 
   if (loadError) {
@@ -162,7 +162,7 @@ export default function SalidaCard({ onResumen }) {
               style={{ backgroundColor: VERDE, borderColor: VERDE }}
             >
               {isBuscando
-                ? 'Obteniendo ubicación...'
+                ? 'Obteniendo ubicación…'
                 : (salida?.configurada ? 'Actualizar con mi ubicación' : 'Usar mi ubicación')}
             </Button>
 
@@ -183,7 +183,7 @@ export default function SalidaCard({ onResumen }) {
               <span className="d-flex align-items-center gap-2 small">
                 <span className="fw-semibold text-dark">¿Quitar tu dirección de salida?</span>
                 <Button variant="danger" size="sm" onClick={handleQuitar} disabled={isSaving}>
-                  {isSaving ? 'Quitando...' : 'Sí, quitar'}
+                  {isSaving ? 'Quitando…' : 'Sí, quitar'}
                 </Button>
                 <button type="button" className="btn btn-light btn-sm" onClick={() => setConfirmandoQuitar(false)} disabled={isSaving}>
                   Cancelar

@@ -27,6 +27,7 @@ import {
   resolverPeriodo, filtrarRealizados, resumirPeriodo, calcularVariacion, formatearPorcentaje
 } from '../components/metricas/metricasUtils';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
 
 const MAX_TURNOS_PROXIMOS = 4;
 
@@ -185,14 +186,14 @@ export default function Dashboard() {
   const getEstadoBadge = (estado) => {
     switch (estado) {
       case 'EN_EJECUCION':
-        return <span className="badge rounded-pill bg-warning text-dark fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><PlayCircle size={12}/> En curso</span>;
+        return <Badge tipo="en-curso" conPunto={false} className="flex-shrink-0"><PlayCircle size={12}/> En curso</Badge>;
       case 'REALIZADO':
-        return <span className="badge rounded-pill bg-success text-white fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><CheckCircle size={12}/> Realizado</span>;
+        return <Badge tipo="exito" conPunto={false} className="flex-shrink-0"><CheckCircle size={12}/> Realizado</Badge>;
       case 'CONFIRMADO':
-        return <span className="badge rounded-pill bg-info bg-opacity-10 text-info border fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><CheckCircle size={12}/> Confirmado</span>;
+        return <Badge tipo="info" conPunto={false} className="flex-shrink-0"><CheckCircle size={12}/> Confirmado</Badge>;
       case 'COORDINADO':
       default:
-        return <span className="badge rounded-pill bg-light text-secondary border fw-semibold d-inline-flex align-items-center gap-1 flex-shrink-0" style={{ padding: '0.25rem 0.6rem', fontSize: '0.72rem' }}><Clock size={12}/> Pendiente</span>;
+        return <Badge tipo="pendiente" conPunto={false} className="flex-shrink-0"><Clock size={12}/> Pendiente</Badge>;
     }
   };
 
@@ -201,7 +202,7 @@ export default function Dashboard() {
       {/* Encabezado */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Panel de control</span>
+          <span className="hovy-rotulo">Panel de control</span>
         </div>
         <h2 className="fw-bold fs-2 text-dark mb-1">Hola, {mockData.usuario}</h2>
         <p className="text-secondary m-0">Aquí tienes el resumen de tu jardín para hoy.</p>
@@ -225,7 +226,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: '#79542D' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(253, 203, 155, 0.3)', color: 'var(--hovy-ambar-800)' }}>
                 <ClipboardList size={24} />
               </div>
               <div>
@@ -238,7 +239,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: '#ba1a1a' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(186, 26, 26, 0.1)', color: 'var(--hovy-rojo-600)' }}>
                 <AlertTriangle size={24} />
               </div>
               <div>
@@ -335,7 +336,7 @@ export default function Dashboard() {
             </div>
 
             <div className="d-flex flex-column gap-3">
-              {cargandoTurnos && <p className="text-secondary small m-0">Cargando turnos...</p>}
+              {cargandoTurnos && <p className="text-secondary small m-0">Cargando turnos…</p>}
               {!cargandoTurnos && proximosTurnos.length === 0 && (
                 <p className="text-secondary small m-0">No hay turnos próximos.</p>
               )}

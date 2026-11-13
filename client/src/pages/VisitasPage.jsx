@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Search, AlertCircle, Phone, MapPin, Ruler, Wrench, CalendarDays, Clock, CalendarCheck, UserPlus, Users, UserCheck, Inbox, History } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -7,6 +7,7 @@ import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaModal from '../components/visitas/ConfirmarVisitaModal';
 import VisitasSkeleton from '../components/skeletons/VisitasSkeleton';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
 
 // Case- and accent-insensitive comparison for the search box
 const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -79,18 +80,18 @@ const getGrupo = (visita) => {
 // A new contact that was confirmed is now a client.
 const yaEsCliente = (visita) => getGrupo(visita) === 'nuevas' && getTab(visita) === 'Confirmada';
 
-const BADGE_CLASS = {
-  Pendiente: 'bg-warning-subtle text-warning border border-warning-subtle',
-  Contactada: 'bg-info-subtle text-info border border-info-subtle',
-  Confirmada: 'bg-success-subtle text-success border border-success-subtle',
-  Cancelada: 'bg-danger-subtle text-danger border border-danger-subtle',
+// Tipo de Badge según el estado de la solicitud
+const BADGE_TIPO = {
+  Pendiente: 'pendiente',
+  Contactada: 'info',
+  Confirmada: 'exito',
+  Cancelada: 'neutro',
 };
 
 // Compact status badge (top right) and secondary chips (under the name)
-const ESTADO_BADGE_STYLE = { fontSize: '0.72rem', padding: '0.3rem 0.6rem' };
-const CHIP_STYLE = { fontSize: '0.68rem', padding: '0.15rem 0.5rem', border: '1px solid', whiteSpace: 'nowrap' };
+const CHIP_STYLE = { fontSize: 'var(--hovy-texto-xs)', padding: 'var(--hovy-espacio-2) var(--hovy-espacio-8)', border: '1px solid', whiteSpace: 'nowrap' };
 const CHIP_TURNO = { backgroundColor: 'rgba(27, 48, 6, 0.08)', color: VERDE, borderColor: 'rgba(27, 48, 6, 0.15)' };
-const CHIP_CLIENTE = { backgroundColor: 'rgba(121, 84, 45, 0.08)', color: '#79542D', borderColor: 'rgba(121, 84, 45, 0.2)' };
+const CHIP_CLIENTE = { backgroundColor: 'rgba(121, 84, 45, 0.08)', color: 'var(--hovy-ambar-800)', borderColor: 'rgba(121, 84, 45, 0.2)' };
 
 const EMPTY_TEXT = {
   Todas: 'Todavía no hay solicitudes.',
@@ -104,7 +105,6 @@ const EMPTY_TEXT = {
 const time = (visita) => new Date(visita.created_at).getTime() || 0;
 
 export default function VisitasPage() {
-  const navigate = useNavigate();
   const [visitas, setVisitas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -194,7 +194,7 @@ export default function VisitasPage() {
 
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Solicitudes</span>
+          <span className="hovy-rotulo">Solicitudes</span>
         </div>
         <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes</h2>
         <p className="text-secondary small m-0">
@@ -275,7 +275,7 @@ export default function VisitasPage() {
           <input
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-            placeholder="Buscar por nombre, teléfono o dirección..."
+            placeholder="Buscar por nombre, teléfono o dirección…"
             aria-label="Buscar solicitudes"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -334,13 +334,9 @@ export default function VisitasPage() {
                         </h5>
                         <p className="text-secondary small m-0">Solicitud #{visita.id_solicitud}</p>
                       </div>
-                      <span
-                        className={`badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-nowrap flex-shrink-0 ${BADGE_CLASS[tab] || 'bg-secondary-subtle text-secondary'}`}
-                        style={ESTADO_BADGE_STYLE}
-                      >
-                        <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: 'currentColor' }} aria-hidden="true"></span>
+                      <Badge tipo={BADGE_TIPO[tab] || 'neutro'} className="flex-shrink-0">
                         {tab}
-                      </span>
+                      </Badge>
                     </div>
                     {(visita.estado === 'Realizada' || yaEsCliente(visita) || esPedidoClienteEnCurso(visita) || esPedidoClienteConVisita(visita)) && (
                       <div className="d-flex flex-wrap gap-1 mt-2">
@@ -384,13 +380,12 @@ export default function VisitasPage() {
                   </div>
 
                   <div className="d-flex align-items-center gap-2 mt-auto">
-                    <Button
-                      variant="light"
-                      className="flex-grow-1 rounded-pill text-dark fw-bold small py-2 bg-light border shadow-sm"
-                      onClick={() => navigate(`/visitas/${visita.id_solicitud}`)}
+                    <Link
+                      to={`/visitas/${visita.id_solicitud}`}
+                      className="btn btn-light flex-grow-1 rounded-pill text-dark fw-bold small py-2 bg-light border shadow-sm"
                     >
                       Ver detalle
-                    </Button>
+                    </Link>
                     {visita.estado === 'Contactada' && (
                       <Button
                         variant="primary"

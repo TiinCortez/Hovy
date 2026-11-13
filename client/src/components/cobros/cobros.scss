@@ -1,12 +1,12 @@
 @use '../../styles/tokens' as *;
 // Estilos exclusivos de la vista de Cobros (paleta del DESIGN.md).
 $cobros-verde: $hovy-green;
-$cobros-verde-medio: #496544;
-$cobros-terracota: #C87D55;
-$cobros-borde: #EAE6DF;
-$cobros-superficie: #F5F3F0;
+$cobros-verde-medio: $hovy-verde-600;
+$cobros-terracota: $hovy-terracota-500;
+$cobros-borde: $hovy-crema-300;
+$cobros-superficie: $hovy-crema-100;
 
-.cobros-texto-terracota { color: $cobros-terracota !important; }
+.cobros-texto-terracota { color: $hovy-texto-pendiente !important; }
 
 /* --- Barra de filtros --- */
 // Selector de orden: ancho completo hasta tablet (ahí el menú lateral le quita
@@ -26,7 +26,7 @@ $cobros-superficie: #F5F3F0;
 
 /* --- Tarjetas de resumen --- */
 .cobros-kpi-valor {
-  font-size: 1.5rem;
+  font-size: $hovy-texto-2xl;
   font-weight: 700;
   line-height: 2rem;
   font-variant-numeric: tabular-nums;
@@ -38,26 +38,26 @@ $cobros-superficie: #F5F3F0;
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 0.75rem;
+  border-radius: $hovy-radio-md;
   flex-shrink: 0;
 
-  &--verde { background-color: #CBECC1; color: #173313; }
-  &--terracota { background-color: #FFDBCB; color: #4F1E00; }
-  &--neutro { background-color: $cobros-superficie; color: #173313; }
+  &--verde { background-color: $hovy-verde-300; color: $hovy-verde-850; }
+  &--terracota { background-color: $hovy-terracota-200; color: $hovy-terracota-900; }
+  &--neutro { background-color: $cobros-superficie; color: $hovy-verde-850; }
 }
 
 .cobros-kpi-deco {
   position: absolute;
-  right: -1.5rem;
-  bottom: -1.5rem;
+  right: -$hovy-espacio-24;
+  bottom: -$hovy-espacio-24;
   width: 6rem;
   height: 6rem;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   pointer-events: none;
-  transition: transform 0.3s ease;
+  transition: transform $hovy-duracion-lenta ease;
 
-  &--verde { background-color: rgba(203, 236, 193, 0.35); }
-  &--terracota { background-color: rgba(255, 219, 203, 0.35); }
+  &--verde { background-color: rgba($hovy-verde-300, 0.35); }
+  &--terracota { background-color: rgba($hovy-terracota-200, 0.35); }
   &--neutro { background-color: $cobros-superficie; }
 }
 
@@ -68,26 +68,26 @@ $cobros-superficie: #F5F3F0;
 .cobros-badge-terracota {
   display: inline-flex;
   align-items: center;
-  padding: 0.3rem 0.75rem;
-  font-size: 0.75rem;
+  padding: $hovy-espacio-4 $hovy-espacio-12;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .cobros-badge-verde {
-  color: #4F6C4A;
-  background-color: #CBECC1;
+  color: $hovy-verde-600;
+  background-color: $hovy-verde-300;
 }
 
 .cobros-badge-terracota {
-  color: #713714;
-  background-color: #FFDBCB;
+  color: $hovy-terracota-800;
+  background-color: $hovy-terracota-200;
 }
 
 .cobros-progreso {
   height: 6px;
-  background-color: #EFEEEB;
-  border-radius: 9999px;
+  background-color: $hovy-gris-100;
+  border-radius: $hovy-radio-pill;
   overflow: hidden;
 
   > span {
@@ -95,7 +95,7 @@ $cobros-superficie: #F5F3F0;
     height: 100%;
     background-color: $cobros-verde-medio;
     border-radius: inherit;
-    transition: width 0.6s ease;
+    transition: width $hovy-duracion-larga ease;
   }
 }
 
@@ -107,7 +107,7 @@ $cobros-superficie: #F5F3F0;
 .cobros-punto-alerta {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   background-color: $cobros-terracota;
   flex-shrink: 0;
   animation: cobrosPulso 1.6s ease-in-out infinite;
@@ -117,7 +117,7 @@ $cobros-superficie: #F5F3F0;
   display: inline-block;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
 
   &--pendiente { background-color: $cobros-terracota; }
   &--cobrado { background-color: $cobros-verde-medio; }
@@ -133,15 +133,15 @@ $cobros-superficie: #F5F3F0;
     "cliente cliente"
     "servicio servicio"
     "monto estado";
-  gap: 0.5rem 1rem;
+  gap: $hovy-espacio-8 $hovy-espacio-16;
   align-items: center;
-  padding: 1rem;
+  padding: $hovy-espacio-16;
   border-bottom: 1px solid $cobros-borde;
-  transition: background-color 0.15s ease;
+  transition: background-color $hovy-duracion-rapida ease;
 
-  &:hover { background-color: #FBF9F6; }
-  &.is-pendiente { background-color: #FFFAF7; }
-  &.is-pendiente:hover { background-color: #FFF4EE; }
+  &:hover { background-color: $hovy-crema-50; }
+  &.is-pendiente { background-color: $hovy-crema-50; }
+  &.is-pendiente:hover { background-color: $hovy-terracota-50; }
 
   // Celulares angostos: el monto no entra al lado del estado, va en su propia línea.
   @media (max-width: 399.98px) {
@@ -156,8 +156,8 @@ $cobros-superficie: #F5F3F0;
   @media (min-width: 992px) {
     grid-template-columns: 3fr 3fr 2fr 2fr 2fr;
     grid-template-areas: "turno cliente servicio monto estado";
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    gap: $hovy-espacio-12;
+    padding: $hovy-espacio-16 $hovy-espacio-24;
   }
 }
 
@@ -173,76 +173,76 @@ $cobros-superficie: #F5F3F0;
 }
 
 .cobros-encabezado {
-  padding-block: 0.85rem;
-  color: #5F695D;
+  padding-block: $hovy-espacio-14;
+  color: $hovy-oliva-700;
   background-color: $cobros-superficie;
-  font-size: 0.72rem;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border-radius: 1rem 1rem 0 0;
+  border-radius: $hovy-radio-lg $hovy-radio-lg 0 0;
 
   &:hover { background-color: $cobros-superficie; }
 }
 
 .cobros-pie {
   background-color: $cobros-superficie;
-  border-radius: 0 0 1rem 1rem;
+  border-radius: 0 0 $hovy-radio-lg $hovy-radio-lg;
 }
 
 .cobros-monto {
-  font-size: 1.25rem;
+  font-size: $hovy-texto-xl;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 
-  &.is-cobrado { color: #173313; }
-  &.is-pendiente { color: $cobros-terracota; }
+  &.is-cobrado { color: $hovy-verde-850; }
+  &.is-pendiente { color: $hovy-texto-pendiente; }
 }
 
-.cobros-alerta { color: $cobros-terracota; }
+.cobros-alerta { color: $hovy-texto-pendiente; }
 
 // Botón de estado: no usa .btn para conservar la forma de píldora del diseño
 .cobros-estado {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: $hovy-espacio-6;
   min-height: 34px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.8125rem;
+  padding: $hovy-espacio-6 $hovy-espacio-14;
+  font-size: $hovy-texto-sm;
   font-weight: 600;
   white-space: nowrap;
   border: 1px solid transparent;
-  border-radius: 9999px;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border-radius: $hovy-radio-pill;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease;
 
-  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid $hovy-verde-500; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: wait; }
 
   &.is-cobrado {
     color: $cobros-verde;
-    background-color: #EAF2E8;
-    border-color: #D2E4CF;
-    &:not(:disabled):hover { background-color: #DCEBD8; }
+    background-color: $hovy-verde-100;
+    border-color: $hovy-oliva-300;
+    &:not(:disabled):hover { background-color: $hovy-crema-400; }
   }
 
   &.is-pendiente {
     color: $cobros-terracota;
-    background-color: #FDF0EB;
-    border-color: #F8D8C9;
-    &:not(:disabled):hover { background-color: #FBE2D7; }
+    background-color: $hovy-terracota-50;
+    border-color: $hovy-terracota-200;
+    &:not(:disabled):hover { background-color: $hovy-terracota-100; }
   }
 }
 
 .cobros-link-cobrar {
   padding: 0;
-  font-size: 0.72rem;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   color: $cobros-verde-medio;
   background: none;
   border: 0;
 
   &:not(:disabled):hover { text-decoration: underline; }
-  &:focus-visible { outline: 2px solid #67884e; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid $hovy-verde-500; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: wait; }
 }
 

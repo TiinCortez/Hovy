@@ -215,3 +215,66 @@ Hecho y verificado en el navegador a 320, 768 y escritorio; `lint` y `build` en 
 | A9: `lang="es"` | Hecho. Falta el título por ruta |
 
 Pendiente: A1 (atrapar el foco), A5 a A8, A10 a A12; `badge` y `table` sin CSS; el resto de la paleta (unos 200 valores); breakpoints `420px` y `359.98px`; anchos fijos inline; C3, C4 y C6.
+
+## Segunda tanda: decisiones del sistema de diseño (rama `feat/sistema-diseno-accesibilidad`)
+
+Aplica en la app las decisiones del sistema de diseño publicado en Claude. Verificado en el navegador a 320, 768 y 1280 px; `lint` y `build` en verde.
+
+| Ítem | Estado |
+|---|---|
+| A6: `$secondary` `#5c636a`, `$success` `#08775b`, `$body-secondary-color` | Hecho. Ninguna de las 12 pantallas internas tiene texto por debajo de 4.5:1 |
+| A6: terracota y gris tenue usados como texto | Hecho (`#a35a34` y `metricas-texto-secundario`) |
+| A6: badge Confirmado (1.81:1) y aviso "Estimado interno" (1.47:1) | Hecho con el componente `Badge` |
+| A5: borde de campos `#7d8577` (3.8:1) y foco que no anula `shadow-sm` | Hecho |
+| A5: foco de `SeccionDesplegable` recortado por `overflow-hidden` | Hecho: el anillo va hacia adentro |
+| A1 y A3: foco atrapado, foco inicial y devolución del foco en los 15 modales | Hecho (`useFocoModal`) |
+| A2: Escape cierra solo el modal de arriba | Hecho (pila en `useCerrarConEscape`) |
+| A12: errores vinculados con `aria-invalid` y `aria-describedby` | Hecho en Nuevo Cliente, Editar Cliente, Inmueble y Servicio |
+| A7: texto de menos de 12 px | Hecho, salvo el texto interno del logo de Registro |
+| Títulos en peso 700 y rótulo de pantalla `.hovy-rotulo` | Hecho |
+| C4: componente `Badge` | Hecho en 13 estados; quedan contadores, prioridades y etiquetas sobre imágenes |
+
+Tercera tanda, en la misma rama:
+
+| Ítem | Estado |
+|---|---|
+| C4: componente `Modal` | Hecho. Los 15 modales lo usan; título en `h2` vinculado, cierre bloqueado mientras guardan |
+| A1: con dos modales encimados, solo el de arriba atrapa el foco | Hecho (pila en `useFocoModal`) |
+| Foco inicial en modales que cargan datos (Nuevo Turno) | Hecho: reintenta mientras los campos se habilitan |
+| A4 y A12 en Registro | Hecho: etiquetas, errores vinculados y `autoComplete` |
+| Nuevo Turno | Aviso de error con `role="alert"`, opciones con `aria-pressed`, obligatorios con `aria-required` |
+| Etiquetas `bg-*-subtle` con `text-*` (prioridades, tipos) | Hecho: usan el tono `*-text-emphasis` |
+| Mensajes vacíos y separadores con `opacity-50` | Hecho |
+| Logo de Registro con texto de 5 a 8 px | Hecho: el nombre pasa debajo del círculo, a 14 y 12 px |
+
+Cuarta tanda, en la misma rama: base para escalar.
+
+| Ítem | Estado |
+|---|---|
+| C2: paleta por escalas | Hecho. `styles/_paleta.scss` (75 tonos en 12 escalas) es el único lugar con valores de color; se publica como variables CSS `--hovy-*` y en `styles/paleta.js` para SVG y Leaflet. Quedan en hex solo los dibujos SVG (logo de Registro, marcadores) |
+| C3: escalas | Hecho en `_tokens.scss`: texto (10 tamaños), radios (9), sombras (5), capas z-index (10, también en `styles/capas.js`), duraciones (4) y cortes de pantalla propios |
+| C5: cortes 420 y 359.98 px | Con nombre: `$hovy-bp-telefono` y `$hovy-bp-telefono-chico` |
+| C6: `transition: all` | Hecho: propiedades explícitas |
+| C6: navegación con `onClick` | Hecho: enlaces (`Link`) en Login, Inmuebles, Detalle de solicitud y Solicitudes |
+| C6: teléfono del cliente en la URL | Hecho: la ruta usa el número de cliente |
+| C6: `window.confirm` | Hecho: `ConfirmarModal` (cancelar turno, dar de baja inmueble) |
+| C6: `...` en textos | Hecho: 81 reemplazos por `…` |
+| C6: imágenes sin tamaño | Hecho; el avatar externo (ui-avatars) pasa a iniciales locales |
+| C6: fechas a mano y `es-ES` | Hecho con `Intl` en `es-AR` |
+| C6: cambios sin guardar | Hecho en 4 formularios y Registro (`useAvisoCambiosSinGuardar`) |
+| C6: `theme-color`, `touch-action`, `overscroll-behavior`, `spellCheck` en correos | Hecho |
+| Dos modales encimados | Probado en pantalla con Cancelar turno sobre Detalle del turno |
+
+Quinta tanda, en la misma rama: lo que había quedado pendiente.
+
+| Ítem | Estado |
+|---|---|
+| C3: escala de espaciado | Hecho: `$hovy-espacio-2` a `$hovy-espacio-56` (el número es la medida en px) y `var(--hovy-espacio-*)`. 183 paddings, margins, gaps y desplazamientos de las hojas y 11 estilos inline pasan a la escala; cada valor se movió al paso más cercano (2 px como máximo) |
+| C6: `alert()` | Hecho: avisos flotantes (`AvisosProvider` y `useAvisos`) en Clientes, Inmuebles, Agenda y Detalle de solicitud. Los errores usan `role="alert"`, quedan hasta cerrarlos y aparecen sobre los modales y sobre la barra inferior |
+| Ver en Maps sin coordenadas | Hecho: el botón queda deshabilitado con su motivo, como el de WhatsApp |
+| A5: bloques clicables sin teclado | Hecho: tarjetas y turnos de la agenda semanal y mensual, "+N más" y los días del clima se usan con Tab, Enter y Espacio (`accionable.js`); los días del clima anuncian cuál está elegido (`aria-pressed`) |
+| A4 y A12 en Login | Hecho: etiquetas vinculadas, errores con `aria-describedby`, `autoComplete`, y el ojo de la contraseña pasa a ser un botón con nombre |
+| `Input.jsx` | Hecho: vincula etiqueta, error y ayuda con `aria-*`, marca obligatorios y desactiva el corrector en correos |
+
+Quedan fuera, a propósito: los desplazamientos decorativos de Métricas (−4 rem), la altura del encabezado (80 px) y el espacio de la barra inferior (6 rem), que son medidas de diseño y no de espaciado.
+

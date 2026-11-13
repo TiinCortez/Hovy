@@ -70,7 +70,7 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
               </thead>
               <tbody className="border-top">
                 {cargando && (
-                  <tr><td colSpan={4} className="py-4 text-center text-secondary small">Cargando notificaciones...</td></tr>
+                  <tr><td colSpan={4} className="py-4 text-center text-secondary small">Cargando notificaciones…</td></tr>
                 )}
                 {!cargando && todas.length === 0 && (
                   <tr><td colSpan={4} className="py-4 text-center text-secondary small">No tenés alertas ni notificaciones pendientes.</td></tr>

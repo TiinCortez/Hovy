@@ -8,6 +8,7 @@ import { formatearHorarioTurno, formatearMontoARS } from '../turnos/agendaTurnos
 import {
   codigoOrden, formatearDiaCorto, montoFinal, cobroAtrasado, diasEntre, DIAS_ALERTA_COBRO,
 } from './cobrosUtils';
+import { CAPAS } from '../../styles/capas';
 
 // Una fila de la liquidación: grilla en desktop y tarjeta apilada en mobile (cobros.scss)
 export default function CobroFila({
@@ -27,7 +28,7 @@ export default function CobroFila({
     <div className={`cobros-fila ${cobrado ? '' : 'is-pendiente'}`}>
       <div className="cobros-celda-turno min-w-0">
         <div className="d-flex align-items-center gap-2">
-          <span className="fw-bold" style={{ color: '#173313' }}>{codigoOrden(turno)}</span>
+          <span className="fw-bold" style={{ color: 'var(--hovy-verde-850)' }}>{codigoOrden(turno)}</span>
           {atrasado && (
             <span
               className="cobros-alerta d-inline-flex"
@@ -65,7 +66,7 @@ export default function CobroFila({
       </div>
 
       <div className="cobros-celda-monto">
-        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: '0.65rem' }}>Presupuesto final</span>
+        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Presupuesto final</span>
         <span className={`cobros-monto ${cobrado ? 'is-cobrado' : 'is-pendiente'}`}>{formatearMontoARS(monto)}</span>
       </div>
 
@@ -111,7 +112,7 @@ export default function CobroFila({
           {menuAbierto && (
             <div
               className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
-              style={{ minWidth: '220px', zIndex: 1050 }}
+              style={{ minWidth: '220px', zIndex: CAPAS.menu }}
             >
               <button
                 type="button"

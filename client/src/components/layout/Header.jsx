@@ -109,7 +109,7 @@ export default function Header() {
     // Utilizamos clases utilitarias de Flexbox y Spacing de Bootstrap
     <header className="hovy-header d-flex align-items-center justify-content-between flex-shrink-0 sticky-top">
       <div className="brand hovy-header-brand d-flex align-items-center ps-3 ps-md-4">
-        <img src="/hovy-emblema.webp" alt="" className="hovy-header-emblema" />
+        <img src="/hovy-emblema.webp" alt="" className="hovy-header-emblema" width="40" height="40" />
         <span className="hovy-header-nombre">Hovy</span>
         <span className="hovy-header-divisor d-none d-sm-block" aria-hidden="true" />
         <span className="hovy-header-subtitulo d-none d-sm-block">Gestión de<br />espacios verdes</span>
@@ -125,7 +125,7 @@ export default function Header() {
             {notificaciones.length > 0 && (
               <span
                 className="badge rounded-pill bg-danger position-absolute d-flex align-items-center justify-content-center"
-                style={{ top: 2, right: 2, minWidth: 18, height: 18, fontSize: '0.65rem', padding: 0 }}
+                style={{ top: 2, right: 2, minWidth: 18, height: 18, fontSize: 'var(--hovy-texto-xs)', padding: 0 }}
               >
                 {notificaciones.length}
               </span>

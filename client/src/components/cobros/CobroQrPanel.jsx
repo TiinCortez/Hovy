@@ -267,7 +267,7 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
   }
 
   if (isLoading) {
-    return <div className="cobro-qr mt-4 text-secondary small">Consultando el cobro...</div>;
+    return <div className="cobro-qr mt-4 text-secondary small">Consultando el cobro…</div>;
   }
 
   const estado = cobro ? describirCobro(cobro, formatearMontoARS) : null;
@@ -316,9 +316,9 @@ export default function CobroQrPanel({ turno, onCobrado, preferencia = null }) {
           {cobroPendiente && (
             <div className="d-flex flex-column flex-sm-row gap-3 align-items-sm-start">
               {qrVisible ? (
-                <img className="cobro-qr-imagen" src={qrVisible} alt="QR para pagar con Mercado Pago" />
+                <img className="cobro-qr-imagen" src={qrVisible} alt="QR para pagar con Mercado Pago" width="240" height="240" />
               ) : (
-                <div className="cobro-qr-vacio">Generando el QR...</div>
+                <div className="cobro-qr-vacio">Generando el QR…</div>
               )}
               <div className="d-flex flex-column gap-2">
                 <p className="text-secondary small m-0">

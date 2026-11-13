@@ -1,11 +1,12 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Info, MapPin, User } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import TurnoService from '../../services/api/turno.service';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import useRelojTurnos from './useRelojTurnos';
 import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos, formatearHoraCorta } from './agendaTurnos';
+import Modal from '../ui/Modal';
+import { CAPAS } from '../../styles/capas';
 
 export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurnoUpdated, turnosExistentes = [] }) {
   const ahora = useRelojTurnos();
@@ -15,18 +16,6 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Se monta al abrir para iniciar los campos con el turno seleccionado.
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const overflowAnterior = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const cerrarConEscape = (event) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', cerrarConEscape);
-    return () => {
-      document.body.style.overflow = overflowAnterior;
-      document.removeEventListener('keydown', cerrarConEscape);
-    };
-  }, [isOpen, onClose]);
 
   const cambiarFecha = (nuevaFecha) => {
     if (!nuevaFecha || nuevaFecha < obtenerAhoraTurnos().fecha) {
@@ -97,18 +86,18 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const inmueble = turnoData.inmueble || {};
 
   return (
-    <div className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1080 }}>
-      <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-          <div className="modal-header align-items-start px-3 px-md-4 py-3 border-bottom">
-            <div className="min-w-0">
-              <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '0.06em' }}>
-                Reasignación de Servicio
-              </span>
-              <h2 className="modal-title fw-bold text-dark mb-1">Modificar Turno #{turnoData.idTurno}</h2>
-            </div>
-            <CloseButton label="Cerrar modificación de turno" onClick={onClose} />
-          </div>
+    <Modal
+      titulo={`Modificar Turno #${turnoData.idTurno}`}
+      antetitulo={<span className="hovy-rotulo text-secondary">Reasignación de Servicio</span>}
+      etiquetaCerrar="Cerrar modificación de turno"
+      onCerrar={onClose}
+      tamano="xl"
+      desplazable
+      zIndex={CAPAS.modalSuperior}
+      claseRaiz="modificar-turno-modal"
+      claseContenido="overflow-hidden"
+      claseCabecera="px-3 px-md-4 py-3 border-bottom"
+    >
 
           <form onSubmit={handleSubmit} className="d-flex flex-column min-h-0">
             <div className="modal-body p-3 p-md-4">
@@ -203,12 +192,10 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
             <div className="turnos-modificar-footer modal-footer border-top px-3 px-md-4 py-3 d-flex justify-content-end gap-2">
               <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold text-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
               <Button type="submit" variant="primary" disabled={fechaInvalida || horarioInvalido || Boolean(franjaActiva?.turnoSolapado) || isSubmitting}>
-                <Check size={17} /> {isSubmitting ? 'Guardando...' : 'Guardar Modificación'}
+                <Check size={17} /> {isSubmitting ? 'Guardando…' : 'Guardar Modificación'}
               </Button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,7 +1,108 @@
-// Tokens de color compartidos. Único lugar donde se definen los colores de marca:
-// main.scss y los SCSS de cada módulo los toman de acá.
-$hovy-green: #1B3006;
-$hovy-cream: #F2F2E6;
-$hovy-gray: #4A4A4A;
-$hovy-border: #D1D1C4;
-$hovy-skeleton: #E6E6D8;
+// Tokens de Hovy: colores por rol y escalas (texto, espaciado, radios, sombras, capas,
+// duraciones y cortes de pantalla). Los colores salen de la paleta (_paleta.scss),
+// que se reexporta para que main.scss y los SCSS de cada módulo tengan todo con
+// un solo import. main.scss publica las escalas como variables CSS (--hovy-*)
+// para usarlas en estilos inline; en JS, las capas están en styles/capas.js.
+@forward 'paleta';
+@use 'paleta' as *;
+
+// --- Colores por rol ---------------------------------------------------------
+$hovy-green: $hovy-verde-900;
+$hovy-cream: $hovy-crema-200;
+$hovy-gray: $hovy-gris-700;
+$hovy-border: $hovy-crema-500;
+$hovy-skeleton: $hovy-crema-400;
+
+// Todos pasan 4.5:1 sobre $hovy-cream y blanco; los bordes y el foco, 3:1.
+$hovy-texto-secundario: $hovy-gris-600;
+$hovy-texto-exito: $hovy-esmeralda-600;
+$hovy-texto-pendiente: $hovy-terracota-600;
+$hovy-texto-error: $hovy-rojo-700;
+$hovy-borde-control: $hovy-oliva-600;
+$hovy-foco: $hovy-verde-500;
+
+// --- Tamaños de texto (mínimo 12 px) ----------------------------------------
+$hovy-texto-xs: 0.75rem;     // 12px: rótulos, badges, ayudas
+$hovy-texto-sm: 0.8125rem;   // 13px
+$hovy-texto-md: 0.875rem;    // 14px: texto de apoyo, botones
+$hovy-texto-base: 1rem;      // 16px
+$hovy-texto-lg: 1.125rem;    // 18px
+$hovy-texto-xl: 1.25rem;     // 20px: títulos de tarjeta
+$hovy-texto-2xl: 1.5rem;     // 24px: títulos de modal
+$hovy-texto-3xl: 1.75rem;    // 28px
+$hovy-texto-4xl: 2rem;       // 32px: títulos de pantalla
+$hovy-texto-5xl: 2.5rem;     // 40px: cifras destacadas
+
+// --- Radios -----------------------------------------------------------------
+$hovy-radio-xs: 0.25rem;     // 4px
+$hovy-radio-sm: 0.5rem;      // 8px: cajas internas
+$hovy-radio-boton: 10px;     // botones
+$hovy-radio-md: 0.75rem;     // 12px: campos, filas
+$hovy-radio-lg: 1rem;        // 16px: tarjetas, modales
+$hovy-radio-xl: 1.5rem;      // 24px: paneles grandes
+$hovy-radio-2xl: 2rem;       // 32px
+$hovy-radio-pill: 50rem;     // badges, chips, buscadores
+$hovy-radio-circulo: 50%;
+
+// --- Sombras (tinte del verde de marca) --------------------------------------
+$hovy-sombra-xs: 0 1px 2px rgba($hovy-verde-900, 0.04);
+$hovy-sombra-sm: 0 1px 3px rgba($hovy-verde-900, 0.06);    // tarjetas (.shadow-sm)
+$hovy-sombra-md: 0 4px 12px rgba($hovy-verde-900, 0.08);   // hover, popovers (.shadow)
+$hovy-sombra-lg: 0 12px 28px rgba($hovy-verde-900, 0.12);  // menús flotantes
+$hovy-sombra-xl: 0 20px 40px -8px rgba($hovy-verde-900, 0.18); // modales (.shadow-lg)
+
+// --- Capas (z-index) ---------------------------------------------------------
+$hovy-capa-base: 1;
+$hovy-capa-superpuesta: 5;
+$hovy-capa-elevada: 10;
+$hovy-capa-fija: 1000;           // encabezado y barras fijas
+$hovy-capa-barra: 1040;          // menú lateral y barra inferior
+$hovy-capa-menu: 1050;           // desplegables y popovers
+$hovy-capa-modal: 1060;
+$hovy-capa-modal-encima: 1070;   // un modal abierto sobre otro
+$hovy-capa-modal-superior: 1080;
+$hovy-capa-aviso: 1100;
+
+// --- Duraciones ---------------------------------------------------------------
+$hovy-duracion-rapida: 0.15s;    // hover y foco
+$hovy-duracion-media: 0.2s;      // aperturas, giros de íconos
+$hovy-duracion-lenta: 0.3s;
+$hovy-duracion-larga: 0.6s;      // barras de progreso
+
+// --- Cortes de pantalla propios (además de los de Bootstrap: 576, 768, 992, 1200)
+$hovy-bp-telefono: 420px;          // teléfonos angostos
+$hovy-bp-telefono-chico: 359.98px; // teléfonos de 320 a 359 px
+
+// --- Espaciado: el número es la medida en px (no confundir con p-1…p-5 de
+// Bootstrap). Para padding, margin, gap y desplazamientos de posición.
+$hovy-espacio-2: 0.125rem;
+$hovy-espacio-4: 0.25rem;
+$hovy-espacio-6: 0.375rem;
+$hovy-espacio-8: 0.5rem;
+$hovy-espacio-10: 0.625rem;
+$hovy-espacio-12: 0.75rem;
+$hovy-espacio-14: 0.875rem;
+$hovy-espacio-16: 1rem;
+$hovy-espacio-20: 1.25rem;
+$hovy-espacio-24: 1.5rem;
+$hovy-espacio-32: 2rem;
+$hovy-espacio-40: 2.5rem;
+$hovy-espacio-48: 3rem;
+$hovy-espacio-56: 3.5rem;
+
+$hovy-escalas: (
+  'texto-xs': $hovy-texto-xs, 'texto-sm': $hovy-texto-sm, 'texto-md': $hovy-texto-md,
+  'texto-base': $hovy-texto-base, 'texto-lg': $hovy-texto-lg, 'texto-xl': $hovy-texto-xl,
+  'texto-2xl': $hovy-texto-2xl, 'texto-3xl': $hovy-texto-3xl, 'texto-4xl': $hovy-texto-4xl,
+  'texto-5xl': $hovy-texto-5xl,
+  'radio-xs': $hovy-radio-xs, 'radio-sm': $hovy-radio-sm, 'radio-boton': $hovy-radio-boton,
+  'radio-md': $hovy-radio-md, 'radio-lg': $hovy-radio-lg, 'radio-xl': $hovy-radio-xl,
+  'radio-2xl': $hovy-radio-2xl, 'radio-pill': $hovy-radio-pill, 'radio-circulo': $hovy-radio-circulo,
+  'sombra-xs': $hovy-sombra-xs, 'sombra-sm': $hovy-sombra-sm, 'sombra-md': $hovy-sombra-md,
+  'sombra-lg': $hovy-sombra-lg, 'sombra-xl': $hovy-sombra-xl,
+  'duracion-rapida': $hovy-duracion-rapida, 'duracion-media': $hovy-duracion-media,
+  'duracion-lenta': $hovy-duracion-lenta, 'duracion-larga': $hovy-duracion-larga,
+  'espacio-2': $hovy-espacio-2, 'espacio-4': $hovy-espacio-4, 'espacio-6': $hovy-espacio-6, 'espacio-8': $hovy-espacio-8, 'espacio-10': $hovy-espacio-10,
+  'espacio-12': $hovy-espacio-12, 'espacio-14': $hovy-espacio-14, 'espacio-16': $hovy-espacio-16, 'espacio-20': $hovy-espacio-20, 'espacio-24': $hovy-espacio-24,
+  'espacio-32': $hovy-espacio-32, 'espacio-40': $hovy-espacio-40, 'espacio-48': $hovy-espacio-48, 'espacio-56': $hovy-espacio-56,
+);

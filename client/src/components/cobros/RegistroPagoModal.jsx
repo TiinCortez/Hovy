@@ -1,8 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, Banknote, CircleCheck, Landmark, NotebookPen, QrCode, TriangleAlert, Wallet } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import Aviso from '../ui/Aviso';
 import { formatearMontoARS } from '../turnos/agendaTurnos';
 import {
@@ -15,6 +14,8 @@ import {
   validarSeleccion,
 } from './formaDePago';
 import { VERDE } from '../../styles/colores';
+import Modal from '../ui/Modal';
+import { CAPAS } from '../../styles/capas';
 
 const ICONOS = { anotar: NotebookPen, efectivo: Banknote, transferencia: Landmark, qr: QrCode };
 
@@ -42,7 +43,6 @@ export default function RegistroPagoModal({
   onClose,
 }) {
   const idBase = useId();
-  const dialogo = useRef(null);
   const finalizando = modo === 'finalizar';
   const [seleccion, setSeleccion] = useState(() => seleccionInicial(formaInicial ?? formas[0], pendiente));
   const [errorLocal, setErrorLocal] = useState(null);
@@ -55,20 +55,6 @@ export default function RegistroPagoModal({
   const analisis = necesitaMonto ? analizarMonto(seleccion.monto, deuda) : { tipo: 'vacio' };
   const atajos = necesitaMonto ? montosRapidos(deuda) : [];
 
-  // Escape closes (unless it is saving) and the page behind does not scroll.
-  useEffect(() => {
-    const anterior = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    dialogo.current?.focus();
-    const alTeclear = (evento) => {
-      if (evento.key === 'Escape' && !isSaving) onClose();
-    };
-    document.addEventListener('keydown', alTeclear);
-    return () => {
-      document.body.style.overflow = anterior;
-      document.removeEventListener('keydown', alTeclear);
-    };
-  }, [isSaving, onClose]);
 
   const cambiar = (nueva) => {
     setSeleccion(nueva);
@@ -93,24 +79,14 @@ export default function RegistroPagoModal({
   const mensajeError = errorLocal ?? error;
 
   return createPortal(
-    <div
-      className="modal d-block bg-dark bg-opacity-50"
-      style={{ zIndex: 1070, overflowY: 'auto' }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={`${idBase}-titulo`}
+    <Modal
+      titulo={finalizando ? 'Finalizar turno' : 'Cobrar el turno'}
+      subtitulo={subtitulo && <p className="text-secondary small mb-0 mt-1">{subtitulo}</p>}
+      onCerrar={onClose}
+      bloqueado={isSaving}
+      tamano="lg"
+      zIndex={CAPAS.modalEncima}
     >
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content border-0 rounded-4 shadow-lg" ref={dialogo} tabIndex={-1}>
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 align-items-start">
-            <div>
-              <h5 className="modal-title fw-bold text-dark fs-4 mb-1" id={`${idBase}-titulo`}>
-                {finalizando ? 'Finalizar turno' : 'Cobrar el turno'}
-              </h5>
-              {subtitulo && <p className="text-secondary small mb-0">{subtitulo}</p>}
-            </div>
-            <CloseButton label="Cerrar" onClick={onClose} disabled={isSaving} />
-          </div>
 
           <div className="modal-body p-4 d-flex flex-column gap-4">
             {deuda !== null && (
@@ -267,12 +243,10 @@ export default function RegistroPagoModal({
               disabled={confirmarDeshabilitado}
               style={{ backgroundColor: VERDE, borderColor: VERDE }}
             >
-              {isSaving ? (finalizando ? 'Finalizando...' : 'Procesando...') : textoConfirmar(seleccion.forma, finalizando)}
+              {isSaving ? (finalizando ? 'Finalizando…' : 'Procesando…') : textoConfirmar(seleccion.forma, finalizando)}
             </Button>
           </div>
-        </div>
-      </div>
-    </div>,
+    </Modal>,
     document.body
   );
 }

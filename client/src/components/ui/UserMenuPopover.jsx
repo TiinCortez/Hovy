@@ -1,10 +1,11 @@
 import { User, Settings, LogOut } from 'lucide-react';
+import { CAPAS } from '../../styles/capas';
 
 export default function UserMenuPopover({ onPerfil, onConfiguracion, onCerrarSesion }) {
   return (
     <div
       className="user-menu-popover shadow-lg rounded-4 p-0 overflow-hidden"
-      style={{ zIndex: 1050 }}
+      style={{ zIndex: CAPAS.menu }}
       role="menu"
       aria-label="Menú de usuario"
     >
@@ -27,7 +28,7 @@ export default function UserMenuPopover({ onPerfil, onConfiguracion, onCerrarSes
         <span className="small text-dark">Configuración</span>
       </button>
 
-      <hr className="m-0" style={{ borderColor: '#D1D1C4', opacity: 1 }} />
+      <hr className="m-0" style={{ borderColor: 'var(--hovy-crema-500)', opacity: 1 }} />
 
       <button
         type="button"

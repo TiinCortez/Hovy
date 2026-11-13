@@ -8,6 +8,24 @@ $body-bg: $hovy-cream;
 $body-color: $hovy-gray;
 $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
+// Colores de texto con contraste suficiente sobre el fondo crema
+$secondary: $hovy-texto-secundario;
+$body-secondary-color: $hovy-texto-secundario; // .text-muted y .text-body-secondary
+$success: $hovy-texto-exito;
+$headings-font-weight: 700;
+
+// Sombras y radios de Bootstrap tomados de la escala de Hovy
+$box-shadow-sm: $hovy-sombra-sm;
+$box-shadow: $hovy-sombra-md;
+$box-shadow-lg: $hovy-sombra-xl;
+
+// Campos: borde visible (3:1), foco con anillo y errores legibles
+$input-border-color: $hovy-borde-control;
+$input-focus-border-color: $hovy-green;
+$input-focus-box-shadow: 0 0 0 3px $hovy-foco;
+$form-invalid-color: $hovy-texto-error;
+$form-invalid-border-color: $hovy-texto-error;
+
 /* ==========================================
    BOOTSTRAP: IMPORTACIONES SELECTIVAS
    ========================================== */
@@ -38,7 +56,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 /* --- HOME & HERO SECTION --- */
 .home-navbar {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-bottom: 1px solid $hovy-border;
   
   .nav-link {
@@ -86,7 +104,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   .container {
     position: relative;
-    z-index: 1;
+    z-index: $hovy-capa-base;
   }
   
   .hero-title {
@@ -139,31 +157,31 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   border: none;
   
   @media (min-width: 992px) {
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
     border: 1px solid $hovy-border;
-    border-radius: 1.5rem;
-    padding: 3rem !important;
-    box-shadow: 0px 10px 30px rgba(27, 48, 6, 0.05);
+    border-radius: $hovy-radio-xl;
+    padding: $hovy-espacio-48 !important;
+    box-shadow: $hovy-sombra-xl;
   }
 }
 
 /* --- SIDEBAR & DASHBOARD --- */
 .hovy-sidebar {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-right: 1px solid $hovy-border;
   min-height: 100vh;
   .nav-link {
     color: $hovy-gray;
-    border-radius: 24px;
+    border-radius: $hovy-radio-xl;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: background-color $hovy-duracion-media ease, border-color $hovy-duracion-media ease, color $hovy-duracion-media ease, box-shadow $hovy-duracion-media ease, transform $hovy-duracion-media ease, opacity $hovy-duracion-media ease;
     &:hover,
     &:focus { text-decoration: none; }
-    &:hover { background-color: rgba(27, 48, 6, 0.05); }
+    &:hover { background-color: rgba($hovy-verde-900, 0.05); }
     &.active {
       background-color: $hovy-green;
-      color: #ffffff;
+      color: $hovy-blanco;
     }
   }
 }
@@ -177,14 +195,14 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: flex;
     position: fixed;
     bottom: 0; left: 0; width: 100%;
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
     border-top: 1px solid $hovy-border;
-    z-index: 1050;
-    box-shadow: 0px -4px 20px rgba(27, 48, 6, 0.05);
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    z-index: $hovy-capa-menu;
+    box-shadow: 0px -4px 20px rgba($hovy-verde-900, 0.05);
+    padding-bottom: calc(#{$hovy-espacio-8} + env(safe-area-inset-bottom)) !important;
     
     .nav-link {
-      flex: 1; color: $hovy-gray; font-size: 0.75rem; border-radius: 12px;
+      flex: 1; color: $hovy-gray; font-size: $hovy-texto-xs; border-radius: $hovy-radio-md;
       &.active {
         color: $hovy-green; font-weight: bold; background-color: transparent;
         svg { stroke-width: 2.5; }
@@ -195,8 +213,8 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .hovy-more-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1040;
-    background-color: rgba(27, 48, 6, 0.12);
+    z-index: $hovy-capa-barra;
+    background-color: rgba($hovy-verde-900, 0.12);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     animation: hovyFadeIn 0.2s ease;
@@ -205,19 +223,19 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   // Tarjeta flotante con las secciones agrupadas en "Más"
   .hovy-more-menu {
     position: absolute;
-    bottom: calc(100% + 0.5rem);
-    right: 0.75rem;
+    bottom: calc(100% + #{$hovy-espacio-8});
+    right: $hovy-espacio-12;
     width: 14rem;
-    padding: 0.375rem;
+    padding: $hovy-espacio-6;
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
-    background-color: rgba(255, 255, 255, 0.95);
+    gap: $hovy-espacio-2;
+    background-color: rgba($hovy-blanco, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid $hovy-border;
-    border-radius: 1rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border-radius: $hovy-radio-lg;
+    box-shadow: $hovy-sombra-lg, $hovy-sombra-md;
     transform-origin: bottom right;
     animation: hovyMoreMenuIn 0.2s ease;
   }
@@ -225,22 +243,22 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .hovy-more-menu-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
+    gap: $hovy-espacio-10;
+    padding: $hovy-espacio-8 $hovy-espacio-12;
+    border-radius: $hovy-radio-md;
+    font-size: $hovy-texto-md;
     font-weight: 500;
-    color: #44403C;
+    color: $hovy-gris-700;
     text-decoration: none;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    &:hover { background-color: rgba(245, 245, 244, 0.8); color: #0F172A; }
+    transition: background-color $hovy-duracion-media ease, color $hovy-duracion-media ease;
+    &:hover { background-color: rgba($hovy-gris-50, 0.8); color: $hovy-azul-900; }
     &.active { color: $hovy-green; font-weight: bold; }
 
     // Colores de los íconos según el diseño
-    &--solicitudes svg { color: #D97706; }
+    &--solicitudes svg { color: $hovy-naranja-500; }
     &--servicios svg { color: $hovy-green; }
-    &--cobros svg { color: #047857; }
-    &--metricas svg { color: #1D4ED8; }
+    &--cobros svg { color: $hovy-esmeralda-600; }
+    &--metricas svg { color: $hovy-azul-700; }
   }
   .hovy-content-wrapper {
     // Las utilidades p-4/p-md-5 de Bootstrap usan !important.
@@ -252,10 +270,10 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .hovy-header {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border-bottom: 1px solid $hovy-border;
   height: 72px;
-  padding-inline: 1.5rem;
+  padding-inline: $hovy-espacio-24;
 }
 
 // Dashboard KPI cards: on narrow screens the icon goes above the text so long
@@ -269,14 +287,14 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     .card-body > .d-flex {
       flex-direction: column;
       align-items: flex-start !important;
-      gap: 0.5rem !important;
+      gap: $hovy-espacio-8 !important;
     }
     .card-body > .d-flex > .rounded-circle { padding: 0.6rem !important; }
-    h3 { font-size: 1.25rem; }
+    h3 { font-size: $hovy-texto-xl; }
   }
 }
 .hovy-header-brand {
-  gap: 12px;
+  gap: $hovy-espacio-12;
   min-width: 0;
 }
 .hovy-header-emblema {
@@ -288,10 +306,10 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .hovy-header-nombre {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  font-size: 28px;
+  font-size: $hovy-texto-3xl;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: #274922;
+  color: $hovy-verde-800;
 }
 .hovy-header-divisor {
   width: 1px;
@@ -299,10 +317,10 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   background-color: $hovy-border;
 }
 .hovy-header-subtitulo {
-  font-size: 11px;
+  font-size: $hovy-texto-xs;
   font-weight: 500;
   line-height: 1.25;
-  color: #6b7564;
+  color: $hovy-oliva-600;
 }
 .hovy-brand {
   font-weight: 800;
@@ -310,8 +328,8 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
 .icon-button {
-  background: transparent; border: none; border-radius: 50%; color: $hovy-gray;
-  &:hover { background-color: rgba(27, 48, 6, 0.05); }
+  background: transparent; border: none; border-radius: $hovy-radio-circulo; color: $hovy-gray;
+  &:hover { background-color: rgba($hovy-verde-900, 0.05); }
 }
 .max-w-1280 { max-width: 1280px; }
 
@@ -321,25 +339,25 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 // viewport para no cortarse.
 .visitas-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + #{$hovy-espacio-8});
   right: 0;
   width: 340px;
   max-width: 340px;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
 
   @media (max-width: 575.98px) {
     position: fixed;
     top: 80px;
-    left: 16px;
-    right: 16px;
+    left: $hovy-espacio-16;
+    right: $hovy-espacio-16;
     width: auto;
     max-width: none;
   }
 }
 .visitas-popover-item {
-  transition: background-color 0.15s ease;
-  &:hover, &:focus-visible { background-color: rgba(27, 48, 6, 0.05); }
+  transition: background-color $hovy-duracion-rapida ease;
+  &:hover, &:focus-visible { background-color: rgba($hovy-verde-900, 0.05); }
   &:last-child { border-bottom: none !important; }
 }
 
@@ -347,10 +365,10 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 // de notificaciones, pero más angosto.
 .user-menu-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + #{$hovy-espacio-8});
   right: 0;
   width: 220px;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
 }
 
@@ -360,31 +378,31 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e5efe3;
-  padding: 1.5rem;
+  background-color: $hovy-verde-100;
+  padding: $hovy-espacio-24;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   
   @media (max-width: 575.98px) {
-    background: radial-gradient(circle at 50% 30%, #EEF5ED 0%, #DCE8DB 100%);
-    padding: 1rem;
+    background: radial-gradient(circle at 50% 30%, $hovy-verde-100 0%, $hovy-oliva-100 100%);
+    padding: $hovy-espacio-16;
   }
 }
 
 .register-card {
   width: 100%;
   max-width: 620px;
-  background-color: #f7f3ec;
-  border-radius: 32px;
-  box-shadow: 0 12px 36px -8px rgba(35, 60, 30, 0.08);
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-2xl;
+  box-shadow: $hovy-sombra-xl;
   position: relative;
   overflow: hidden;
-  padding: 2.5rem 3.5rem;
+  padding: $hovy-espacio-40 $hovy-espacio-56;
 
   @media (max-width: 575.98px) {
     max-width: 420px;
-    background-color: #F8F5EE;
-    border-radius: 2.25rem;
-    padding: 2rem 1.5rem;
+    background-color: $hovy-crema-100;
+    border-radius: $hovy-radio-2xl;
+    padding: $hovy-espacio-32 $hovy-espacio-24;
   }
 }
 
@@ -392,7 +410,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   position: absolute;
   top: 0; right: 0;
   width: 140px; height: 140px;
-  background-color: #eee7da;
+  background-color: $hovy-crema-400;
   border-bottom-left-radius: 100%;
   pointer-events: none;
   
@@ -407,7 +425,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     position: absolute;
     top: 0; right: 0;
     width: 144px; height: 144px;
-    background: linear-gradient(to bottom left, #EFE9DF, transparent);
+    background: linear-gradient(to bottom left, $hovy-crema-300, transparent);
     border-bottom-left-radius: 4.5rem;
     opacity: 0.6;
     pointer-events: none;
@@ -416,64 +434,59 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 .register-logo-badge {
   width: 84px; height: 84px;
-  border-radius: 50%;
-  background-color: #fbf9f4;
-  border: 1px solid #eee8dc;
+  border-radius: $hovy-radio-circulo;
+  background-color: $hovy-crema-50;
+  border: 1px solid $hovy-crema-400;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
+  margin: 0 auto $hovy-espacio-8;
 
-  .logo-text { font-size: 8px; font-weight: 800; color: #22391e; text-transform: uppercase; letter-spacing: -0.5px; }
-  .logo-subtext { font-size: 5.5px; color: #77806f; font-weight: 500; letter-spacing: 1px; }
-
-  @media (max-width: 575.98px) {
-    width: 64px; height: 64px;
-    .logo-text { font-size: 7px; transform: scale(0.9); margin-top: -2px; }
-    .logo-subtext { font-size: 5px; transform: scale(0.75); margin-top: -4px; }
-  }
+  @media (max-width: 575.98px) { width: 64px; height: 64px; }
 }
+// Nombre del logo debajo del círculo, legible (antes 5,5 a 8 px dentro del círculo)
+.register-logo-nombre { margin: 0; font-size: $hovy-texto-md; font-weight: 800; color: $hovy-verde-850; text-transform: uppercase; letter-spacing: 0.02em; }
+.register-logo-bajada { margin: 0 0 1rem; font-size: $hovy-texto-xs; font-weight: 500; color: $hovy-oliva-700; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .register-title {
-  font-size: 2.125rem;
+  font-size: $hovy-texto-4xl;
   font-weight: 800;
-  color: #173812;
+  color: $hovy-verde-850;
   letter-spacing: -0.025em;
-  margin-bottom: 0.25rem;
+  margin-bottom: $hovy-espacio-4;
   
-  @media (max-width: 575.98px) { font-size: 1.875rem; color: #1C3A13; }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-4xl; color: $hovy-verde-850; }
 }
 
 .register-subtitle {
-  font-size: 0.9375rem;
-  color: #4b5563;
+  font-size: $hovy-texto-base;
+  color: $hovy-gris-600;
   
-  @media (max-width: 575.98px) { font-size: 0.875rem; color: rgba(87, 83, 78, 0.9); }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-md; color: rgba(87, 83, 78, 0.9); }
 }
 
 .register-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: $hovy-texto-sm;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.375rem;
+  color: $hovy-gris-900;
+  margin-bottom: $hovy-espacio-6;
   
-  @media (max-width: 575.98px) { font-size: 0.75rem; color: #2B2B2B; }
+  @media (max-width: 575.98px) { font-size: $hovy-texto-xs; color: $hovy-gris-900; }
 }
 
 .register-input-group {
   display: flex;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
   border: 1px solid rgba(107, 114, 128, 0.7);
-  border-radius: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  transition: all 0.15s ease-in-out;
+  border-radius: $hovy-radio-md;
+  padding: $hovy-espacio-10 $hovy-espacio-14;
+  transition: background-color $hovy-duracion-rapida ease-in-out, border-color $hovy-duracion-rapida ease-in-out, color $hovy-duracion-rapida ease-in-out, box-shadow $hovy-duracion-rapida ease-in-out, transform $hovy-duracion-rapida ease-in-out, opacity $hovy-duracion-rapida ease-in-out;
   
   &:focus-within {
-    border-color: #183c13;
-    box-shadow: 0 0 0 1px #183c13;
+    border-color: $hovy-verde-850;
+    box-shadow: 0 0 0 1px $hovy-verde-850;
   }
   
   input {
@@ -481,20 +494,20 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     outline: none;
     background: transparent;
     width: 100%;
-    font-size: 0.875rem;
-    color: #111827;
-    margin-left: 0.625rem;
+    font-size: $hovy-texto-md;
+    color: $hovy-azul-900;
+    margin-left: $hovy-espacio-10;
     
-    &::placeholder { color: #6b7280; }
+    &::placeholder { color: $hovy-gris-500; }
   }
 
   @media (max-width: 575.98px) {
-    border-color: #CFD3D1;
-    padding: 0.625rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    border-color: $hovy-gris-300;
+    padding: $hovy-espacio-10;
+    box-shadow: $hovy-sombra-xs;
     
-    &:focus-within { border-color: #1C3A13; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
-    input { font-size: 0.75rem; margin-left: 0.5rem; color: #292524; }
+    &:focus-within { border-color: $hovy-verde-850; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
+    input { font-size: $hovy-texto-xs; margin-left: 0.5rem; color: $hovy-gris-900; }
   }
 }
 
@@ -561,45 +574,45 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 0.5rem;
   height: 0.5rem;
   flex: 0 0 auto;
-  border-radius: 50%;
-  background-color: #2563eb;
-  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+  border-radius: $hovy-radio-circulo;
+  background-color: $hovy-azul-600;
+  box-shadow: 0 0 0 0.2rem rgba($hovy-azul-600, 0.12);
   animation: turnoEnCursoPulse 1.6s ease-in-out infinite;
 }
 
 .turno-en-curso-dot--light {
-  background-color: #b8d2ff;
-  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.16);
+  background-color: $hovy-azul-200;
+  box-shadow: 0 0 0 0.2rem rgba($hovy-blanco, 0.16);
 }
 
 .turno-en-curso-card {
-  border-color: #60a5fa !important;
-  border-left-color: #2563eb !important;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 0.35rem 0.9rem rgba(37, 99, 235, 0.12) !important;
+  border-color: $hovy-azul-400 !important;
+  border-left-color: $hovy-azul-600 !important;
+  box-shadow: 0 0 0 1px rgba($hovy-azul-600, 0.1), $hovy-sombra-lg !important;
 }
 
 .turno-en-curso-bg {
-  background-color: #2563eb !important;
+  background-color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-text {
-  color: #2563eb !important;
+  color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-border {
-  border-color: #2563eb !important;
+  border-color: $hovy-azul-600 !important;
 }
 
 .turno-en-curso-subtle {
-  color: #1d4ed8 !important;
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
+  color: $hovy-azul-700 !important;
+  background-color: $hovy-azul-50 !important;
+  border-color: $hovy-azul-200 !important;
 }
 
 .turno-en-curso-solid {
-  color: #ffffff !important;
-  background-color: #2563eb !important;
-  border-color: #2563eb !important;
+  color: $hovy-blanco !important;
+  background-color: $hovy-azul-600 !important;
+  border-color: $hovy-azul-600 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -615,13 +628,13 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .min-h-0 { min-height: 0; }
 
 .nuevo-turno-modal {
-  padding: 1rem;
+  padding: $hovy-espacio-16;
 
   .modal-dialog { max-width: 1180px; }
 
   .modal-content {
     max-height: calc(100dvh - 2rem);
-    background-color: #ffffff;
+    background-color: $hovy-blanco;
   }
 
   .modal-content > form {
@@ -633,7 +646,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .nuevo-turno-header {
-  background-color: #ffffff;
+  background-color: $hovy-blanco;
 
   .modal-title {
     font-size: clamp(1.35rem, 2.5vw, 1.8rem);
@@ -642,22 +655,22 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .nuevo-turno-close {
-  color: #7b8178;
-  background-color: #f4f4ef;
+  color: $hovy-oliva-600;
+  background-color: $hovy-crema-100;
 
-  &:hover { background-color: #e9eadf; color: $hovy-green; }
+  &:hover { background-color: $hovy-oliva-100; color: $hovy-green; }
 }
 
 .nuevo-turno-status {
-  color: #8a5b00;
-  background-color: #fff9e8;
-  border: 1px solid #f4d77b;
+  color: $hovy-ambar-700;
+  background-color: $hovy-ambar-50;
+  border: 1px solid $hovy-ambar-200;
 }
 
 .nuevo-turno-label {
   display: block;
-  color: #454a43;
-  font-size: 0.75rem;
+  color: $hovy-gris-700;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -667,30 +680,30 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .input-group-text,
   .form-select {
     min-height: 46px;
-    border-color: #d8d9d1;
+    border-color: $hovy-oliva-300;
   }
 
   .input-group-text {
-    color: #70766d;
-    border-radius: 0.8rem 0 0 0.8rem;
+    color: $hovy-oliva-600;
+    border-radius: $hovy-radio-md 0 0 $hovy-radio-md;
   }
 
-  .form-select { border-radius: 0 0.8rem 0.8rem 0; }
+  .form-select { border-radius: 0 $hovy-radio-md $hovy-radio-md 0; }
 }
 
 .nuevo-turno-budget-card {
-  background-color: #fbfaf7;
-  border-color: #dedfd7 !important;
-  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+  background-color: $hovy-crema-50;
+  border-color: $hovy-oliva-200 !important;
+  box-shadow: $hovy-sombra-md;
 }
 
 .nuevo-turno-approved {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  color: #08775b;
-  background-color: #eafff6;
-  border: 1px solid #8ee5c6;
+  gap: $hovy-espacio-4;
+  color: $hovy-esmeralda-600;
+  background-color: $hovy-esmeralda-50;
+  border: 1px solid $hovy-esmeralda-200;
 }
 
 .nuevo-turno-icon {
@@ -700,51 +713,51 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 30px;
   height: 30px;
   flex: 0 0 auto;
-  color: #747a72;
-  background-color: #f1f1ec;
-  border-radius: 50%;
+  color: $hovy-oliva-600;
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-circulo;
 }
 
-.nuevo-turno-property { background-color: #ffffff; border-color: #e1e2da !important; }
+.nuevo-turno-property { background-color: $hovy-blanco; border-color: $hovy-oliva-200 !important; }
 
 .nuevo-turno-surface {
-  color: #294b15;
-  background-color: #f0f8e9;
-  border: 1px solid #d5e9c6;
+  color: $hovy-verde-800;
+  background-color: $hovy-verde-50;
+  border: 1px solid $hovy-verde-200;
 }
 
 .nuevo-turno-priority,
 .nuevo-turno-slot {
-  color: #343934;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  color: $hovy-oliva-900;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease, transform $hovy-duracion-rapida ease;
 
   &:not(:disabled):hover {
-    border-color: #9eab96;
+    border-color: $hovy-oliva-400;
     transform: translateY(-1px);
   }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
   }
 }
 
 .nuevo-turno-rule,
 .nuevo-turno-weather {
-  color: #62675f;
-  background-color: #f6f5f0;
-  border: 1px solid #e5e3da;
+  color: $hovy-oliva-700;
+  background-color: $hovy-crema-100;
+  border: 1px solid $hovy-crema-300;
 }
 
 .nuevo-turno-date {
   position: relative;
   min-height: 46px;
-  color: #535a52;
-  background-color: #ffffff;
-  border-color: #d8d9d1 !important;
+  color: $hovy-oliva-800;
+  background-color: $hovy-blanco;
+  border-color: $hovy-oliva-300 !important;
 }
 
 .nuevo-turno-date-input {
@@ -759,20 +772,20 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   min-height: 88px;
 
   &.is-occupied {
-    color: #9ba09a;
-    background-color: #f5f5f5;
+    color: $hovy-oliva-500;
+    background-color: $hovy-gris-50;
     border-style: dashed;
     cursor: not-allowed;
-    text-decoration-color: #b4b8b3;
+    text-decoration-color: $hovy-crema-600;
   }
 }
 
-.nuevo-turno-empty { background-color: #fafaf7; border-color: #dedfd7 !important; }
+.nuevo-turno-empty { background-color: $hovy-crema-50; border-color: $hovy-oliva-200 !important; }
 
 .nuevo-turno-footer {
   flex: 0 0 auto;
-  background-color: #ffffff;
-  box-shadow: 0 -6px 18px rgba(27, 48, 6, 0.035);
+  background-color: $hovy-blanco;
+  box-shadow: 0 -6px 18px rgba($hovy-verde-900, 0.035);
 }
 
 .leaflet-container {
@@ -780,7 +793,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 100%;
   height: 320px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: $hovy-radio-md;
 }
 .mapa-fullscreen {
   width: 100vw;
@@ -811,19 +824,19 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .nuevo-turno-header { flex: 0 0 auto; }
 
   .nuevo-turno-footer {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(#{$hovy-espacio-12} + env(safe-area-inset-bottom)) !important;
 
     .btn {
       min-width: 0;
-      padding-inline: 1rem !important;
+      padding-inline: $hovy-espacio-16 !important;
     }
 
     .nuevo-turno-submit { flex: 1 1 auto; }
   }
 }
 
-@media (max-width: 420px) {
-  .nuevo-turno-footer .btn { font-size: 0.78rem; }
+@media (max-width: #{$hovy-bp-telefono}) {
+  .nuevo-turno-footer .btn { font-size: $hovy-texto-xs; }
   .nuevo-turno-footer .btn:first-child { padding-inline: 0.8rem !important; }
 }
 
@@ -859,15 +872,15 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .turnos-view-switcher .btn {
     flex: 1 0 auto;
     justify-content: center;
-    padding-inline: 0.75rem !important;
+    padding-inline: $hovy-espacio-12 !important;
   }
 
   .turnos-shared-filters {
-    padding: 0.75rem !important;
+    padding: $hovy-espacio-12 !important;
   }
 
   .turnos-kanban-card > .card-body {
-    padding: 1rem !important;
+    padding: $hovy-espacio-16 !important;
   }
 }
 
@@ -876,9 +889,9 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
    así que estos estilos son propios. */
 .combustible-label {
   display: block;
-  margin-bottom: 0.4rem;
-  color: #454a43;
-  font-size: 0.75rem;
+  margin-bottom: $hovy-espacio-6;
+  color: $hovy-gris-700;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -886,28 +899,28 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 .combustible-tipos {
   display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  background-color: #f1f1ec;
-  border-radius: 999px;
+  gap: $hovy-espacio-4;
+  padding: $hovy-espacio-4;
+  background-color: $hovy-crema-100;
+  border-radius: $hovy-radio-pill;
 }
 
 .combustible-tipo {
-  padding: 0.45rem 1.25rem;
+  padding: $hovy-espacio-8 $hovy-espacio-20;
   color: $hovy-gray;
   font-weight: 600;
   background: transparent;
   border: 0;
-  border-radius: 999px;
-  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  border-radius: $hovy-radio-pill;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  &:hover:not(.is-selected) { background-color: rgba(27, 48, 6, 0.07); }
+  &:hover:not(.is-selected) { background-color: rgba($hovy-verde-900, 0.07); }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
 
   &.is-selected {
-    color: #ffffff;
+    color: $hovy-blanco;
     background-color: $hovy-green;
-    box-shadow: 0 2px 6px rgba(27, 48, 6, 0.22);
+    box-shadow: $hovy-sombra-md;
   }
 }
 
@@ -917,9 +930,9 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   > svg {
     position: absolute;
     top: 50%;
-    left: 0.9rem;
+    left: $hovy-espacio-14;
     transform: translateY(-50%);
-    color: #8a9086;
+    color: $hovy-oliva-500;
     pointer-events: none;
   }
 
@@ -928,30 +941,30 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 .combustible-sugerencias {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + #{$hovy-espacio-6});
   right: 0;
   left: 0;
-  z-index: 10;
-  padding: 0.35rem;
-  background-color: #ffffff;
+  z-index: $hovy-capa-elevada;
+  padding: $hovy-espacio-6;
+  background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
-  border-radius: 0.9rem;
-  box-shadow: 0 12px 28px rgba(27, 48, 6, 0.12);
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-lg;
 }
 
 .combustible-sugerencia {
   display: block;
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  color: #343934;
-  font-size: 0.9rem;
+  padding: $hovy-espacio-8 $hovy-espacio-12;
+  color: $hovy-oliva-900;
+  font-size: $hovy-texto-md;
   text-align: left;
   background: transparent;
   border: 0;
-  border-radius: 0.6rem;
+  border-radius: $hovy-radio-sm;
 
   &:hover,
-  &.is-activa { background-color: rgba(27, 48, 6, 0.07); }
+  &.is-activa { background-color: rgba($hovy-verde-900, 0.07); }
 
   mark {
     padding: 0;
@@ -962,15 +975,15 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .combustible-sugerencias-pie {
-  padding: 0.45rem 0.75rem 0.25rem;
-  color: #70766d;
-  font-size: 0.78rem;
+  padding: $hovy-espacio-8 $hovy-espacio-12 $hovy-espacio-4;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-xs;
 }
 
 .combustible-marca {
-  margin: 0 0 0.5rem;
+  margin: 0 0 $hovy-espacio-8;
   color: $hovy-green;
-  font-size: 0.78rem;
+  font-size: $hovy-texto-xs;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -979,14 +992,14 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .combustible-opcion {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 0.5rem;
-  padding: 0.8rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 0.9rem;
+  gap: $hovy-espacio-14;
+  margin-bottom: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
   cursor: pointer;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
   input {
     flex: 0 0 auto;
@@ -996,67 +1009,184 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     accent-color: $hovy-green;
   }
 
-  &:hover { border-color: #9eab96; }
+  &:hover { border-color: $hovy-oliva-400; }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
   }
 }
 
 .combustible-precio {
-  font-size: 1.05rem;
+  font-size: $hovy-texto-base;
   font-weight: 800;
-  color: #1f2a14;
+  color: $hovy-verde-950;
   white-space: nowrap;
 
   small {
-    margin-left: 0.15rem;
-    color: #70766d;
-    font-size: 0.75rem;
+    margin-left: $hovy-espacio-2;
+    color: $hovy-oliva-600;
+    font-size: $hovy-texto-xs;
     font-weight: 600;
   }
 }
 
 .combustible-pill {
   display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.55rem;
-  color: #08775b;
-  font-size: 0.68rem;
+  margin-left: $hovy-espacio-8;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
+  color: $hovy-esmeralda-600;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   vertical-align: middle;
-  background-color: #eafff6;
-  border: 1px solid #8ee5c6;
-  border-radius: 999px;
+  background-color: $hovy-esmeralda-50;
+  border: 1px solid $hovy-esmeralda-200;
+  border-radius: $hovy-radio-pill;
 }
 
 .hovy-aviso {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.85rem;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-14;
+  font-size: $hovy-texto-md;
   font-weight: 600;
-  border-radius: 0.8rem;
+  border-radius: $hovy-radio-md;
 
-  &.is-error { color: #a12626; background-color: #fdecec; border: 1px solid #f5b5b5; }
-  &.is-ok { color: #08775b; background-color: #eafff6; border: 1px solid #8ee5c6; }
-  &.is-aviso { color: #8a5b00; background-color: #fff9e8; border: 1px solid #f4d77b; }
-  &.is-espera { color: #294b15; background-color: #f0f8e9; border: 1px solid #d5e9c6; }
+  &.is-error { color: $hovy-rojo-700; background-color: $hovy-rojo-50; border: 1px solid $hovy-rojo-100; }
+  &.is-ok { color: $hovy-esmeralda-600; background-color: $hovy-esmeralda-50; border: 1px solid $hovy-esmeralda-200; }
+  &.is-aviso { color: $hovy-ambar-700; background-color: $hovy-ambar-50; border: 1px solid $hovy-ambar-200; }
+  &.is-espera { color: $hovy-verde-800; background-color: $hovy-verde-50; border: 1px solid $hovy-verde-200; }
 }
 
 // Las clases .alert de Bootstrap (módulo no importado) se usan en varios
 // formularios: toman el mismo aspecto que <Aviso>.
 .alert {
   @extend .hovy-aviso;
-  margin-bottom: 1rem;
+  margin-bottom: $hovy-espacio-16;
 }
 .alert-danger { @extend .hovy-aviso, .is-error; }
 .alert-success { @extend .hovy-aviso, .is-ok; }
 .alert-warning { @extend .hovy-aviso, .is-aviso; }
 .alert-info { @extend .hovy-aviso, .is-espera; }
+
+// Avisos flotantes (AvisosProvider / useAvisos): abajo al centro, por encima de
+// los modales y, en celular, por encima de la barra inferior.
+.hovy-avisos-flotantes {
+  position: fixed;
+  z-index: $hovy-capa-aviso;
+  left: 50%;
+  bottom: $hovy-espacio-24;
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+  width: min(calc(100% - #{$hovy-espacio-32}), 28rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  > .hovy-aviso {
+    padding-block: $hovy-espacio-6;
+    padding-right: $hovy-espacio-6;
+    box-shadow: $hovy-sombra-lg;
+    pointer-events: auto;
+    animation: hovyAvisoEntra $hovy-duracion-media ease-out;
+  }
+
+  @media (max-width: 767.98px) {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+.btn.hovy-aviso-cerrar {
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-color: currentColor;
+}
+
+@keyframes hovyAvisoEntra {
+  from { opacity: 0; transform: translateY($hovy-espacio-8); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hovy-avisos-flotantes > .hovy-aviso { animation: none; }
+}
+
+// Foco de campos: .shadow-sm lleva !important y anulaba el anillo de foco.
+.form-control.shadow-sm:focus,
+.form-select.shadow-sm:focus { box-shadow: $input-focus-box-shadow !important; }
+.form-control.shadow-sm.is-invalid:focus,
+.form-select.shadow-sm.is-invalid:focus { box-shadow: 0 0 0 3px $hovy-texto-error !important; }
+
+// Etiquetas de prioridad, tipo y estado armadas con utilidades (bg-*-subtle con
+// text-* del mismo color): el color base no llega a 4.5:1 sobre su tinte, así que
+// en esa combinación se usa el tono oscuro (*-text-emphasis) de Bootstrap.
+@each $color in success, danger, warning, info, secondary {
+  .bg-#{$color}-subtle.text-#{$color},
+  .bg-#{$color}-subtle .text-#{$color} { color: var(--bs-#{$color}-text-emphasis) !important; }
+}
+
+// La paleta y las escalas como variables CSS, para estilos inline en JSX: var(--hovy-verde-900)
+:root {
+  @each $nombre, $valor in $hovy-paleta {
+    --hovy-#{$nombre}: #{$valor};
+  }
+  @each $nombre, $valor in $hovy-escalas {
+    --hovy-#{$nombre}: #{$valor};
+  }
+}
+
+// Controles táctiles sin la demora del doble toque, y el scroll de un modal no
+// arrastra a la página de atrás.
+a, button, input, select, textarea, label, [role="button"] { touch-action: manipulation; }
+.modal { overscroll-behavior: contain; }
+
+// Bloques que actúan como botón (accionable.js): mismo cursor y anillo de foco que un botón.
+[role="button"][tabindex="0"] {
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+}
+
+/* --- RÓTULO SOBRE EL TÍTULO DE PANTALLA --- */
+.hovy-rotulo {
+  display: block;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $hovy-texto-exito;
+}
+
+/* --- BADGE: palabra de estado con punto de color --- */
+.hovy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  border-radius: $hovy-radio-pill;
+
+  &::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: $hovy-radio-circulo;
+    background-color: currentColor;
+  }
+  &.sin-punto::before { display: none; }
+
+  &.is-exito { color: $hovy-texto-exito; background-color: $hovy-esmeralda-50; }
+  &.is-pendiente { color: $hovy-terracota-700; background-color: $hovy-terracota-100; }
+  &.is-info { color: $hovy-celeste-800; background-color: $hovy-celeste-50; }
+  &.is-en-curso { color: $hovy-azul-700; background-color: $hovy-azul-50; }
+  &.is-neutro { color: $hovy-texto-secundario; background-color: $hovy-gris-50; }
+}
 
 /* --- COBRO CON QR --- */
 @keyframes hovySpin { to { transform: rotate(360deg); } }
@@ -1066,9 +1196,9 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   flex: 0 0 auto;
   width: 1.1rem;
   height: 1.1rem;
-  border: 2px solid rgba(27, 48, 6, 0.2);
+  border: 2px solid rgba($hovy-verde-900, 0.2);
   border-top-color: $hovy-green;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   animation: hovySpin 0.8s linear infinite;
 }
 
@@ -1077,11 +1207,11 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .cobro-qr {
-  padding: 1.25rem;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 1rem;
-  box-shadow: 0 2px 6px rgba(27, 48, 6, 0.04);
+  padding: $hovy-espacio-20;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-md;
 }
 
 .cobro-qr-imagen {
@@ -1089,43 +1219,43 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 100%;
   max-width: 240px;
   height: auto;
-  background-color: #ffffff;
-  border: 1px solid #e5e3da;
-  border-radius: 0.75rem;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-md;
 }
 
 .forma-pago-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.6rem;
+  gap: $hovy-espacio-10;
 }
 
 .forma-pago {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
-  padding: 0.85rem 0.95rem;
-  color: #343934;
+  gap: $hovy-espacio-2;
+  padding: $hovy-espacio-14 $hovy-espacio-16;
+  color: $hovy-oliva-900;
   text-align: left;
-  background-color: #ffffff;
-  border: 1px solid #dfe1dc;
-  border-radius: 1rem;
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-200;
+  border-radius: $hovy-radio-lg;
+  transition: border-color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  strong { display: block; font-size: 0.95rem; }
-  small { display: block; color: #70766d; font-size: 0.74rem; line-height: 1.25; }
+  strong { display: block; font-size: $hovy-texto-base; }
+  small { display: block; color: $hovy-oliva-700; font-size: $hovy-texto-xs; line-height: 1.25; }
 
-  &:hover:not(:disabled):not(.is-selected) { border-color: #9eab96; }
+  &:hover:not(:disabled):not(.is-selected) { border-color: $hovy-oliva-400; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 
   &.is-selected {
-    background-color: #f4f9ef;
+    background-color: $hovy-verde-50;
     border-color: $hovy-green;
-    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
+    box-shadow: inset 0 0 0 1px $hovy-green, $hovy-sombra-md;
 
-    .forma-pago-icono { color: #ffffff; background-color: $hovy-green; }
+    .forma-pago-icono { color: $hovy-blanco; background-color: $hovy-green; }
   }
 }
 
@@ -1135,11 +1265,11 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   justify-content: center;
   width: 2.1rem;
   height: 2.1rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: $hovy-espacio-6;
   color: $hovy-green;
-  background-color: rgba(27, 48, 6, 0.08);
-  border-radius: 50%;
-  transition: background-color 0.16s ease, color 0.16s ease;
+  background-color: rgba($hovy-verde-900, 0.08);
+  border-radius: $hovy-radio-circulo;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
 }
 
 /* Resumen de lo que se debe, arriba del modal de pago */
@@ -1147,11 +1277,11 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 1rem 2rem;
-  padding: 1rem 1.25rem;
-  background-color: #f6f5f0;
-  border: 1px solid #e5e3da;
-  border-radius: 1rem;
+  gap: $hovy-espacio-16 $hovy-espacio-32;
+  padding: $hovy-espacio-16 $hovy-espacio-20;
+  background-color: $hovy-crema-100;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
 
   > div { display: flex; flex-direction: column; }
 }
@@ -1159,18 +1289,18 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .pago-resumen-principal { margin-left: auto; text-align: right; }
 
 .pago-resumen-etiqueta {
-  color: #70766d;
-  font-size: 0.72rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-xs;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.pago-resumen-cifra { color: #343934; font-size: 1.05rem; font-weight: 700; }
+.pago-resumen-cifra { color: $hovy-oliva-900; font-size: $hovy-texto-base; font-weight: 700; }
 
 .pago-resumen-total {
   color: $hovy-green;
-  font-size: 1.9rem;
+  font-size: $hovy-texto-4xl;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -1181,16 +1311,16 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .pago-chip {
-  padding: 0.3rem 0.8rem;
+  padding: $hovy-espacio-4 $hovy-espacio-12;
   color: $hovy-green;
-  font-size: 0.8rem;
+  font-size: $hovy-texto-sm;
   font-weight: 600;
-  background-color: #ffffff;
-  border: 1px solid #cdd7c4;
-  border-radius: 999px;
-  transition: background-color 0.16s ease, border-color 0.16s ease;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-300;
+  border-radius: $hovy-radio-pill;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease;
 
-  &:hover:not(:disabled) { background-color: #f4f9ef; border-color: $hovy-green; }
+  &:hover:not(:disabled) { background-color: $hovy-verde-50; border-color: $hovy-green; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
@@ -1199,23 +1329,23 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .pago-estado {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0.6rem 0 0;
-  font-size: 0.85rem;
+  gap: $hovy-espacio-6;
+  margin: $hovy-espacio-10 0 0;
+  font-size: $hovy-texto-md;
   font-weight: 600;
 
-  &.is-salda { color: #08775b; }
-  &.is-parcial { color: #8a5b00; }
-  &.is-excede { color: #a12626; }
+  &.is-salda { color: $hovy-esmeralda-600; }
+  &.is-parcial { color: $hovy-ambar-700; }
+  &.is-excede { color: $hovy-rojo-700; }
 }
 
 .pago-nota {
-  padding: 0.75rem 1rem;
-  color: #62675f;
-  font-size: 0.85rem;
-  background-color: #fafaf7;
-  border-left: 3px solid #cfd2c8;
-  border-radius: 0.5rem;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  color: $hovy-oliva-700;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-crema-50;
+  border-left: 3px solid $hovy-crema-500;
+  border-radius: $hovy-radio-sm;
 }
 
 .cobro-qr-vacio {
@@ -1225,44 +1355,44 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 240px;
   max-width: 100%;
   aspect-ratio: 1;
-  color: #70766d;
-  font-size: 0.85rem;
-  background-color: #fafaf7;
-  border: 1px dashed #cfd2c8;
-  border-radius: 0.75rem;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-crema-50;
+  border: 1px dashed $hovy-crema-500;
+  border-radius: $hovy-radio-md;
 }
 
 .combustible-vacio {
-  padding: 1.25rem;
-  color: #70766d;
-  font-size: 0.9rem;
+  padding: $hovy-espacio-20;
+  color: $hovy-oliva-600;
+  font-size: $hovy-texto-md;
   text-align: center;
-  background-color: #fafaf7;
-  border: 1px dashed #cfd2c8;
-  border-radius: 0.9rem;
+  background-color: $hovy-crema-50;
+  border: 1px dashed $hovy-crema-500;
+  border-radius: $hovy-radio-lg;
 }
 
 .combustible-ejemplo {
-  padding: 0.75rem 1rem;
-  color: #294b15;
-  font-size: 0.88rem;
-  background-color: #f0f8e9;
-  border: 1px solid #d5e9c6;
-  border-radius: 0.8rem;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  color: $hovy-verde-800;
+  font-size: $hovy-texto-md;
+  background-color: $hovy-verde-50;
+  border: 1px solid $hovy-verde-200;
+  border-radius: $hovy-radio-md;
 }
 
 .combustible-ayuda {
   summary {
     color: $hovy-green;
-    font-size: 0.82rem;
+    font-size: $hovy-texto-sm;
     font-weight: 600;
     cursor: pointer;
   }
 
   p {
-    margin: 0.4rem 0 0;
-    color: #62675f;
-    font-size: 0.82rem;
+    margin: $hovy-espacio-6 0 0;
+    color: $hovy-oliva-700;
+    font-size: $hovy-texto-sm;
   }
 }
 
@@ -1274,12 +1404,12 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   > .card-body {
     min-width: 0;
-    padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+    padding: clamp(#{$hovy-espacio-12}, 2.5vw, #{$hovy-espacio-24}) !important;
   }
 
   .clientes-resumen-titulo {
     min-width: 0;
-    font-size: clamp(0.625rem, 1.8vw, 0.68rem);
+    font-size: $hovy-texto-xs;
     letter-spacing: 0.05em;
     overflow-wrap: anywhere;
   }
@@ -1308,7 +1438,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   .badge {
     max-width: 100%;
-    font-size: clamp(0.6875rem, 1.8vw, 0.75rem);
+    font-size: $hovy-texto-xs;
     line-height: 1.35;
     white-space: normal;
     text-align: left;
@@ -1324,7 +1454,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   display: block;
   max-width: 100%;
   background-color: $hovy-skeleton;
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  background-image: linear-gradient(90deg, rgba($hovy-blanco, 0) 0%, rgba($hovy-blanco, 0.55) 50%, rgba($hovy-blanco, 0) 100%);
   background-size: 200% 100%;
   background-repeat: no-repeat;
   animation: hovySkeletonShimmer 1.4s ease-in-out infinite;

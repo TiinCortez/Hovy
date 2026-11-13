@@ -15,6 +15,7 @@ import {
 import CobrosResumenSkeleton from '../components/skeletons/CobrosResumenSkeleton';
 import CobrosTablaSkeleton from '../components/skeletons/CobrosTablaSkeleton';
 import '../components/cobros/cobros.scss';
+import Badge from '../components/ui/Badge';
 
 const TABS = [
   { value: 'todos', label: 'Todos' },
@@ -178,7 +179,7 @@ export default function CobrosPage() {
       <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
         <div>
           <div className="d-flex align-items-center gap-2 mb-1">
-            <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Administración financiera</span>
+            <span className="hovy-rotulo">Administración financiera</span>
           </div>
           <h2 className="fw-bold fs-2 text-dark m-0">Cobros &amp; Liquidación de Servicios</h2>
           <p className="text-secondary small m-0">Control de pagos de turnos ejecutados, presupuestos finales y conciliación de cobranzas en terreno.</p>
@@ -192,7 +193,7 @@ export default function CobrosPage() {
             <CalendarDays size={18} className="text-success flex-shrink-0" />
             <span className="fw-semibold text-dark small text-nowrap" aria-live="polite">{etiquetaMes(mes)}</span>
             {mes === mesActual && (
-              <span className="badge rounded-pill cobros-badge-verde text-nowrap d-none d-sm-inline-block">Mes actual</span>
+              <Badge tipo="info" conPunto={false} className="d-none d-sm-inline-flex">Mes actual</Badge>
             )}
           </div>
           <Button variant="light" icon className="border-0" aria-label="Mes siguiente" onClick={() => cambiarMes(1)}>
@@ -211,7 +212,7 @@ export default function CobrosPage() {
           <input
             type="text"
             className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-            placeholder="Buscar por cliente, predio, servicio u orden (#OT)..."
+            placeholder="Buscar por cliente, predio, servicio u orden (#OT)…"
             aria-label="Buscar turnos a cobrar"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setPagina(1); }}

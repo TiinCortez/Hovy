@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import NewClientModal from '../components/ui/NewClientModal';
 import EditClientModal from '../components/ui/EditClientModal';
 import ClienteService from '../services/api/cliente.service';
@@ -15,8 +16,11 @@ import TurnoService from '../services/api/turno.service';
 import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
 import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
+import { CAPAS } from '../styles/capas';
 
 export default function ClientsPage() {
+  const { avisar } = useAvisos();
   const navigate = useNavigate();
   const [estadoFiltro, setEstadoFiltro] = useState('Activos');
   const [activeFilter, setActiveFilter] = useState('Todos');
@@ -112,7 +116,7 @@ export default function ClientsPage() {
       ));
     } catch (error) {
       console.error('Error al cambiar el estado del cliente:', error);
-      alert('Hubo un error al actualizar el estado.');
+      avisar('No se pudo cambiar el estado del cliente. Intentá de nuevo.');
     }
   };
 
@@ -123,15 +127,15 @@ export default function ClientsPage() {
   };
 
   const getClientColor = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return '#E8F5E9';
-    if (tipo === 'Fijo') return '#F1F8E9';
-    return '#FFEBEE';
+    if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'var(--hovy-verde-100)';
+    if (tipo === 'Fijo') return 'var(--hovy-verde-50)';
+    return 'var(--hovy-rojo-50)';
   };
 
   const getClientTextColor = (tipo) => {
     if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'text-success';
     if (tipo === 'Fijo') return 'text-success';
-    return 'text-danger';
+    return 'text-danger-emphasis';
   };
 
   const clientesActivos = clients.filter(c => c.estado !== 'Inactivo');
@@ -175,7 +179,7 @@ export default function ClientsPage() {
       {/* Title and main action share a row (also on mobile); the description goes below */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Directorio de clientes</span>
+          <span className="hovy-rotulo">Directorio de clientes</span>
         </div>
         <div className="d-flex align-items-center justify-content-between gap-3">
           <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
@@ -195,7 +199,7 @@ export default function ClientsPage() {
             </div>
             <div>
               <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">{clientesActivos.length}</h3>
-              <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Clientes activos</span>
+              <Badge tipo="exito" conPunto={false} className="mt-2">Clientes activos</Badge>
             </div>
           </Card>
         </div>
@@ -225,7 +229,7 @@ export default function ClientsPage() {
               <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
                 {clientesActivos.filter(c => c.tipo_cliente === 'Casual').length}
               </h3>
-              <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Servicios esporádicos</span>
+              <Badge tipo="exito" conPunto={false} className="mt-2">Servicios esporádicos</Badge>
             </div>
           </Card>
         </div>
@@ -268,7 +272,7 @@ export default function ClientsPage() {
                   ? 'bg-warning-subtle border border-warning-subtle shadow-sm'
                   : 'text-secondary bg-transparent'
               }`}
-              style={estadoFiltro === 'Inactivos' ? { color: '#856404' } : {}}
+              style={estadoFiltro === 'Inactivos' ? { color: 'var(--hovy-ambar-700)' } : {}}
             >
               Inactivos ({clientesInactivos.length})
             </button>
@@ -279,7 +283,7 @@ export default function ClientsPage() {
             <input
               type="text"
               className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-              placeholder={estadoFiltro === 'Inactivos' ? 'Buscar en inactivos...' : 'Buscar en activos...'}
+              placeholder={estadoFiltro === 'Inactivos' ? 'Buscar en inactivos…' : 'Buscar en activos…'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -375,14 +379,14 @@ export default function ClientsPage() {
               <div key={clientKey} className="col-12 col-md-6 col-xl-4">
                 <Card
                   className="h-100 p-3 shadow-sm border-0 rounded-4 d-flex flex-column justify-content-between bg-white position-relative"
-                  style={{ cursor: 'pointer', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}
-                  onClick={() => navigate(`/clients/${client.telefono}/inmuebles`)}
+                  style={{ cursor: 'pointer', transition: 'transform var(--hovy-duracion-rapida) ease, box-shadow var(--hovy-duracion-rapida) ease' }}
+                  onClick={() => navigate(`/clients/${client.id_cliente}/inmuebles`)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      navigate(`/clients/${client.telefono}/inmuebles`);
+                      navigate(`/clients/${client.id_cliente}/inmuebles`);
                     }
                   }}
                 >
@@ -414,7 +418,7 @@ export default function ClientsPage() {
                             {isMenuOpen && (
                               <div
                                 className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
-                                style={{ minWidth: '175px', zIndex: 1050 }}
+                                style={{ minWidth: '175px', zIndex: CAPAS.menu }}
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
@@ -454,7 +458,7 @@ export default function ClientsPage() {
                             )}
                           </div>
                         </div>
-                        <p className="text-secondary small m-0 text-truncate" style={{ fontSize: '0.78rem' }}>{client.razon_social || 'Cliente Estándar'}</p>
+                        <p className="text-secondary small m-0 text-truncate" style={{ fontSize: 'var(--hovy-texto-xs)' }}>{client.razon_social || 'Cliente Estándar'}</p>
                       </div>
                     </div>
 
@@ -476,7 +480,7 @@ export default function ClientsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-sm btn-outline-success border-0 p-1 px-2 d-inline-flex align-items-center gap-1 text-decoration-none rounded-pill flex-shrink-0"
-                            style={{ fontSize: '0.75rem', backgroundColor: '#eaf8ef' }}
+                            style={{ fontSize: 'var(--hovy-texto-xs)', backgroundColor: 'var(--hovy-verde-100)' }}
                             title={`Contactar a ${fullName} por WhatsApp`}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -496,17 +500,17 @@ export default function ClientsPage() {
 
                   <div className="row g-0 bg-light rounded-3 border overflow-hidden mt-auto">
                     <div className="col-5 p-2 px-2 border-end">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Inmuebles</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Inmuebles</span>
                       <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                         <Building2 size={13} className="text-secondary" /> {cantidadInmuebles > 0 ? cantidadInmuebles : '-'}
                       </span>
                     </div>
                     <div className="col-7 p-2 px-2">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Próximo servicio</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Próximo servicio</span>
                       <div className="d-flex flex-column">
                         <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                           <Calendar size={13} className={fechaProximoTurno ? 'text-success' : 'text-secondary'} /> {fechaProximoTurno || '-'}
-                          {proximoTurno?.franjaHoraria?.horaInicio && (<span className="text-secondary" style={{ fontSize: '0.92rem' }}>{proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs</span>)}
+                          {proximoTurno?.franjaHoraria?.horaInicio && (<span className="text-secondary" style={{ fontSize: 'var(--hovy-texto-md)' }}>{proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs</span>)}
                         </span>
                       </div>
                     </div>

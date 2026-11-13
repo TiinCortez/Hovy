@@ -5,7 +5,6 @@ import {
   ClipboardList, CalendarDays, CheckCircle, XCircle, CalendarClock, MapPin, PlayCircle
 } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import { obtenerEnlaceUbicacionWhatsApp } from '../ui/inmuebleUbicacion';
 import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
@@ -15,16 +14,17 @@ import CobroQrPanel from '../cobros/CobroQrPanel';
 import RegistroPagoModal from '../cobros/RegistroPagoModal';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
 import { VERDE } from '../../styles/colores';
-import useCerrarConEscape from '../ui/useCerrarConEscape';
+import Modal from '../ui/Modal';
+import ConfirmarModal from '../ui/ConfirmarModal';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function TurnoDetalleModal({
   isOpen, onClose, turnoData, onCancelTurno, onEditTurno, onChangeState, onTurnoUpdated
 }) {
-  useCerrarConEscape(isOpen, onClose);
   const navigate = useNavigate();
   const [isEditingDatos, setIsEditingDatos] = useState(false);
+  const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [inmuebles, setInmuebles] = useState([]);
   const [servicios, setServicios] = useState([]);
@@ -219,22 +219,12 @@ export default function TurnoDetalleModal({
     setIsFinalizarOpen(false);
   };
 
-  const handleCancelClick = () => {
-    if(window.confirm('¿Estás seguro de que deseas cancelar este turno?')) {
-      onCancelTurno(turnoData.idTurno);
-    }
-  };
+  const handleCancelClick = () => setConfirmandoCancelacion(true);
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg my-4">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
-          
-          <div className="modal-header border-bottom-0 pb-2 pt-4 px-3 px-md-4 align-items-start">
-            <div className="min-w-0 flex-grow-1">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <h4 className="modal-title fw-bold text-dark m-0">Detalle del Turno #{turnoData.idTurno || 'TU-000'}</h4>
-                {isActivo && !isEditingDatos && (
+    <Modal
+      titulo={`Detalle del Turno #${turnoData.idTurno || 'TU-000'}`}
+      accionTitulo={isActivo && !isEditingDatos && (
                   <button
                     type="button"
                     onClick={abrirEdicionDatos}
@@ -243,8 +233,7 @@ export default function TurnoDetalleModal({
                     <Pencil size={14} /> Editar datos y presupuesto
                   </button>
                 )}
-              </div>
-              <div className="d-flex flex-wrap gap-2">
+      subtitulo={<div className="d-flex flex-wrap gap-2 mt-2">
                 <span className={`badge border rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2
                   ${turnoData.estado === 'EN_EJECUCION' ? 'bg-primary-subtle text-primary border-primary-subtle' : 
                     turnoData.estado === 'REALIZADO' ? 'bg-secondary text-white border-secondary' :
@@ -257,10 +246,14 @@ export default function TurnoDetalleModal({
                   <span className="rounded-circle bg-danger" style={{ width: 8, height: 8 }}></span>
                   {turnoData.prioridad}
                 </span>
-              </div>
-            </div>
-            <CloseButton label="Cerrar detalle del turno" onClick={onClose} />
-          </div>
+              </div>}
+      etiquetaCerrar="Cerrar detalle del turno"
+      onCerrar={onClose}
+      tamano="lg"
+      claseDialogo="my-4"
+      claseContenido="overflow-hidden bg-white"
+      claseCabecera="border-bottom-0 pb-2 pt-4 px-3 px-md-4"
+    >
 
           <div className="modal-body p-3 p-md-4 bg-white">
             {errorEdicion && (
@@ -304,7 +297,7 @@ export default function TurnoDetalleModal({
                           onChange={(e) => handleCambiarClienteEdit(e.target.value)}
                           disabled={isLoadingOpciones}
                         >
-                          <option value="">{isLoadingOpciones ? 'Cargando clientes...' : 'Seleccionar cliente...'}</option>
+                          <option value="">{isLoadingOpciones ? 'Cargando clientes…' : 'Seleccionar cliente…'}</option>
                           {seleccionadoFueraDelFiltro && (
                             <option value={idClienteEdit}>
                               #{clienteSeleccionadoEdit.id_cliente} — {clienteSeleccionadoEdit.nombre} {clienteSeleccionadoEdit.apellido}
@@ -332,7 +325,7 @@ export default function TurnoDetalleModal({
                             disabled={isLoadingOpciones || isLoadingInmuebles || inmuebles.length === 0}
                           >
                             <option value="">
-                              {isLoadingInmuebles ? 'Cargando inmuebles...' : inmuebles.length === 0 ? 'Sin inmuebles registrados' : 'Seleccionar inmueble...'}
+                              {isLoadingInmuebles ? 'Cargando inmuebles…' : inmuebles.length === 0 ? 'Sin inmuebles registrados' : 'Seleccionar inmueble…'}
                             </option>
                             {inmuebles.map((i) => (
                               <option key={i.id_inmueble} value={i.id_inmueble}>
@@ -380,7 +373,7 @@ export default function TurnoDetalleModal({
                               onChange={(e) => { setIdServicioEdit(e.target.value); setMontoFinalEditado(null); setErrorEdicion(''); }}
                               disabled={isLoadingOpciones}
                             >
-                              <option value="">{isLoadingOpciones ? 'Cargando servicios...' : 'Seleccionar servicio...'}</option>
+                              <option value="">{isLoadingOpciones ? 'Cargando servicios…' : 'Seleccionar servicio…'}</option>
                               {servicios.map((s) => (
                                 <option key={s.id_servicio} value={s.id_servicio}>
                                   {s.servicio?.nombre || `Servicio #${s.id_servicio}`} — ${Number(s.precio_base || 0).toLocaleString('es-AR')}/m²
@@ -396,7 +389,7 @@ export default function TurnoDetalleModal({
                           <div>
                             <span className="small text-secondary d-block">Total final estimado:</span>
                             {calculoPresupuestoEdit && (
-                              <span className="text-secondary" style={{ fontSize: '0.72rem' }}>
+                              <span className="text-secondary" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                                 {calculoPresupuestoEdit.superficie > 0 ? `${calculoPresupuestoEdit.superficie} m²` : '1 m² (mín.)'} × {formatearMontoARS(calculoPresupuestoEdit.precioBase)}/m²
                               </span>
                             )}
@@ -452,7 +445,7 @@ export default function TurnoDetalleModal({
                         <h5 className="fw-bold text-dark m-0 fs-5 text-break">{cliente.nombre} {cliente.apellido}</h5>
                         {cliente.telefono && <span className="text-secondary small d-block mt-1">{cliente.telefono}</span>}
                       </div>
-                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold d-flex align-items-center gap-1 flex-shrink-0" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold d-flex align-items-center gap-1 flex-shrink-0" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                         <span className="rounded-circle bg-success" style={{ width: 6, height: 6 }}></span>
                         {cliente.tipo_cliente?.toUpperCase() || 'CLIENTE'}
                       </span>
@@ -571,7 +564,7 @@ export default function TurnoDetalleModal({
                   className="rounded-pill px-4 shadow-sm d-flex align-items-center justify-content-center gap-2"
                   disabled={!idClienteEdit || !idInmuebleEdit || !idServicioEdit || !Number.isFinite(montoFinalNumero) || montoFinalNumero <= 0 || isSavingDatos}
                 >
-                  <Check size={17} /> {isSavingDatos ? 'Guardando...' : 'Guardar cambios'}
+                  <Check size={17} /> {isSavingDatos ? 'Guardando…' : 'Guardar cambios'}
                 </Button>
               </div>
             ) : (
@@ -632,9 +625,17 @@ export default function TurnoDetalleModal({
               </>
             )}
           </div>
-          
-        </div>
-      </div>
-    </div>
+
+      {confirmandoCancelacion && (
+        <ConfirmarModal
+          titulo="Cancelar turno"
+          mensaje={`¿Querés cancelar el turno #${turnoData.idTurno}? El turno queda cancelado y deja de aparecer en la agenda.`}
+          textoConfirmar="Cancelar turno"
+          textoCancelar="Volver"
+          onCancelar={() => setConfirmandoCancelacion(false)}
+          onConfirmar={() => { setConfirmandoCancelacion(false); onCancelTurno(turnoData.idTurno); }}
+        />
+      )}
+    </Modal>
   );
 }

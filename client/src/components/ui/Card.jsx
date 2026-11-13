@@ -17,7 +17,7 @@ export default function Card({ children, className = '', title, ...props }) {
     // Tarjeta con borde suave (Level 1 de elevación según el diseño)
     <div
       className={`card border-0 shadow-sm rounded-4 ${className}`}
-      style={{ backgroundColor: '#ffffff', border: '1px solid #D1D1C4' }}
+      style={{ backgroundColor: 'var(--hovy-blanco)', border: '1px solid var(--hovy-crema-500)' }}
       {...props}
     >
       {title && (

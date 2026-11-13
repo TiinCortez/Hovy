@@ -153,7 +153,7 @@ export default function NotificacionesHistorialPage() {
             <input
               type="text"
               className="form-control form-control-sm ps-4"
-              placeholder="Buscar por cliente, lote o mensaje..."
+              placeholder="Buscar por cliente, lote o mensaje…"
               value={busqueda}
               onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
             />
@@ -183,7 +183,7 @@ export default function NotificacionesHistorialPage() {
               </thead>
               <tbody className="border-top">
                 {cargando && (
-                  <tr><td colSpan={5} className="py-4 text-center text-secondary small">Cargando historial...</td></tr>
+                  <tr><td colSpan={5} className="py-4 text-center text-secondary small">Cargando historial…</td></tr>
                 )}
                 {!cargando && filtrados.length === 0 && (
                   <tr><td colSpan={5} className="py-4 text-center text-secondary small">No hay notificaciones en el historial.</td></tr>

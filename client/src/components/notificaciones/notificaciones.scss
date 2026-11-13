@@ -8,14 +8,14 @@ $notif-borde: $hovy-border;
 .notificaciones-pagina-numero,
 .notificaciones-pagina-flecha {
   border: 1px solid $notif-borde;
-  background-color: #ffffff;
-  color: #4A4A4A;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  background-color: $hovy-blanco;
+  color: $hovy-gris-700;
+  border-radius: $hovy-radio-sm;
+  font-size: $hovy-texto-xs;
   font-weight: 600;
-  transition: background-color 0.15s ease;
+  transition: background-color $hovy-duracion-rapida ease;
 
-  &:hover:not(:disabled) { background-color: rgba(27, 48, 6, 0.05); }
+  &:hover:not(:disabled) { background-color: rgba($hovy-verde-900, 0.05); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
@@ -28,7 +28,7 @@ $notif-borde: $hovy-border;
   &.activa {
     background-color: $notif-verde;
     border-color: $notif-verde;
-    color: #ffffff;
+    color: $hovy-blanco;
   }
 }
 
@@ -45,7 +45,7 @@ $notif-borde: $hovy-border;
 .notificacion-icono {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -57,16 +57,16 @@ $notif-borde: $hovy-border;
   width: 28px;
   height: 28px;
   border: 0;
-  border-radius: 50%;
+  border-radius: $hovy-radio-circulo;
   background-color: transparent;
-  color: #9ca3af;
+  color: $hovy-gris-400;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition: color $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease;
 
-  &.cancelar:hover { color: #dc3545; background-color: rgba(220, 53, 69, 0.08); }
-  &.restaurar:hover { color: $notif-verde; background-color: rgba(27, 48, 6, 0.08); }
+  &.cancelar:hover { color: $hovy-rojo-500; background-color: rgba($hovy-rojo-500, 0.08); }
+  &.restaurar:hover { color: $notif-verde; background-color: rgba($hovy-verde-900, 0.08); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
@@ -74,49 +74,49 @@ $notif-borde: $hovy-border;
 .notificacion-estado {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
+  gap: $hovy-espacio-6;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
+  border-radius: $hovy-radio-pill;
   border: 1px solid;
-  font-size: 0.75rem;
+  font-size: $hovy-texto-xs;
   font-weight: 600;
   white-space: nowrap;
 
-  &.resuelta { background-color: #EBF3E7; color: #1f5f2a; border-color: #D5E4CF; }
-  &.cancelada { background-color: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  &.resuelta { background-color: $hovy-verde-100; color: $hovy-verde-700; border-color: $hovy-oliva-300; }
+  &.cancelada { background-color: $hovy-rojo-50; color: $hovy-rojo-500; border-color: $hovy-rojo-100; }
 }
 
 // Filtros del historial
 .notificaciones-chip {
-  padding: 4px 10px;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
   border: 0;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  border-radius: $hovy-radio-sm;
+  font-size: $hovy-texto-xs;
   font-weight: 500;
-  background-color: #F4F6EF;
-  color: #556053;
-  transition: background-color 0.15s ease;
+  background-color: $hovy-crema-100;
+  color: $hovy-oliva-700;
+  transition: background-color $hovy-duracion-rapida ease;
 
-  &:hover { background-color: #EAECE4; }
-  &.activo { background-color: #253923; color: #ffffff; }
+  &:hover { background-color: $hovy-oliva-100; }
+  &.activo { background-color: $hovy-verde-850; color: $hovy-blanco; }
 }
 
 .notificaciones-filtro-activo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background-color: #E9EDE5;
-  color: #344234;
-  font-size: 0.75rem;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-6 $hovy-espacio-14;
+  border-radius: $hovy-radio-pill;
+  background-color: $hovy-oliva-100;
+  color: $hovy-oliva-800;
+  font-size: $hovy-texto-xs;
   font-weight: 600;
 
   .punto {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
-    background-color: #059669;
+    border-radius: $hovy-radio-circulo;
+    background-color: $hovy-esmeralda-600;
   }
 }
 
@@ -133,12 +133,12 @@ $notif-borde: $hovy-border;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.5rem 0.75rem;
-      padding: 0.875rem;
-      margin-bottom: 0.625rem;
-      background-color: #f7f7f4;
-      border: 1px solid #ececE7;
-      border-radius: 0.875rem;
+      gap: $hovy-espacio-8 $hovy-espacio-12;
+      padding: $hovy-espacio-14;
+      margin-bottom: $hovy-espacio-10;
+      background-color: $hovy-crema-50;
+      border: 1px solid $hovy-crema-300;
+      border-radius: $hovy-radio-lg;
     }
     tr:last-child { margin-bottom: 0; }
 
@@ -156,7 +156,7 @@ $notif-borde: $hovy-border;
     .notif-td-estado { order: 1; }
     .notif-td-tipo { order: 2; flex: 1 1 auto; }
     .notif-td-tiempo { order: 3; margin-left: auto; }
-    .notif-td-mensaje { order: 4; flex-basis: 100%; overflow-wrap: anywhere; font-size: 0.875rem; line-height: 1.4; }
+    .notif-td-mensaje { order: 4; flex-basis: 100%; overflow-wrap: anywhere; font-size: $hovy-texto-md; line-height: 1.4; }
     .notif-td-acciones { order: 5; flex-basis: 100%; text-align: right; white-space: normal !important; }
   }
 }
