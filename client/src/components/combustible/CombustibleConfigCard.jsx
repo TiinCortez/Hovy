@@ -14,8 +14,8 @@ import {
   TIPOS_COMBUSTIBLE,
 } from './combustibleUtils';
 import CiudadAutocomplete from './CiudadAutocomplete';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 const KM_EJEMPLO = 10;
 
 const FORM_VACIO = { ciudad: '', tipo: 'nafta', empresa: '', producto: '', consumo: '' };

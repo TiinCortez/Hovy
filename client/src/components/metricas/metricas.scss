@@ -1,7 +1,8 @@
+@use '../../styles/tokens' as *;
 // Estilos exclusivos de la vista de Métricas (paleta del DESIGN.md).
 // Bootstrap (main.scss) se inyecta después de este archivo: donde se pisa una
 // clase de Bootstrap se usa un selector de dos clases para ganar especificidad.
-$metricas-verde: #2D4A27;
+$metricas-verde: $hovy-green;
 $metricas-verde-oscuro: #173313;
 $metricas-verde-medio: #496544;
 $metricas-verde-claro: #CBECC1;

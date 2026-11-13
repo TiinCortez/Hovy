@@ -6,6 +6,7 @@ import VisitaService from '../../services/api/visita.service';
 import TrasladoDetalle from '../combustible/TrasladoDetalle';
 import { formulaTraslado } from '../combustible/combustibleUtils';
 import { getApiError, formatMoney, INTERNAL_NOTICE } from './visitaUtils';
+import { VERDE } from '../../styles/colores';
 
 // Estimate lines table. Internal only: it is never meant to be sent to the client.
 // The trip cost (fuel to the property) comes either as the full `traslado` answer
@@ -72,16 +73,16 @@ export function DiferenciaPrecio({ estimado, final }) {
   const diff = Math.round((Number(final) - Number(estimado)) * 100) / 100;
   const color = diff > 0 ? 'text-success' : diff < 0 ? 'text-danger' : 'text-secondary';
   return (
-    <div className="row g-0 bg-light rounded-3 border overflow-hidden small">
-      <div className="col-4 p-2 px-3 border-end">
+    <div className="row g-0 bg-light rounded-3 border overflow-hidden small presupuesto-comparacion">
+      <div className="col-12 col-sm-4 p-2 px-3">
         <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Estimado</span>
         <span className="fw-bold text-dark">{formatMoney(estimado)}</span>
       </div>
-      <div className="col-4 p-2 px-3 border-end">
+      <div className="col-12 col-sm-4 p-2 px-3">
         <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Precio final</span>
         <span className="fw-bold text-dark">{formatMoney(final)}</span>
       </div>
-      <div className="col-4 p-2 px-3">
+      <div className="col-12 col-sm-4 p-2 px-3">
         <span className="text-secondary d-block fw-semibold" style={{ fontSize: '0.65rem' }}>Diferencia</span>
         <span className={`fw-bold ${color}`}>{diff > 0 ? '+' : ''}{formatMoney(diff)}</span>
       </div>
@@ -155,7 +156,7 @@ export default function PresupuestoPanel({ visita, onSaved }) {
         {!hasServicios ? (
           <p className="text-secondary small m-0">Guardá los servicios para ver el presupuesto propuesto.</p>
         ) : loading ? (
-          <div className="text-center py-3"><div className="spinner-border spinner-border-sm" style={{ color: '#1B3006' }} role="status"></div></div>
+          <div className="text-center py-3"><div className="spinner-border spinner-border-sm" style={{ color: VERDE }} role="status"></div></div>
         ) : loadError ? (
           <p className="text-danger small m-0" role="alert">{loadError}</p>
         ) : estimado && (
@@ -214,7 +215,7 @@ export default function PresupuestoPanel({ visita, onSaved }) {
                 variant="primary"
                 onClick={handleAceptar}
                 disabled={isSaving || !montoValido}
-                style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+                style={{ backgroundColor: VERDE, borderColor: VERDE }}
               >
                 {isSaving ? 'Guardando...' : accepted ? 'Actualizar precio final' : 'Aceptar precio final'}
               </Button>

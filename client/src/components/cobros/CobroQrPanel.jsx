@@ -16,8 +16,8 @@ import {
   sePuedeRegenerar,
 } from './cobroEstado';
 import { medioDeForma, totalPagado } from './formaDePago';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 
 // Spinner shaped like an icon, to sit inside <Aviso>.
 const IconoEspera = () => <span className="hovy-spinner" aria-hidden="true" />;

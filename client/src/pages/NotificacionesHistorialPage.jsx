@@ -12,6 +12,7 @@ import {
   formatearTiempo,
 } from '../components/notificaciones/notificacionesConfig.js';
 import '../components/notificaciones/notificaciones.scss';
+import { VERDE } from '../styles/colores';
 
 const POR_PAGINA = 10;
 const DIAS_HISTORIAL = 60;
@@ -113,7 +114,7 @@ export default function NotificacionesHistorialPage() {
             </p>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <span className="btn btn-light btn-sm border rounded-3 d-flex align-items-center gap-1 fw-semibold" style={{ color: '#1B3006', cursor: 'default' }}>
+            <span className="btn btn-light btn-sm border rounded-3 d-flex align-items-center gap-1 fw-semibold" style={{ color: VERDE, cursor: 'default' }}>
               <CalendarIcon size={14} /> Últimos {DIAS_HISTORIAL} días
             </span>
             <button

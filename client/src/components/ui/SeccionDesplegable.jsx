@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CardEmbebidaContext } from './cardEmbebidaContext';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 
 // Collapsible card: a header with icon, title and a one-line summary (useful while
 // it is closed) and a body shown only when open. A Card placed directly in
@@ -22,7 +22,7 @@ export default function SeccionDesplegable({
     <div className="card border-0 shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
       <button
         type="button"
-        className="btn w-100 text-start d-flex align-items-center gap-3 p-3 p-md-4 border-0 rounded-0"
+        className="btn w-100 text-start d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 p-3 p-md-4 border-0 rounded-0"
         onClick={() => setAbierta((valor) => !valor)}
         aria-expanded={abierta}
         aria-controls={idCuerpo}
@@ -35,7 +35,7 @@ export default function SeccionDesplegable({
             <Icono size={20} />
           </span>
         )}
-        <span className="flex-grow-1" style={{ minWidth: 0 }}>
+        <span style={{ flex: '1 1 8rem', minWidth: 0 }}>
           <span className="d-block fw-bold fs-6" style={{ color: VERDE }}>{titulo}</span>
           {resumen && <span className="d-block small text-secondary text-truncate">{resumen}</span>}
         </span>

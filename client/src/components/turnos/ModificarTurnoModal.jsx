@@ -97,7 +97,7 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const inmueble = turnoData.inmueble || {};
 
   return (
-    <div className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" style={{ zIndex: 1080 }}>
+    <div className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1080 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
           <div className="modal-header align-items-start px-3 px-md-4 py-3 border-bottom">

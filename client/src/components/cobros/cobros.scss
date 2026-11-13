@@ -1,5 +1,6 @@
+@use '../../styles/tokens' as *;
 // Estilos exclusivos de la vista de Cobros (paleta del DESIGN.md).
-$cobros-verde: #2D4A27;
+$cobros-verde: $hovy-green;
 $cobros-verde-medio: #496544;
 $cobros-terracota: #C87D55;
 $cobros-borde: #EAE6DF;
@@ -8,13 +9,14 @@ $cobros-superficie: #F5F3F0;
 .cobros-texto-terracota { color: $cobros-terracota !important; }
 
 /* --- Barra de filtros --- */
-// Selector de orden: ancho completo en mobile, ancho natural desde tablet.
+// Selector de orden: ancho completo hasta tablet (ahí el menú lateral le quita
+// lugar a la fila), ancho natural desde desktop.
 // Va con .form-select en el selector porque Bootstrap (main.scss) se inyecta
 // después de este archivo y su `width: 100%` ganaría a igual especificidad.
 .form-select.cobros-orden {
   width: 100%;
 
-  @media (min-width: 768px) {
+  @media (min-width: 992px) {
     width: auto;
     min-width: 13rem;
     max-width: 100%;
@@ -140,6 +142,16 @@ $cobros-superficie: #F5F3F0;
   &:hover { background-color: #FBF9F6; }
   &.is-pendiente { background-color: #FFFAF7; }
   &.is-pendiente:hover { background-color: #FFF4EE; }
+
+  // Celulares angostos: el monto no entra al lado del estado, va en su propia línea.
+  @media (max-width: 399.98px) {
+    grid-template-areas:
+      "turno turno"
+      "cliente cliente"
+      "servicio servicio"
+      "monto monto"
+      "estado estado";
+  }
 
   @media (min-width: 992px) {
     grid-template-columns: 3fr 3fr 2fr 2fr 2fr;

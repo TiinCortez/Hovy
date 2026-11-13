@@ -8,6 +8,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import Button from '../components/ui/Button.jsx';
+import { VERDE } from '../styles/colores';
 
 export default function Home() {
   return (
@@ -17,7 +18,7 @@ export default function Home() {
       {/* 1. NAVBAR SUPERIOR */}
       <nav className="home-navbar w-100 d-flex align-items-center justify-content-between bg-white px-3 px-md-4 py-3 border-bottom flex-shrink-0 z-3">
         <div className="d-flex align-items-center gap-2">
-          <Leaf color="#1B3006" size={28} />
+          <Leaf color={VERDE} size={28} />
           <h1 className="hovy-brand fs-4 m-0 text-dark fw-bold">Valle La Armonía</h1>
         </div>
         

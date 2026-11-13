@@ -22,6 +22,7 @@ import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
 import { BADGE_CLASS, getEstadoLabel } from '../components/visitas/visitaUtils';
 import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
+import { VERDE } from '../styles/colores';
 
 const FRANJA_TEXTO = {
   Mañana: 'por la mañana',
@@ -235,7 +236,7 @@ export default function VisitaDetallePage() {
             <Button
               variant="primary"
               className="w-100 w-md-auto justify-content-center"
-              style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+              style={{ backgroundColor: VERDE, borderColor: VERDE }}
               onClick={handleContactar}
               disabled={contactando}
             >

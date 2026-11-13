@@ -4,8 +4,10 @@ import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
+import useCerrarConEscape from './useCerrarConEscape';
 
 export default function EditClientModal({ isOpen, onClose, clientData, onClientUpdated }) {
+  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -66,7 +68,7 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060 }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
@@ -90,10 +92,10 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
 
               <div className="row g-3 mb-3">
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Nombre *</label>
+                  <label htmlFor="editar-cliente-nombre" className="form-label small fw-bold text-secondary">Nombre *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><User size={16} /></span>
-                    <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.nombre ? 'is-invalid' : ''}`}
+                    <input id="editar-cliente-nombre" type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.nombre ? 'is-invalid' : ''}`}
                       placeholder="Ej: Juan"
                       {...register('nombre', { required: 'El nombre es obligatorio' })}
                     />
@@ -102,10 +104,10 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Apellido *</label>
+                  <label htmlFor="editar-cliente-apellido" className="form-label small fw-bold text-secondary">Apellido *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><User size={16} /></span>
-                    <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`}
+                    <input id="editar-cliente-apellido" type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`}
                       placeholder="Ej: Pérez"
                       {...register('apellido', { required: 'El apellido es obligatorio' })}
                     />
@@ -116,10 +118,10 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
 
               <div className="row g-3 mb-3">
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Teléfono Celular *</label>
+                  <label htmlFor="editar-cliente-telefono" className="form-label small fw-bold text-secondary">Teléfono Celular *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Phone size={16} /></span>
-                    <input type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.telefono ? 'is-invalid' : ''}`}
+                    <input id="editar-cliente-telefono" type="text" className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.telefono ? 'is-invalid' : ''}`}
                       placeholder="Ej: 3514330429"
                       {...register('telefono', {
                         required: 'El teléfono es obligatorio',
@@ -135,8 +137,8 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Tipo de Cliente *</label>
-                  <select className="form-select bg-light border rounded-3 small" {...register('tipo_cliente', { required: true })}>
+                  <label htmlFor="editar-cliente-tipo-cliente" className="form-label small fw-bold text-secondary">Tipo de Cliente *</label>
+                  <select id="editar-cliente-tipo-cliente" className="form-select bg-light border rounded-3 small" {...register('tipo_cliente', { required: true })}>
                     <option value="Casual">Casual</option>
                     <option value="Fijo">Fijo</option>
                     <option value="Empresa">Empresa</option>
@@ -146,10 +148,10 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
 
               <div className="row g-3">
                 <div className="col-12">
-                  <label className="form-label small fw-bold text-secondary">Correo Electrónico (Opcional)</label>
+                  <label htmlFor="editar-cliente-email" className="form-label small fw-bold text-secondary">Correo Electrónico (Opcional)</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 rounded-start-3 text-secondary"><Mail size={16} /></span>
-                    <input type="email" className="form-control bg-light border-start-0 rounded-end-3 small" placeholder="ejemplo@correo.com" {...register('email')} />
+                    <input id="editar-cliente-email" type="email" className="form-control bg-light border-start-0 rounded-end-3 small" placeholder="ejemplo@correo.com" {...register('email')} />
                   </div>
                 </div>
               </div>

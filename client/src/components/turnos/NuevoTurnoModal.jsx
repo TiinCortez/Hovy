@@ -363,7 +363,7 @@ export default function NuevoTurnoModal({
     : '';
 
   return (
-    <div className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
 

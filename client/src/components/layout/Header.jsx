@@ -6,6 +6,7 @@ import AuthService from '../../services/auth.service.js';
 import NotificacionesPopover from '../notificaciones/NotificacionesPopover.jsx';
 import { EVENTO_NOTIFICACIONES_ACTUALIZADAS } from '../notificaciones/notificacionesConfig.js';
 import UserMenuPopover from '../ui/UserMenuPopover.jsx';
+import { VERDE } from '../../styles/colores';
 
 const INTERVALO_POLLING_MS = 60000;
 
@@ -146,7 +147,7 @@ export default function Header() {
             aria-expanded={isUserMenuOpen}
             onClick={handleToggleUserMenu}
           >
-            <UserCircle size={28} color="#1B3006" />
+            <UserCircle size={28} color={VERDE} />
           </button>
           {isUserMenuOpen && (
             <UserMenuPopover
