@@ -3,6 +3,7 @@ import { Inbox, ArrowRight } from 'lucide-react';
 import Paginacion from './Paginacion.jsx';
 import { obtenerTipo, destinoNotificacion, formatearTiempo } from './notificacionesConfig.js';
 import './notificaciones.scss';
+import { VERDE } from '../../styles/colores';
 
 const POR_PAGINA = 2;
 
@@ -65,7 +66,7 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
           type="button"
           onClick={onVerTodas}
           className="btn btn-link p-0 ms-auto small fw-semibold text-decoration-none d-flex align-items-center gap-1"
-          style={{ color: '#1B3006', fontSize: '0.8rem' }}
+          style={{ color: VERDE, fontSize: '0.8rem' }}
         >
           Ver todas <ArrowRight size={14} />
         </button>

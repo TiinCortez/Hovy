@@ -2,17 +2,19 @@ import { createPortal } from 'react-dom';
 import { MapPin } from 'lucide-react';
 import CloseButton from '../ui/CloseButton';
 import ConfirmarVisitaForm from './ConfirmarVisitaForm';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
 
 // Mounted by the parent only while open, so the form starts fresh each time.
 // The form shows API errors itself, so the modal stays open on failure.
 export default function ConfirmarVisitaModal({ visita, onClose, onConfirmed }) {
+  useCerrarConEscape(true, onClose);
   const handleDone = async (message) => {
     await onConfirmed(message);
     onClose();
   };
 
   return createPortal(
-    <div className="modal d-block bg-dark bg-opacity-50" style={{ zIndex: 1060 }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">

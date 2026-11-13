@@ -8,8 +8,8 @@ import Aviso from '../ui/Aviso';
 import PerfilService from '../../services/api/perfil.service';
 import { getApiError } from '../visitas/visitaUtils';
 import ModalUbicacion from './ModalUbicacion';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 const ZOOM_MAX = 19;
 const ZOOM_MIN = 4;
 const ZOOM_SIN_SALIDA = 12;

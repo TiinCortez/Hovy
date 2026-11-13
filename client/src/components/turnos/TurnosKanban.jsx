@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { MapPin, Clock, ChevronRight, ChevronDown } from 'lucide-react';
 import Card from '../ui/Card';
 import { PRIORIDADES_CONFIG as prioridadesConfig, compararHorarioTurnos, formatearHorarioTurno } from './agendaTurnos';
+import { VERDE } from '../../styles/colores';
 
 export default function TurnosKanban({ turnos, onSelectTurno }) {
   const [colFiltro, setColFiltro] = useState('TODOS'); // Filtro de columnas activo restaurado
@@ -87,7 +88,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
 
         <div className="turnos-agenda-card-pie">
           <span className="fw-semibold text-dark min-w-0 text-break">{turno.servicio.descripcion}</span>
-          <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: '#1B3006' }}>
+          <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: VERDE }}>
             {isEjecucion ? 'Ver ficha' : 'Detalle'} <ChevronRight size={14} />
           </span>
         </div>

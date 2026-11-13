@@ -14,8 +14,8 @@ import {
   textoConfirmar,
   validarSeleccion,
 } from './formaDePago';
+import { VERDE } from '../../styles/colores';
 
-const VERDE = '#1B3006';
 const ICONOS = { anotar: NotebookPen, efectivo: Banknote, transferencia: Landmark, qr: QrCode };
 
 // One modal for "how does the client pay?", used when finishing a turno and when

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import httpService from '../../services/api/http.service.js';
+import { VERDE } from '../../styles/colores';
 
 export default function RequireAuth({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,7 +44,7 @@ export default function RequireAuth({ children }) {
   if (loading) {
     return (
       <div className="vh-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: '#F2F2E6' }}>
-        <div className="spinner-border" style={{ color: '#1B3006' }} role="status">
+        <div className="spinner-border" style={{ color: VERDE }} role="status">
           <span className="visually-hidden">Cargando...</span>
         </div>
       </div>

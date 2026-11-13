@@ -6,6 +6,7 @@ import CloseButton from './CloseButton';
 import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import InmuebleService from '../../services/api/inmueble.service';
+import useCerrarConEscape from './useCerrarConEscape';
 
 const PROVINCIAS_ARG = [
   "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Ciudad Autónoma de Buenos Aires", 
@@ -15,6 +16,7 @@ const PROVINCIAS_ARG = [
 ];
 
 export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente, onSaved }) {
+  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -176,7 +178,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060 }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
@@ -203,10 +205,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-3">
                 <div className="col-12">
-                  <label className="form-label small fw-bold text-secondary">Dirección / Calle y Número *</label>
+                  <label htmlFor="inmueble-direccion" className="form-label small fw-bold text-secondary">Dirección / Calle y Número *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><MapPin size={16} /></span>
-                    <input 
+                    <input id="inmueble-direccion" 
                       type="text" 
                       className={`form-control bg-light border-start-0 small ${errors.direccion ? 'is-invalid' : ''}`}
                       placeholder="Ej: Francisco N. de laprida 459"
@@ -219,8 +221,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-3">
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Provincia *</label>
-                  <select 
+                  <label htmlFor="inmueble-provincia" className="form-label small fw-bold text-secondary">Provincia *</label>
+                  <select id="inmueble-provincia" 
                     className={`form-select bg-light small ${errors.provincia ? 'is-invalid' : ''}`}
                     {...register('provincia', { required: 'Provincia obligatoria' })}
                   >
@@ -233,8 +235,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <label className="form-label small fw-bold text-secondary">Ciudad/Localidad</label>
-                  <input 
+                  <label htmlFor="inmueble-localidad" className="form-label small fw-bold text-secondary">Ciudad/Localidad</label>
+                  <input id="inmueble-localidad" 
                     type="text" 
                     className="form-control bg-light small border-primary-subtle"
                     placeholder="Ej: Córdoba Capital, San Francisco..."
@@ -246,10 +248,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-3">
                 <div className="col-12">
-                  <label className="form-label small fw-bold text-secondary">Barrio *</label>
+                  <label htmlFor="inmueble-barrio" className="form-label small fw-bold text-secondary">Barrio *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Map size={16} /></span>
-                    <input 
+                    <input id="inmueble-barrio" 
                       type="text" 
                       className={`form-control bg-light border-start-0 small ${errors.barrio ? 'is-invalid' : ''}`}
                       placeholder="Ej: Cerro de las Rosas"
@@ -265,12 +267,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 <summary className="small fw-semibold text-secondary">Referencias adicionales (opcional)</summary>
                 <div className="row g-3 mt-0">
                   <div className="col-12 col-sm-6">
-                    <label className="form-label small fw-bold text-secondary">Manzana</label>
-                    <input type="text" className="form-control bg-white small" placeholder="Ej: 12" {...register('manzana')} />
+                    <label htmlFor="inmueble-manzana" className="form-label small fw-bold text-secondary">Manzana</label>
+                    <input id="inmueble-manzana" type="text" className="form-control bg-white small" placeholder="Ej: 12" {...register('manzana')} />
                   </div>
                   <div className="col-12 col-sm-6">
-                    <label className="form-label small fw-bold text-secondary">Lote</label>
-                    <input type="text" className="form-control bg-white small" placeholder="Ej: 4B" {...register('lote')} />
+                    <label htmlFor="inmueble-lote" className="form-label small fw-bold text-secondary">Lote</label>
+                    <input id="inmueble-lote" type="text" className="form-control bg-white small" placeholder="Ej: 4B" {...register('lote')} />
                   </div>
                 </div>
               </details>
@@ -303,10 +305,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3 mb-3">
                 <div className="col-12 col-md-12">
-                  <label className="form-label small fw-bold text-secondary">Tipo de Inmueble *</label>
+                  <label htmlFor="inmueble-tipo-inmueble" className="form-label small fw-bold text-secondary">Tipo de Inmueble *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Building2 size={16} /></span>
-                    <select 
+                    <select id="inmueble-tipo-inmueble" 
                       className={`form-select bg-light border-start-0 small ${errors.tipo_inmueble ? 'is-invalid' : ''}`} 
                       {...register('tipo_inmueble', { required: 'Seleccione un tipo' })}
                     >
@@ -320,10 +322,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
 
               <div className="row g-3">
                 <div className="col-12 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Sup. Total (m²) *</label>
+                  <label htmlFor="inmueble-superficie-total" className="form-label small fw-bold text-secondary">Sup. Total (m²) *</label>
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Maximize size={16} /></span>
-                    <input 
+                    <input id="inmueble-superficie-total" 
                       type="number" 
                       step="0.01" 
                       className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`}
@@ -335,8 +337,8 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 </div>
 
                 <div className="col-6 col-md-4">
-                  <label className="form-label small fw-bold text-secondary">Sup. Construida</label>
-                  <input 
+                  <label htmlFor="inmueble-superficie-construida" className="form-label small fw-bold text-secondary">Sup. Construida</label>
+                  <input id="inmueble-superficie-construida" 
                     type="number" 
                     step="0.01" 
                     className={`form-control bg-light small ${errors.superficie_construida ? 'is-invalid' : ''}`}

@@ -5,6 +5,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import VisitaService from '../../services/api/visita.service';
 import { TIPOS_INMUEBLE, TIPOS_CLIENTE, getApiError } from './visitaUtils';
+import { VERDE } from '../../styles/colores';
 
 // Step of estado Contactada: confirm the physical visit data (creates client/property)
 // embedded: rendered inside a modal (no Card wrapper nor title)
@@ -103,7 +104,7 @@ export default function ConfirmarVisitaForm({ visita, onDone, embedded = false }
             </div>
           )}
         </div>
-        <Button type="submit" variant="primary" disabled={isSubmitting} style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}>
+        <Button type="submit" variant="primary" disabled={isSubmitting} style={{ backgroundColor: VERDE, borderColor: VERDE }}>
           {isSubmitting ? 'Confirmando...' : 'Confirmar visita'}
         </Button>
       </form>

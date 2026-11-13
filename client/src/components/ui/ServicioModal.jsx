@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
 import ServicioService from '../../services/api/servicio.service';
+import useCerrarConEscape from './useCerrarConEscape';
 
 // Mirrors server rule: finite number >= 0
 const nonNegative = (value) => {
@@ -17,6 +18,7 @@ const nonNegative = (value) => {
  * tipos: global catalog of service types, used only as name suggestions.
  */
 export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSaved }) {
+  useCerrarConEscape(isOpen, onClose);
   const isEdit = Boolean(servicio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -62,7 +64,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
   const formId = 'servicio-form';
 
   return createPortal(
-    <div className="modal d-block bg-dark bg-opacity-50" style={{ zIndex: 1060 }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">

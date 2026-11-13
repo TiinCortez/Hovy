@@ -1,9 +1,11 @@
 import { useId } from 'react';
 import { createPortal } from 'react-dom';
 import CloseButton from '../ui/CloseButton';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
 
 // Dialog shell shared by the steps of choosing a departure point.
 export default function ModalUbicacion({ titulo, size, cerrable = true, onClose, footer, children }) {
+  useCerrarConEscape(cerrable, onClose);
   const idTitulo = useId();
 
   return createPortal(

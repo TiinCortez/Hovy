@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { CardEmbebidaContext } from './cardEmbebidaContext';
+import { VERDE } from '../../styles/colores';
 
 export default function Card({ children, className = '', title, ...props }) {
   const embebida = useContext(CardEmbebidaContext);
@@ -21,7 +22,7 @@ export default function Card({ children, className = '', title, ...props }) {
     >
       {title && (
         <div className="card-header bg-transparent border-bottom-0 pt-4 pb-0 px-4">
-          <h5 className="card-title fw-bold m-0" style={{ color: '#1B3006' }}>{title}</h5>
+          <h5 className="card-title fw-bold m-0" style={{ color: VERDE }}>{title}</h5>
         </div>
       )}
       <div className="card-body p-4">

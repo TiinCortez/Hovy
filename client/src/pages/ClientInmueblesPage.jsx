@@ -18,6 +18,7 @@ import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
 import ClienteDetalleSkeleton from '../components/skeletons/ClienteDetalleSkeleton';
+import { VERDE } from '../styles/colores';
 
 export default function ClientInmueblesPage() {
   const { id } = useParams();
@@ -484,7 +485,7 @@ export default function ClientInmueblesPage() {
             <p className="text-secondary small m-0 d-none d-md-block">Gestión integral de parcelas vinculadas y estados operativos.</p>
             <Button 
               className="d-flex d-md-none w-100 align-items-center justify-content-center gap-2 py-3 rounded-pill shadow-sm mt-3" 
-              style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}
+              style={{backgroundColor: VERDE, borderColor: VERDE}}
               onClick={() => openInmuebleModal()}
             >
               <Plus size={18} /> Agregar Nuevo Inmueble
@@ -506,7 +507,7 @@ export default function ClientInmueblesPage() {
               </div>
               <Button 
                 className="d-none d-md-flex text-nowrap align-items-center gap-2 px-4 shadow-sm rounded-pill" 
-                style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}
+                style={{backgroundColor: VERDE, borderColor: VERDE}}
                 onClick={() => openInmuebleModal()}
               >
                 <Building2 size={18} /> Agregar Nuevo Inmueble

@@ -1,10 +1,7 @@
 /* ==========================================
    SCSS PROPIO: COLORES HOVY Y VARIABLES
    ========================================== */
-$hovy-green: #1B3006;
-$hovy-cream: #F2F2E6;
-$hovy-gray: #4A4A4A;
-$hovy-border: #D1D1C4;
+@import './tokens';
 
 $primary: $hovy-green;
 $body-bg: $hovy-cream;
@@ -23,6 +20,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 @import "bootstrap/scss/root";
 @import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type"; // .small, .h1–.h6, .list-unstyled
 @import "bootstrap/scss/grid";
 @import "bootstrap/scss/buttons";
 @import "bootstrap/scss/button-group";
@@ -30,6 +28,8 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 @import "bootstrap/scss/forms";
 @import "bootstrap/scss/modal";
 @import "bootstrap/scss/offcanvas";
+@import "bootstrap/scss/spinners"; // .spinner-border
+@import "bootstrap/scss/helpers"; // .text-truncate, .visually-hidden, .sticky-top, .text-bg-*
 @import "bootstrap/scss/utilities/api";
 
 /* ==========================================
@@ -364,7 +364,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   padding: 1.5rem;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   
-  @media (max-width: 576px) {
+  @media (max-width: 575.98px) {
     background: radial-gradient(circle at 50% 30%, #EEF5ED 0%, #DCE8DB 100%);
     padding: 1rem;
   }
@@ -380,7 +380,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   overflow: hidden;
   padding: 2.5rem 3.5rem;
 
-  @media (max-width: 576px) {
+  @media (max-width: 575.98px) {
     max-width: 420px;
     background-color: #F8F5EE;
     border-radius: 2.25rem;
@@ -396,13 +396,13 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   border-bottom-left-radius: 100%;
   pointer-events: none;
   
-  @media (max-width: 576px) { display: none; }
+  @media (max-width: 575.98px) { display: none; }
 }
 
 .register-shape-mobile {
   display: none;
   
-  @media (max-width: 576px) {
+  @media (max-width: 575.98px) {
     display: block;
     position: absolute;
     top: 0; right: 0;
@@ -428,7 +428,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   .logo-text { font-size: 8px; font-weight: 800; color: #22391e; text-transform: uppercase; letter-spacing: -0.5px; }
   .logo-subtext { font-size: 5.5px; color: #77806f; font-weight: 500; letter-spacing: 1px; }
 
-  @media (max-width: 576px) {
+  @media (max-width: 575.98px) {
     width: 64px; height: 64px;
     .logo-text { font-size: 7px; transform: scale(0.9); margin-top: -2px; }
     .logo-subtext { font-size: 5px; transform: scale(0.75); margin-top: -4px; }
@@ -442,14 +442,14 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   letter-spacing: -0.025em;
   margin-bottom: 0.25rem;
   
-  @media (max-width: 576px) { font-size: 1.875rem; color: #1C3A13; }
+  @media (max-width: 575.98px) { font-size: 1.875rem; color: #1C3A13; }
 }
 
 .register-subtitle {
   font-size: 0.9375rem;
   color: #4b5563;
   
-  @media (max-width: 576px) { font-size: 0.875rem; color: rgba(87, 83, 78, 0.9); }
+  @media (max-width: 575.98px) { font-size: 0.875rem; color: rgba(87, 83, 78, 0.9); }
 }
 
 .register-label {
@@ -459,7 +459,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   color: #1f2937;
   margin-bottom: 0.375rem;
   
-  @media (max-width: 576px) { font-size: 0.75rem; color: #2B2B2B; }
+  @media (max-width: 575.98px) { font-size: 0.75rem; color: #2B2B2B; }
 }
 
 .register-input-group {
@@ -488,7 +488,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     &::placeholder { color: #6b7280; }
   }
 
-  @media (max-width: 576px) {
+  @media (max-width: 575.98px) {
     border-color: #CFD3D1;
     padding: 0.625rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -645,7 +645,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   color: #7b8178;
   background-color: #f4f4ef;
 
-  &:hover { background-color: #e9eadf; color: #1B3006; }
+  &:hover { background-color: #e9eadf; color: $hovy-green; }
 }
 
 .nuevo-turno-status {
@@ -727,8 +727,8 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   &.is-selected {
     background-color: #f4f9ef;
-    border-color: #1B3006;
-    box-shadow: inset 0 0 0 1px #1B3006, 0 3px 9px rgba(27, 48, 6, 0.08);
+    border-color: $hovy-green;
+    box-shadow: inset 0 0 0 1px $hovy-green, 0 3px 9px rgba(27, 48, 6, 0.08);
   }
 }
 
@@ -1047,6 +1047,17 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   &.is-espera { color: #294b15; background-color: #f0f8e9; border: 1px solid #d5e9c6; }
 }
 
+// Las clases .alert de Bootstrap (módulo no importado) se usan en varios
+// formularios: toman el mismo aspecto que <Aviso>.
+.alert {
+  @extend .hovy-aviso;
+  margin-bottom: 1rem;
+}
+.alert-danger { @extend .hovy-aviso, .is-error; }
+.alert-success { @extend .hovy-aviso, .is-ok; }
+.alert-warning { @extend .hovy-aviso, .is-aviso; }
+.alert-info { @extend .hovy-aviso, .is-espera; }
+
 /* --- COBRO CON QR --- */
 @keyframes hovySpin { to { transform: rotate(360deg); } }
 
@@ -1308,7 +1319,6 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 @import './buttons';
 
 /* --- SKELETON DE CARGA (primera carga de cada página) --- */
-$hovy-skeleton: #E6E6D8;
 
 .hovy-skeleton {
   display: block;
@@ -1335,4 +1345,15 @@ $hovy-skeleton: #E6E6D8;
 .table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* --- COMPARACIÓN ESTIMADO / PRECIO FINAL (detalle de solicitud) --- */
+// Apilado en celular (tres columnas no entran a 320px), en fila desde sm.
+.presupuesto-comparacion > div + div {
+  border-top: 1px solid var(--bs-border-color);
+
+  @include media-breakpoint-up(sm) {
+    border-top: 0;
+    border-left: 1px solid var(--bs-border-color);
+  }
 }

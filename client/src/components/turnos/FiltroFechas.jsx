@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { VERDE } from '../../styles/colores';
 
 export default function FiltroFechas({ filtroActual, setFiltro, fechaEspecifica, setFechaEspecifica }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +32,7 @@ export default function FiltroFechas({ filtroActual, setFiltro, fechaEspecifica,
         onClick={() => setIsOpen(!isOpen)}
         className="d-flex align-items-center gap-2"
         style={{
-          backgroundColor: isOpen ? '#2D4A27' : '#FFFFFF',
+          backgroundColor: isOpen ? VERDE : '#FFFFFF',
           color: isOpen ? '#FFFFFF' : '#1F291E',
           border: '1px solid #EAE6DF',
           borderRadius: '9999px',
@@ -83,7 +84,7 @@ export default function FiltroFechas({ filtroActual, setFiltro, fechaEspecifica,
                   textAlign: 'left',
                   padding: '8px 16px',
                   marginBottom: '4px',
-                  backgroundColor: isActive ? '#2D4A27' : 'transparent',
+                  backgroundColor: isActive ? VERDE : 'transparent',
                   color: isActive ? '#FFFFFF' : '#5F695D',
                   border: 'none',
                   borderRadius: '9999px',
@@ -131,7 +132,7 @@ export default function FiltroFechas({ filtroActual, setFiltro, fechaEspecifica,
                   outline: 'none',
                   transition: 'border-color 0.2s'
                 }}
-                onFocus={(e) => e.target.style.border = '1.5px solid #2D4A27'}
+                onFocus={(e) => e.target.style.border = `1.5px solid ${VERDE}`}
                 onBlur={(e) => e.target.style.border = '1px solid #EAE6DF'}
               />
             </div>

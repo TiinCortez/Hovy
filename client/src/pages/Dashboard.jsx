@@ -26,6 +26,7 @@ import {
 import {
   resolverPeriodo, filtrarRealizados, resumirPeriodo, calcularVariacion, formatearPorcentaje
 } from '../components/metricas/metricasUtils';
+import { VERDE } from '../styles/colores';
 
 const MAX_TURNOS_PROXIMOS = 4;
 
@@ -211,7 +212,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(170, 59, 255, 0.1)', color: '#1B3006' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(170, 59, 255, 0.1)', color: VERDE }}>
                 <CalendarCheck size={24} />
               </div>
               <div>
@@ -250,7 +251,7 @@ export default function Dashboard() {
         <div className="col-6 col-lg-3">
           <Card className="h-100 p-2 dashboard-kpi">
             <div className="d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(27, 48, 6, 0.1)', color: '#1B3006' }}>
+              <div className="p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(27, 48, 6, 0.1)', color: VERDE }}>
                 <MapPin size={24} />
               </div>
               <div>
@@ -278,7 +279,7 @@ export default function Dashboard() {
               <TrendingUp size={24} className="text-secondary" />
             </div>
             <p className="text-secondary small fw-semibold m-0 mb-1">Total recaudado este mes</p>
-            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: 'clamp(1.9rem, 8vw, 3rem)', color: '#1B3006', letterSpacing: '-0.02em', overflowWrap: 'anywhere' }}>
+            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: 'clamp(1.9rem, 8vw, 3rem)', color: VERDE, letterSpacing: '-0.02em', overflowWrap: 'anywhere' }}>
               {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
             </h2>
             <p className={`fw-semibold small mb-5 ${variacionGanancias.diferencia < 0 ? 'text-danger' : 'text-success'}`}>
@@ -289,7 +290,7 @@ export default function Dashboard() {
                 ? '...'
                 : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
             </p>
-            <Link to="/cobros" className="text-decoration-none fw-bold mt-auto" style={{ color: '#1B3006' }}>
+            <Link to="/cobros" className="text-decoration-none fw-bold mt-auto" style={{ color: VERDE }}>
               Ver cobros <ArrowRight size={18} className="ms-1" />
             </Link>
           </Card>
@@ -346,7 +347,7 @@ export default function Dashboard() {
                 return (
                   // Day/time and state on the first line, then service and address: fits narrow screens.
                   <div key={turno.idTurno} className="d-flex align-items-start gap-3 p-3 rounded-4 border bg-white">
-                    <div className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1B3006', color: 'white' }}>
+                    <div className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: VERDE, color: 'white' }}>
                       <CalendarCheck size={20} />
                     </div>
                     <div className="flex-grow-1" style={{ minWidth: 0 }}>
@@ -365,7 +366,7 @@ export default function Dashboard() {
             </div>
 
             <div className="text-center mt-4">
-              <Link to="/calendar" className="text-decoration-none fw-bold" style={{ color: '#1B3006' }}>
+              <Link to="/calendar" className="text-decoration-none fw-bold" style={{ color: VERDE }}>
                 Ver agenda completa
               </Link>
             </div>

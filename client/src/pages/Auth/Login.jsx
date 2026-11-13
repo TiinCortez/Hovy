@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { User, Lock, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import AuthService from '../../services/auth.service.js';
+import { VERDE } from '../../styles/colores';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,10 +48,10 @@ export default function Login() {
                   <img
                     src="/hovy.webp"
                     alt="Hovy Logo"
-                    style={{ maxHeight: '122px', width: 'auto', objectFit: 'contain' }}
+                    style={{ maxHeight: '122px', maxWidth: '100%', width: 'auto', objectFit: 'contain' }}
                   />
                 </div>
-                <h1 className="fw-bold" style={{ color: '#1B3006', fontSize: '2.5rem' }}>Bienvenido</h1>
+                <h1 className="fw-bold" style={{ color: VERDE, fontSize: '2.5rem' }}>Bienvenido</h1>
               </div>
 
               {/* Manejo de error general de autenticación */}
@@ -112,7 +113,7 @@ export default function Login() {
 
                 {/* Recuperar Contraseña */}
                 <div className="text-end mb-4">
-                  <a href="#olvido" className="text-decoration-none fw-semibold small" style={{ color: '#1B3006' }}>
+                  <a href="#olvido" className="text-decoration-none fw-semibold small" style={{ color: VERDE }}>
                     ¿Olvidó su contraseña?
                   </a>
                 </div>

@@ -14,6 +14,7 @@ import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
 import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
 import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
+import { VERDE } from '../styles/colores';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
@@ -255,7 +256,7 @@ export default function ClientsPage() {
                   ? 'text-white shadow-sm'
                   : 'text-secondary bg-transparent'
               }`}
-              style={estadoFiltro === 'Activos' ? { backgroundColor: '#1B3006' } : {}}
+              style={estadoFiltro === 'Activos' ? { backgroundColor: VERDE } : {}}
             >
               Activos ({clientesActivos.length})
             </button>
@@ -306,7 +307,7 @@ export default function ClientsPage() {
                       ? 'btn-primary'
                       : 'bg-white text-secondary'
                   }`}
-                  style={activeFilter === filter ? { backgroundColor: '#1B3006', borderColor: '#1B3006' } : {}}
+                  style={activeFilter === filter ? { backgroundColor: VERDE, borderColor: VERDE } : {}}
                 >
                   <span className="hovy-filter-label">{filter}</span>
                   <span className="hovy-filter-count">({count})</span>
@@ -524,7 +525,7 @@ export default function ClientsPage() {
           </span>
           <div className="d-flex align-items-center gap-1">
             <button className="btn btn-sm btn-white text-secondary border shadow-sm px-2 bg-white" disabled>&lt;</button>
-            <button className="btn btn-sm btn-primary border shadow-sm px-3" style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>1</button>
+            <button className="btn btn-sm btn-primary border shadow-sm px-3" style={{backgroundColor: VERDE, borderColor: VERDE}}>1</button>
             <button className="btn btn-sm btn-white text-secondary border shadow-sm px-2 bg-white" disabled>&gt;</button>
           </div>
         </div>

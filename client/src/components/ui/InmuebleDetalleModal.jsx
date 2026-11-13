@@ -3,8 +3,11 @@ import Button from './Button';
 import CloseButton from './CloseButton';
 import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
+import { VERDE } from '../../styles/colores';
+import useCerrarConEscape from './useCerrarConEscape';
 
 export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, onEdit, onDelete }) {
+  useCerrarConEscape(isOpen, onClose);
   if (!isOpen || !inmuebleData) return null;
 
   // Imagen por defecto si el inmueble no tiene una cargada
@@ -21,7 +24,7 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg my-4">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           
@@ -149,7 +152,7 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               <Button 
                 variant="primary" 
                 className="rounded-pill px-4 shadow-sm d-flex align-items-center gap-2" 
-                style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}} 
+                style={{backgroundColor: VERDE, borderColor: VERDE}} 
                 onClick={() => { onClose(); onEdit(inmuebleData); }}
               >
                 <Edit2 size={16} /> Editar Inmueble

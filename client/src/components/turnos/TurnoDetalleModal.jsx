@@ -14,12 +14,15 @@ import ServicioService from '../../services/api/servicio.service';
 import CobroQrPanel from '../cobros/CobroQrPanel';
 import RegistroPagoModal from '../cobros/RegistroPagoModal';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
+import { VERDE } from '../../styles/colores';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function TurnoDetalleModal({
   isOpen, onClose, turnoData, onCancelTurno, onEditTurno, onChangeState, onTurnoUpdated
 }) {
+  useCerrarConEscape(isOpen, onClose);
   const navigate = useNavigate();
   const [isEditingDatos, setIsEditingDatos] = useState(false);
   const [clientes, setClientes] = useState([]);
@@ -223,7 +226,7 @@ export default function TurnoDetalleModal({
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50 tab-index-1" style={{ zIndex: 1060, overflowY: 'auto' }}>
+    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg my-4">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           
@@ -596,7 +599,7 @@ export default function TurnoDetalleModal({
                       <button onClick={() => onEditTurno(turnoData)} className="btn btn-white border border-secondary-subtle rounded-pill fw-semibold d-flex align-items-center justify-content-center gap-2 px-4 text-dark shadow-sm">
                         <CalendarClock size={16} /> Modificar Horario
                       </button>
-                      <Button variant="primary" onClick={() => onChangeState(turnoData.idTurno, 'CONFIRMADO', turnoData)} className="rounded-pill px-5 shadow-sm d-flex align-items-center justify-content-center gap-2" style={{backgroundColor: '#1B3006', borderColor: '#1B3006'}}>
+                      <Button variant="primary" onClick={() => onChangeState(turnoData.idTurno, 'CONFIRMADO', turnoData)} className="rounded-pill px-5 shadow-sm d-flex align-items-center justify-content-center gap-2" style={{backgroundColor: VERDE, borderColor: VERDE}}>
                         <CheckCircle size={18} /> Confirmar Turno
                       </Button>
                     </>

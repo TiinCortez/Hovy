@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaModal from '../components/visitas/ConfirmarVisitaModal';
 import VisitasSkeleton from '../components/skeletons/VisitasSkeleton';
+import { VERDE } from '../styles/colores';
 
 // Case- and accent-insensitive comparison for the search box
 const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -79,7 +80,7 @@ const BADGE_CLASS = {
 // Compact status badge (top right) and secondary chips (under the name)
 const ESTADO_BADGE_STYLE = { fontSize: '0.72rem', padding: '0.3rem 0.6rem' };
 const CHIP_STYLE = { fontSize: '0.68rem', padding: '0.15rem 0.5rem', border: '1px solid', whiteSpace: 'nowrap' };
-const CHIP_TURNO = { backgroundColor: 'rgba(27, 48, 6, 0.08)', color: '#1B3006', borderColor: 'rgba(27, 48, 6, 0.15)' };
+const CHIP_TURNO = { backgroundColor: 'rgba(27, 48, 6, 0.08)', color: VERDE, borderColor: 'rgba(27, 48, 6, 0.15)' };
 const CHIP_CLIENTE = { backgroundColor: 'rgba(121, 84, 45, 0.08)', color: '#79542D', borderColor: 'rgba(121, 84, 45, 0.2)' };
 
 const EMPTY_TEXT = {
@@ -205,7 +206,7 @@ export default function VisitasPage() {
                 aria-selected={activo}
                 onClick={() => { setGrupo(value); setActiveTab('Todas'); }}
                 className={`w-100 text-start rounded-4 p-3 d-flex align-items-center gap-3 shadow-sm border ${activo ? 'text-white' : 'bg-white text-dark'}`}
-                style={activo ? { backgroundColor: '#1B3006', borderColor: '#1B3006' } : undefined}
+                style={activo ? { backgroundColor: VERDE, borderColor: VERDE } : undefined}
               >
                 <span className={`p-3 rounded-circle d-flex ${activo ? 'bg-white bg-opacity-25' : 'bg-light'}`}>
                   <Icon size={22} />
@@ -250,7 +251,7 @@ export default function VisitasPage() {
               aria-selected={activo}
               onClick={() => { setVista(value); setActiveTab('Todas'); }}
               className={`btn btn-sm rounded-pill fw-semibold d-flex align-items-center gap-1 px-3 border-0 ${activo ? 'text-white' : 'text-secondary'}`}
-              style={activo ? { backgroundColor: '#1B3006' } : undefined}
+              style={activo ? { backgroundColor: VERDE } : undefined}
             >
               <Icon size={14} /> {label} ({countsVista[value]})
             </button>
@@ -385,7 +386,7 @@ export default function VisitasPage() {
                       <Button
                         variant="primary"
                         className="flex-grow-1 rounded-pill fw-bold small py-2"
-                        style={{ backgroundColor: '#1B3006', borderColor: '#1B3006' }}
+                        style={{ backgroundColor: VERDE, borderColor: VERDE }}
                         onClick={() => setConfirmando(visita)}
                       >
                         Confirmar
