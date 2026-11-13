@@ -21,6 +21,7 @@ import {
   updateInmuebleBot,
   darDeBajaInmuebleBot,
   sugerirUbicacion,
+  validarDireccionEscrita,
 } from '../controllers/botInmueblesController.js';
 import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
 import { crearSolicitudClienteBot, consultarDisponibilidadClienteBot } from '../controllers/botSolicitudesClienteController.js';
@@ -200,5 +201,10 @@ router.get('/staff/:telefono/visitas/:id/estimado', resolverStaffPorTelefono, ob
 // No toca la base ni depende de un cliente, por eso no lleva el middleware.
 // POST /api/bot/ubicacion/reversa
 router.post('/ubicacion/reversa', sugerirUbicacion);
+
+// Auxiliar del alta: valida una direccion escrita a mano y devuelve el punto y
+// su precision para que el bot lo muestre en el mapa antes de confirmar.
+// POST /api/bot/ubicacion/directa
+router.post('/ubicacion/directa', validarDireccionEscrita);
 
 export default router;

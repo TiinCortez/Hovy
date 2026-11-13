@@ -13,6 +13,7 @@ import {
   StickyNote,
   CheckCircle2,
   AlertTriangle,
+  XCircle,
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -20,6 +21,7 @@ import { useAvisos } from '../components/ui/avisosContext';
 import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
+import CancelarVisitaModal from '../components/visitas/CancelarVisitaModal.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
 import { BADGE_TIPO, getEstadoLabel } from '../components/visitas/visitaUtils';
 import Badge from '../components/ui/Badge';
@@ -49,6 +51,7 @@ export default function VisitaDetallePage() {
   const [error, setError] = useState(null);
   const [contactando, setContactando] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [showCancel, setShowCancel] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -255,6 +258,23 @@ export default function VisitaDetallePage() {
       )}
 
       {visita.estado === 'Contactada' && <ConfirmarVisitaForm visita={visita} onDone={refreshVisita} />}
+      {visita.tipo_solicitud === 'cliente' && ['Pendiente', 'Contactada'].includes(visita.estado) && (
+        <div>
+          <Button variant="light" className="text-danger d-flex align-items-center gap-2" onClick={() => setShowCancel(true)}>
+            <XCircle size={18} /> Cancelar visita
+          </Button>
+        </div>
+      )}
+      {showCancel && (
+        <CancelarVisitaModal
+          idSolicitud={visita.id_solicitud}
+          onClose={() => setShowCancel(false)}
+          onCancelled={() => {
+            setShowCancel(false);
+            refreshVisita('Visita cancelada.');
+          }}
+        />
+      )}
       {visita.estado === 'Confirmada' && <FlujoConfirmada visita={visita} onRefresh={refreshVisita} />}
       {visita.estado === 'Realizada' && <ResumenVisitaPanel visita={visita} />}
       {visita.estado === 'Cancelada' && (

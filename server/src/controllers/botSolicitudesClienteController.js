@@ -16,13 +16,20 @@ export const crearSolicitudClienteBot = async (req, res, deps) => {
     const resultado = await crear({ cliente: req.cliente, body: req.body ?? {} });
     if (resultado.error) return responderErrorServicio(res, resultado.error);
 
-    const { solicitud, servicio, servicioCargado } = resultado;
+    const { solicitud, servicio, servicioCargado, requiereVisita = false } = resultado;
+
+    // First turno on the property: nobody measured it yet, so the budget waits
+    // for the physical visit (see crearSolicitudCliente).
+    const siguientePaso = requiereVisita
+      ? 'Como es la primera vez que trabajamos en este inmueble, te vamos a contactar para coordinar una visita y medir el terreno. Después te enviamos el presupuesto.'
+      : 'Te vamos a enviar el presupuesto.';
 
     return res.status(201).json({
       ok: true,
-      mensaje: `Recibimos tu pedido de ${servicio.nombre} para ${solicitud.direccion}. Te vamos a enviar el presupuesto.`,
+      mensaje: `Recibimos tu pedido de ${servicio.nombre} para ${solicitud.direccion}. ${siguientePaso}`,
       data: solicitud,
       servicio_cargado: servicioCargado,
+      requiere_visita: requiereVisita,
     });
   } catch (err) {
     console.error('Error inesperado al registrar el pedido del cliente:', err);

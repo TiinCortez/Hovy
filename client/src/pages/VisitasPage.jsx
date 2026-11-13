@@ -35,8 +35,16 @@ const esPedidoClienteEnCurso = (visita) => visita.tipo_solicitud === 'cliente' &
 const ESTADOS_ACTIVOS = ['Pendiente', 'Contactada'];
 const esActiva = (visita) => ESTADOS_ACTIVOS.includes(visita.estado) || esPedidoClienteEnCurso(visita);
 
+// First turno on a property: the client request arrives Pendiente and goes
+// through the physical visit (measure the real m2) before any budget.
+const esPedidoClienteConVisita = (visita) =>
+  visita.tipo_solicitud === 'cliente' && ESTADOS_ACTIVOS.includes(visita.estado);
+
 // What an open client request is waiting for.
-const pasoPendienteCliente = (visita) => (visita.id_presupuesto ? 'Falta turno' : 'Falta presupuesto');
+const pasoPendienteCliente = (visita) => {
+  if (esPedidoClienteConVisita(visita)) return 'Falta visita';
+  return visita.id_presupuesto ? 'Falta turno' : 'Falta presupuesto';
+};
 
 const VISTAS = [
   { value: 'activas', label: 'Pendientes', icon: Inbox },
@@ -48,9 +56,10 @@ const TABS_POR_VISTA = {
   historial: ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada'],
 };
 
-// Client requests arrive Confirmada, so their pending view also needs that tab.
+// Client requests arrive Confirmada (property already measured) or Pendiente
+// (first turno: needs a visit), so their pending view needs all three tabs.
 const tabsDe = (vista, grupo) => (
-  vista === 'activas' && grupo === 'clientes' ? ['Todas', 'Confirmada'] : TABS_POR_VISTA[vista]
+  vista === 'activas' && grupo === 'clientes' ? ['Todas', 'Pendiente', 'Contactada', 'Confirmada'] : TABS_POR_VISTA[vista]
 );
 
 const GRUPOS = [
@@ -329,7 +338,7 @@ export default function VisitasPage() {
                         {tab}
                       </Badge>
                     </div>
-                    {(visita.estado === 'Realizada' || yaEsCliente(visita) || esPedidoClienteEnCurso(visita)) && (
+                    {(visita.estado === 'Realizada' || yaEsCliente(visita) || esPedidoClienteEnCurso(visita) || esPedidoClienteConVisita(visita)) && (
                       <div className="d-flex flex-wrap gap-1 mt-2">
                         {visita.estado === 'Realizada' && (
                           <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_TURNO }}>
@@ -341,7 +350,7 @@ export default function VisitasPage() {
                             <UserCheck size={12} /> Ya es cliente
                           </span>
                         )}
-                        {esPedidoClienteEnCurso(visita) && (
+                        {(esPedidoClienteEnCurso(visita) || esPedidoClienteConVisita(visita)) && (
                           <span className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold" style={{ ...CHIP_STYLE, ...CHIP_CLIENTE }}>
                             <Clock size={12} /> {pasoPendienteCliente(visita)}
                           </span>

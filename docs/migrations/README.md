@@ -40,6 +40,7 @@ Los scripts se aplican en orden numérico estricto indicado por su prefijo de 3 
 16. **`016_permitir_multiples_qr_por_turno.sql`**: Migración `permitir multiples qr por turno`.
 17. **`017_historial_notificaciones.sql`**: Tabla `notificaciones` (Activa/Resuelta/Cancelada) y funciones `fn_notificaciones_actuales` y `fn_sincronizar_notificaciones` para las alertas del panel (ciclo de corte, nueva solicitud, turno sin confirmar) con historial de 60 días.
 18. **`018_solicitud_cliente_existente.sql`**: Columna `tipo_solicitud` (`nuevo` / `cliente`) en `solicitudes_visita` para los pedidos de turno de clientes existentes desde el bot, índice único parcial (un pedido de cliente abierto por inmueble), y `fn_notificaciones_actuales` avisa también los pedidos de cliente que esperan presupuesto.
+19. **`019_pedido_cliente_abierto_con_visita.sql`**: Amplía el índice único `uq_solicitudes_visita_pedido_cliente_abierto` a `Pendiente`, `Contactada` y `Confirmada`, porque el primer turno de un cliente sobre un inmueble ahora pasa por la visita antes del presupuesto.
 
 ---
 
