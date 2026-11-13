@@ -220,6 +220,42 @@ test('crearSolicitudCliente: sin franja usa Indistinto y los opcionales vacíos 
   assert.equal(fila.nota_horario, null);
 });
 
+// ---- chosen time slot (hora_desde / hora_hasta) ---------------------------------
+
+test('crearSolicitudCliente: el horario elegido define la franja y queda anotado en la nota', async () => {
+  const manana = crearDb(respuestasOk());
+  await ejecutar({ id_inmueble: 7, id_servicio: 3, fecha_preferida: '2026-11-20', hora_desde: '09:00', hora_hasta: '11:00' }, manana);
+  const filaManana = insertDe(manana, 'solicitudes_visita');
+  assert.equal(filaManana.franja_preferida, 'Mañana');
+  assert.equal(filaManana.nota_horario, 'Horario elegido: 09:00 a 11:00');
+
+  const tarde = crearDb(respuestasOk());
+  await ejecutar({ id_inmueble: 7, id_servicio: 3, hora_desde: '14:00', hora_hasta: '16:00', nota_horario: 'Tocar timbre' }, tarde);
+  const filaTarde = insertDe(tarde, 'solicitudes_visita');
+  assert.equal(filaTarde.franja_preferida, 'Tarde');
+  assert.equal(filaTarde.nota_horario, 'Horario elegido: 14:00 a 16:00 · Tocar timbre');
+});
+
+test('crearSolicitudCliente: hora_desde y hora_hasta inválidas devuelven 400', async () => {
+  for (const body of [
+    { hora_desde: '09:00' },
+    { hora_desde: '9', hora_hasta: '11:00' },
+    { hora_desde: '11:00', hora_hasta: '09:00' },
+  ]) {
+    const db = crearDb(respuestasOk());
+    const resultado = await ejecutar({ id_inmueble: 7, id_servicio: 3, ...body }, db);
+    assert.equal(resultado.error?.status, 400, JSON.stringify(body));
+    assert.match(resultado.error.message, /hora_desde/);
+  }
+});
+
+test('crearSolicitudCliente: sin horario elegido la nota queda igual que antes', async () => {
+  const db = crearDb(respuestasOk());
+  await ejecutar(BODY_OK, db);
+  assert.equal(insertDe(db, 'solicitudes_visita').nota_horario, 'Después de las 9');
+  assert.equal(insertDe(db, 'solicitudes_visita').franja_preferida, 'Mañana');
+});
+
 test('crearSolicitudCliente: si falla la precarga del servicio la solicitud igual se crea', async () => {
   const db = crearDb(respuestasOk({ 'solicitud_servicio:insert': { data: null, error: { message: 'boom' } } }));
   const errorOriginal = console.error;

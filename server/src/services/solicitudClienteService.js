@@ -3,6 +3,48 @@ import { estaVacio, falla, parsearIdSolicitud } from '../utils/solicitudesVisita
 import { validarFechaNoPasada } from '../utils/fechaArgentina.js';
 import { FRANJAS_VALIDAS } from '../controllers/botVisitasController.js';
 import { listarServiciosActivos } from './catalogoPublicoService.js';
+import { consultarDisponibilidad } from './visitaFlujoService.js';
+
+const HORA_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const minutos = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+const INICIO_TARDE_MIN = 13 * 60;
+
+// { desde, hasta } when both come, {} when neither, { error } otherwise.
+const leerHorarioElegido = (body) => {
+  const vinoDesde = !estaVacio(body.hora_desde);
+  const vinoHasta = !estaVacio(body.hora_hasta);
+  if (!vinoDesde && !vinoHasta) return {};
+  if (vinoDesde !== vinoHasta) return { error: 'hora_desde y hora_hasta tienen que venir juntas.' };
+  const desde = String(body.hora_desde).trim().slice(0, 5);
+  const hasta = String(body.hora_hasta).trim().slice(0, 5);
+  if (!HORA_HHMM.test(desde) || !HORA_HHMM.test(hasta)) {
+    return { error: 'hora_desde y hora_hasta tienen que tener el formato HH:MM.' };
+  }
+  if (minutos(desde) >= minutos(hasta)) return { error: 'hora_desde tiene que ser menor a hora_hasta.' };
+  return { desde, hasta };
+};
+
+const franjaDeHora = (hhmm) => (minutos(hhmm) < INICIO_TARDE_MIN ? 'Mañana' : 'Tarde');
+
+const notaConHorario = (horario, nota) => {
+  if (!horario.desde) return nota;
+  const elegido = `Horario elegido: ${horario.desde} a ${horario.hasta}`;
+  return nota ? `${elegido} · ${nota}` : elegido;
+};
+
+// Free slots shown to an existing client in the bot. Only the date can be chosen:
+// duration, buffer and window stay the business defaults. Without a date it walks
+// the next days and returns at most LIMITE_DIAS_CLIENTE days (a WhatsApp list
+// holds up to 10 rows). Only free slots leave here, never other clients' turnos.
+export const DIAS_DISPONIBILIDAD_CLIENTE = 21;
+export const LIMITE_DIAS_CLIENTE = 10;
+
+export const consultarDisponibilidadCliente = async ({ query = {}, consultar = consultarDisponibilidad } = {}) => {
+  const fecha = estaVacio(query.fecha) ? null : String(query.fecha).trim();
+  return fecha
+    ? consultar({ fecha })
+    : consultar({ dias: DIAS_DISPONIBILIDAD_CLIENTE, limite: LIMITE_DIAS_CLIENTE });
+};
 
 // Turno request of an EXISTING client from the WhatsApp bot.
 //
@@ -60,7 +102,15 @@ export const crearSolicitudCliente = async ({
   const idServicio = parsearIdSolicitud(body.id_servicio);
   if (!idServicio) errores.push('id_servicio es obligatorio y tiene que ser un número entero positivo.');
 
-  const franja = estaVacio(body.franja_preferida) ? 'Indistinto' : String(body.franja_preferida).trim();
+  // Optional chosen slot (the bot shows the free slots of the day and the client
+  // taps one). It is a preference, not a reservation: it defines the franja when
+  // none was sent and is written in nota_horario for the admin.
+  const horario = leerHorarioElegido(body);
+  if (horario.error) errores.push(horario.error);
+
+  const franja = estaVacio(body.franja_preferida)
+    ? (horario.desde ? franjaDeHora(horario.desde) : 'Indistinto')
+    : String(body.franja_preferida).trim();
   if (!FRANJAS_VALIDAS.includes(franja)) {
     errores.push(`franja_preferida inválida: "${franja}". Valores permitidos: ${FRANJAS_VALIDAS.join(', ')}`);
   }
@@ -137,7 +187,7 @@ export const crearSolicitudCliente = async ({
       servicio: servicio.nombre,
       fecha_preferida: fechaPreferida,
       franja_preferida: franja,
-      nota_horario: textoOpcional(body.nota_horario),
+      nota_horario: notaConHorario(horario, textoOpcional(body.nota_horario)),
       id_cliente: cliente.id_cliente,
       id_inmueble: inmueble.id_inmueble,
       estado: 'Confirmada',
