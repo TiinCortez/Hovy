@@ -66,9 +66,9 @@ export default function Home() {
         <div className="container px-3">
           <div className="d-flex flex-wrap justify-content-center align-items-center gap-2 gap-md-3 mb-2 mb-md-3 small fw-semibold">
             <a href="#legal" className="text-decoration-none text-secondary">Aviso Legal</a>
-            <span className="text-secondary opacity-50 d-none d-sm-inline">•</span>
+            <span className="text-secondary d-none d-sm-inline" aria-hidden="true">•</span>
             <a href="#privacidad" className="text-decoration-none text-secondary">Privacidad</a>
-            <span className="text-secondary opacity-50 d-none d-sm-inline">•</span>
+            <span className="text-secondary d-none d-sm-inline" aria-hidden="true">•</span>
             <a href="#whatsapp" className="text-decoration-none text-dark d-flex align-items-center gap-1">
               <MessageCircle size={16} /> WhatsApp
             </a>

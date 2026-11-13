@@ -1,16 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
-import useCerrarConEscape from './useCerrarConEscape';
-import useFocoModal from './useFocoModal';
+import Modal from './Modal';
 
 export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
-  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -53,15 +48,12 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
   };
 
   return (
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          
-          {/* Header */}
-          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">Registrar Nuevo Cliente</h5>
-            <CloseButton label="Cerrar nuevo cliente" onClick={() => { reset(); setErrorMessage(null); onClose(); }} />
-          </div>
+    <Modal
+      titulo="Registrar Nuevo Cliente"
+      etiquetaCerrar="Cerrar nuevo cliente"
+      onCerrar={() => { reset(); setErrorMessage(null); onClose(); }}
+      tamano="lg"
+    >
 
           {/* Body */}
           <div className="modal-body p-4">
@@ -191,8 +183,6 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
             </Button>
           </div>
 
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

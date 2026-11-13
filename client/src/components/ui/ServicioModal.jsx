@@ -1,12 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import ServicioService from '../../services/api/servicio.service';
-import useCerrarConEscape from './useCerrarConEscape';
-import useFocoModal from './useFocoModal';
+import Modal from './Modal';
 
 // Mirrors server rule: finite number >= 0
 const nonNegative = (value) => {
@@ -19,9 +17,6 @@ const nonNegative = (value) => {
  * tipos: global catalog of service types, used only as name suggestions.
  */
 export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSaved }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
-  useCerrarConEscape(isOpen, onClose);
   const isEdit = Boolean(servicio);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -67,13 +62,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
   const formId = 'servicio-form';
 
   return createPortal(
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">{isEdit ? 'Editar Servicio' : 'Agregar Servicio'}</h5>
-            <CloseButton label="Cerrar" onClick={onClose} disabled={isSubmitting} />
-          </div>
+    <Modal titulo={isEdit ? 'Editar Servicio' : 'Agregar Servicio'} onCerrar={onClose} bloqueado={isSubmitting}>
 
           <div className="modal-body p-4">
             {errorMessage && (
@@ -169,9 +158,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
               {isSubmitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Agregar'}
             </Button>
           </div>
-        </div>
-      </div>
-    </div>,
+    </Modal>,
     document.body
   );
 }

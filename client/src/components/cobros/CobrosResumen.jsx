@@ -75,7 +75,7 @@ export default function CobrosResumen({ resumen }) {
             </div>
             <div className="d-flex align-items-center gap-2 mt-2 small fw-semibold">
               <span style={{ color: '#496544' }}>{cantidadCobrados} cobrados</span>
-              <span className="text-secondary opacity-50">•</span>
+              <span className="text-secondary" aria-hidden="true">•</span>
               <span style={{ color: '#A35A34' }}>{cantidadPendientes} pendientes</span>
             </div>
           </div>

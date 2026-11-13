@@ -1,11 +1,10 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Check, Clock, DollarSign, RotateCcw, ArrowLeft, ArrowRight, Pencil, CalendarDays,
   Info, MapPin, Maximize, MessageCircle, Phone, Search, Sun, User, Home, Wrench, Plus
 } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import TurnoService from '../../services/api/turno.service';
 import ClienteService from '../../services/api/cliente.service';
@@ -20,16 +19,13 @@ import {
   horaAMinutos, obtenerFranjasTurnos, formatearHoraCorta, calcularEstimadoTurno,
   formatearMontoARS, fechaDesdeIso
 } from './agendaTurnos';
-import useCerrarConEscape from '../ui/useCerrarConEscape';
-import useFocoModal from '../ui/useFocoModal';
+import Modal from '../ui/Modal';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function NuevoTurnoModal({
   isOpen, onClose, onTurnoCreated, turnosExistentes = [], datosClima, fechaInicial, horaInicioInicial
 }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
   const navigate = useNavigate();
   const ahora = useRelojTurnos();
   const [pasoActual, setPasoActual] = useState(1);
@@ -138,8 +134,6 @@ export default function NuevoTurnoModal({
     return () => { vigente = false; };
   }, [isOpen, idInmueble]);
 
-  // Escape cierra; el bloqueo de scroll y el foco los maneja useFocoModal.
-  useCerrarConEscape(isOpen, onClose);
 
   const clienteSeleccionado = clientes.find(c => String(c.id_cliente) === String(idCliente));
   const enlaceWhatsApp = obtenerEnlaceWhatsApp(clienteSeleccionado?.telefono);
@@ -356,14 +350,9 @@ export default function NuevoTurnoModal({
     : '';
 
   return (
-    <div ref={refModal} className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-
-          {/* Cabecera Principal */}
-          <div className="modal-header nuevo-turno-header justify-content-between align-items-start px-3 px-md-4 py-2 pt-3 border-bottom-0">
-            <div className="min-w-0 flex-grow-1">
-              <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
+    <Modal
+      titulo="Coordinar nuevo turno"
+      antetitulo={<div className="d-flex flex-wrap align-items-center gap-2 mb-1">
                 <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.06em' }}>
                   Etapa {pasoActual} de 4 · Programación de servicio
                 </span>
@@ -371,11 +360,17 @@ export default function NuevoTurnoModal({
                   <span className="rounded-circle bg-warning d-inline-block me-1" style={{ width: 6, height: 6 }} />
                   Estado inicial: Coordinado
                 </span>
-              </div>
-              <h2 className="modal-title fw-bold text-dark mb-0 fs-4">Coordinar nuevo turno</h2>
-            </div>
-            <CloseButton label="Cerrar nuevo turno" onClick={onClose} />
-          </div>
+              </div>}
+      etiquetaCerrar="Cerrar nuevo turno"
+      onCerrar={onClose}
+      cerrarAlTocarFondo
+      tamano="xl"
+      desplazable
+      zIndex={1070}
+      claseRaiz="nuevo-turno-modal"
+      claseContenido="overflow-hidden"
+      claseCabecera="nuevo-turno-header border-bottom-0 px-3 px-md-4 py-2 pt-3"
+    >
 
           {/* Barra de Pestañas Progresivas (Stepper) */}
           <div className="nuevo-turno-stepper">
@@ -431,7 +426,7 @@ export default function NuevoTurnoModal({
           >
             <div className="modal-body p-3 px-md-4 py-md-3">
               {error && (
-                <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-3">
+                <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-3" role="alert">
                   <Info size={16} className="flex-shrink-0" />
                   <span className="small fw-medium">{error}</span>
                 </div>
@@ -468,6 +463,7 @@ export default function NuevoTurnoModal({
                         </label>
                         <select
                           id="turnos-nuevo-cliente"
+                          aria-required="true"
                           className="form-select form-select-sm shadow-none fw-semibold"
                           value={idCliente}
                           onChange={(e) => {
@@ -544,6 +540,7 @@ export default function NuevoTurnoModal({
                           <span className="input-group-text bg-white border-end-0"><Home size={14} /></span>
                           <select
                             id="turnos-nuevo-inmueble"
+                          aria-required="true"
                             className="form-select form-select-sm border-start-0 shadow-none fw-semibold"
                             value={idInmueble}
                             onChange={(e) => { setIdInmueble(e.target.value); setMontoFinalEditado(null); setError(''); }}
@@ -625,12 +622,12 @@ export default function NuevoTurnoModal({
                         {isLoadingServicios ? (
                           <div className="input-group input-group-sm">
                             <span className="input-group-text bg-white border-end-0"><Wrench size={14} /></span>
-                            <select id="turnos-nuevo-servicio" className="form-select form-select-sm border-start-0 shadow-none fw-semibold" disabled value="">
+                            <select id="turnos-nuevo-servicio" aria-required="true" className="form-select form-select-sm border-start-0 shadow-none fw-semibold" disabled value="">
                               <option value="">Cargando servicios...</option>
                             </select>
                           </div>
                         ) : errorServicios ? (
-                          <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-0">
+                          <div className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 mb-0" role="alert">
                             <Info size={15} className="flex-shrink-0" />
                             <span className="small fw-medium">{errorServicios}</span>
                           </div>
@@ -648,7 +645,7 @@ export default function NuevoTurnoModal({
                           <div className="input-group input-group-sm">
                             <span className="input-group-text bg-white border-end-0"><Wrench size={14} /></span>
                             <select
-                              id="turnos-nuevo-servicio"
+                              id="turnos-nuevo-servicio" aria-required="true"
                               className="form-select form-select-sm border-start-0 shadow-none fw-semibold"
                               value={idServicio}
                               onChange={(e) => { setIdServicio(e.target.value); setMontoFinalEditado(null); setError(''); }}
@@ -729,6 +726,7 @@ export default function NuevoTurnoModal({
                             <span className="input-group-text bg-white border-end-0 fw-bold text-success"><DollarSign size={15} /></span>
                             <input
                               id="turnos-nuevo-monto-final"
+                          aria-required="true"
                               type="number"
                               min="0.01"
                               step="0.01"
@@ -772,6 +770,7 @@ export default function NuevoTurnoModal({
                             <button
                               key={item.value}
                               type="button"
+                              aria-pressed={isSelected}
                               className={`w-100 text-start rounded-3 p-2 px-3 border ${isSelected ? 'border-dark bg-dark text-white' : 'border-light-subtle bg-white text-dark'}`}
                               onClick={() => { setPrioridad(item.value); setError(''); }}
                             >
@@ -823,6 +822,7 @@ export default function NuevoTurnoModal({
                                 <button
                                   type="button"
                                   disabled={isOccupied || isPast}
+                                  aria-pressed={isSelected}
                                   onClick={() => { setFranjaSeleccionada(slot.horaInicio); setError(''); }}
                                   className={`w-100 rounded-3 p-2 px-3 text-start border ${isPast ? 'border-light-subtle bg-light text-secondary opacity-75' : isSelected ? 'border-primary bg-primary text-white' : isOccupied ? 'border-danger-subtle bg-danger-subtle text-danger opacity-75' : 'border-light-subtle bg-white text-dark'}`}
                                 >
@@ -1018,8 +1018,6 @@ export default function NuevoTurnoModal({
               )}
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

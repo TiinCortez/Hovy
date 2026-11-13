@@ -1,16 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
-import useCerrarConEscape from './useCerrarConEscape';
-import useFocoModal from './useFocoModal';
+import Modal from './Modal';
 
 export default function EditClientModal({ isOpen, onClose, clientData, onClientUpdated }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
-  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -71,14 +66,12 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
   };
 
   return (
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          
-          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">Editar Cliente</h5>
-            <CloseButton label="Cerrar edición de cliente" onClick={() => { reset(); setErrorMessage(null); onClose(); }} />
-          </div>
+    <Modal
+      titulo="Editar Cliente"
+      etiquetaCerrar="Cerrar edición de cliente"
+      onCerrar={() => { reset(); setErrorMessage(null); onClose(); }}
+      tamano="lg"
+    >
 
           <div className="modal-body p-4">
             {errorMessage && (
@@ -170,8 +163,6 @@ export default function EditClientModal({ isOpen, onClose, clientData, onClientU
             </Button>
           </div>
 
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

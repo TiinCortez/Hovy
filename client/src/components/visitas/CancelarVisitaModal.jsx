@@ -1,18 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import VisitaService from '../../services/api/visita.service';
 import { getApiError } from './visitaUtils';
-import useCerrarConEscape from '../ui/useCerrarConEscape';
-import useFocoModal from '../ui/useFocoModal';
+import Modal from '../ui/Modal';
 
 // Mounted by the parent only while open
 export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled }) {
-  const refModal = useRef(null);
-  useFocoModal(true, refModal);
-  useCerrarConEscape(true, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -30,13 +25,7 @@ export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled 
   };
 
   return createPortal(
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">Cancelar visita</h5>
-            <CloseButton label="Cerrar" onClick={onClose} disabled={isSubmitting} />
-          </div>
+    <Modal titulo="Cancelar visita" onCerrar={onClose} bloqueado={isSubmitting}>
           <div className="modal-body p-4">
             {errorMessage && (
               <div className="alert alert-danger d-flex align-items-center gap-2 rounded-3 mb-3" role="alert">
@@ -55,9 +44,7 @@ export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled 
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>,
+    </Modal>,
     document.body
   );
 }

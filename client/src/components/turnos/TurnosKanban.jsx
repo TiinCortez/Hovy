@@ -159,7 +159,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
               {/* Contenedor de Tarjetas */}
               <div className="turnos-estado-lista" id={`${idBase}-${col.id}`}>
                 {colTurnos.length === 0 ? (
-                  <div className="text-center p-3 text-secondary small fw-medium opacity-50 border border-dashed rounded-3">
+                  <div className="text-center p-3 text-secondary small fw-medium border border-dashed rounded-3">
                     Sin turnos en este estado
                   </div>
                 ) : (

@@ -104,7 +104,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
         {/* Lista de Turnos (Tarjetas estilo Kanban) */}
         <div className="p-3">
           {procesarTurnosDia(diaSeleccionadoActivo).length === 0 ? (
-             <div className="text-center p-4 text-secondary small fw-medium opacity-50 border border-dashed rounded-3 bg-white">No hay turnos para este día.</div>
+             <div className="text-center p-4 text-secondary small fw-medium border border-dashed rounded-3 bg-white">No hay turnos para este día.</div>
           ) : (
             procesarTurnosDia(diaSeleccionadoActivo).map(turno => {
               const isEjecucion = turno.estado === 'EN_EJECUCION';

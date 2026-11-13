@@ -2,12 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Building2, MapPin, Map, Maximize, AlertCircle, Search } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import InmuebleService from '../../services/api/inmueble.service';
-import useCerrarConEscape from './useCerrarConEscape';
-import useFocoModal from './useFocoModal';
+import Modal from './Modal';
 
 const PROVINCIAS_ARG = [
   "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Ciudad Autónoma de Buenos Aires", 
@@ -17,9 +15,6 @@ const PROVINCIAS_ARG = [
 ];
 
 export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente, onSaved }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
-  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -181,16 +176,13 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   };
 
   return (
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          
-          <div className="modal-header justify-content-between align-items-start border-bottom-0 pb-0 pt-4 px-4 flex-shrink-0">
-            <h5 className="modal-title fw-bold text-dark fs-4">
-              {isEditMode ? 'Editar Inmueble' : 'Registrar Nuevo Inmueble'}
-            </h5>
-            <CloseButton label="Cerrar formulario de inmueble" onClick={onClose} />
-          </div>
+    <Modal
+      titulo={isEditMode ? 'Editar Inmueble' : 'Registrar Nuevo Inmueble'}
+      etiquetaCerrar="Cerrar formulario de inmueble"
+      onCerrar={onClose}
+      tamano="lg"
+      desplazable
+    >
 
           <div className="modal-body p-4">
             {errorMessage && (
@@ -381,8 +373,6 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
             </div>
           </div>
 
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

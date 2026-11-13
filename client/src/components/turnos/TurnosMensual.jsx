@@ -173,7 +173,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
         {/* Lista del Día */}
         <div className="px-3 pb-4 overflow-y-auto flex-grow-1">
           {(turnosAgrupados[diaSeleccionadoActivo] || []).length === 0 ? (
-             <div className="text-center p-4 text-secondary small fw-medium opacity-50 border border-dashed rounded-3 bg-white">Día libre. Sin turnos.</div>
+             <div className="text-center p-4 text-secondary small fw-medium border border-dashed rounded-3 bg-white">Día libre. Sin turnos.</div>
           ) : (
             (turnosAgrupados[diaSeleccionadoActivo] || []).map(turno => {
               const isEjecucion = turno.estado === 'EN_EJECUCION';

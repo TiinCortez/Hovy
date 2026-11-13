@@ -433,20 +433,15 @@ $form-invalid-border-color: $hovy-texto-error;
   background-color: #fbf9f4;
   border: 1px solid #eee8dc;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.5rem;
 
-  .logo-text { font-size: 8px; font-weight: 800; color: #22391e; text-transform: uppercase; letter-spacing: -0.5px; }
-  .logo-subtext { font-size: 5.5px; color: #77806f; font-weight: 500; letter-spacing: 1px; }
-
-  @media (max-width: 575.98px) {
-    width: 64px; height: 64px;
-    .logo-text { font-size: 7px; transform: scale(0.9); margin-top: -2px; }
-    .logo-subtext { font-size: 5px; transform: scale(0.75); margin-top: -4px; }
-  }
+  @media (max-width: 575.98px) { width: 64px; height: 64px; }
 }
+// Nombre del logo debajo del círculo, legible (antes 5,5 a 8 px dentro del círculo)
+.register-logo-nombre { margin: 0; font-size: 0.875rem; font-weight: 800; color: #22391e; text-transform: uppercase; letter-spacing: 0.02em; }
+.register-logo-bajada { margin: 0 0 1rem; font-size: 0.75rem; font-weight: 500; color: #5f695d; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .register-title {
   font-size: 2.125rem;
@@ -1076,6 +1071,14 @@ $form-invalid-border-color: $hovy-texto-error;
 .form-select.shadow-sm:focus { box-shadow: $input-focus-box-shadow !important; }
 .form-control.shadow-sm.is-invalid:focus,
 .form-select.shadow-sm.is-invalid:focus { box-shadow: 0 0 0 3px $hovy-texto-error !important; }
+
+// Etiquetas de prioridad, tipo y estado armadas con utilidades (bg-*-subtle con
+// text-* del mismo color): el color base no llega a 4.5:1 sobre su tinte, así que
+// en esa combinación se usa el tono oscuro (*-text-emphasis) de Bootstrap.
+@each $color in success, danger, warning, info, secondary {
+  .bg-#{$color}-subtle.text-#{$color},
+  .bg-#{$color}-subtle .text-#{$color} { color: var(--bs-#{$color}-text-emphasis) !important; }
+}
 
 /* --- RÓTULO SOBRE EL TÍTULO DE PANTALLA --- */
 .hovy-rotulo {

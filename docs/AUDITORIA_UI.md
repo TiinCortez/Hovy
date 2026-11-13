@@ -234,5 +234,18 @@ Aplica en la app las decisiones del sistema de diseño publicado en Claude. Veri
 | Títulos en peso 700 y rótulo de pantalla `.hovy-rotulo` | Hecho |
 | C4: componente `Badge` | Hecho en 13 estados; quedan contadores, prioridades y etiquetas sobre imágenes |
 
-Pendiente: componente `Modal` (la estructura sigue repetida en 15 archivos), errores vinculados en Nuevo Turno y Registro, el resto de la paleta, C3 y C6.
+Tercera tanda, en la misma rama:
+
+| Ítem | Estado |
+|---|---|
+| C4: componente `Modal` | Hecho. Los 15 modales lo usan; título en `h2` vinculado, cierre bloqueado mientras guardan |
+| A1: con dos modales encimados, solo el de arriba atrapa el foco | Hecho (pila en `useFocoModal`) |
+| Foco inicial en modales que cargan datos (Nuevo Turno) | Hecho: reintenta mientras los campos se habilitan |
+| A4 y A12 en Registro | Hecho: etiquetas, errores vinculados y `autoComplete` |
+| Nuevo Turno | Aviso de error con `role="alert"`, opciones con `aria-pressed`, obligatorios con `aria-required` |
+| Etiquetas `bg-*-subtle` con `text-*` (prioridades, tipos) | Hecho: usan el tono `*-text-emphasis` |
+| Mensajes vacíos y separadores con `opacity-50` | Hecho |
+| Logo de Registro con texto de 5 a 8 px | Hecho: el nombre pasa debajo del círculo, a 14 y 12 px |
+
+Pendiente: el resto de la paleta, C3 y C6. Sin probar en pantalla: dos modales encimados (Registrar pago sobre Detalle del turno).
 

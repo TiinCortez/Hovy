@@ -1,16 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle } from 'lucide-react';
 import Button from './Button';
-import CloseButton from './CloseButton';
 import ServicioService from '../../services/api/servicio.service';
-import useCerrarConEscape from './useCerrarConEscape';
-import useFocoModal from './useFocoModal';
+import Modal from './Modal';
 
 export default function ServicioEliminarModal({ isOpen, onClose, servicio, onDeleted }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
-  useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -31,13 +26,7 @@ export default function ServicioEliminarModal({ isOpen, onClose, servicio, onDel
   };
 
   return createPortal(
-    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 rounded-4 shadow-lg">
-          <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
-            <h5 className="modal-title fw-bold text-dark fs-4">Eliminar Servicio</h5>
-            <CloseButton label="Cerrar" onClick={onClose} disabled={isSubmitting} />
-          </div>
+    <Modal titulo="Eliminar Servicio" onCerrar={onClose} bloqueado={isSubmitting}>
 
           <div className="modal-body p-4">
             {errorMessage && (
@@ -59,9 +48,7 @@ export default function ServicioEliminarModal({ isOpen, onClose, servicio, onDel
               {isSubmitting ? 'Eliminando...' : 'Eliminar'}
             </Button>
           </div>
-        </div>
-      </div>
-    </div>,
+    </Modal>,
     document.body
   );
 }

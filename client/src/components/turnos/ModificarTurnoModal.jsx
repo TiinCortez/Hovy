@@ -1,17 +1,13 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Info, MapPin, User } from 'lucide-react';
 import Button from '../ui/Button';
-import CloseButton from '../ui/CloseButton';
 import TurnoService from '../../services/api/turno.service';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import useRelojTurnos from './useRelojTurnos';
 import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos, formatearHoraCorta } from './agendaTurnos';
-import useCerrarConEscape from '../ui/useCerrarConEscape';
-import useFocoModal from '../ui/useFocoModal';
+import Modal from '../ui/Modal';
 
 export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurnoUpdated, turnosExistentes = [] }) {
-  const refModal = useRef(null);
-  useFocoModal(isOpen, refModal);
   const ahora = useRelojTurnos();
   const [prioridad, setPrioridad] = useState(turnoData?.prioridad || 'P2_FIJO');
   const [fecha, setFecha] = useState(() => turnoData?.fechaAsignada >= ahora.fecha ? turnoData.fechaAsignada : ahora.fecha);
@@ -19,8 +15,6 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Escape cierra; el bloqueo de scroll y el foco los maneja useFocoModal.
-  useCerrarConEscape(isOpen, onClose);
 
   const cambiarFecha = (nuevaFecha) => {
     if (!nuevaFecha || nuevaFecha < obtenerAhoraTurnos().fecha) {
@@ -91,18 +85,18 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const inmueble = turnoData.inmueble || {};
 
   return (
-    <div ref={refModal} className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1080 }}>
-      <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-          <div className="modal-header align-items-start px-3 px-md-4 py-3 border-bottom">
-            <div className="min-w-0">
-              <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.06em' }}>
-                Reasignación de Servicio
-              </span>
-              <h2 className="modal-title fw-bold text-dark mb-1">Modificar Turno #{turnoData.idTurno}</h2>
-            </div>
-            <CloseButton label="Cerrar modificación de turno" onClick={onClose} />
-          </div>
+    <Modal
+      titulo={`Modificar Turno #${turnoData.idTurno}`}
+      antetitulo={<span className="hovy-rotulo text-secondary">Reasignación de Servicio</span>}
+      etiquetaCerrar="Cerrar modificación de turno"
+      onCerrar={onClose}
+      tamano="xl"
+      desplazable
+      zIndex={1080}
+      claseRaiz="modificar-turno-modal"
+      claseContenido="overflow-hidden"
+      claseCabecera="px-3 px-md-4 py-3 border-bottom"
+    >
 
           <form onSubmit={handleSubmit} className="d-flex flex-column min-h-0">
             <div className="modal-body p-3 p-md-4">
@@ -201,8 +195,6 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
               </Button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
