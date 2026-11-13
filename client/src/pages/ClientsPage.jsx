@@ -15,6 +15,7 @@ import TurnoService from '../services/api/turno.service';
 import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
 import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
@@ -131,7 +132,7 @@ export default function ClientsPage() {
   const getClientTextColor = (tipo) => {
     if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'text-success';
     if (tipo === 'Fijo') return 'text-success';
-    return 'text-danger';
+    return 'text-danger-emphasis';
   };
 
   const clientesActivos = clients.filter(c => c.estado !== 'Inactivo');
@@ -175,7 +176,7 @@ export default function ClientsPage() {
       {/* Title and main action share a row (also on mobile); the description goes below */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Directorio de clientes</span>
+          <span className="hovy-rotulo">Directorio de clientes</span>
         </div>
         <div className="d-flex align-items-center justify-content-between gap-3">
           <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
@@ -195,7 +196,7 @@ export default function ClientsPage() {
             </div>
             <div>
               <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">{clientesActivos.length}</h3>
-              <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Clientes activos</span>
+              <Badge tipo="exito" conPunto={false} className="mt-2">Clientes activos</Badge>
             </div>
           </Card>
         </div>
@@ -225,7 +226,7 @@ export default function ClientsPage() {
               <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
                 {clientesActivos.filter(c => c.tipo_cliente === 'Casual').length}
               </h3>
-              <span className="badge mt-2 fw-medium bg-success-subtle text-success d-inline-flex align-items-center gap-1 border border-success-subtle px-2 py-1">Servicios esporádicos</span>
+              <Badge tipo="exito" conPunto={false} className="mt-2">Servicios esporádicos</Badge>
             </div>
           </Card>
         </div>
@@ -496,13 +497,13 @@ export default function ClientsPage() {
 
                   <div className="row g-0 bg-light rounded-3 border overflow-hidden mt-auto">
                     <div className="col-5 p-2 px-2 border-end">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Inmuebles</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Inmuebles</span>
                       <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                         <Building2 size={13} className="text-secondary" /> {cantidadInmuebles > 0 ? cantidadInmuebles : '-'}
                       </span>
                     </div>
                     <div className="col-7 p-2 px-2">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Próximo servicio</span>
+                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Próximo servicio</span>
                       <div className="d-flex flex-column">
                         <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
                           <Calendar size={13} className={fechaProximoTurno ? 'text-success' : 'text-secondary'} /> {fechaProximoTurno || '-'}

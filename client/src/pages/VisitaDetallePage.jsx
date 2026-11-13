@@ -20,7 +20,8 @@ import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
-import { BADGE_CLASS, getEstadoLabel } from '../components/visitas/visitaUtils';
+import { BADGE_TIPO, getEstadoLabel } from '../components/visitas/visitaUtils';
+import Badge from '../components/ui/Badge';
 import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
 import { VERDE } from '../styles/colores';
 
@@ -146,14 +147,10 @@ export default function VisitaDetallePage() {
           </div>
 
           <div className="d-flex flex-column align-items-end gap-1">
-            <span
-              className={`badge rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 ${
-                BADGE_CLASS[estadoLabel] || BADGE_CLASS.Pendiente
-              }`}
-            >
-              {yaContactada ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+            <Badge tipo={BADGE_TIPO[estadoLabel] || 'pendiente'} conPunto={false}>
+              {yaContactada ? <CheckCircle2 size={14} aria-hidden="true" /> : <Clock size={14} aria-hidden="true" />}
               {estadoLabel}
-            </span>
+            </Badge>
             {visita.estado === 'Realizada' && (
               <span className="badge rounded-pill px-3 py-2 fw-semibold bg-success text-white">Turno asignado</span>
             )}
@@ -164,21 +161,21 @@ export default function VisitaDetallePage() {
           <div className="col-12 col-md-6">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <Phone size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Teléfono</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Teléfono</div>
               <div className="fw-medium text-dark small">+{visita.telefono}</div>
             </div>
           </div>
           <div className="col-12 col-md-6">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <User size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Disponibilidad</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Disponibilidad</div>
               <div className="fw-medium text-dark small text-capitalize">{franja}</div>
             </div>
           </div>
           <div className="col-12">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <MapPin size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Dirección</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Dirección</div>
               <div className="fw-medium text-dark small">
                 {visita.direccion}
                 {visita.barrio && `, ${visita.barrio}`}
@@ -190,7 +187,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Ruler size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Superficie aproximada</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Superficie aproximada</div>
                 <div className="fw-medium text-dark small">{visita.superficie_aproximada} m²</div>
               </div>
             </div>
@@ -199,7 +196,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Wrench size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Servicio solicitado</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Servicio solicitado</div>
                 <div className="fw-medium text-dark small">{visita.servicio}</div>
               </div>
             </div>
@@ -208,7 +205,7 @@ export default function VisitaDetallePage() {
             <div className="col-12 col-md-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <CalendarDays size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Fecha preferida</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Fecha preferida</div>
                 <div className="fw-medium text-dark small">{visita.fecha_preferida}</div>
               </div>
             </div>
@@ -217,7 +214,7 @@ export default function VisitaDetallePage() {
             <div className="col-12">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <StickyNote size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Nota sobre el horario</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Nota sobre el horario</div>
                 <div className="fw-medium text-dark small">{visita.nota_horario}</div>
               </div>
             </div>
@@ -225,7 +222,7 @@ export default function VisitaDetallePage() {
           <div className="col-12">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
               <Clock size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.65rem' }}>Solicitada el</div>
+              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Solicitada el</div>
               <div className="fw-medium text-dark small">{formatFecha(visita.created_at)}</div>
             </div>
           </div>

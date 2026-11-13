@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { MapPin, Maximize, Trash2, Edit2, Navigation, Home } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
@@ -5,8 +6,11 @@ import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import { VERDE } from '../../styles/colores';
 import useCerrarConEscape from './useCerrarConEscape';
+import useFocoModal from './useFocoModal';
 
 export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, onEdit, onDelete }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   useCerrarConEscape(isOpen, onClose);
   if (!isOpen || !inmuebleData) return null;
 
@@ -24,7 +28,7 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
+    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg my-4">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           

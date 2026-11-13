@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { User, Phone, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 import CloseButton from './CloseButton';
 import ClienteService from '../../services/api/cliente.service';
 import useCerrarConEscape from './useCerrarConEscape';
+import useFocoModal from './useFocoModal';
 
 export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -50,7 +53,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
+    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
@@ -85,12 +88,12 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                     </span>
                     <input id="nuevo-cliente-nombre"
                       type="text"
-                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.nombre ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.nombre ? 'is-invalid' : ''}`} aria-invalid={errors.nombre ? 'true' : undefined} aria-describedby={errors.nombre ? 'nuevo-cliente-nombre-error' : undefined}
                       placeholder="Ej: Juan"
                       {...register('nombre', { required: 'El nombre es obligatorio' })}
                     />
                   </div>
-                  {errors.nombre && <span className="text-danger small mt-1 d-block">{errors.nombre.message}</span>}
+                  {errors.nombre && <span id="nuevo-cliente-nombre-error" className="invalid-feedback d-block">{errors.nombre.message}</span>}
                 </div>
 
                 <div className="col-12 col-md-6">
@@ -101,12 +104,12 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                     </span>
                     <input id="nuevo-cliente-apellido"
                       type="text"
-                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.apellido ? 'is-invalid' : ''}`} aria-invalid={errors.apellido ? 'true' : undefined} aria-describedby={errors.apellido ? 'nuevo-cliente-apellido-error' : undefined}
                       placeholder="Ej: Pérez"
                       {...register('apellido', { required: 'El apellido es obligatorio' })}
                     />
                   </div>
-                  {errors.apellido && <span className="text-danger small mt-1 d-block">{errors.apellido.message}</span>}
+                  {errors.apellido && <span id="nuevo-cliente-apellido-error" className="invalid-feedback d-block">{errors.apellido.message}</span>}
                 </div>
               </div>
 
@@ -119,7 +122,7 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                     </span>
                     <input id="nuevo-cliente-telefono"
                       type="text"
-                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.telefono ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 rounded-end-3 small ${errors.telefono ? 'is-invalid' : ''}`} aria-invalid={errors.telefono ? 'true' : undefined} aria-describedby={errors.telefono ? 'nuevo-cliente-telefono-error' : undefined}
                       placeholder="Ej: 3514330429"
                       {...register('telefono', { 
                         required: 'El teléfono es obligatorio',
@@ -130,8 +133,8 @@ export default function NewClientModal({ isOpen, onClose, onClientCreated }) {
                       })}
                     />
                   </div>
-                  {errors.telefono && <span className="text-danger small mt-1 d-block">{errors.telefono.message}</span>}
-                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>Sin 0 ni 15. Incluir código de área.</span>
+                  {errors.telefono && <span id="nuevo-cliente-telefono-error" className="invalid-feedback d-block">{errors.telefono.message}</span>}
+                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>Sin 0 ni 15. Incluir código de área.</span>
                 </div>
 
                 <div className="col-12 col-md-6">

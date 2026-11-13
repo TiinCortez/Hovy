@@ -98,7 +98,7 @@ export default function PanelClima() {
           </div>
           <div className="lh-1 text-truncate">
             <h2 className="m-0 fs-6 fw-bold text-truncate" style={{ color: '#093624' }}>Clima</h2>
-            <span className="small text-secondary text-truncate d-block" style={{ fontSize: '0.7rem' }}>San salvador de Jujuy</span>
+            <span className="small text-secondary text-truncate d-block" style={{ fontSize: '0.75rem' }}>San salvador de Jujuy</span>
           </div>
         </div>
         
@@ -149,21 +149,21 @@ export default function PanelClima() {
         <div className="col-4">
           <div className="p-1 py-2 text-center rounded-3 border h-100 d-flex flex-column justify-content-center overflow-hidden" style={{ backgroundColor: '#faf9f6', borderColor: '#eaeaea' }}>
             <Droplets size={14} className="text-primary mx-auto mb-1 flex-shrink-0" />
-            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.6rem' }}>Lluvia</span>
+            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.75rem' }}>Lluvia</span>
             <strong className="d-block text-truncate w-100" style={{ color: '#093624', fontSize: '0.8rem' }}>{probLluvia}%</strong>
           </div>
         </div>
         <div className="col-4">
           <div className="p-1 py-2 text-center rounded-3 border h-100 d-flex flex-column justify-content-center overflow-hidden" style={{ backgroundColor: '#faf9f6', borderColor: '#eaeaea' }}>
             <SunDim size={14} className="text-warning mx-auto mb-1 flex-shrink-0" />
-            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.6rem' }}>Índice UV</span>
-            <strong className="d-block text-truncate w-100" style={{ color: '#d97706', fontSize: '0.8rem' }}>{formatUvText(uvIndex)}</strong>
+            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.75rem' }}>Índice UV</span>
+            <strong className="d-block text-truncate w-100" style={{ color: '#8a5b00', fontSize: '0.8rem' }}>{formatUvText(uvIndex)}</strong>
           </div>
         </div>
         <div className="col-4">
           <div className="p-1 py-2 text-center rounded-3 border h-100 d-flex flex-column justify-content-center overflow-hidden" style={{ backgroundColor: '#faf9f6', borderColor: '#eaeaea' }}>
             <Wind size={14} className="text-success mx-auto mb-1 flex-shrink-0" />
-            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.6rem' }}>Viento</span>
+            <span className="d-block text-secondary mb-1 text-truncate w-100" style={{ fontSize: '0.75rem' }}>Viento</span>
             <strong className="d-block text-truncate w-100" style={{ color: '#093624', fontSize: '0.8rem' }}>{viento} km/h</strong>
           </div>
         </div>
@@ -172,8 +172,8 @@ export default function PanelClima() {
       {/* 4. SELECTOR DE PRÓXIMOS DÍAS */}
       <div className="mt-0">
         <div className="d-flex justify-content-between align-items-center mb-1">
-          <strong className="text-secondary text-truncate" style={{ letterSpacing: '0.5px', fontSize: '0.7rem' }}>PRÓXIMOS DÍAS</strong>
-          <span className="text-secondary text-truncate ms-2" style={{ fontSize: '0.7rem' }}>Máximas</span>
+          <strong className="text-secondary text-truncate" style={{ letterSpacing: '0.5px', fontSize: '0.75rem' }}>PRÓXIMOS DÍAS</strong>
+          <span className="text-secondary text-truncate ms-2" style={{ fontSize: '0.75rem' }}>Máximas</span>
         </div>
         
         {/* flex: '1 1 0' garantiza que se dividan el espacio exactamente igual y no se desborden */}
@@ -189,11 +189,11 @@ export default function PanelClima() {
                 className={`d-flex flex-column align-items-center justify-content-center p-1 rounded-3 text-center overflow-hidden ${isSelected ? 'bg-white shadow-sm' : ''}`}
                 style={{ cursor: 'pointer', flex: '1 1 0', minWidth: 0, transition: 'all 0.2s', border: isSelected ? '1px solid #eaeaea' : '1px solid transparent' }}
               >
-                <span className={`fw-medium mb-1 text-truncate w-100 ${isSelected ? 'text-dark' : 'text-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                <span className={`fw-medium mb-1 text-truncate w-100 ${isSelected ? 'text-dark' : 'text-secondary'}`} style={{ fontSize: '0.75rem' }}>
                   {formatDayName(date, index).split(' ')[0]}
                 </span>
                 <div className="mb-1 flex-shrink-0">{dayWeather.icon}</div>
-                <strong className="text-truncate w-100" style={{ color: isSelected ? '#093624' : '#6c757d', fontSize: '0.85rem' }}>
+                <strong className="text-truncate w-100" style={{ color: isSelected ? '#093624' : '#5c636a', fontSize: '0.85rem' }}>
                   {Math.round(clima.daily.temperature_2m_max[index])}°
                 </strong>
               </div>

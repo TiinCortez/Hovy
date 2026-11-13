@@ -7,6 +7,7 @@ import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
 import InmuebleService from '../../services/api/inmueble.service';
 import useCerrarConEscape from './useCerrarConEscape';
+import useFocoModal from './useFocoModal';
 
 const PROVINCIAS_ARG = [
   "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Ciudad Autónoma de Buenos Aires", 
@@ -16,6 +17,8 @@ const PROVINCIAS_ARG = [
 ];
 
 export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente, onSaved }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   useCerrarConEscape(isOpen, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -178,7 +181,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
+    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           
@@ -210,12 +213,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     <span className="input-group-text bg-light border-end-0 text-secondary"><MapPin size={16} /></span>
                     <input id="inmueble-direccion" 
                       type="text" 
-                      className={`form-control bg-light border-start-0 small ${errors.direccion ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 small ${errors.direccion ? 'is-invalid' : ''}`} aria-invalid={errors.direccion ? 'true' : undefined} aria-describedby={errors.direccion ? 'inmueble-direccion-error' : undefined}
                       placeholder="Ej: Francisco N. de laprida 459"
                       {...register('direccion', { required: 'La dirección es obligatoria' })}
                     />
                   </div>
-                  {errors.direccion && <div className="text-danger small mt-1">{errors.direccion.message}</div>}
+                  {errors.direccion && <div id="inmueble-direccion-error" className="invalid-feedback d-block">{errors.direccion.message}</div>}
                 </div>
               </div>
 
@@ -223,7 +226,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                 <div className="col-12 col-md-6">
                   <label htmlFor="inmueble-provincia" className="form-label small fw-bold text-secondary">Provincia *</label>
                   <select id="inmueble-provincia" 
-                    className={`form-select bg-light small ${errors.provincia ? 'is-invalid' : ''}`}
+                    className={`form-select bg-light small ${errors.provincia ? 'is-invalid' : ''}`} aria-invalid={errors.provincia ? 'true' : undefined} aria-describedby={errors.provincia ? 'inmueble-provincia-error' : undefined}
                     {...register('provincia', { required: 'Provincia obligatoria' })}
                   >
                     <option value="">Seleccione...</option>
@@ -231,7 +234,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                       <option key={prov} value={prov}>{prov}</option>
                     ))}
                   </select>
-                  {errors.provincia && <div className="text-danger small mt-1">{errors.provincia.message}</div>}
+                  {errors.provincia && <div id="inmueble-provincia-error" className="invalid-feedback d-block">{errors.provincia.message}</div>}
                 </div>
 
                 <div className="col-12 col-md-6">
@@ -242,7 +245,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     placeholder="Ej: Córdoba Capital, San Francisco..."
                     {...register('localidad')}
                   />
-                  <div className="form-text" style={{fontSize: '0.7rem'}}>Dato usado solo para ayudar al GPS.</div>
+                  <div className="form-text" style={{fontSize: '0.75rem'}}>Dato usado solo para ayudar al GPS.</div>
                 </div>
               </div>
 
@@ -253,12 +256,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Map size={16} /></span>
                     <input id="inmueble-barrio" 
                       type="text" 
-                      className={`form-control bg-light border-start-0 small ${errors.barrio ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 small ${errors.barrio ? 'is-invalid' : ''}`} aria-invalid={errors.barrio ? 'true' : undefined} aria-describedby={errors.barrio ? 'inmueble-barrio-error' : undefined}
                       placeholder="Ej: Cerro de las Rosas"
                       {...register('barrio', { required: 'El barrio es obligatorio' })}
                     />
                   </div>
-                  {errors.barrio && <div className="text-danger small mt-1">{errors.barrio.message}</div>}
+                  {errors.barrio && <div id="inmueble-barrio-error" className="invalid-feedback d-block">{errors.barrio.message}</div>}
                 </div>
 
               </div>
@@ -309,14 +312,14 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   <div className="input-group">
                     <span className="input-group-text bg-light border-end-0 text-secondary"><Building2 size={16} /></span>
                     <select id="inmueble-tipo-inmueble" 
-                      className={`form-select bg-light border-start-0 small ${errors.tipo_inmueble ? 'is-invalid' : ''}`} 
+                      className={`form-select bg-light border-start-0 small ${errors.tipo_inmueble ? 'is-invalid' : ''}`} aria-invalid={errors.tipo_inmueble ? 'true' : undefined} aria-describedby={errors.tipo_inmueble ? 'inmueble-tipo-inmueble-error' : undefined} 
                       {...register('tipo_inmueble', { required: 'Seleccione un tipo' })}
                     >
                       <option value="Casa Habitada">Casa Habitada</option>
                       <option value="Lote Vacio">Lote Vacio</option>
                     </select>
                   </div>
-                  {errors.tipo_inmueble && <div className="text-danger small mt-1">{errors.tipo_inmueble.message}</div>}
+                  {errors.tipo_inmueble && <div id="inmueble-tipo-inmueble-error" className="invalid-feedback d-block">{errors.tipo_inmueble.message}</div>}
                 </div>
               </div>
 
@@ -328,12 +331,12 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                     <input id="inmueble-superficie-total" 
                       type="number" 
                       step="0.01" 
-                      className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`}
+                      className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`} aria-invalid={errors.superficie_total ? 'true' : undefined} aria-describedby={errors.superficie_total ? 'inmueble-superficie-total-error' : undefined}
                       placeholder="Ej: 450.00"
                       {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 1, message: 'Debe ser > 0'}, deps: ['superficie_construida'] })} 
                     />
                   </div>
-                  {errors.superficie_total && <div className="text-danger small mt-1">{errors.superficie_total.message}</div>}
+                  {errors.superficie_total && <div id="inmueble-superficie-total-error" className="invalid-feedback d-block">{errors.superficie_total.message}</div>}
                 </div>
 
                 <div className="col-6 col-md-4">
@@ -341,7 +344,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                   <input id="inmueble-superficie-construida" 
                     type="number" 
                     step="0.01" 
-                    className={`form-control bg-light small ${errors.superficie_construida ? 'is-invalid' : ''}`}
+                    className={`form-control bg-light small ${errors.superficie_construida ? 'is-invalid' : ''}`} aria-invalid={errors.superficie_construida ? 'true' : undefined} aria-describedby={errors.superficie_construida ? 'inmueble-superficie-construida-error' : undefined}
                     placeholder="Ej: 180.00"
                     {...register('superficie_construida', {
                       min: { value: 0, message: 'Inválido'},
@@ -353,7 +356,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                       }
                     })} 
                   />
-                  {errors.superficie_construida && <div className="text-danger small mt-1">{errors.superficie_construida.message}</div>}
+                  {errors.superficie_construida && <div id="inmueble-superficie-construida-error" className="invalid-feedback d-block">{errors.superficie_construida.message}</div>}
                 </div>
 
                 <div className="col-6 col-md-4">

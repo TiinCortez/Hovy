@@ -71,7 +71,7 @@
 .btn-outline-primary {
   --bs-btn-color: #{$hovy-green};
   --bs-btn-bg: transparent;
-  --bs-btn-border-color: #aab69e;
+  --bs-btn-border-color: #{$hovy-foco}; // 4:1 sobre blanco (antes #aab69e, 2.1:1)
   --bs-btn-hover-color: #{$hovy-green};
   --bs-btn-hover-bg: #edf2e7;
   --bs-btn-hover-border-color: #67884e;
@@ -223,6 +223,10 @@
   .modal-footer > .d-flex > .btn { flex: 1 1 100%; }
   .modal-footer > .d-flex { width: 100%; }
 }
+
+// Dentro de un contenedor con overflow-hidden (SeccionDesplegable) el anillo de
+// foco hacia afuera queda recortado: ahí se dibuja hacia adentro.
+.overflow-hidden > .btn:not(.hovy-calendar-day):focus-visible { outline-offset: -4px; }
 
 @media (prefers-reduced-motion: reduce) {
   .btn,

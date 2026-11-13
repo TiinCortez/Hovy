@@ -125,7 +125,7 @@ export default function Header() {
             {notificaciones.length > 0 && (
               <span
                 className="badge rounded-pill bg-danger position-absolute d-flex align-items-center justify-content-center"
-                style={{ top: 2, right: 2, minWidth: 18, height: 18, fontSize: '0.65rem', padding: 0 }}
+                style={{ top: 2, right: 2, minWidth: 18, height: 18, fontSize: '0.75rem', padding: 0 }}
               >
                 {notificaciones.length}
               </span>

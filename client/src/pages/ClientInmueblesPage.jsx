@@ -19,6 +19,7 @@ import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
 import ClienteDetalleSkeleton from '../components/skeletons/ClienteDetalleSkeleton';
 import { VERDE } from '../styles/colores';
+import Badge from '../components/ui/Badge';
 
 export default function ClientInmueblesPage() {
   const { id } = useParams();
@@ -351,10 +352,10 @@ export default function ClientInmueblesPage() {
             <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <h2 className="fw-bold text-dark m-0 fs-4">{nombreMostrar}</h2>
-                <span className="badge bg-light text-secondary border text-uppercase" style={{ fontSize: '0.65rem' }}>{cliente.tipo_cliente}</span>
-                <span className={`badge rounded-pill d-flex align-items-center gap-1 border ${isInactivo ? 'bg-warning-subtle text-warning-emphasis border-warning-subtle' : 'bg-success-subtle text-success border-success-subtle'}`}>
-                  <CheckCircle2 size={12} /> {cliente.estado || 'Activo'}
-                </span>
+                <Badge tipo="neutro" conPunto={false}>{cliente.tipo_cliente}</Badge>
+                <Badge tipo={isInactivo ? 'pendiente' : 'exito'} conPunto={false}>
+                  <CheckCircle2 size={12} aria-hidden="true" /> {cliente.estado || 'Activo'}
+                </Badge>
               </div>
               
               <div className="d-block d-md-none text-secondary small mb-2 d-flex align-items-center gap-1">
@@ -408,14 +409,14 @@ export default function ClientInmueblesPage() {
             <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Phone size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Teléfono</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.75rem'}}>Teléfono</div>
                 <div className="fw-medium text-dark small">+{cliente.telefono}</div>
               </div>
             </div>
             <div className="col-12 col-sm-6">
               <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
                 <Mail size={18} className="text-secondary mb-1"/>
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.65rem'}}>Email Principal</div>
+                <div className="text-secondary text-uppercase fw-bold mb-1" style={{fontSize: '0.75rem'}}>Email Principal</div>
                 <div className="fw-medium text-dark small text-break">{cliente.email || 'No registrado'}</div>
               </div>
             </div>
@@ -425,7 +426,7 @@ export default function ClientInmueblesPage() {
         <div className="row g-3">
           <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.75rem'}}>
                 Inmuebles <Building2 size={16} className="text-secondary"/>
               </div>
               <div className="fs-3 fw-bold text-dark">{inmuebles.length} <span className="fs-6 fw-normal text-secondary d-block d-sm-inline">predios</span></div>
@@ -447,7 +448,7 @@ export default function ClientInmueblesPage() {
                 }
               }}
             >
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.75rem'}}>
                 Turnos <Calendar size={16} className={proximoTurno ? 'text-success' : 'text-secondary'}/>
               </div>
               {proximoTurno ? (
@@ -466,7 +467,7 @@ export default function ClientInmueblesPage() {
           </div>
           <div className="col-12 col-sm-4">
             <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex flex-column justify-content-between">
-              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.65rem'}}>
+              <div className="text-secondary text-uppercase fw-bold mb-2 d-flex justify-content-between align-items-center" style={{fontSize: '0.75rem'}}>
                 Estado de Cuenta <FileText size={16} className="text-secondary"/>
               </div>
               <div className="fs-4 fw-bold text-dark">{cliente.estado || 'Activo'} <span className="d-block text-secondary fw-normal mt-1" style={{fontSize: '0.75rem'}}>$0 pend.</span></div>

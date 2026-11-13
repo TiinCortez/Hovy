@@ -8,6 +8,19 @@ $body-bg: $hovy-cream;
 $body-color: $hovy-gray;
 $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
+// Colores de texto con contraste suficiente sobre el fondo crema
+$secondary: $hovy-texto-secundario;
+$body-secondary-color: $hovy-texto-secundario; // .text-muted y .text-body-secondary
+$success: $hovy-texto-exito;
+$headings-font-weight: 700;
+
+// Campos: borde visible (3:1), foco con anillo y errores legibles
+$input-border-color: $hovy-borde-control;
+$input-focus-border-color: $hovy-green;
+$input-focus-box-shadow: 0 0 0 3px $hovy-foco;
+$form-invalid-color: $hovy-texto-error;
+$form-invalid-border-color: $hovy-texto-error;
+
 /* ==========================================
    BOOTSTRAP: IMPORTACIONES SELECTIVAS
    ========================================== */
@@ -299,7 +312,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   background-color: $hovy-border;
 }
 .hovy-header-subtitulo {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.25;
   color: #6b7564;
@@ -1024,7 +1037,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   margin-left: 0.5rem;
   padding: 0.1rem 0.55rem;
   color: #08775b;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   vertical-align: middle;
   background-color: #eafff6;
@@ -1057,6 +1070,52 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 .alert-success { @extend .hovy-aviso, .is-ok; }
 .alert-warning { @extend .hovy-aviso, .is-aviso; }
 .alert-info { @extend .hovy-aviso, .is-espera; }
+
+// Foco de campos: .shadow-sm lleva !important y anulaba el anillo de foco.
+.form-control.shadow-sm:focus,
+.form-select.shadow-sm:focus { box-shadow: $input-focus-box-shadow !important; }
+.form-control.shadow-sm.is-invalid:focus,
+.form-select.shadow-sm.is-invalid:focus { box-shadow: 0 0 0 3px $hovy-texto-error !important; }
+
+/* --- RÓTULO SOBRE EL TÍTULO DE PANTALLA --- */
+.hovy-rotulo {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $hovy-texto-exito;
+}
+
+/* --- BADGE: palabra de estado con punto de color --- */
+.hovy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  border-radius: 50rem;
+
+  &::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+  &.sin-punto::before { display: none; }
+
+  &.is-exito { color: $hovy-texto-exito; background-color: #eafff6; }
+  &.is-pendiente { color: #8f4c29; background-color: #fbe9df; }
+  &.is-info { color: #055160; background-color: #e7fafe; }
+  &.is-en-curso { color: #1d4ed8; background-color: #e8f0fe; }
+  &.is-neutro { color: $hovy-texto-secundario; background-color: #f8f9fa; }
+}
 
 /* --- COBRO CON QR --- */
 @keyframes hovySpin { to { transform: rotate(360deg); } }
@@ -1114,7 +1173,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 
   strong { display: block; font-size: 0.95rem; }
-  small { display: block; color: #70766d; font-size: 0.74rem; line-height: 1.25; }
+  small { display: block; color: #5f695d; font-size: 0.75rem; line-height: 1.25; }
 
   &:hover:not(:disabled):not(.is-selected) { border-color: #9eab96; }
   &:focus-visible { outline: 2px solid $hovy-green; outline-offset: 2px; }
@@ -1160,7 +1219,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
 .pago-resumen-etiqueta {
   color: #70766d;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1279,7 +1338,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   .clientes-resumen-titulo {
     min-width: 0;
-    font-size: clamp(0.625rem, 1.8vw, 0.68rem);
+    font-size: 0.75rem;
     letter-spacing: 0.05em;
     overflow-wrap: anywhere;
   }
@@ -1308,7 +1367,7 @@ $font-family-sans-serif: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   .badge {
     max-width: 100%;
-    font-size: clamp(0.6875rem, 1.8vw, 0.75rem);
+    font-size: 0.75rem;
     line-height: 1.35;
     white-space: normal;
     text-align: left;

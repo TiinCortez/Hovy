@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import MercadoPagoService from '../../services/api/mercadopago.service';
 import DesvincularMercadoPagoModal from './DesvincularMercadoPagoModal';
 import { alertaDesdeParams } from './mercadopagoMotivos';
+import Badge from '../ui/Badge';
 
 const formatFecha = (iso) =>
   iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
@@ -118,14 +119,14 @@ export default function MercadoPagoConexionCard({ onResumen }) {
           <>
             {conectada && (
               <div>
-                <span className="badge text-bg-success rounded-pill mb-2">Conectada</span>
+                <Badge tipo="exito" className="mb-2">Conectada</Badge>
                 <p className="mb-1">Cuenta de Mercado Pago vinculada (ID {conexion.mp_user_id}).</p>
                 <p className="small text-secondary mb-0">Autorización vigente hasta {formatFecha(conexion.expira_en)}. Se renueva automáticamente.</p>
               </div>
             )}
             {reautorizar && (
               <div>
-                <span className="badge text-bg-warning rounded-pill mb-2">Reautorizar</span>
+                <Badge tipo="pendiente" className="mb-2">Reautorizar</Badge>
                 <p className="mb-0">La vinculación con Mercado Pago venció o fue revocada. Volvé a vincular tu cuenta para seguir cobrando.</p>
               </div>
             )}

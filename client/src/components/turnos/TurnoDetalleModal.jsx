@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, Map, MessageCircle, Pencil, Check, DollarSign, RotateCcw, Home, Wrench, Search, Info, Maximize, Plus,
@@ -16,12 +16,15 @@ import RegistroPagoModal from '../cobros/RegistroPagoModal';
 import { formatearHorarioTurno, calcularEstimadoTurno, formatearMontoARS } from './agendaTurnos';
 import { VERDE } from '../../styles/colores';
 import useCerrarConEscape from '../ui/useCerrarConEscape';
+import useFocoModal from '../ui/useFocoModal';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function TurnoDetalleModal({
   isOpen, onClose, turnoData, onCancelTurno, onEditTurno, onChangeState, onTurnoUpdated
 }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   useCerrarConEscape(isOpen, onClose);
   const navigate = useNavigate();
   const [isEditingDatos, setIsEditingDatos] = useState(false);
@@ -226,7 +229,7 @@ export default function TurnoDetalleModal({
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
+    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060, overflowY: 'auto' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg my-4">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
           
@@ -396,7 +399,7 @@ export default function TurnoDetalleModal({
                           <div>
                             <span className="small text-secondary d-block">Total final estimado:</span>
                             {calculoPresupuestoEdit && (
-                              <span className="text-secondary" style={{ fontSize: '0.72rem' }}>
+                              <span className="text-secondary" style={{ fontSize: '0.75rem' }}>
                                 {calculoPresupuestoEdit.superficie > 0 ? `${calculoPresupuestoEdit.superficie} m²` : '1 m² (mín.)'} × {formatearMontoARS(calculoPresupuestoEdit.precioBase)}/m²
                               </span>
                             )}
@@ -452,7 +455,7 @@ export default function TurnoDetalleModal({
                         <h5 className="fw-bold text-dark m-0 fs-5 text-break">{cliente.nombre} {cliente.apellido}</h5>
                         {cliente.telefono && <span className="text-secondary small d-block mt-1">{cliente.telefono}</span>}
                       </div>
-                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold d-flex align-items-center gap-1 flex-shrink-0" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold d-flex align-items-center gap-1 flex-shrink-0" style={{ fontSize: '0.75rem' }}>
                         <span className="rounded-circle bg-success" style={{ width: 6, height: 6 }}></span>
                         {cliente.tipo_cliente?.toUpperCase() || 'CLIENTE'}
                       </span>

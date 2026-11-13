@@ -5,3 +5,12 @@ $hovy-cream: #F2F2E6;
 $hovy-gray: #4A4A4A;
 $hovy-border: #D1D1C4;
 $hovy-skeleton: #E6E6D8;
+
+// Tokens por rol del sistema de diseño (todos pasan 4.5:1 sobre $hovy-cream y blanco;
+// los bordes y el foco, 3:1).
+$hovy-texto-secundario: #5c636a;
+$hovy-texto-exito: #08775b;
+$hovy-texto-pendiente: #a35a34;
+$hovy-texto-error: #a12626;
+$hovy-borde-control: #7d8577;
+$hovy-foco: #67884e;

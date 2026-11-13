@@ -91,7 +91,7 @@ const crearIconoCluster = (total) => {
 // Estilos de los chips de estado según DESIGN.md
 const getBadgeStyle = (estado) => {
   if (estado === 'EN_EJECUCION') return { background: '#EAF2E8', color: VERDE, border: '1px solid #D2E4CF' };
-  if (estado === 'COORDINADO' || estado === 'CONFIRMADO') return { background: '#FDF0EB', color: '#C87D55', border: '1px solid #F8D8C9' };
+  if (estado === 'COORDINADO' || estado === 'CONFIRMADO') return { background: '#FDF0EB', color: '#8F4C29', border: '1px solid #F8D8C9' };
   if (estado === 'REALIZADO') return { background: '#EAF2E8', color: '#3D6836', border: '1px solid #CCE0C9' };
   return { background: '#EFECE5', color: '#5F695D', border: '1px solid #EAE6DF' };
 };
@@ -198,10 +198,10 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
       )}
 
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.65rem', letterSpacing: '0.02em', background: '#F2EFE9', color: '#5F695D', border: '1px solid #EAE6DF' }}>
+        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em', background: '#F2EFE9', color: '#5F695D', border: '1px solid #EAE6DF' }}>
           ID: {turno.idPresupuesto || turno.idTurno}
         </span>
-        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.65rem', letterSpacing: '0.02em', ...badgeStyle }}>
+        <span className="badge rounded-pill fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em', ...badgeStyle }}>
           {turno.estado.replace('_', ' ')}
         </span>
       </div>
@@ -220,7 +220,7 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
       </div>
 
       <div className="d-flex justify-content-between align-items-center gap-2 pt-3" style={{ borderTop: '1px solid #EAE6DF' }}>
-        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: '0.7rem', background: VERDE, color: '#FFFFFF' }}>
+        <span className="badge rounded-pill fw-semibold py-1 px-2" style={{ fontSize: '0.75rem', background: VERDE, color: '#FFFFFF' }}>
           {formatearFechaCorta(turno.fechaAsignada)} · {formatearHorarioTurno(turno)}
         </span>
         <button

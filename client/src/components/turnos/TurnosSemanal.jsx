@@ -89,10 +89,10 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                 style={{ cursor: 'pointer', minWidth: '70px' }}
                 onClick={() => setDiaSeleccionadoMobile(dia.iso)}
               >
-                <span className="fw-bold" style={{ fontSize: '0.70rem' }}>{dia.nombre}</span>
+                <span className="fw-bold" style={{ fontSize: '0.75rem' }}>{dia.nombre}</span>
                 <span className={`fs-5 fw-bold ${isSelected ? 'text-white' : 'text-dark'}`}>{dia.diaNumero}</span>
                 {dia.isToday ? (
-                  <span className={`badge mt-1 rounded-pill ${isSelected ? 'bg-success text-white' : 'bg-warning text-dark'}`} style={{fontSize: '0.60rem'}}>HOY</span>
+                  <span className={`badge mt-1 rounded-pill ${isSelected ? 'bg-success text-white' : 'bg-warning text-dark'}`} style={{fontSize: '0.75rem'}}>HOY</span>
                 ) : (
                   <span className={`rounded-circle mt-1 ${dia.turnosCount > 0 ? 'bg-success' : 'bg-transparent'}`} style={{width: 6, height: 6}}></span>
                 )}
@@ -117,7 +117,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                   <div className="d-flex flex-column align-items-end justify-content-start pt-2 pe-2 text-end flex-shrink-0" style={{ width: '60px' }}>
                     <span className={`fw-bold ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`} style={{ fontSize: '0.90rem' }}>{tieneHorarioTurno(turno) ? formatearHoraCorta(turno.franjaHoraria.horaInicio) : 'Sin horario'}</span>
                     {tieneHorarioTurno(turno) && <span className="text-secondary small">{formatearHoraCorta(turno.franjaHoraria.horaFin)}</span>}
-                    {isEjecucion && <span className="badge turno-en-curso-solid rounded-pill px-2 mt-1" style={{ fontSize: '0.60rem' }}>AHORA</span>}
+                    {isEjecucion && <span className="badge turno-en-curso-solid rounded-pill px-2 mt-1" style={{ fontSize: '0.75rem' }}>AHORA</span>}
                   </div>
 
                   {/* Tarjeta */}
@@ -127,10 +127,10 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                       <div className="col-12 p-3 ps-4 d-flex flex-column">
 
                         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                          <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.65rem'}}>
+                          <span className={`badge bg-${isEjecucion ? 'primary' : pConf.color}-subtle text-${isEjecucion ? 'primary' : pConf.color} border border-${isEjecucion ? 'primary' : pConf.color}-subtle rounded-pill px-2 py-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{fontSize: '0.75rem'}}>
                             {isEjecucion ? `${pConf.short.split(' ')[0]} - EN CURSO` : pConf.short.replace('P1 ', '').replace('P2 ', '').replace('P3 ', '')}
                           </span>
-                          <span className={`badge rounded-pill border ${isEjecucion ? 'turno-en-curso-solid' : 'bg-white text-secondary border-light-subtle'}`} style={{fontSize: '0.65rem'}}>
+                          <span className={`badge rounded-pill border ${isEjecucion ? 'turno-en-curso-solid' : 'bg-white text-secondary border-light-subtle'}`} style={{fontSize: '0.75rem'}}>
                             {isEjecucion && <span className="turno-en-curso-dot turno-en-curso-dot--light me-1" />}
                             {isEjecucion ? 'EN CURSO' : turno.estado.replace('_', ' ')}
                           </span>
@@ -191,7 +191,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
           {dias.map(dia => (
             <div key={dia.iso} className="flex-grow-1 border-end py-2 px-1" style={{ flexBasis: 0 }}>
               <div className="d-flex align-items-center justify-content-center gap-2">
-                {dia.isToday && <span className="badge bg-dark text-white rounded-pill px-2" style={{fontSize: '0.65rem'}}>HOY</span>}
+                {dia.isToday && <span className="badge bg-dark text-white rounded-pill px-2" style={{fontSize: '0.75rem'}}>HOY</span>}
                 <span className={`fw-bold ${dia.isToday ? 'text-success' : 'text-secondary'}`}>
                   {dia.nombre} {dia.diaNumero}
                 </span>
@@ -277,10 +277,10 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                           onClick={() => onSelectTurno(turno.idTurno)}
                         >
                           <div className="d-flex justify-content-between align-items-start mb-1">
-                            <span className="fw-bold text-dark" style={{ fontSize: '0.70rem' }}>
+                            <span className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>
                               {turno.franjaHoraria.horaInicio.slice(0, 5)} - {turno.franjaHoraria.horaFin.slice(0, 5)}
                             </span>
-                            <span className={`badge bg-${isEjecucion ? 'primary' : config.color}-subtle text-${isEjecucion ? 'primary' : config.color} border border-${isEjecucion ? 'primary' : config.color}-subtle rounded-1 px-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{ fontSize: '0.60rem' }}>
+                            <span className={`badge bg-${isEjecucion ? 'primary' : config.color}-subtle text-${isEjecucion ? 'primary' : config.color} border border-${isEjecucion ? 'primary' : config.color}-subtle rounded-1 px-1 fw-bold ${isEjecucion ? 'turno-en-curso-subtle' : ''}`} style={{ fontSize: '0.75rem' }}>
                               {isEjecucion && <span className="turno-en-curso-dot me-1" />}
                               {isEjecucion ? `${config.short.split(' ')[0]} - EN CURSO` : config.short}
                             </span>
@@ -288,11 +288,11 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
 
                           <div className="flex-grow-1 overflow-hidden d-flex flex-column mt-1">
                             <span className="fw-bold text-truncate text-dark" style={{ fontSize: '0.80rem' }}>{turno.cliente.nombre}</span>
-                            <span className={`small text-truncate ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`} style={{ fontSize: '0.70rem' }}>{turno.inmueble.direccion}</span>
+                            <span className={`small text-truncate ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`} style={{ fontSize: '0.75rem' }}>{turno.inmueble.direccion}</span>
                           </div>
 
                           <div className="mt-auto pt-1 d-flex justify-content-end">
-                            <span className={`badge rounded-pill fw-medium border ${isEjecucion ? 'turno-en-curso-solid' : 'bg-white text-secondary border-light-subtle'}`} style={{ fontSize: '0.65rem' }}>
+                            <span className={`badge rounded-pill fw-medium border ${isEjecucion ? 'turno-en-curso-solid' : 'bg-white text-secondary border-light-subtle'}`} style={{ fontSize: '0.75rem' }}>
                               {isEjecucion ? 'EN CURSO' : turno.estado.replace('_', ' ')}
                             </span>
                           </div>

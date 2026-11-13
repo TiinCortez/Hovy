@@ -51,7 +51,7 @@ export default function NotificacionesPopover({ notificaciones, onAbrir, onVerTo
               <span className="flex-grow-1">
                 <span className="small fw-bold text-dark d-block">{tipo.etiqueta}</span>
                 <span className="small text-secondary d-block">{notificacion.mensaje}</span>
-                <span className="text-secondary d-block" style={{ fontSize: '0.7rem' }}>
+                <span className="text-secondary d-block" style={{ fontSize: '0.75rem' }}>
                   {formatearTiempo(notificacion.fecha_notificacion)}
                 </span>
               </span>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Check, Clock, DollarSign, RotateCcw, ArrowLeft, ArrowRight, Pencil, CalendarDays,
@@ -20,12 +20,16 @@ import {
   horaAMinutos, obtenerFranjasTurnos, formatearHoraCorta, calcularEstimadoTurno,
   formatearMontoARS, fechaDesdeIso
 } from './agendaTurnos';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
+import useFocoModal from '../ui/useFocoModal';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 export default function NuevoTurnoModal({
   isOpen, onClose, onTurnoCreated, turnosExistentes = [], datosClima, fechaInicial, horaInicioInicial
 }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   const navigate = useNavigate();
   const ahora = useRelojTurnos();
   const [pasoActual, setPasoActual] = useState(1);
@@ -134,19 +138,8 @@ export default function NuevoTurnoModal({
     return () => { vigente = false; };
   }, [isOpen, idInmueble]);
 
-  // Bloquear scroll de fondo
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const handleKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  // Escape cierra; el bloqueo de scroll y el foco los maneja useFocoModal.
+  useCerrarConEscape(isOpen, onClose);
 
   const clienteSeleccionado = clientes.find(c => String(c.id_cliente) === String(idCliente));
   const enlaceWhatsApp = obtenerEnlaceWhatsApp(clienteSeleccionado?.telefono);
@@ -363,7 +356,7 @@ export default function NuevoTurnoModal({
     : '';
 
   return (
-    <div className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div ref={refModal} className="modal nuevo-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1070 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
 
@@ -371,10 +364,10 @@ export default function NuevoTurnoModal({
           <div className="modal-header nuevo-turno-header justify-content-between align-items-start px-3 px-md-4 py-2 pt-3 border-bottom-0">
             <div className="min-w-0 flex-grow-1">
               <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.68rem', letterSpacing: '0.06em' }}>
+                <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.06em' }}>
                   Etapa {pasoActual} de 4 · Programación de servicio
                 </span>
-                <span className="badge rounded-pill nuevo-turno-status px-2 py-1 fw-semibold" style={{ fontSize: '0.68rem' }}>
+                <span className="badge rounded-pill nuevo-turno-status px-2 py-1 fw-semibold" style={{ fontSize: '0.75rem' }}>
                   <span className="rounded-circle bg-warning d-inline-block me-1" style={{ width: 6, height: 6 }} />
                   Estado inicial: Coordinado
                 </span>
@@ -416,10 +409,10 @@ export default function NuevoTurnoModal({
                       <div className="fw-bold text-dark d-none d-md-block text-truncate" style={{ fontSize: '0.78rem' }}>
                         {step.titulo}
                       </div>
-                      <div className="fw-bold text-dark d-block d-md-none text-truncate" style={{ fontSize: '0.7rem' }}>
+                      <div className="fw-bold text-dark d-block d-md-none text-truncate" style={{ fontSize: '0.75rem' }}>
                         {step.tituloCorto}
                       </div>
-                      <div className="text-secondary text-truncate d-none d-sm-block" style={{ fontSize: '0.67rem' }}>
+                      <div className="text-secondary text-truncate d-none d-sm-block" style={{ fontSize: '0.75rem' }}>
                         {step.resumen}
                       </div>
                     </div>
@@ -494,7 +487,7 @@ export default function NuevoTurnoModal({
                             </option>
                           ))}
                         </select>
-                        <div className="text-secondary mt-1" style={{ fontSize: '0.72rem' }} role="status">
+                        <div className="text-secondary mt-1" style={{ fontSize: '0.75rem' }} role="status">
                           {isLoadingData ? 'Cargando clientes...' : `${clientesFiltrados.length} cliente${clientesFiltrados.length === 1 ? '' : 's'} disponible${clientesFiltrados.length === 1 ? '' : 's'}`}
                         </div>
                       </div>
@@ -507,7 +500,7 @@ export default function NuevoTurnoModal({
                             <div className="d-flex gap-2 min-w-0 align-items-center">
                               <span className="bg-light p-2 rounded-circle border text-dark flex-shrink-0"><User size={18} /></span>
                               <div className="min-w-0">
-                                <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                                <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                                   Ficha del cliente #{clienteSeleccionado.id_cliente}
                                 </span>
                                 <div className="fw-bold text-dark text-break">{clienteSeleccionado.nombre} {clienteSeleccionado.apellido}</div>
@@ -517,7 +510,7 @@ export default function NuevoTurnoModal({
                               </div>
                             </div>
                             <div className="d-flex align-items-center gap-2">
-                              <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.7rem' }}>
+                              <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style={{ fontSize: '0.75rem' }}>
                                 {clienteSeleccionado.tipo_cliente?.toUpperCase() || 'FIJO'}
                               </span>
                               {enlaceWhatsApp ? (
@@ -572,7 +565,7 @@ export default function NuevoTurnoModal({
                             ))}
                           </select>
                         </div>
-                        <div className="text-secondary mt-1" style={{ fontSize: '0.72rem' }}>
+                        <div className="text-secondary mt-1" style={{ fontSize: '0.75rem' }}>
                           {clienteSeleccionado
                             ? `${inmuebles.length} inmueble${inmuebles.length === 1 ? '' : 's'} vinculado${inmuebles.length === 1 ? '' : 's'}`
                             : 'Se habilita al elegir cliente'}
@@ -585,7 +578,7 @@ export default function NuevoTurnoModal({
                         <div className="border rounded-3 p-3 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
                           <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <div className="min-w-0">
-                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                                 Predio seleccionado
                               </span>
                               <div className="fw-bold text-dark small d-flex align-items-center gap-1 mt-1 text-break">
@@ -672,7 +665,7 @@ export default function NuevoTurnoModal({
                       </div>
 
                       <div className="border rounded-3 p-2 px-3 bg-white mt-3">
-                        <span className="text-secondary d-block" style={{ fontSize: '0.68rem' }}>Predio seleccionado</span>
+                        <span className="text-secondary d-block" style={{ fontSize: '0.75rem' }}>Predio seleccionado</span>
                         <div className="fw-semibold text-dark small text-truncate">{inmuebleSeleccionado?.direccion}</div>
                         <div className="text-success fw-bold" style={{ fontSize: '0.75rem' }}>
                           Superficie mantenible: {inmuebleSeleccionado?.superficie_mantenible || 0} m²
@@ -687,7 +680,7 @@ export default function NuevoTurnoModal({
                         <div>
                           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 pb-2 mb-2 border-bottom">
                             <div className="min-w-0">
-                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                              <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                                 Tarjeta del servicio y presupuesto
                               </span>
                               <div className="fw-bold text-dark text-break">{servicioSeleccionado.servicio?.nombre || `Servicio #${idServicio}`}</div>
@@ -745,7 +738,7 @@ export default function NuevoTurnoModal({
                               placeholder="0.00"
                             />
                           </div>
-                          <small className="text-secondary d-block mt-1" style={{ fontSize: '0.7rem' }}>
+                          <small className="text-secondary d-block mt-1" style={{ fontSize: '0.75rem' }}>
                             {montoEsPersonalizado
                               ? `Se guardará ${formatearMontoARS(montoFinalNumero)} como monto final.`
                               : 'Podés mantener el valor estimado o ajustarlo manualmente.'}
@@ -786,7 +779,7 @@ export default function NuevoTurnoModal({
                                 <span className={`rounded-circle bg-${item.color}`} style={{ width: 8, height: 8 }} />
                                 {item.title}
                               </span>
-                              <span className={`d-block mt-1 ${isSelected ? 'text-light' : 'text-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                              <span className={`d-block mt-1 ${isSelected ? 'text-light' : 'text-secondary'}`} style={{ fontSize: '0.75rem' }}>
                                 {item.description}
                               </span>
                             </button>
@@ -837,7 +830,7 @@ export default function NuevoTurnoModal({
                                     <span>{formatearHoraCorta(slot.horaInicio)} – {formatearHoraCorta(slot.horaFin)} hs</span>
                                     <span className={`rounded-circle flex-shrink-0 ${isPast ? 'bg-secondary' : isOccupied ? 'bg-danger' : isSelected ? 'bg-white' : 'bg-success'}`} style={{ width: 8, height: 8 }} />
                                   </span>
-                                  <span className={`d-flex justify-content-between gap-2 mt-1 ${isSelected ? 'text-light' : isOccupied ? 'text-danger' : 'text-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                                  <span className={`d-flex justify-content-between gap-2 mt-1 ${isSelected ? 'text-light' : isOccupied ? 'text-danger' : 'text-secondary'}`} style={{ fontSize: '0.75rem' }}>
                                     <span>{isPast ? 'Horario pasado' : isOccupied ? 'Ocupado' : 'Disponible'}</span>
                                     <span>{isOccupied || isPast ? 'No disp.' : `${Math.floor(duration / 60)}h ${String(duration % 60).padStart(2, '0')}m`}</span>
                                   </span>
@@ -862,14 +855,14 @@ export default function NuevoTurnoModal({
                     <div className="border rounded-3 p-3 h-100 bg-white shadow-sm d-flex flex-column justify-content-between">
                       <div>
                         <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
-                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                             <User size={13} /> Cliente e Inmueble
                           </span>
                           <button
                             type="button"
                             onClick={() => irAPaso(1)}
                             className="btn btn-sm btn-light border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                            style={{ fontSize: '0.7rem' }}
+                            style={{ fontSize: '0.75rem' }}
                           >
                             <Pencil size={11} /> Editar
                           </button>
@@ -898,14 +891,14 @@ export default function NuevoTurnoModal({
                     <div className="border rounded-3 p-3 h-100 bg-white shadow-sm d-flex flex-column justify-content-between">
                       <div>
                         <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
-                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                          <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                             <Wrench size={13} /> Servicio y Presupuesto
                           </span>
                           <button
                             type="button"
                             onClick={() => irAPaso(2)}
                             className="btn btn-sm btn-light border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                            style={{ fontSize: '0.7rem' }}
+                            style={{ fontSize: '0.75rem' }}
                           >
                             <Pencil size={11} /> Editar
                           </button>
@@ -946,14 +939,14 @@ export default function NuevoTurnoModal({
                   <div className="col-12">
                     <div className="border rounded-3 p-3 bg-light shadow-sm">
                       <div className="d-flex justify-content-between align-items-center gap-2 mb-1">
-                        <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                        <span className="text-secondary text-uppercase fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
                           <CalendarDays size={13} /> Fecha, Horario y Prioridad
                         </span>
                         <button
                           type="button"
                           onClick={() => irAPaso(3)}
                           className="btn btn-sm btn-white bg-white border rounded-pill px-2 py-0 text-secondary fw-semibold d-inline-flex align-items-center gap-1"
-                          style={{ fontSize: '0.7rem' }}
+                          style={{ fontSize: '0.75rem' }}
                         >
                           <Pencil size={11} /> Editar
                         </button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle } from 'lucide-react';
 import Button from '../ui/Button';
@@ -6,9 +6,12 @@ import CloseButton from '../ui/CloseButton';
 import VisitaService from '../../services/api/visita.service';
 import { getApiError } from './visitaUtils';
 import useCerrarConEscape from '../ui/useCerrarConEscape';
+import useFocoModal from '../ui/useFocoModal';
 
 // Mounted by the parent only while open
 export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled }) {
+  const refModal = useRef(null);
+  useFocoModal(true, refModal);
   useCerrarConEscape(true, onClose);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -27,7 +30,7 @@ export default function CancelarVisitaModal({ idSolicitud, onClose, onCancelled 
   };
 
   return createPortal(
-    <div className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
+    <div ref={refModal} className="modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 shadow-lg">
           <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">

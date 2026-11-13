@@ -6,7 +6,7 @@ $cobros-terracota: #C87D55;
 $cobros-borde: #EAE6DF;
 $cobros-superficie: #F5F3F0;
 
-.cobros-texto-terracota { color: $cobros-terracota !important; }
+.cobros-texto-terracota { color: $hovy-texto-pendiente !important; }
 
 /* --- Barra de filtros --- */
 // Selector de orden: ancho completo hasta tablet (ahí el menú lateral le quita
@@ -176,7 +176,7 @@ $cobros-superficie: #F5F3F0;
   padding-block: 0.85rem;
   color: #5F695D;
   background-color: $cobros-superficie;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -196,10 +196,10 @@ $cobros-superficie: #F5F3F0;
   font-variant-numeric: tabular-nums;
 
   &.is-cobrado { color: #173313; }
-  &.is-pendiente { color: $cobros-terracota; }
+  &.is-pendiente { color: $hovy-texto-pendiente; }
 }
 
-.cobros-alerta { color: $cobros-terracota; }
+.cobros-alerta { color: $hovy-texto-pendiente; }
 
 // Botón de estado: no usa .btn para conservar la forma de píldora del diseño
 .cobros-estado {
@@ -235,7 +235,7 @@ $cobros-superficie: #F5F3F0;
 
 .cobros-link-cobrar {
   padding: 0;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: $cobros-verde-medio;
   background: none;

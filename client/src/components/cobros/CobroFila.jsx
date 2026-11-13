@@ -65,7 +65,7 @@ export default function CobroFila({
       </div>
 
       <div className="cobros-celda-monto">
-        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: '0.65rem' }}>Presupuesto final</span>
+        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: '0.75rem' }}>Presupuesto final</span>
         <span className={`cobros-monto ${cobrado ? 'is-cobrado' : 'is-pendiente'}`}>{formatearMontoARS(monto)}</span>
       </div>
 

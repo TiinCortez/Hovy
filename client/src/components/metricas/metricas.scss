@@ -13,7 +13,7 @@ $metricas-borde: #EAE6DF;
 $metricas-superficie: #F5F3F0;
 $metricas-texto: #1F291E;
 $metricas-texto-secundario: #5F695D;
-$metricas-texto-tenue: #8D968B;
+$metricas-texto-tenue: $metricas-texto-secundario; // antes #8D968B (3.06:1)
 $metricas-sombra: 0px 2px 8px rgba(45, 74, 39, 0.04);
 $metricas-sombra-flotante: 0px 8px 24px rgba(31, 41, 30, 0.08);
 
@@ -21,7 +21,7 @@ $metricas-alto-grafico: 260px;
 $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 
 .metricas-texto-verde { color: $metricas-verde-medio !important; }
-.metricas-texto-terracota { color: $metricas-terracota !important; }
+.metricas-texto-terracota { color: $hovy-texto-pendiente !important; }
 
 /* --- Selector de período --- */
 .metricas-periodo {
@@ -94,7 +94,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
   margin: 0;
 
   > span {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -104,7 +104,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 
 /* --- Tarjetas de resumen --- */
 .metricas-kpi-titulo {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -162,7 +162,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
   gap: 0.15rem;
 
   > span {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     color: $metricas-texto-tenue;
   }
 
@@ -240,7 +240,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 }
 
 .metricas-hero-etiqueta {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -466,7 +466,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
   > span {
     position: absolute;
     right: 0.75rem;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     font-weight: 600;
     line-height: 1;
     color: $metricas-texto-tenue;
@@ -560,7 +560,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
     white-space: nowrap;
 
     > small {
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       font-weight: 500;
       color: $metricas-texto-tenue;
     }
@@ -660,7 +660,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 
   thead th {
     padding: 0.85rem 1rem;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -701,7 +701,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 }
 
 .metricas-celda-cobrado { font-weight: 600; color: $metricas-verde-oscuro; }
-.metricas-celda-pendiente { font-weight: 600; color: $metricas-terracota; }
+.metricas-celda-pendiente { font-weight: 600; color: $hovy-texto-pendiente; }
 .metricas-celda-total { font-weight: 700; color: $metricas-texto; }
 
 .metricas-punto {
@@ -714,7 +714,7 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 
 .metricas-etiqueta-curso {
   padding: 0.1rem 0.5rem;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #324D2E;
   background-color: $metricas-verde-claro;

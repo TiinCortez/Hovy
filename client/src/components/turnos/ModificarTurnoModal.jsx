@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { Check, Info, MapPin, User } from 'lucide-react';
 import Button from '../ui/Button';
 import CloseButton from '../ui/CloseButton';
@@ -6,8 +6,12 @@ import TurnoService from '../../services/api/turno.service';
 import TurnoFechaSelector from './TurnoFechaSelector';
 import useRelojTurnos from './useRelojTurnos';
 import { horarioPasadoTurnos, obtenerAhoraTurnos, PRIORIDADES, obtenerFranjasTurnos, formatearHoraCorta } from './agendaTurnos';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
+import useFocoModal from '../ui/useFocoModal';
 
 export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurnoUpdated, turnosExistentes = [] }) {
+  const refModal = useRef(null);
+  useFocoModal(isOpen, refModal);
   const ahora = useRelojTurnos();
   const [prioridad, setPrioridad] = useState(turnoData?.prioridad || 'P2_FIJO');
   const [fecha, setFecha] = useState(() => turnoData?.fechaAsignada >= ahora.fecha ? turnoData.fechaAsignada : ahora.fecha);
@@ -15,18 +19,8 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Se monta al abrir para iniciar los campos con el turno seleccionado.
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const overflowAnterior = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const cerrarConEscape = (event) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', cerrarConEscape);
-    return () => {
-      document.body.style.overflow = overflowAnterior;
-      document.removeEventListener('keydown', cerrarConEscape);
-    };
-  }, [isOpen, onClose]);
+  // Escape cierra; el bloqueo de scroll y el foco los maneja useFocoModal.
+  useCerrarConEscape(isOpen, onClose);
 
   const cambiarFecha = (nuevaFecha) => {
     if (!nuevaFecha || nuevaFecha < obtenerAhoraTurnos().fecha) {
@@ -97,12 +91,12 @@ export default function ModificarTurnoModal({ isOpen, onClose, turnoData, onTurn
   const inmueble = turnoData.inmueble || {};
 
   return (
-    <div className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1080 }}>
+    <div ref={refModal} className="modal modificar-turno-modal d-block bg-dark bg-opacity-50" role="dialog" aria-modal="true" style={{ zIndex: 1080 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
           <div className="modal-header align-items-start px-3 px-md-4 py-3 border-bottom">
             <div className="min-w-0">
-              <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '0.06em' }}>
+              <span className="text-uppercase text-secondary fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '0.06em' }}>
                 Reasignación de Servicio
               </span>
               <h2 className="modal-title fw-bold text-dark mb-1">Modificar Turno #{turnoData.idTurno}</h2>

@@ -30,11 +30,12 @@ export const getApiError = (err, fallback) => err.response?.data?.error || fallb
 // Backend "Realizada" means "turno agendado": it is shown as Confirmada
 export const getEstadoLabel = (estado) => (estado === 'Realizada' ? 'Confirmada' : estado);
 
-export const BADGE_CLASS = {
-  Pendiente: 'bg-warning-subtle text-warning border border-warning-subtle',
-  Contactada: 'bg-info-subtle text-info border border-info-subtle',
-  Confirmada: 'bg-success-subtle text-success border border-success-subtle',
-  Cancelada: 'bg-danger-subtle text-danger border border-danger-subtle',
+// Tipo de Badge (components/ui/Badge.jsx) según el estado de la solicitud
+export const BADGE_TIPO = {
+  Pendiente: 'pendiente',
+  Contactada: 'info',
+  Confirmada: 'exito',
+  Cancelada: 'neutro',
 };
 
 export const INTERNAL_NOTICE = 'Estimado interno - no se comunica al cliente';

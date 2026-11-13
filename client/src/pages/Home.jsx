@@ -73,7 +73,7 @@ export default function Home() {
               <MessageCircle size={16} /> WhatsApp
             </a>
           </div>
-          <p className="m-0 text-secondary opacity-75" style={{ fontSize: '0.70rem' }}>
+          <p className="m-0 text-secondary opacity-75" style={{ fontSize: '0.75rem' }}>
             © 2024 Valle La Armonía. Paisajismo Sustentable. Todos los derechos reservados.
           </p>
         </div>
@@ -87,19 +87,19 @@ export default function Home() {
       >
         <a href="#inicio" className="text-decoration-none text-center text-dark d-flex flex-column align-items-center flex-grow-1 px-1">
           <HomeIcon size={22} className="mb-1" />
-          <span style={{ fontSize: '0.65rem', fontWeight: '600' }}>Inicio</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Inicio</span>
         </a>
         <a href="#servicios" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <Leaf size={22} className="mb-1" />
-          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Servicios</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Servicios</span>
         </a>
         <a href="#nosotros" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <Users size={22} className="mb-1" />
-          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Nosotros</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Nosotros</span>
         </a>
         <a href="#contacto" className="text-decoration-none text-center text-secondary d-flex flex-column align-items-center flex-grow-1 px-1">
           <MessageCircle size={22} className="mb-1" />
-          <span style={{ fontSize: '0.65rem', fontWeight: '500' }}>Contacto</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>Contacto</span>
         </a>
       </nav>
 

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, Banknote, CircleCheck, Landmark, NotebookPen, QrCode, TriangleAlert, Wallet } from 'lucide-react';
 import Button from '../ui/Button';
@@ -15,6 +15,8 @@ import {
   validarSeleccion,
 } from './formaDePago';
 import { VERDE } from '../../styles/colores';
+import useCerrarConEscape from '../ui/useCerrarConEscape';
+import useFocoModal from '../ui/useFocoModal';
 
 const ICONOS = { anotar: NotebookPen, efectivo: Banknote, transferencia: Landmark, qr: QrCode };
 
@@ -41,6 +43,8 @@ export default function RegistroPagoModal({
   onConfirm,
   onClose,
 }) {
+  const refModal = useRef(null);
+  useFocoModal(true, refModal);
   const idBase = useId();
   const dialogo = useRef(null);
   const finalizando = modo === 'finalizar';
@@ -56,19 +60,7 @@ export default function RegistroPagoModal({
   const atajos = necesitaMonto ? montosRapidos(deuda) : [];
 
   // Escape closes (unless it is saving) and the page behind does not scroll.
-  useEffect(() => {
-    const anterior = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    dialogo.current?.focus();
-    const alTeclear = (evento) => {
-      if (evento.key === 'Escape' && !isSaving) onClose();
-    };
-    document.addEventListener('keydown', alTeclear);
-    return () => {
-      document.body.style.overflow = anterior;
-      document.removeEventListener('keydown', alTeclear);
-    };
-  }, [isSaving, onClose]);
+  useCerrarConEscape(true, onClose, isSaving);
 
   const cambiar = (nueva) => {
     setSeleccion(nueva);
@@ -93,7 +85,7 @@ export default function RegistroPagoModal({
   const mensajeError = errorLocal ?? error;
 
   return createPortal(
-    <div
+    <div ref={refModal}
       className="modal d-block bg-dark bg-opacity-50"
       style={{ zIndex: 1070, overflowY: 'auto' }}
       role="dialog"

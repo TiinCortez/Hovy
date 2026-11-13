@@ -215,3 +215,24 @@ Hecho y verificado en el navegador a 320, 768 y escritorio; `lint` y `build` en 
 | A9: `lang="es"` | Hecho. Falta el título por ruta |
 
 Pendiente: A1 (atrapar el foco), A5 a A8, A10 a A12; `badge` y `table` sin CSS; el resto de la paleta (unos 200 valores); breakpoints `420px` y `359.98px`; anchos fijos inline; C3, C4 y C6.
+
+## Segunda tanda: decisiones del sistema de diseño (rama `feat/sistema-diseno-accesibilidad`)
+
+Aplica en la app las decisiones del sistema de diseño publicado en Claude. Verificado en el navegador a 320, 768 y 1280 px; `lint` y `build` en verde.
+
+| Ítem | Estado |
+|---|---|
+| A6: `$secondary` `#5c636a`, `$success` `#08775b`, `$body-secondary-color` | Hecho. Ninguna de las 12 pantallas internas tiene texto por debajo de 4.5:1 |
+| A6: terracota y gris tenue usados como texto | Hecho (`#a35a34` y `metricas-texto-secundario`) |
+| A6: badge Confirmado (1.81:1) y aviso "Estimado interno" (1.47:1) | Hecho con el componente `Badge` |
+| A5: borde de campos `#7d8577` (3.8:1) y foco que no anula `shadow-sm` | Hecho |
+| A5: foco de `SeccionDesplegable` recortado por `overflow-hidden` | Hecho: el anillo va hacia adentro |
+| A1 y A3: foco atrapado, foco inicial y devolución del foco en los 15 modales | Hecho (`useFocoModal`) |
+| A2: Escape cierra solo el modal de arriba | Hecho (pila en `useCerrarConEscape`) |
+| A12: errores vinculados con `aria-invalid` y `aria-describedby` | Hecho en Nuevo Cliente, Editar Cliente, Inmueble y Servicio |
+| A7: texto de menos de 12 px | Hecho, salvo el texto interno del logo de Registro |
+| Títulos en peso 700 y rótulo de pantalla `.hovy-rotulo` | Hecho |
+| C4: componente `Badge` | Hecho en 13 estados; quedan contadores, prioridades y etiquetas sobre imágenes |
+
+Pendiente: componente `Modal` (la estructura sigue repetida en 15 archivos), errores vinculados en Nuevo Turno y Registro, el resto de la paleta, C3 y C6.
+

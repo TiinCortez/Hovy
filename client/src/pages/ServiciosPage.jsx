@@ -83,7 +83,7 @@ export default function ServiciosPage() {
       {/* Title and main action share a row (also on mobile); the description goes below */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="text-success fw-bold text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Catálogo Operativo</span>
+          <span className="hovy-rotulo">Catálogo Operativo</span>
         </div>
         <div className="d-flex align-items-center justify-content-between gap-3">
           <h2 className="fw-bold fs-2 text-dark m-0">Servicios</h2>
@@ -152,11 +152,11 @@ export default function ServiciosPage() {
 
                 <div className="row g-0 mb-4 bg-light rounded-3 border overflow-hidden">
                   <div className="col-6 p-2 px-3 border-end">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Precio por m²</span>
+                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Precio por m²</span>
                     <span className="fw-bold text-dark small">{formatPrice(servicio.precio_base)}</span>
                   </div>
                   <div className="col-6 p-2 px-3">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.65rem' }}>Límite operativo</span>
+                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Límite operativo</span>
                     <span className="fw-bold text-dark small">{servicio.limite_operativo ?? '-'}</span>
                   </div>
                 </div>
