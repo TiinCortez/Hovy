@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import EditClientModal from '../components/ui/EditClientModal'; 
 import InmuebleModal from '../components/ui/InmuebleModal';
 import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
@@ -24,6 +25,7 @@ import { CAPAS } from '../styles/capas';
 import ConfirmarModal from '../components/ui/ConfirmarModal';
 
 export default function ClientInmueblesPage() {
+  const { avisar } = useAvisos();
   const { id } = useParams();
   
   const [showFichaMobile, setShowFichaMobile] = useState(false);
@@ -117,7 +119,7 @@ export default function ClientInmueblesPage() {
       setCliente(prev => ({ ...prev, estado: nuevoEstado }));
     } catch (error) {
       console.error('Error al cambiar el estado del cliente:', error);
-      alert('Hubo un error al actualizar el estado.');
+      avisar('No se pudo cambiar el estado del cliente. Intentá de nuevo.');
     }
   };
 
@@ -132,7 +134,7 @@ export default function ClientInmueblesPage() {
       setIsTurnoDetalleOpen(false);
     } catch (error) {
       console.error('Error al cancelar el turno:', error);
-      alert('Ocurrió un error al intentar cancelar el turno. Verifique su conexión.');
+      avisar('No se pudo cancelar el turno. Revisá tu conexión e intentá de nuevo.');
     }
   };
 
@@ -151,7 +153,7 @@ export default function ClientInmueblesPage() {
       return true;
     } catch (error) {
       console.error(`Error al cambiar el estado a ${newState}:`, error);
-      alert('Ocurrió un error al actualizar el estado del turno.');
+      avisar('No se pudo cambiar el estado del turno. Intentá de nuevo.');
       return false;
     }
   };
@@ -266,7 +268,7 @@ export default function ClientInmueblesPage() {
     : null;
 
   return (
-    <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: 'var(--hovy-gris-50)', minHeight: '100vh', margin: '-1.5rem', padding: '1.5rem' }}>
+    <div className="d-flex flex-column gap-3 pb-5" style={{ backgroundColor: 'var(--hovy-gris-50)', minHeight: '100vh', margin: 'calc(-1 * var(--hovy-espacio-24))', padding: 'var(--hovy-espacio-24)' }}>
       
       {/* HEADER MÓVIL */}
       <div className="d-flex d-md-none align-items-center justify-content-between mb-3 px-2">
@@ -587,6 +589,10 @@ export default function ClientInmueblesPage() {
               const defaultImg = inmueble.tipo_inmueble === 'Lote Vacio' ? '/Lote.webp' : '/Habitada.webp';
               const imgToRender = inmueble.img || defaultImg;
               const enlaceUbicacionWhatsApp = obtenerEnlaceUbicacionWhatsApp(inmueble);
+              const enlaceMaps = inmueble.latitud && inmueble.longitud
+                ? `https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`
+                : null;
+              const abrirMaps = () => window.open(enlaceMaps, '_blank', 'noopener,noreferrer');
               const compartirUbicacion = () => {
                 if (enlaceUbicacionWhatsApp) {
                   window.open(enlaceUbicacionWhatsApp, '_blank', 'noopener,noreferrer');
@@ -642,13 +648,9 @@ export default function ClientInmueblesPage() {
                           <Button 
                             variant="light" 
                             className="btn-sm bg-white border shadow-sm text-primary px-3 fw-semibold text-nowrap d-flex align-items-center gap-2"
-                            onClick={() => {
-                              if (inmueble.latitud && inmueble.longitud) {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
-                              } else {
-                                alert('Este inmueble no tiene coordenadas registradas.');
-                              }
-                            }}
+                            onClick={abrirMaps}
+                            disabled={!enlaceMaps}
+                            title={enlaceMaps ? 'Ver el inmueble en Google Maps' : 'Agregá la ubicación del inmueble para verla en Maps'}
                           >
                             <MapPin size={14}/> Ver en Maps
                           </Button>
@@ -682,13 +684,9 @@ export default function ClientInmueblesPage() {
                         <Button 
                           variant="light" 
                           className="btn-sm bg-white border text-primary flex-grow-1 fw-bold py-2 d-flex align-items-center justify-content-center gap-2"
-                          onClick={() => {
-                            if (inmueble.latitud && inmueble.longitud) {
-                              window.open(`https://www.google.com/maps/search/?api=1&query=${inmueble.latitud},${inmueble.longitud}`, '_blank');
-                            } else {
-                              alert('No hay coordenadas.');
-                            }
-                          }}
+                          onClick={abrirMaps}
+                          disabled={!enlaceMaps}
+                          title={enlaceMaps ? 'Ver el inmueble en Google Maps' : 'Agregá la ubicación del inmueble para verla en Maps'}
                         >
                           <MapPin size={16}/> Maps
                         </Button>

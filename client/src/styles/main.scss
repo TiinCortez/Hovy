@@ -160,7 +160,7 @@ $form-invalid-border-color: $hovy-texto-error;
     background-color: $hovy-blanco;
     border: 1px solid $hovy-border;
     border-radius: $hovy-radio-xl;
-    padding: 3rem !important;
+    padding: $hovy-espacio-48 !important;
     box-shadow: $hovy-sombra-xl;
   }
 }
@@ -199,7 +199,7 @@ $form-invalid-border-color: $hovy-texto-error;
     border-top: 1px solid $hovy-border;
     z-index: $hovy-capa-menu;
     box-shadow: 0px -4px 20px rgba($hovy-verde-900, 0.05);
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(#{$hovy-espacio-8} + env(safe-area-inset-bottom)) !important;
     
     .nav-link {
       flex: 1; color: $hovy-gray; font-size: $hovy-texto-xs; border-radius: $hovy-radio-md;
@@ -223,13 +223,13 @@ $form-invalid-border-color: $hovy-texto-error;
   // Tarjeta flotante con las secciones agrupadas en "Más"
   .hovy-more-menu {
     position: absolute;
-    bottom: calc(100% + 0.5rem);
-    right: 0.75rem;
+    bottom: calc(100% + #{$hovy-espacio-8});
+    right: $hovy-espacio-12;
     width: 14rem;
-    padding: 0.375rem;
+    padding: $hovy-espacio-6;
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: $hovy-espacio-2;
     background-color: rgba($hovy-blanco, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -243,8 +243,8 @@ $form-invalid-border-color: $hovy-texto-error;
   .hovy-more-menu-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 0.75rem;
+    gap: $hovy-espacio-10;
+    padding: $hovy-espacio-8 $hovy-espacio-12;
     border-radius: $hovy-radio-md;
     font-size: $hovy-texto-md;
     font-weight: 500;
@@ -273,7 +273,7 @@ $form-invalid-border-color: $hovy-texto-error;
   background-color: $hovy-blanco;
   border-bottom: 1px solid $hovy-border;
   height: 72px;
-  padding-inline: 1.5rem;
+  padding-inline: $hovy-espacio-24;
 }
 
 // Dashboard KPI cards: on narrow screens the icon goes above the text so long
@@ -287,14 +287,14 @@ $form-invalid-border-color: $hovy-texto-error;
     .card-body > .d-flex {
       flex-direction: column;
       align-items: flex-start !important;
-      gap: 0.5rem !important;
+      gap: $hovy-espacio-8 !important;
     }
     .card-body > .d-flex > .rounded-circle { padding: 0.6rem !important; }
     h3 { font-size: $hovy-texto-xl; }
   }
 }
 .hovy-header-brand {
-  gap: 12px;
+  gap: $hovy-espacio-12;
   min-width: 0;
 }
 .hovy-header-emblema {
@@ -339,7 +339,7 @@ $form-invalid-border-color: $hovy-texto-error;
 // viewport para no cortarse.
 .visitas-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + #{$hovy-espacio-8});
   right: 0;
   width: 340px;
   max-width: 340px;
@@ -349,8 +349,8 @@ $form-invalid-border-color: $hovy-texto-error;
   @media (max-width: 575.98px) {
     position: fixed;
     top: 80px;
-    left: 16px;
-    right: 16px;
+    left: $hovy-espacio-16;
+    right: $hovy-espacio-16;
     width: auto;
     max-width: none;
   }
@@ -365,7 +365,7 @@ $form-invalid-border-color: $hovy-texto-error;
 // de notificaciones, pero más angosto.
 .user-menu-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + #{$hovy-espacio-8});
   right: 0;
   width: 220px;
   background-color: $hovy-blanco;
@@ -379,12 +379,12 @@ $form-invalid-border-color: $hovy-texto-error;
   align-items: center;
   justify-content: center;
   background-color: $hovy-verde-100;
-  padding: 1.5rem;
+  padding: $hovy-espacio-24;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   
   @media (max-width: 575.98px) {
     background: radial-gradient(circle at 50% 30%, $hovy-verde-100 0%, $hovy-oliva-100 100%);
-    padding: 1rem;
+    padding: $hovy-espacio-16;
   }
 }
 
@@ -396,13 +396,13 @@ $form-invalid-border-color: $hovy-texto-error;
   box-shadow: $hovy-sombra-xl;
   position: relative;
   overflow: hidden;
-  padding: 2.5rem 3.5rem;
+  padding: $hovy-espacio-40 $hovy-espacio-56;
 
   @media (max-width: 575.98px) {
     max-width: 420px;
     background-color: $hovy-crema-100;
     border-radius: $hovy-radio-2xl;
-    padding: 2rem 1.5rem;
+    padding: $hovy-espacio-32 $hovy-espacio-24;
   }
 }
 
@@ -440,7 +440,7 @@ $form-invalid-border-color: $hovy-texto-error;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.5rem;
+  margin: 0 auto $hovy-espacio-8;
 
   @media (max-width: 575.98px) { width: 64px; height: 64px; }
 }
@@ -453,7 +453,7 @@ $form-invalid-border-color: $hovy-texto-error;
   font-weight: 800;
   color: $hovy-verde-850;
   letter-spacing: -0.025em;
-  margin-bottom: 0.25rem;
+  margin-bottom: $hovy-espacio-4;
   
   @media (max-width: 575.98px) { font-size: $hovy-texto-4xl; color: $hovy-verde-850; }
 }
@@ -470,7 +470,7 @@ $form-invalid-border-color: $hovy-texto-error;
   font-size: $hovy-texto-sm;
   font-weight: 700;
   color: $hovy-gris-900;
-  margin-bottom: 0.375rem;
+  margin-bottom: $hovy-espacio-6;
   
   @media (max-width: 575.98px) { font-size: $hovy-texto-xs; color: $hovy-gris-900; }
 }
@@ -481,7 +481,7 @@ $form-invalid-border-color: $hovy-texto-error;
   background-color: $hovy-blanco;
   border: 1px solid rgba(107, 114, 128, 0.7);
   border-radius: $hovy-radio-md;
-  padding: 0.625rem 0.875rem;
+  padding: $hovy-espacio-10 $hovy-espacio-14;
   transition: background-color $hovy-duracion-rapida ease-in-out, border-color $hovy-duracion-rapida ease-in-out, color $hovy-duracion-rapida ease-in-out, box-shadow $hovy-duracion-rapida ease-in-out, transform $hovy-duracion-rapida ease-in-out, opacity $hovy-duracion-rapida ease-in-out;
   
   &:focus-within {
@@ -496,14 +496,14 @@ $form-invalid-border-color: $hovy-texto-error;
     width: 100%;
     font-size: $hovy-texto-md;
     color: $hovy-azul-900;
-    margin-left: 0.625rem;
+    margin-left: $hovy-espacio-10;
     
     &::placeholder { color: $hovy-gris-500; }
   }
 
   @media (max-width: 575.98px) {
     border-color: $hovy-gris-300;
-    padding: 0.625rem;
+    padding: $hovy-espacio-10;
     box-shadow: $hovy-sombra-xs;
     
     &:focus-within { border-color: $hovy-verde-850; box-shadow: 0 0 0 2px rgba(28, 58, 19, 0.3); }
@@ -628,7 +628,7 @@ $form-invalid-border-color: $hovy-texto-error;
 .min-h-0 { min-height: 0; }
 
 .nuevo-turno-modal {
-  padding: 1rem;
+  padding: $hovy-espacio-16;
 
   .modal-dialog { max-width: 1180px; }
 
@@ -700,7 +700,7 @@ $form-invalid-border-color: $hovy-texto-error;
 .nuevo-turno-approved {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: $hovy-espacio-4;
   color: $hovy-esmeralda-600;
   background-color: $hovy-esmeralda-50;
   border: 1px solid $hovy-esmeralda-200;
@@ -824,11 +824,11 @@ $form-invalid-border-color: $hovy-texto-error;
   .nuevo-turno-header { flex: 0 0 auto; }
 
   .nuevo-turno-footer {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(#{$hovy-espacio-12} + env(safe-area-inset-bottom)) !important;
 
     .btn {
       min-width: 0;
-      padding-inline: 1rem !important;
+      padding-inline: $hovy-espacio-16 !important;
     }
 
     .nuevo-turno-submit { flex: 1 1 auto; }
@@ -872,15 +872,15 @@ $form-invalid-border-color: $hovy-texto-error;
   .turnos-view-switcher .btn {
     flex: 1 0 auto;
     justify-content: center;
-    padding-inline: 0.75rem !important;
+    padding-inline: $hovy-espacio-12 !important;
   }
 
   .turnos-shared-filters {
-    padding: 0.75rem !important;
+    padding: $hovy-espacio-12 !important;
   }
 
   .turnos-kanban-card > .card-body {
-    padding: 1rem !important;
+    padding: $hovy-espacio-16 !important;
   }
 }
 
@@ -889,7 +889,7 @@ $form-invalid-border-color: $hovy-texto-error;
    así que estos estilos son propios. */
 .combustible-label {
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: $hovy-espacio-6;
   color: $hovy-gris-700;
   font-size: $hovy-texto-xs;
   font-weight: 800;
@@ -899,14 +899,14 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .combustible-tipos {
   display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  gap: $hovy-espacio-4;
+  padding: $hovy-espacio-4;
   background-color: $hovy-crema-100;
   border-radius: $hovy-radio-pill;
 }
 
 .combustible-tipo {
-  padding: 0.45rem 1.25rem;
+  padding: $hovy-espacio-8 $hovy-espacio-20;
   color: $hovy-gray;
   font-weight: 600;
   background: transparent;
@@ -930,7 +930,7 @@ $form-invalid-border-color: $hovy-texto-error;
   > svg {
     position: absolute;
     top: 50%;
-    left: 0.9rem;
+    left: $hovy-espacio-14;
     transform: translateY(-50%);
     color: $hovy-oliva-500;
     pointer-events: none;
@@ -941,11 +941,11 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .combustible-sugerencias {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + #{$hovy-espacio-6});
   right: 0;
   left: 0;
   z-index: $hovy-capa-elevada;
-  padding: 0.35rem;
+  padding: $hovy-espacio-6;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-border;
   border-radius: $hovy-radio-lg;
@@ -955,7 +955,7 @@ $form-invalid-border-color: $hovy-texto-error;
 .combustible-sugerencia {
   display: block;
   width: 100%;
-  padding: 0.55rem 0.75rem;
+  padding: $hovy-espacio-8 $hovy-espacio-12;
   color: $hovy-oliva-900;
   font-size: $hovy-texto-md;
   text-align: left;
@@ -975,13 +975,13 @@ $form-invalid-border-color: $hovy-texto-error;
 }
 
 .combustible-sugerencias-pie {
-  padding: 0.45rem 0.75rem 0.25rem;
+  padding: $hovy-espacio-8 $hovy-espacio-12 $hovy-espacio-4;
   color: $hovy-oliva-600;
   font-size: $hovy-texto-xs;
 }
 
 .combustible-marca {
-  margin: 0 0 0.5rem;
+  margin: 0 0 $hovy-espacio-8;
   color: $hovy-green;
   font-size: $hovy-texto-xs;
   font-weight: 800;
@@ -992,9 +992,9 @@ $form-invalid-border-color: $hovy-texto-error;
 .combustible-opcion {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 0.5rem;
-  padding: 0.8rem 1rem;
+  gap: $hovy-espacio-14;
+  margin-bottom: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-oliva-200;
   border-radius: $hovy-radio-lg;
@@ -1025,7 +1025,7 @@ $form-invalid-border-color: $hovy-texto-error;
   white-space: nowrap;
 
   small {
-    margin-left: 0.15rem;
+    margin-left: $hovy-espacio-2;
     color: $hovy-oliva-600;
     font-size: $hovy-texto-xs;
     font-weight: 600;
@@ -1034,8 +1034,8 @@ $form-invalid-border-color: $hovy-texto-error;
 
 .combustible-pill {
   display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.55rem;
+  margin-left: $hovy-espacio-8;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
   color: $hovy-esmeralda-600;
   font-size: $hovy-texto-xs;
   font-weight: 700;
@@ -1048,8 +1048,8 @@ $form-invalid-border-color: $hovy-texto-error;
 .hovy-aviso {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0.9rem;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-14;
   font-size: $hovy-texto-md;
   font-weight: 600;
   border-radius: $hovy-radio-md;
@@ -1064,12 +1064,54 @@ $form-invalid-border-color: $hovy-texto-error;
 // formularios: toman el mismo aspecto que <Aviso>.
 .alert {
   @extend .hovy-aviso;
-  margin-bottom: 1rem;
+  margin-bottom: $hovy-espacio-16;
 }
 .alert-danger { @extend .hovy-aviso, .is-error; }
 .alert-success { @extend .hovy-aviso, .is-ok; }
 .alert-warning { @extend .hovy-aviso, .is-aviso; }
 .alert-info { @extend .hovy-aviso, .is-espera; }
+
+// Avisos flotantes (AvisosProvider / useAvisos): abajo al centro, por encima de
+// los modales y, en celular, por encima de la barra inferior.
+.hovy-avisos-flotantes {
+  position: fixed;
+  z-index: $hovy-capa-aviso;
+  left: 50%;
+  bottom: $hovy-espacio-24;
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+  width: min(calc(100% - #{$hovy-espacio-32}), 28rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  > .hovy-aviso {
+    padding-block: $hovy-espacio-6;
+    padding-right: $hovy-espacio-6;
+    box-shadow: $hovy-sombra-lg;
+    pointer-events: auto;
+    animation: hovyAvisoEntra $hovy-duracion-media ease-out;
+  }
+
+  @media (max-width: 767.98px) {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+.btn.hovy-aviso-cerrar {
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-color: currentColor;
+}
+
+@keyframes hovyAvisoEntra {
+  from { opacity: 0; transform: translateY($hovy-espacio-8); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hovy-avisos-flotantes > .hovy-aviso { animation: none; }
+}
 
 // Foco de campos: .shadow-sm lleva !important y anulaba el anillo de foco.
 .form-control.shadow-sm:focus,
@@ -1100,6 +1142,12 @@ $form-invalid-border-color: $hovy-texto-error;
 a, button, input, select, textarea, label, [role="button"] { touch-action: manipulation; }
 .modal { overscroll-behavior: contain; }
 
+// Bloques que actúan como botón (accionable.js): mismo cursor y anillo de foco que un botón.
+[role="button"][tabindex="0"] {
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+}
+
 /* --- RÓTULO SOBRE EL TÍTULO DE PANTALLA --- */
 .hovy-rotulo {
   display: block;
@@ -1115,8 +1163,8 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 .hovy-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
+  gap: $hovy-espacio-6;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
   font-size: $hovy-texto-xs;
   font-weight: 600;
   line-height: 1.25;
@@ -1159,7 +1207,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 }
 
 .cobro-qr {
-  padding: 1.25rem;
+  padding: $hovy-espacio-20;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-oliva-200;
   border-radius: $hovy-radio-lg;
@@ -1179,15 +1227,15 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 .forma-pago-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.6rem;
+  gap: $hovy-espacio-10;
 }
 
 .forma-pago {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
-  padding: 0.85rem 0.95rem;
+  gap: $hovy-espacio-2;
+  padding: $hovy-espacio-14 $hovy-espacio-16;
   color: $hovy-oliva-900;
   text-align: left;
   background-color: $hovy-blanco;
@@ -1217,7 +1265,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
   justify-content: center;
   width: 2.1rem;
   height: 2.1rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: $hovy-espacio-6;
   color: $hovy-green;
   background-color: rgba($hovy-verde-900, 0.08);
   border-radius: $hovy-radio-circulo;
@@ -1229,8 +1277,8 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 1rem 2rem;
-  padding: 1rem 1.25rem;
+  gap: $hovy-espacio-16 $hovy-espacio-32;
+  padding: $hovy-espacio-16 $hovy-espacio-20;
   background-color: $hovy-crema-100;
   border: 1px solid $hovy-crema-300;
   border-radius: $hovy-radio-lg;
@@ -1263,7 +1311,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 }
 
 .pago-chip {
-  padding: 0.3rem 0.8rem;
+  padding: $hovy-espacio-4 $hovy-espacio-12;
   color: $hovy-green;
   font-size: $hovy-texto-sm;
   font-weight: 600;
@@ -1281,8 +1329,8 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 .pago-estado {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0.6rem 0 0;
+  gap: $hovy-espacio-6;
+  margin: $hovy-espacio-10 0 0;
   font-size: $hovy-texto-md;
   font-weight: 600;
 
@@ -1292,7 +1340,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 }
 
 .pago-nota {
-  padding: 0.75rem 1rem;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
   color: $hovy-oliva-700;
   font-size: $hovy-texto-md;
   background-color: $hovy-crema-50;
@@ -1315,7 +1363,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 }
 
 .combustible-vacio {
-  padding: 1.25rem;
+  padding: $hovy-espacio-20;
   color: $hovy-oliva-600;
   font-size: $hovy-texto-md;
   text-align: center;
@@ -1325,7 +1373,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 }
 
 .combustible-ejemplo {
-  padding: 0.75rem 1rem;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
   color: $hovy-verde-800;
   font-size: $hovy-texto-md;
   background-color: $hovy-verde-50;
@@ -1342,7 +1390,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
   }
 
   p {
-    margin: 0.4rem 0 0;
+    margin: $hovy-espacio-6 0 0;
     color: $hovy-oliva-700;
     font-size: $hovy-texto-sm;
   }
@@ -1356,7 +1404,7 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 
   > .card-body {
     min-width: 0;
-    padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+    padding: clamp(#{$hovy-espacio-12}, 2.5vw, #{$hovy-espacio-24}) !important;
   }
 
   .clientes-resumen-titulo {

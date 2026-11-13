@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MapPin, ChevronRight, LockKeyhole } from 'lucide-react';
 import Card from '../ui/Card';
+import { accionable } from '../ui/accionable';
 import { fechaAIso, fechaDesdeIso, inicioSemanaTurnos, sumarDiasTurnos, horarioPasadoTurnos, PRIORIDADES_CONFIG as prioridadesConfig, horaAMinutos, minutosAHora, compararHorarioTurnos, tieneHorarioTurno, formatearHoraCorta } from './agendaTurnos';
 import { CAPAS } from '../../styles/capas';
 
@@ -112,7 +113,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
               const pConf = prioridadesConfig[turno.prioridad];
 
               return (
-                <div key={turno.idTurno} className="d-flex align-items-stretch mb-3 gap-2" onClick={() => onSelectTurno(turno.idTurno)}>
+                <div key={turno.idTurno} className="d-flex align-items-stretch mb-3 gap-2 rounded-4" {...accionable(() => onSelectTurno(turno.idTurno))}>
 
                   {/* Hora */}
                   <div className="d-flex flex-column align-items-end justify-content-start pt-2 pe-2 text-end flex-shrink-0" style={{ width: '60px' }}>
@@ -275,7 +276,7 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
                         <div
                           className={`h-100 w-100 rounded-3 border d-flex flex-column p-2 overflow-hidden shadow-sm hover-opacity bg-white border-${isEjecucion ? 'primary' : config.color}-subtle ${isEjecucion ? 'turno-en-curso-card' : ''}`}
                           style={{ cursor: 'pointer', borderLeft: `4px solid var(--bs-${isEjecucion ? 'primary' : config.color})` }}
-                          onClick={() => onSelectTurno(turno.idTurno)}
+                          {...accionable(() => onSelectTurno(turno.idTurno))}
                         >
                           <div className="d-flex justify-content-between align-items-start mb-1">
                             <span className="fw-bold text-dark" style={{ fontSize: 'var(--hovy-texto-xs)' }}>

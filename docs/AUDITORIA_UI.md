@@ -265,5 +265,16 @@ Cuarta tanda, en la misma rama: base para escalar.
 | C6: `theme-color`, `touch-action`, `overscroll-behavior`, `spellCheck` en correos | Hecho |
 | Dos modales encimados | Probado en pantalla con Cancelar turno sobre Detalle del turno |
 
-Pendiente: los `alert()` de error que quedan en 4 pantallas, y el espaciado (paddings y gaps sueltos).
+Quinta tanda, en la misma rama: lo que había quedado pendiente.
+
+| Ítem | Estado |
+|---|---|
+| C3: escala de espaciado | Hecho: `$hovy-espacio-2` a `$hovy-espacio-56` (el número es la medida en px) y `var(--hovy-espacio-*)`. 183 paddings, margins, gaps y desplazamientos de las hojas y 11 estilos inline pasan a la escala; cada valor se movió al paso más cercano (2 px como máximo) |
+| C6: `alert()` | Hecho: avisos flotantes (`AvisosProvider` y `useAvisos`) en Clientes, Inmuebles, Agenda y Detalle de solicitud. Los errores usan `role="alert"`, quedan hasta cerrarlos y aparecen sobre los modales y sobre la barra inferior |
+| Ver en Maps sin coordenadas | Hecho: el botón queda deshabilitado con su motivo, como el de WhatsApp |
+| A5: bloques clicables sin teclado | Hecho: tarjetas y turnos de la agenda semanal y mensual, "+N más" y los días del clima se usan con Tab, Enter y Espacio (`accionable.js`); los días del clima anuncian cuál está elegido (`aria-pressed`) |
+| A4 y A12 en Login | Hecho: etiquetas vinculadas, errores con `aria-describedby`, `autoComplete`, y el ojo de la contraseña pasa a ser un botón con nombre |
+| `Input.jsx` | Hecho: vincula etiqueta, error y ayuda con `aria-*`, marca obligatorios y desactiva el corrector en correos |
+
+Quedan fuera, a propósito: los desplazamientos decorativos de Métricas (−4 rem), la altura del encabezado (80 px) y el espacio de la barra inferior (6 rem), que son medidas de diseño y no de espaciado.
 

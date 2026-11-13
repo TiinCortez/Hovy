@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, LayoutDashboard, LayoutList, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import TurnosKanban from '../components/turnos/TurnosKanban';
 import TurnosSemanal from '../components/turnos/TurnosSemanal';
 import TurnosMensual from '../components/turnos/TurnosMensual';
@@ -19,6 +20,7 @@ import { VERDE } from '../styles/colores';
 const PRIORIDADES_INICIALES = Object.keys(PRIORIDADES_CONFIG);
 
 export default function TurnosPage() {
+  const { avisar } = useAvisos();
   const [vistaActual, setVistaActual] = useState('diaria');
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ export default function TurnosPage() {
       setIsDetalleOpen(false);
     } catch (error) {
       console.error("Error al cancelar el turno:", error);
-      alert("Ocurrió un error al intentar cancelar el turno. Verifique su conexión.");
+      avisar('No se pudo cancelar el turno. Revisá tu conexión e intentá de nuevo.');
     }
   };
 
@@ -151,7 +153,7 @@ export default function TurnosPage() {
       return true;
     } catch (error) {
       console.error(`Error al cambiar el estado a ${newState}:`, error);
-      alert("Ocurrió un error al actualizar el estado del turno.");
+      avisar('No se pudo cambiar el estado del turno. Intentá de nuevo.');
       return false;
     }
   };

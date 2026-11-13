@@ -1,4 +1,4 @@
-// Tokens de Hovy: colores por rol y escalas (texto, radios, sombras, capas,
+// Tokens de Hovy: colores por rol y escalas (texto, espaciado, radios, sombras, capas,
 // duraciones y cortes de pantalla). Los colores salen de la paleta (_paleta.scss),
 // que se reexporta para que main.scss y los SCSS de cada módulo tengan todo con
 // un solo import. main.scss publica las escalas como variables CSS (--hovy-*)
@@ -73,6 +73,23 @@ $hovy-duracion-larga: 0.6s;      // barras de progreso
 $hovy-bp-telefono: 420px;          // teléfonos angostos
 $hovy-bp-telefono-chico: 359.98px; // teléfonos de 320 a 359 px
 
+// --- Espaciado: el número es la medida en px (no confundir con p-1…p-5 de
+// Bootstrap). Para padding, margin, gap y desplazamientos de posición.
+$hovy-espacio-2: 0.125rem;
+$hovy-espacio-4: 0.25rem;
+$hovy-espacio-6: 0.375rem;
+$hovy-espacio-8: 0.5rem;
+$hovy-espacio-10: 0.625rem;
+$hovy-espacio-12: 0.75rem;
+$hovy-espacio-14: 0.875rem;
+$hovy-espacio-16: 1rem;
+$hovy-espacio-20: 1.25rem;
+$hovy-espacio-24: 1.5rem;
+$hovy-espacio-32: 2rem;
+$hovy-espacio-40: 2.5rem;
+$hovy-espacio-48: 3rem;
+$hovy-espacio-56: 3.5rem;
+
 $hovy-escalas: (
   'texto-xs': $hovy-texto-xs, 'texto-sm': $hovy-texto-sm, 'texto-md': $hovy-texto-md,
   'texto-base': $hovy-texto-base, 'texto-lg': $hovy-texto-lg, 'texto-xl': $hovy-texto-xl,
@@ -85,4 +102,7 @@ $hovy-escalas: (
   'sombra-lg': $hovy-sombra-lg, 'sombra-xl': $hovy-sombra-xl,
   'duracion-rapida': $hovy-duracion-rapida, 'duracion-media': $hovy-duracion-media,
   'duracion-lenta': $hovy-duracion-lenta, 'duracion-larga': $hovy-duracion-larga,
+  'espacio-2': $hovy-espacio-2, 'espacio-4': $hovy-espacio-4, 'espacio-6': $hovy-espacio-6, 'espacio-8': $hovy-espacio-8, 'espacio-10': $hovy-espacio-10,
+  'espacio-12': $hovy-espacio-12, 'espacio-14': $hovy-espacio-14, 'espacio-16': $hovy-espacio-16, 'espacio-20': $hovy-espacio-20, 'espacio-24': $hovy-espacio-24,
+  'espacio-32': $hovy-espacio-32, 'espacio-40': $hovy-espacio-40, 'espacio-48': $hovy-espacio-48, 'espacio-56': $hovy-espacio-56,
 );

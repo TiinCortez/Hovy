@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Sun, CloudSun, Cloud, CloudRain, CloudLightning, Droplets, Wind, SunDim, AlertTriangle, Clock } from 'lucide-react';
 import ClimaService from '../../services/api/clima.service';
 import ClimaSkeleton from '../skeletons/ClimaSkeleton';
+import { accionable } from '../ui/accionable';
 
 export default function PanelClima() {
   const [clima, setClima] = useState(null);
@@ -185,7 +186,7 @@ export default function PanelClima() {
             return (
               <div 
                 key={date}
-                onClick={() => setDiaSeleccionado(index)}
+                {...accionable(() => setDiaSeleccionado(index), { presionado: isSelected })}
                 className={`d-flex flex-column align-items-center justify-content-center p-1 rounded-3 text-center overflow-hidden ${isSelected ? 'bg-white shadow-sm' : ''}`}
                 style={{ cursor: 'pointer', flex: '1 1 0', minWidth: 0, transition: 'background-color var(--hovy-duracion-media), border-color var(--hovy-duracion-media), color var(--hovy-duracion-media), box-shadow var(--hovy-duracion-media), transform var(--hovy-duracion-media), opacity var(--hovy-duracion-media)', border: isSelected ? '1px solid var(--hovy-gris-200)' : '1px solid transparent' }}
               >

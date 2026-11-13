@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useAvisos } from '../components/ui/avisosContext';
 import NewClientModal from '../components/ui/NewClientModal';
 import EditClientModal from '../components/ui/EditClientModal';
 import ClienteService from '../services/api/cliente.service';
@@ -19,6 +20,7 @@ import Badge from '../components/ui/Badge';
 import { CAPAS } from '../styles/capas';
 
 export default function ClientsPage() {
+  const { avisar } = useAvisos();
   const navigate = useNavigate();
   const [estadoFiltro, setEstadoFiltro] = useState('Activos');
   const [activeFilter, setActiveFilter] = useState('Todos');
@@ -114,7 +116,7 @@ export default function ClientsPage() {
       ));
     } catch (error) {
       console.error('Error al cambiar el estado del cliente:', error);
-      alert('Hubo un error al actualizar el estado.');
+      avisar('No se pudo cambiar el estado del cliente. Intentá de nuevo.');
     }
   };
 

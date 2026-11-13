@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronRight, MapPin } from 'lucide-react';
 import Card from '../ui/Card';
+import { accionable } from '../ui/accionable';
 import { fechaAIso, fechaDesdeIso, PRIORIDADES_CONFIG, compararHorarioTurnos, tieneHorarioTurno, formatearHoraCorta } from './agendaTurnos';
 
 export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSelectTurno, onSwitchToDailyView }) {
@@ -180,7 +181,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
               const pConf = PRIORIDADES_CONFIG[turno.prioridad];
 
               return (
-                <div key={turno.idTurno} className={`card mb-3 border shadow-sm rounded-4 overflow-hidden bg-white ${isEjecucion ? 'border-primary turno-en-curso-card' : 'border-light-subtle'}`} onClick={() => onSelectTurno(turno.idTurno)}>
+                <div key={turno.idTurno} className={`card mb-3 border shadow-sm rounded-4 overflow-hidden bg-white ${isEjecucion ? 'border-primary turno-en-curso-card' : 'border-light-subtle'}`} {...accionable(() => onSelectTurno(turno.idTurno))}>
                   <div className="row g-0 position-relative">
                     <div className={`position-absolute top-0 start-0 h-100 ${isEjecucion ? 'turno-en-curso-bg' : `bg-${pConf.color}`}`} style={{ width: '4px' }}></div>
                     <div className="col-12 p-3 ps-4">
@@ -265,7 +266,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                         return (
                           <div
                             key={t.idTurno}
-                            onClick={(e) => { e.stopPropagation(); onSelectTurno(t.idTurno); }}
+                            {...accionable((e) => { e.stopPropagation(); onSelectTurno(t.idTurno); })}
                             className={`badge border ${bg} ${border} rounded-2 text-start p-1 px-2 d-flex align-items-center w-100 shadow-sm hover-opacity ${isEjecucion ? 'turno-en-curso-solid' : ''}`}
                             style={{ cursor: 'pointer', fontSize: 'var(--hovy-texto-xs)', fontWeight: 600 }}
                             title={`${tieneHorarioTurno(t) ? formatearHoraCorta(t.franjaHoraria.horaInicio) : 'Sin horario'} ${t.cliente.nombre}`}
@@ -285,7 +286,7 @@ export default function TurnosMensual({ turnos, fechaReferencia, hoyIsoStr, onSe
                         <div
                           className="text-secondary small fw-bold ps-1 mt-auto pb-1 hover-opacity"
                           style={{fontSize: 'var(--hovy-texto-xs)', cursor: 'pointer'}}
-                          onClick={(e) => { e.stopPropagation(); onSwitchToDailyView(dia.iso); }}
+                          {...accionable((e) => { e.stopPropagation(); onSwitchToDailyView(dia.iso); })}
                         >
                           +{desborde} más
                         </div>

@@ -1,9 +1,12 @@
 import AppRoutes from './routes/AppRoutes.jsx';
+import AvisosProvider from './components/ui/AvisosProvider.jsx';
 
 function App() {
-  // Aquí más adelante inyectaremos los Contextos Globales (AuthContext, ThemeContext, etc.)
+  // Contextos globales de la app: los avisos flotantes (useAvisos) envuelven todas las rutas.
   return (
-    <AppRoutes />
+    <AvisosProvider>
+      <AppRoutes />
+    </AvisosProvider>
   );
 }
 

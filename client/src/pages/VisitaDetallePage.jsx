@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
+import { useAvisos } from '../components/ui/avisosContext';
 import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
@@ -40,6 +41,7 @@ const formatFecha = (valor) => {
 };
 
 export default function VisitaDetallePage() {
+  const { avisar } = useAvisos();
   const { id } = useParams();
 
   const [visita, setVisita] = useState(null);
@@ -92,7 +94,7 @@ export default function VisitaDetallePage() {
       setVisita(response.data);
     } catch (err) {
       console.error('No se pudo marcar la solicitud como contactada:', err);
-      alert(err.response?.data?.error || 'No se pudo marcar la solicitud como contactada.');
+      avisar(err.response?.data?.error || 'No se pudo marcar la solicitud como contactada.');
     } finally {
       setContactando(false);
     }

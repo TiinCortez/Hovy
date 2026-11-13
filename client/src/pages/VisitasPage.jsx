@@ -80,7 +80,7 @@ const BADGE_TIPO = {
 };
 
 // Compact status badge (top right) and secondary chips (under the name)
-const CHIP_STYLE = { fontSize: 'var(--hovy-texto-xs)', padding: '0.15rem 0.5rem', border: '1px solid', whiteSpace: 'nowrap' };
+const CHIP_STYLE = { fontSize: 'var(--hovy-texto-xs)', padding: 'var(--hovy-espacio-2) var(--hovy-espacio-8)', border: '1px solid', whiteSpace: 'nowrap' };
 const CHIP_TURNO = { backgroundColor: 'rgba(27, 48, 6, 0.08)', color: VERDE, borderColor: 'rgba(27, 48, 6, 0.15)' };
 const CHIP_CLIENTE = { backgroundColor: 'rgba(121, 84, 45, 0.08)', color: 'var(--hovy-ambar-800)', borderColor: 'rgba(121, 84, 45, 0.2)' };
 

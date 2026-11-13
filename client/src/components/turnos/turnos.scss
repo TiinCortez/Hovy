@@ -12,8 +12,8 @@
     flex: 0 1 21rem;
     width: 21rem;
     min-width: 0;
-    gap: 0.25rem;
-    padding: 4px;
+    gap: $hovy-espacio-4;
+    padding: $hovy-espacio-4;
     background-color: $hovy-blanco;
     border: 1px solid $hovy-oliva-200;
     border-radius: $hovy-radio-md;
@@ -43,7 +43,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 1rem;
+  gap: $hovy-espacio-16;
   min-width: 0;
 
   @media (min-width: 768px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -62,10 +62,10 @@
 .turnos-estado-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: $hovy-espacio-8;
   min-width: 0;
   min-height: 56px;
-  padding: 0.75rem;
+  padding: $hovy-espacio-12;
   border-radius: $hovy-radio-lg $hovy-radio-lg 0 0;
   list-style: none;
   cursor: pointer;
@@ -94,9 +94,9 @@
 .turnos-estado-lista {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: $hovy-espacio-12;
   min-width: 0;
-  padding: 0 0.75rem 0.75rem;
+  padding: 0 $hovy-espacio-12 $hovy-espacio-12;
 }
 
 // Turno card: flat white surface with a thin border; state lives in small
@@ -105,7 +105,7 @@
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
-  padding: 0.875rem 1rem;
+  padding: $hovy-espacio-14 $hovy-espacio-16;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-crema-300;
   border-radius: $hovy-radio-lg;
@@ -124,7 +124,7 @@
 }
 
 .turnos-agenda-card-cliente {
-  margin: 0.5rem 0 0.15rem;
+  margin: $hovy-espacio-8 0 $hovy-espacio-2;
   font-size: $hovy-texto-base;
   font-weight: 700;
   color: $hovy-gris-900;
@@ -133,7 +133,7 @@
 .turnos-agenda-card-direccion {
   display: flex;
   align-items: flex-start;
-  gap: 0.3rem;
+  gap: $hovy-espacio-4;
   font-size: $hovy-texto-sm;
   color: $hovy-gris-500;
 }
@@ -142,9 +142,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding-top: 0.6rem;
+  gap: $hovy-espacio-8;
+  margin-top: $hovy-espacio-12;
+  padding-top: $hovy-espacio-10;
   border-top: 1px solid $hovy-crema-100;
   font-size: $hovy-texto-sm;
 }
@@ -153,8 +153,8 @@
 .turnos-agenda-etiqueta {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.15rem 0.5rem;
+  gap: $hovy-espacio-4;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
   border-radius: $hovy-radio-pill;
   font-size: $hovy-texto-xs;
   font-weight: 700;
@@ -177,13 +177,13 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: $hovy-espacio-12;
   min-width: 0;
 
   .turnos-periodo-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
     flex: 1 1 22rem;
     min-width: 0;
   }
@@ -200,7 +200,7 @@
   .turnos-periodo-input {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
     min-width: 0;
     margin: 0;
   }
@@ -238,16 +238,16 @@
   .nuevo-turno-steps-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
+    gap: $hovy-espacio-8;
   }
 
   .nuevo-turno-step-btn {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: $hovy-espacio-10;
     width: 100%;
     min-width: 0;
-    padding: 0.65rem 0.75rem;
+    padding: $hovy-espacio-10 $hovy-espacio-12;
     border-radius: $hovy-radio-md;
     border: 1px solid transparent;
     background-color: transparent;
@@ -322,15 +322,15 @@
 @media (max-width: 767.98px) {
   .nuevo-turno-stepper .nuevo-turno-steps-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.35rem;
+    gap: $hovy-espacio-6;
   }
 
   .nuevo-turno-stepper .nuevo-turno-step-btn {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 0.5rem 0.25rem;
-    gap: 0.25rem;
+    padding: $hovy-espacio-8 $hovy-espacio-4;
+    gap: $hovy-espacio-4;
   }
 }
 
@@ -398,7 +398,7 @@
     left: 0;
     width: 100%;
     height: 1px;
-    margin-top: 8px;
+    margin-top: $hovy-espacio-8;
     opacity: 0;
     pointer-events: none;
     border: none;
@@ -409,7 +409,7 @@
 .turnos-page .turnos-hueco {
   line-height: 1.3;
   overflow: hidden;
-  padding: 0.25rem;
+  padding: $hovy-espacio-4;
 
   &.turnos-hueco-inhabilitado {
     color: $hovy-gris-800;
@@ -444,8 +444,8 @@
 
 @media (max-width: #{$hovy-bp-telefono}) {
   .turnos-page .turnos-view-option {
-    gap: 0.3rem;
-    padding-inline: 0.4rem !important;
+    gap: $hovy-espacio-4;
+    padding-inline: $hovy-espacio-6 !important;
   }
   .turnos-periodo .turnos-periodo-title { font-size: $hovy-texto-sm; }
 }
@@ -453,7 +453,7 @@
 @media (max-width: #{$hovy-bp-telefono-chico}) {
   .turnos-page .turnos-view-option {
     font-size: $hovy-texto-xs !important;
-    padding-inline: 0.2rem !important;
+    padding-inline: $hovy-espacio-4 !important;
     svg { width: 14px; height: 14px; }
   }
 }

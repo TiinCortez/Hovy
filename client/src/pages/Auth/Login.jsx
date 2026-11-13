@@ -68,13 +68,16 @@ export default function Login() {
                 
                 {/* Campo Usuario/Correo */}
                 <div className="mb-4">
-                  <label className="form-label fw-bold text-secondary mb-1">Correo Electrónico</label>
+                  <label htmlFor="login-email" className="form-label fw-bold text-secondary mb-1">Correo Electrónico</label>
                   <div className="input-group">
                     <span className="input-group-text bg-transparent border-end-0 rounded-start-pill ps-3 text-secondary">
-                      <User size={20} />
+                      <User size={20} aria-hidden="true" />
                     </span>
                     <input
-                      type="email" spellCheck={false} autoCapitalize="none"
+                      id="login-email"
+                      type="email" spellCheck={false} autoCapitalize="none" autoComplete="email"
+                      aria-invalid={errors.email ? 'true' : undefined}
+                      aria-describedby={errors.email ? 'login-email-error' : undefined}
                       className={`form-control border-start-0 rounded-end-pill py-2 ${errors.email ? 'is-invalid' : ''}`}
                       placeholder="Ingrese su correo"
                       {...register("email", { 
@@ -86,31 +89,37 @@ export default function Login() {
                       })}
                     />
                   </div>
-                  {errors.email && <div className="text-danger small mt-1 ps-3">{errors.email.message}</div>}
+                  {errors.email && <div id="login-email-error" className="text-danger small mt-1 ps-3">{errors.email.message}</div>}
                 </div>
 
                 {/* Campo Contraseña */}
                 <div className="mb-2">
-                  <label className="form-label fw-bold text-secondary mb-1">Contraseña</label>
+                  <label htmlFor="login-password" className="form-label fw-bold text-secondary mb-1">Contraseña</label>
                   <div className="input-group">
                     <span className="input-group-text bg-transparent border-end-0 rounded-start-pill ps-3 text-secondary">
-                      <Lock size={20} />
+                      <Lock size={20} aria-hidden="true" />
                     </span>
                     <input
+                      id="login-password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      aria-invalid={errors.password ? 'true' : undefined}
+                      aria-describedby={errors.password ? 'login-password-error' : undefined}
                       className={`form-control border-start-0 border-end-0 py-2 ${errors.password ? 'is-invalid' : ''}`}
                       placeholder="••••••••"
                       {...register("password", { required: "La contraseña es obligatoria" })}
                     />
-                    <span 
+                    <button
+                      type="button"
                       className="input-group-text bg-transparent border-start-0 rounded-end-pill pe-3 text-secondary"
-                      style={{ cursor: 'pointer' }}
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-pressed={showPassword}
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </span>
+                      {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                    </button>
                   </div>
-                  {errors.password && <div className="text-danger small mt-1 ps-3">{errors.password.message}</div>}
+                  {errors.password && <div id="login-password-error" className="text-danger small mt-1 ps-3">{errors.password.message}</div>}
                 </div>
 
                 {/* Recuperar Contraseña */}

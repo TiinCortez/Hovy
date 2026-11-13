@@ -84,7 +84,7 @@ export default function Home() {
       {/* Integrado al flujo natural para garantizar que todo encaje en el 100vh sin scroll */}
       <nav 
         className="d-md-none bg-white border-top d-flex justify-content-around align-items-center pt-2 shadow-lg w-100 flex-shrink-0"
-        style={{ zIndex: CAPAS.menu, paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' }}
+        style={{ zIndex: CAPAS.menu, paddingBottom: 'calc(env(safe-area-inset-bottom) + var(--hovy-espacio-8))' }}
       >
         <a href="#inicio" className="text-decoration-none text-center text-dark d-flex flex-column align-items-center flex-grow-1 px-1">
           <HomeIcon size={22} className="mb-1" />

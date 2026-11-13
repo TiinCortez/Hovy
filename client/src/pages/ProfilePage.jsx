@@ -57,7 +57,7 @@ export default function ProfilePage() {
             {rol && (
               <span
                 className="d-inline-flex align-items-center gap-1 rounded-pill fw-semibold mt-1"
-                style={{ padding: '0.2rem 0.6rem', fontSize: 'var(--hovy-texto-xs)', backgroundColor: 'rgba(27, 48, 6, 0.08)', color: VERDE }}
+                style={{ padding: 'var(--hovy-espacio-4) var(--hovy-espacio-10)', fontSize: 'var(--hovy-texto-xs)', backgroundColor: 'rgba(27, 48, 6, 0.08)', color: VERDE }}
               >
                 <ShieldCheck size={12} /> {rol}
               </span>

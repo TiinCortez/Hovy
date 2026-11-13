@@ -74,8 +74,8 @@ $notif-borde: $hovy-border;
 .notificacion-estado {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: $hovy-espacio-6;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
   border-radius: $hovy-radio-pill;
   border: 1px solid;
   font-size: $hovy-texto-xs;
@@ -88,7 +88,7 @@ $notif-borde: $hovy-border;
 
 // Filtros del historial
 .notificaciones-chip {
-  padding: 4px 10px;
+  padding: $hovy-espacio-4 $hovy-espacio-10;
   border: 0;
   border-radius: $hovy-radio-sm;
   font-size: $hovy-texto-xs;
@@ -104,8 +104,8 @@ $notif-borde: $hovy-border;
 .notificaciones-filtro-activo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-6 $hovy-espacio-14;
   border-radius: $hovy-radio-pill;
   background-color: $hovy-oliva-100;
   color: $hovy-oliva-800;
@@ -133,9 +133,9 @@ $notif-borde: $hovy-border;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.5rem 0.75rem;
-      padding: 0.875rem;
-      margin-bottom: 0.625rem;
+      gap: $hovy-espacio-8 $hovy-espacio-12;
+      padding: $hovy-espacio-14;
+      margin-bottom: $hovy-espacio-10;
       background-color: $hovy-crema-50;
       border: 1px solid $hovy-crema-300;
       border-radius: $hovy-radio-lg;

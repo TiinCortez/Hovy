@@ -48,8 +48,8 @@ $cobros-superficie: $hovy-crema-100;
 
 .cobros-kpi-deco {
   position: absolute;
-  right: -1.5rem;
-  bottom: -1.5rem;
+  right: -$hovy-espacio-24;
+  bottom: -$hovy-espacio-24;
   width: 6rem;
   height: 6rem;
   border-radius: $hovy-radio-circulo;
@@ -68,7 +68,7 @@ $cobros-superficie: $hovy-crema-100;
 .cobros-badge-terracota {
   display: inline-flex;
   align-items: center;
-  padding: 0.3rem 0.75rem;
+  padding: $hovy-espacio-4 $hovy-espacio-12;
   font-size: $hovy-texto-xs;
   font-weight: 700;
   line-height: 1.2;
@@ -133,9 +133,9 @@ $cobros-superficie: $hovy-crema-100;
     "cliente cliente"
     "servicio servicio"
     "monto estado";
-  gap: 0.5rem 1rem;
+  gap: $hovy-espacio-8 $hovy-espacio-16;
   align-items: center;
-  padding: 1rem;
+  padding: $hovy-espacio-16;
   border-bottom: 1px solid $cobros-borde;
   transition: background-color $hovy-duracion-rapida ease;
 
@@ -156,8 +156,8 @@ $cobros-superficie: $hovy-crema-100;
   @media (min-width: 992px) {
     grid-template-columns: 3fr 3fr 2fr 2fr 2fr;
     grid-template-areas: "turno cliente servicio monto estado";
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    gap: $hovy-espacio-12;
+    padding: $hovy-espacio-16 $hovy-espacio-24;
   }
 }
 
@@ -173,7 +173,7 @@ $cobros-superficie: $hovy-crema-100;
 }
 
 .cobros-encabezado {
-  padding-block: 0.85rem;
+  padding-block: $hovy-espacio-14;
   color: $hovy-oliva-700;
   background-color: $cobros-superficie;
   font-size: $hovy-texto-xs;
@@ -205,9 +205,9 @@ $cobros-superficie: $hovy-crema-100;
 .cobros-estado {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: $hovy-espacio-6;
   min-height: 34px;
-  padding: 0.35rem 0.85rem;
+  padding: $hovy-espacio-6 $hovy-espacio-14;
   font-size: $hovy-texto-sm;
   font-weight: 600;
   white-space: nowrap;

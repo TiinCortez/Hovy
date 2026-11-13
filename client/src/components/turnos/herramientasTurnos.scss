@@ -2,7 +2,7 @@
 .turnos-widgets {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: 1rem;
+  gap: $hovy-espacio-16;
   align-items: stretch;
 }
 
@@ -13,8 +13,8 @@
 }
 
 .turnos-widget-map {
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
   background: $hovy-blanco;
   border: 1px solid $hovy-crema-400;
   border-radius: $hovy-radio-lg;
@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: $hovy-espacio-16;
 
   h3 {
     margin: 0;
@@ -55,8 +55,8 @@
 
 .turnos-widget-clima .clima-panel {
   height: 100%;
-  gap: 0.6rem !important;
-  padding: 0.75rem 1rem !important;
+  gap: $hovy-espacio-10 !important;
+  padding: $hovy-espacio-12 $hovy-espacio-16 !important;
 }
 
 .turnos-tools-map {
@@ -69,7 +69,7 @@
     --agenda-map-min-height: 0px;
     width: 100vw;
     height: 100dvh;
-    padding: 1rem;
+    padding: $hovy-espacio-16;
     background: $hovy-crema-100;
   }
 
@@ -82,8 +82,8 @@
 
 .turnos-tools-expand.btn {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: $hovy-espacio-12;
+  right: $hovy-espacio-12;
   z-index: $hovy-capa-fija;
 }
 
@@ -92,7 +92,7 @@
   place-items: center;
   min-height: 12rem;
   height: 100%;
-  padding: 1.5rem;
+  padding: $hovy-espacio-24;
   color: $hovy-oliva-700;
   font-size: $hovy-texto-md;
   background: $hovy-crema-200;
