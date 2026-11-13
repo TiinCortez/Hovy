@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { estaVacio, falla, parsearIdSolicitud } from '../utils/solicitudesVisita.js';
-import { validarFechaNoPasada } from '../utils/fechaArgentina.js';
+import { validarFechaNoPasada, ahoraEnArgentina } from '../utils/fechaArgentina.js';
 import { FRANJAS_VALIDAS } from '../controllers/botVisitasController.js';
 import { listarServiciosActivos } from './catalogoPublicoService.js';
 import { consultarDisponibilidad } from './visitaFlujoService.js';
@@ -39,11 +39,28 @@ const notaConHorario = (horario, nota) => {
 export const DIAS_DISPONIBILIDAD_CLIENTE = 21;
 export const LIMITE_DIAS_CLIENTE = 10;
 
-export const consultarDisponibilidadCliente = async ({ query = {}, consultar = consultarDisponibilidad } = {}) => {
+export const consultarDisponibilidadCliente = async ({
+  query = {},
+  consultar = consultarDisponibilidad,
+  ahora = new Date(),
+} = {}) => {
   const fecha = estaVacio(query.fecha) ? null : String(query.fecha).trim();
-  return fecha
-    ? consultar({ fecha })
-    : consultar({ dias: DIAS_DISPONIBILIDAD_CLIENTE, limite: LIMITE_DIAS_CLIENTE });
+  const resultado = fecha
+    ? await consultar({ fecha })
+    : await consultar({ dias: DIAS_DISPONIBILIDAD_CLIENTE, limite: LIMITE_DIAS_CLIENTE });
+  if (resultado.error) return resultado;
+
+  // The shared agenda helper does not know the current time: for today, drop the
+  // slots that already started. A day left without slots is dropped from the list
+  // of days (with an explicit fecha it stays, empty, so the bot can say so).
+  const { fecha: hoy, segundos } = ahoraEnArgentina(ahora);
+  const minutoActual = Math.floor(segundos / 60);
+  const dias = (resultado.data ?? []).map((dia) => (dia.fecha !== hoy ? dia : {
+    ...dia,
+    disponibles: (dia.disponibles ?? []).filter((h) => minutos(String(h.inicio_desde).slice(0, 5)) > minutoActual),
+  }));
+
+  return { data: fecha ? dias : dias.filter((dia) => (dia.disponibles ?? []).length > 0) };
 };
 
 // Turno request of an EXISTING client from the WhatsApp bot.
