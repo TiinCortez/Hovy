@@ -16,45 +16,45 @@ export function EstimadoTable({ lineas, total, traslado = null, montoTraslado = 
   const trasladoIncluido = traslado?.incluido === true;
   return (
     <div className="table-responsive">
-      <table className="table table-sm align-middle small mb-2">
+      <table className="table align-middle small mb-2 estimado-tabla">
         <thead>
-          <tr className="text-secondary">
-            <th>Servicio</th>
-            <th className="text-end">m²</th>
-            <th className="text-end">Precio por m²</th>
-            <th className="text-end">Subtotal</th>
+          <tr className="text-secondary text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+            <th className="px-3 py-2">Servicio</th>
+            <th className="px-3 py-2 text-end text-nowrap">m²</th>
+            <th className="px-3 py-2 text-end text-nowrap">Precio por m²</th>
+            <th className="px-3 py-2 text-end text-nowrap">Subtotal</th>
           </tr>
         </thead>
         <tbody>
           {lineas.map((l) => (
             <tr key={l.id_servicio}>
-              <td>{l.nombre}</td>
-              <td className="text-end">{l.superficie_m2}</td>
-              <td className="text-end">{l.precio_m2 != null ? formatMoney(l.precio_m2) : '-'}</td>
-              <td className="text-end">{l.subtotal != null ? formatMoney(l.subtotal) : '-'}</td>
+              <td className="px-3 py-2">{l.nombre}</td>
+              <td className="px-3 py-2 text-end text-nowrap">{l.superficie_m2}</td>
+              <td className="px-3 py-2 text-end text-nowrap">{l.precio_m2 != null ? formatMoney(l.precio_m2) : '-'}</td>
+              <td className="px-3 py-2 text-end text-nowrap">{l.subtotal != null ? formatMoney(l.subtotal) : '-'}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           {trasladoIncluido && (
             <tr>
-              <td colSpan={3}>
+              <td colSpan={3} className="px-3 py-2">
                 <span className="fw-semibold">Traslado</span>
                 {traslado.km_aproximados && <span className="combustible-pill">Aproximado</span>}
                 <small className="d-block text-secondary">{formulaTraslado(traslado, formatMoney)}</small>
               </td>
-              <td className="text-end">{formatMoney(traslado.costo)}</td>
+              <td className="px-3 py-2 text-end text-nowrap">{formatMoney(traslado.costo)}</td>
             </tr>
           )}
           {!trasladoIncluido && montoTraslado > 0 && (
             <tr>
-              <td colSpan={3} className="fw-semibold">Traslado (combustible)</td>
-              <td className="text-end">{formatMoney(montoTraslado)}</td>
+              <td colSpan={3} className="px-3 py-2 fw-semibold">Traslado (combustible)</td>
+              <td className="px-3 py-2 text-end text-nowrap">{formatMoney(montoTraslado)}</td>
             </tr>
           )}
           <tr className="fw-bold">
-            <td colSpan={3} className="text-end">Total estimado</td>
-            <td className="text-end">{formatMoney(total)}</td>
+            <td colSpan={3} className="px-3 py-2 text-end">Total estimado</td>
+            <td className="px-3 py-2 text-end text-nowrap">{formatMoney(total)}</td>
           </tr>
         </tfoot>
       </table>

@@ -143,7 +143,8 @@ export default function CobrosPage() {
     setGuardandoId(turno.idTurno);
     try {
       const response = await TurnoService.update(turno.idTurno, { cobrado });
-      setTurnos((prev) => prev.map((t) => (t.idTurno === turno.idTurno ? response.data : t)));
+      // El PUT no calcula lo pagado: se conserva el valor que ya tenía el listado.
+      setTurnos((prev) => prev.map((t) => (t.idTurno === turno.idTurno ? { ...response.data, pagado: t.pagado } : t)));
       setFeedback({
         type: 'success',
         text: cobrado
@@ -165,7 +166,15 @@ export default function CobrosPage() {
       setFeedback({ type: 'success', text: `El turno ${codigoOrden(turno)} quedó cobrado.` });
     } else {
       setFeedback({ type: 'success', text: `Se registró el pago del turno ${codigoOrden(turno)}; todavía queda saldo pendiente.` });
+      // Recarga el listado sin skeleton para que la fila muestre lo que ya pagó.
+      setReloadKey((k) => k + 1);
     }
+  };
+
+  // El panel de QR se cerró: el cliente pudo haber pagado una parte (o todo) por Mercado Pago.
+  const handleQrCerrado = () => {
+    setPagando(null);
+    setReloadKey((k) => k + 1);
   };
 
   const handleVerDetalle = (turno) => {
@@ -330,6 +339,7 @@ export default function CobrosPage() {
           onRegistrado={(resultado) => handlePagoRegistrado(pagando, resultado)}
           onSinSaldo={() => { const turno = pagando; setPagando(null); actualizarCobrado(turno, true); }}
           onFallo={(text) => { setPagando(null); setFeedback({ type: 'danger', text }); }}
+          onQrCerrado={handleQrCerrado}
           onClose={() => setPagando(null)}
         />
       )}

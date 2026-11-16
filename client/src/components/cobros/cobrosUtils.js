@@ -59,6 +59,19 @@ export const diasEntre = (desdeIso, hastaIso) => {
 
 export const montoFinal = (turno) => Number(turno.presupuesto?.monto_total ?? 0);
 
+// Lo ya pagado de un turno pendiente (pago parcial), nunca más que el total.
+export const montoPagado = (turno) => {
+  if (turno.cobrado) return montoFinal(turno);
+  const pagado = Number(turno.pagado ?? 0);
+  return Number.isFinite(pagado) && pagado > 0 ? Math.min(pagado, montoFinal(turno)) : 0;
+};
+
+// Lo que el cliente todavía debe del turno.
+export const montoPendiente = (turno) =>
+  Math.round((montoFinal(turno) - montoPagado(turno)) * 100) / 100;
+
+export const tienePagoParcial = (turno) => !turno.cobrado && montoPagado(turno) > 0;
+
 // Pendiente con más de DIAS_ALERTA_COBRO días desde la ejecución
 export const cobroAtrasado = (turno, hoyIso) =>
   !turno.cobrado && diasEntre(turno.fechaAsignada, hoyIso) > DIAS_ALERTA_COBRO;
@@ -77,7 +90,9 @@ export const resumirCobros = (liquidaciones, hoyIso) => {
       recaudado += montoFinal(t);
       cantidadCobrados += 1;
     } else {
-      porCobrar += montoFinal(t);
+      // Un pago parcial ya está recaudado: solo falta cobrar el resto.
+      recaudado += montoPagado(t);
+      porCobrar += montoPendiente(t);
       cantidadPendientes += 1;
       if (cobroAtrasado(t, hoyIso)) cantidadAtrasados += 1;
     }

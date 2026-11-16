@@ -25,6 +25,35 @@ export const formatDia = (iso) => {
 
 export const hhmm = (hora) => (hora ? String(hora).slice(0, 5) : '');
 
+const FRANJA_INICIO_TARDE_MIN = 13 * 60;
+const aMinutos = (hora) => Number(hhmm(hora).slice(0, 2)) * 60 + Number(hhmm(hora).slice(3, 5));
+
+// What the client asked for in the request: preferred day, time slot (the bot writes it
+// in nota_horario as "Horario elegido: 15:00 a 17:00") and franja (Mañana | Tarde).
+export const horarioSolicitado = (visita) => {
+  const fecha = /^\d{4}-\d{2}-\d{2}/.test(visita?.fecha_preferida ?? '') ? visita.fecha_preferida.slice(0, 10) : null;
+  const coincidencia = /Horario elegido:\s*(\d{2}:\d{2})\s*a\s*(\d{2}:\d{2})/.exec(visita?.nota_horario ?? '');
+  const franja = ['Mañana', 'Tarde'].includes(visita?.franja_preferida) ? visita.franja_preferida : null;
+  return {
+    fecha,
+    desde: coincidencia?.[1] ?? null,
+    hasta: coincidencia?.[2] ?? null,
+    franja,
+  };
+};
+
+// Slot to preselect among the free ones: the exact one the client tapped, else the first
+// one inside their franja. null when none fits (the admin picks by hand).
+export const slotSolicitado = (slots, solicitado) => {
+  if (!Array.isArray(slots) || !solicitado) return null;
+  if (solicitado.desde && solicitado.hasta) {
+    const exacto = slots.find((s) => hhmm(s.inicio_desde) === solicitado.desde && hhmm(s.hasta) === solicitado.hasta);
+    if (exacto) return exacto;
+  }
+  if (!solicitado.franja) return null;
+  return slots.find((s) => (aMinutos(s.inicio_desde) < FRANJA_INICIO_TARDE_MIN) === (solicitado.franja === 'Mañana')) ?? null;
+};
+
 export const getApiError = (err, fallback) => err.response?.data?.error || fallback;
 
 // Backend "Realizada" means "turno agendado": it is shown as Confirmada
