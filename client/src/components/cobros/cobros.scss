@@ -233,6 +233,30 @@ $cobros-superficie: $hovy-crema-100;
   }
 }
 
+// Acción única de una fila pendiente: cobra el turno (abre el modal de pago)
+.cobros-estado.is-accion {
+  color: $cobros-verde;
+  background-color: #fff;
+  border-color: #BBD4B6;
+  &:not(:disabled):hover { background-color: #EAF2E8; }
+}
+
+// Pago parcial: el total original va tachado y debajo lo que todavía se debe
+.cobros-monto-total-tachado {
+  display: block;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: #8A9387;
+  text-decoration: line-through;
+}
+
+.cobros-parcial-detalle {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $cobros-verde-medio;
+}
+
 .cobros-link-cobrar {
   padding: 0;
   font-size: $hovy-texto-xs;

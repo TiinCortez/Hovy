@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import VisitaService from '../../services/api/visita.service';
-import { PRIORIDADES, getApiError, hhmm } from './visitaUtils';
+import { PRIORIDADES, getApiError, formatDia, hhmm, horarioSolicitado, slotSolicitado } from './visitaUtils';
 import { VERDE } from '../../styles/colores';
 
 const todayISO = () => {
@@ -15,15 +15,24 @@ const todayISO = () => {
 // Step 4 of Confirmada: pick day + slot (or no specific slot) and book the turno.
 // `enabled` is false until the final price is accepted (the backend would answer 409).
 export default function TurnoPanel({ visita, enabled, onSaved }) {
-  const [fecha, setFecha] = useState('');
+  const solicitado = horarioSolicitado(visita);
+  // The day the client asked for comes preloaded, unless it is already in the past.
+  const fechaInicial = solicitado.fecha && solicitado.fecha >= todayISO() ? solicitado.fecha : '';
+  const [fecha, setFecha] = useState(fechaInicial);
   const [slots, setSlots] = useState(null); // null = not queried yet
-  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(Boolean(fechaInicial) && enabled);
   const [slotKey, setSlotKey] = useState(''); // '' = no specific slot
   const [prioridad, setPrioridad] = useState('P3_Casual');
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const handleFecha = async (value) => {
+  const textoSolicitado = [
+    solicitado.fecha ? formatDia(solicitado.fecha) : null,
+    solicitado.desde ? `${solicitado.desde} a ${solicitado.hasta}` : solicitado.franja ? `por la ${solicitado.franja === 'Mañana' ? 'mañana' : 'tarde'}` : null,
+  ].filter(Boolean).join(', ');
+
+  // Loads the free slots of a day. `preseleccionar` picks the slot the client asked for.
+  const cargarSlots = async (value, preseleccionar = false) => {
     setFecha(value);
     setSlotKey('');
     setSlots(null);
@@ -32,13 +41,39 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
     setLoadingSlots(true);
     try {
       const res = await VisitaService.getDisponibilidad(visita.id_solicitud, { fecha: value });
-      setSlots(res.data?.[0]?.disponibles || []);
+      const disponibles = res.data?.[0]?.disponibles || [];
+      setSlots(disponibles);
+      if (preseleccionar) {
+        const elegido = slotSolicitado(disponibles, solicitado);
+        if (elegido) setSlotKey(`${hhmm(elegido.inicio_desde)}|${hhmm(elegido.hasta)}`);
+      }
     } catch (err) {
       setErrorMessage(getApiError(err, 'No se pudo consultar la disponibilidad.'));
     } finally {
       setLoadingSlots(false);
     }
   };
+
+  const handleFecha = (value) => cargarSlots(value, value === solicitado.fecha);
+
+  // Free slots of the preloaded day, with the one the client asked for preselected.
+  useEffect(() => {
+    if (!enabled || !fechaInicial) return undefined;
+    let cancelled = false;
+    VisitaService.getDisponibilidad(visita.id_solicitud, { fecha: fechaInicial })
+      .then((res) => {
+        if (cancelled) return;
+        const disponibles = res.data?.[0]?.disponibles || [];
+        setSlots(disponibles);
+        const elegido = slotSolicitado(disponibles, solicitado);
+        if (elegido) setSlotKey(`${hhmm(elegido.inicio_desde)}|${hhmm(elegido.hasta)}`);
+      })
+      .catch((err) => { if (!cancelled) setErrorMessage(getApiError(err, 'No se pudo consultar la disponibilidad.')); })
+      .finally(() => { if (!cancelled) setLoadingSlots(false); });
+    return () => { cancelled = true; };
+    // Only when the step opens: after that the admin drives the date.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, visita.id_solicitud]);
 
   const handleAsignar = async () => {
     setIsSaving(true);
@@ -67,6 +102,11 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
       ) : (
         <>
           <p className="text-secondary small mb-3">Elegí el día y, si querés, un horario disponible.</p>
+          {textoSolicitado && (
+            <p className="small mb-3 p-2 px-3 rounded-3 bg-light border">
+              <span className="fw-bold text-secondary">El cliente pidió:</span> {textoSolicitado}
+            </p>
+          )}
 
           {errorMessage && (
             <div className="alert alert-danger d-flex align-items-center gap-2 rounded-3" role="alert">

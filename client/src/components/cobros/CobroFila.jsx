@@ -1,12 +1,13 @@
 import {
-  AlertCircle, Clock, MapPin, Wrench, MoreVertical, CheckCircle2, Hourglass,
+  AlertCircle, Clock, MapPin, Wrench, MoreVertical, CheckCircle2, Plus,
   FileText, MessageCircle, RotateCcw,
 } from 'lucide-react';
 import Button from '../ui/Button';
 import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import { formatearHorarioTurno, formatearMontoARS } from '../turnos/agendaTurnos';
 import {
-  codigoOrden, formatearDiaCorto, montoFinal, cobroAtrasado, diasEntre, DIAS_ALERTA_COBRO,
+  codigoOrden, formatearDiaCorto, montoFinal, montoPagado, montoPendiente, tienePagoParcial,
+  cobroAtrasado, diasEntre, DIAS_ALERTA_COBRO,
 } from './cobrosUtils';
 import { CAPAS } from '../../styles/capas';
 
@@ -16,12 +17,15 @@ export default function CobroFila({
 }) {
   const { cobrado, cliente = {}, inmueble = {}, fechaAsignada } = turno;
   const monto = montoFinal(turno);
+  const parcial = tienePagoParcial(turno);
+  const pagado = montoPagado(turno);
+  const pendiente = montoPendiente(turno);
   const atrasado = cobroAtrasado(turno, hoy);
   const diasSinCobrar = diasEntre(fechaAsignada, hoy);
   const ubicacion = [inmueble.direccion, inmueble.barrio].filter(Boolean).join(', ') || 'Sin dirección';
 
   const enlaceWhatsApp = obtenerEnlaceWhatsApp(cliente.telefono);
-  const mensaje = `Hola ${cliente.nombre || ''}, te escribimos de Hovy para recordarte que está pendiente el pago del servicio realizado el ${formatearDiaCorto(fechaAsignada)} por ${formatearMontoARS(monto)}. ¡Muchas gracias!`;
+  const mensaje = `Hola ${cliente.nombre || ''}, te escribimos de Hovy para recordarte que está pendiente el pago del servicio realizado el ${formatearDiaCorto(fechaAsignada)} por ${formatearMontoARS(pendiente)}. ¡Muchas gracias!`;
   const urlWhatsApp = enlaceWhatsApp ? `${enlaceWhatsApp}?text=${encodeURIComponent(mensaje)}` : null;
 
   return (
@@ -66,34 +70,43 @@ export default function CobroFila({
       </div>
 
       <div className="cobros-celda-monto">
-        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Presupuesto final</span>
-        <span className={`cobros-monto ${cobrado ? 'is-cobrado' : 'is-pendiente'}`}>{formatearMontoARS(monto)}</span>
+        <span className="d-block d-lg-none text-secondary fw-semibold" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
+          {parcial ? 'Saldo pendiente' : 'Presupuesto final'}
+        </span>
+        {parcial && <span className="cobros-monto-total-tachado">{formatearMontoARS(monto)}</span>}
+        <span className={`cobros-monto ${cobrado ? 'is-cobrado' : 'is-pendiente'}`}>
+          {formatearMontoARS(parcial ? pendiente : monto)}
+        </span>
+        {parcial && (
+          <span className="cobros-parcial-detalle">Pagó {formatearMontoARS(pagado)}</span>
+        )}
       </div>
 
       <div className="cobros-celda-estado d-flex align-items-center justify-content-end justify-content-lg-center gap-2">
-        <div className="d-flex flex-column align-items-center">
+        {cobrado ? (
           <button
             type="button"
-            className={`cobros-estado ${cobrado ? 'is-cobrado' : 'is-pendiente'}`}
-            onClick={() => onCambiarCobrado(turno, !cobrado)}
+            className="cobros-estado is-cobrado"
+            onClick={() => onCambiarCobrado(turno, false)}
             disabled={guardando}
-            aria-label={cobrado ? 'Cobrado. Click para volver a pendiente' : 'Pendiente. Click para marcar como cobrado'}
-            title={cobrado ? 'Volver a pendiente' : 'Marcar como cobrado'}
+            aria-label="Cobrado. Click para volver a pendiente"
+            title="Volver a pendiente"
           >
-            {cobrado ? <CheckCircle2 size={16} /> : <Hourglass size={16} />}
-            <span>{cobrado ? 'Cobrado' : 'Pendiente'}</span>
+            <CheckCircle2 size={16} />
+            <span>Cobrado</span>
           </button>
-          {!cobrado && (
-            <button
-              type="button"
-              className="cobros-link-cobrar mt-1"
-              onClick={() => onCambiarCobrado(turno, true)}
-              disabled={guardando}
-            >
-              + Marcar cobrado
-            </button>
-          )}
-        </div>
+        ) : (
+          <button
+            type="button"
+            className="cobros-estado is-accion"
+            onClick={() => onCambiarCobrado(turno, true)}
+            disabled={guardando}
+            title="Registrar el cobro de este turno"
+          >
+            <Plus size={16} />
+            <span>Marcar cobrado</span>
+          </button>
+        )}
 
         <div className="position-relative" onClick={(e) => e.stopPropagation()}>
           <Button

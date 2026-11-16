@@ -94,6 +94,52 @@ const obtenerServiciosPorPresupuesto = async (idsPresupuesto) => {
   return porPresupuesto;
 };
 
+const TAMANO_LOTE_IDS = 150;
+
+const enLotes = (lista, tamano) => {
+  const lotes = [];
+  for (let i = 0; i < lista.length; i += tamano) lotes.push(lista.slice(i, i + tamano));
+  return lotes;
+};
+
+// Lo ya cobrado (pagos aprobados) de cada turno Realizado: sirve para mostrar un pago
+// parcial en la vista de Cobros. Un fallo acá no debe tirar el listado: degrada a vacío.
+const obtenerPagadoPorTurno = async (idsTurno) => {
+  const pagadoPorTurno = new Map();
+  const ids = [...new Set(idsTurno.filter((id) => id !== null && id !== undefined))];
+  if (ids.length === 0) return pagadoPorTurno;
+
+  try {
+    const turnoPorTrabajo = new Map();
+    for (const lote of enLotes(ids, TAMANO_LOTE_IDS)) {
+      const { data, error } = await supabaseAdmin
+        .from('trabajos_ejecutados')
+        .select('id_trabajo, id_turno')
+        .in('id_turno', lote);
+      if (error) throw error;
+      for (const t of data ?? []) turnoPorTrabajo.set(t.id_trabajo, t.id_turno);
+    }
+
+    const centavosPorTurno = new Map();
+    for (const lote of enLotes([...turnoPorTrabajo.keys()], TAMANO_LOTE_IDS)) {
+      const { data, error } = await supabaseAdmin
+        .from('pagos')
+        .select('id_trabajo, monto')
+        .eq('estado', 'Aprobado')
+        .in('id_trabajo', lote);
+      if (error) throw error;
+      for (const pago of data ?? []) {
+        const idTurno = turnoPorTrabajo.get(pago.id_trabajo);
+        centavosPorTurno.set(idTurno, (centavosPorTurno.get(idTurno) ?? 0) + Math.round(Number(pago.monto) * 100));
+      }
+    }
+    for (const [idTurno, centavos] of centavosPorTurno) pagadoPorTurno.set(idTurno, centavos / 100);
+  } catch (error) {
+    console.error('Error al consultar los pagos de los turnos:', error);
+  }
+  return pagadoPorTurno;
+};
+
 const armarServicio = (infoPresupuesto) => {
   const nombres = Array.isArray(infoPresupuesto)
     ? infoPresupuesto
@@ -108,7 +154,7 @@ const armarServicio = (infoPresupuesto) => {
   };
 };
 
-const formatearTurnoRespuesta = (t, infoPresupuesto) => ({
+const formatearTurnoRespuesta = (t, infoPresupuesto, pagado = 0) => ({
   idTurno: t.id_turno,
   fechaAsignada: t.fecha_programada,
   franjaHoraria: { horaInicio: t.inicio_desde, horaFin: t.hasta },
@@ -117,6 +163,8 @@ const formatearTurnoRespuesta = (t, infoPresupuesto) => ({
   motivo_cancelacion: t.motivo_cancelacion,
   // Estado de cobro del turno (vista de Cobros). null se toma como pendiente.
   cobrado: t.cobrado === true,
+  // Pagos aprobados hasta ahora; solo el listado lo calcula (en el resto queda en 0).
+  pagado,
   inmueble: t.inmueble,
   cliente: t.inmueble?.cliente,
   servicio: armarServicio(infoPresupuesto),
@@ -141,8 +189,12 @@ export const getTurnos = async (req, res) => {
 
     const serviciosPorPresupuesto = await obtenerServiciosPorPresupuesto(data.map(t => t.id_presupuesto));
 
+    const pagadoPorTurno = await obtenerPagadoPorTurno(
+      data.filter((t) => t.estado === 'Realizado' && t.cobrado !== true).map((t) => t.id_turno)
+    );
+
     const turnosFormateados = data.map(t =>
-      formatearTurnoRespuesta(t, serviciosPorPresupuesto.get(t.id_presupuesto))
+      formatearTurnoRespuesta(t, serviciosPorPresupuesto.get(t.id_presupuesto), pagadoPorTurno.get(t.id_turno) ?? 0)
     );
 
     res.status(200).json({ ok: true, data: turnosFormateados });
