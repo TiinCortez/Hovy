@@ -15,8 +15,8 @@ import Badge from '../ui/Badge';
 export function EstimadoTable({ lineas, total, traslado = null, montoTraslado = 0 }) {
   const trasladoIncluido = traslado?.incluido === true;
   return (
-    <div className="table-responsive">
-      <table className="table align-middle small mb-2 estimado-tabla">
+    <div className="table-responsive w-100">
+      <table className="table w-100 align-middle small mb-2 estimado-tabla">
         <thead>
           <tr className="text-secondary text-uppercase" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
             <th className="px-3 py-2">Servicio</th>

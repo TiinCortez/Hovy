@@ -6,7 +6,7 @@ process.env.SUPABASE_URL = 'https://visita-confirmar-inmueble-tests.supabase.co'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'visita-confirmar-inmueble-tests-sin-conexion';
 
 const { supabaseAdmin } = await import('../config/supabase.js');
-const { confirmarVisita } = await import('../services/visitaFlujoService.js');
+const { confirmarVisita, agendarTurnoVisita } = await import('../services/visitaFlujoService.js');
 
 const SOLICITUD_BASE = {
   id_solicitud: 30,
@@ -39,7 +39,7 @@ const mockBase = (t, respuestas) => {
       return typeof valor === 'function' ? valor(consulta) : (valor ?? { data: null, error: null });
     };
     const builder = {};
-    for (const op of ['select', 'eq', 'is', 'in', 'limit', 'insert', 'update']) {
+    for (const op of ['select', 'eq', 'neq', 'not', 'lt', 'gt', 'is', 'in', 'limit', 'insert', 'update']) {
       builder[op] = (...args) => { consulta.ops.push([op, ...args]); return builder; };
     }
     builder.maybeSingle = () => Promise.resolve(resolver());
@@ -118,4 +118,38 @@ test('confirmarVisita: una solicitud sin inmueble sigue creando uno nuevo (flujo
     longitud: -64.18,
   });
   assert.equal(resultado.inmueble.id_inmueble, 99);
+});
+
+test('agendarTurnoVisita: un turno agendado desde solicitudes se crea en estado Confirmado', async (t) => {
+  const consultas = mockBase(t, {
+    'solicitudes_visita:select': {
+      data: { ...SOLICITUD_BASE, estado: 'Confirmada', id_inmueble: 7, id_presupuesto: 15 },
+      error: null,
+    },
+    'presupuestos:select': {
+      data: { id_presupuesto: 15, estado: 'Aceptado' },
+      error: null,
+    },
+    'turnos:select': { data: [], error: null },
+    'turnos:insert': (c) => ({
+      data: { id_turno: 501, ...c.ops.find(([o]) => o === 'insert')[1] },
+      error: null,
+    }),
+    'solicitudes_visita:update': (c) => ({
+      data: { ...SOLICITUD_BASE, ...c.ops.find(([o]) => o === 'update')[1] },
+      error: null,
+    }),
+  });
+
+  const resultado = await agendarTurnoVisita(30, {
+    fecha_programada: '2099-12-20',
+    inicio_desde: '09:00',
+    hasta: '11:00',
+    prioridad: 'P3_Casual',
+  });
+
+  assert.equal(resultado.error, undefined);
+  const insertTurno = opDe(consultas, 'turnos', 'insert').ops.find(([o]) => o === 'insert')[1];
+  assert.equal(insertTurno.estado, 'Confirmado');
+  assert.equal(resultado.turno.estado, 'Confirmado');
 });
