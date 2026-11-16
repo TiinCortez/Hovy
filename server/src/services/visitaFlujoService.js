@@ -387,7 +387,7 @@ export const agendarTurnoVisita = async (idSolicitud, body) => {
       inicio_desde: vinoInicio ? body.inicio_desde : null,
       hasta: vinoInicio ? body.hasta : null,
       prioridad: body.prioridad,
-      estado: 'Coordinado',
+      estado: 'Confirmado',
     })
     .select()
     .single();

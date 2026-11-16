@@ -1473,8 +1473,76 @@ a, button, input, select, textarea, label, [role="button"] { touch-action: manip
 // The Bootstrap tables module is not imported: restore the horizontal scroll of
 // .table-responsive so a wide table never pushes the whole page sideways.
 .table-responsive {
+  width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.estimado-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  thead th {
+    padding: $hovy-espacio-10 $hovy-espacio-16;
+    background-color: $hovy-crema-100;
+    border-bottom: 1px solid $hovy-crema-300;
+
+    &:first-child { border-radius: $hovy-radio-md 0 0 $hovy-radio-md; }
+    &:last-child { border-radius: 0 $hovy-radio-md $hovy-radio-md 0; }
+  }
+
+  tbody td,
+  tfoot td {
+    padding: $hovy-espacio-12 $hovy-espacio-16;
+    border-bottom: 1px solid $hovy-crema-200;
+  }
+
+  tfoot tr:last-child td {
+    border-bottom: 0;
+    padding-top: $hovy-espacio-14;
+    font-size: $hovy-texto-base;
+    color: $hovy-verde-850;
+  }
+}
+
+@keyframes hovyGuardadoPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes hovyCheckPop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  60% { opacity: 1; transform: scale(1.18) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes hovyFeedbackSlideIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.btn-servicio-guardado {
+  background-color: $hovy-esmeralda-600 !important;
+  border-color: $hovy-esmeralda-600 !important;
+  animation: hovyGuardadoPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.servicio-check-icon {
+  animation: hovyCheckPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.servicio-guardado-feedback {
+  animation: hovyFeedbackSlideIn 0.28s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-servicio-guardado,
+  .servicio-check-icon,
+  .servicio-guardado-feedback {
+    animation: none;
+  }
 }
 
 /* --- COMPARACIÓN ESTIMADO / PRECIO FINAL (detalle de solicitud) --- */

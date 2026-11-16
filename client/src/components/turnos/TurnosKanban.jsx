@@ -1,8 +1,21 @@
 import { useId, useState } from 'react';
-import { MapPin, Clock, ChevronRight, ChevronDown } from 'lucide-react';
+import { MapPin, Clock, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
 import Card from '../ui/Card';
+import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import { PRIORIDADES_CONFIG as prioridadesConfig, compararHorarioTurnos, formatearHorarioTurno } from './agendaTurnos';
 import { VERDE } from '../../styles/colores';
+
+const buildCoordinateWhatsAppUrl = (turno) => {
+  const base = obtenerEnlaceWhatsApp(turno.cliente?.telefono);
+  if (!base) return null;
+  const nombre = turno.cliente?.nombre ? ` ${turno.cliente.nombre}` : '';
+  const fechaTexto = turno.fechaAsignada
+    ? turno.fechaAsignada.split('-').reverse().join('/')
+    : '';
+  const horario = formatearHorarioTurno(turno);
+  const mensaje = `Hola${nombre}, nos comunicamos de Hovy para coordinar el horario del turno del día ${fechaTexto} (${horario}). ¿Te queda bien ese horario?`;
+  return `${base}?text=${encodeURIComponent(mensaje)}`;
+};
 
 export default function TurnosKanban({ turnos, onSelectTurno }) {
   const [colFiltro, setColFiltro] = useState('TODOS'); // Filtro de columnas activo restaurado
@@ -34,8 +47,10 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
 
   const renderCard = (turno) => {
     const pConf = prioridadesConfig[turno.prioridad];
+    const isCoordinado = turno.estado === 'COORDINADO';
     const isRealizado = turno.estado === 'REALIZADO';
     const isEjecucion = turno.estado === 'EN_EJECUCION';
+    const urlWhatsApp = isCoordinado ? buildCoordinateWhatsAppUrl(turno) : null;
     // Priority label: "P2 · Fijo". P1 (reasignado / urgente) is the only one highlighted.
     const [, tipoPrioridad = ''] = pConf.short.split(' - ');
     const etiquetaPrioridad = `${pConf.code} · ${tipoPrioridad.charAt(0)}${tipoPrioridad.slice(1).toLowerCase()}`;
@@ -88,9 +103,39 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
 
         <div className="turnos-agenda-card-pie">
           <span className="fw-semibold text-dark min-w-0 text-break">{turno.servicio.descripcion}</span>
-          <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: VERDE }}>
-            {isEjecucion ? 'Ver ficha' : 'Detalle'} <ChevronRight size={14} />
-          </span>
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            {isCoordinado && (
+              urlWhatsApp ? (
+                <a
+                  href={urlWhatsApp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm btn-success rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1 fw-semibold"
+                  style={{ fontSize: 'var(--hovy-texto-xs)' }}
+                  aria-label={`Coordinar horario por WhatsApp con ${turno.cliente?.nombre || 'el cliente'}`}
+                  title="Coordinar horario por WhatsApp"
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  <MessageCircle size={13} aria-hidden="true" /> WhatsApp
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="btn btn-sm btn-light border rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1 fw-semibold text-secondary"
+                  style={{ fontSize: 'var(--hovy-texto-xs)' }}
+                  title="El cliente no tiene un teléfono válido para WhatsApp"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <MessageCircle size={13} aria-hidden="true" /> WhatsApp
+                </button>
+              )
+            )}
+            <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: VERDE }}>
+              {isEjecucion ? 'Ver ficha' : 'Detalle'} <ChevronRight size={14} />
+            </span>
+          </div>
         </div>
       </div>
     );

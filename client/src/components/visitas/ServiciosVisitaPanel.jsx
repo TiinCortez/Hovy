@@ -1,11 +1,28 @@
-import { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import ServicioService from '../../services/api/servicio.service';
 import VisitaService from '../../services/api/visita.service';
 import { getApiError, formatMoney } from './visitaUtils';
 import { VERDE } from '../../styles/colores';
+
+const normalizeServiceText = (value) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const matchesRequestedService = (catalogName, requestedService) => {
+  const normCatalog = normalizeServiceText(catalogName);
+  const normRequested = normalizeServiceText(requestedService);
+  if (!normCatalog || !normRequested) return false;
+  if (normCatalog === normRequested) return true;
+  const parts = normRequested.split(/[,;/]+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.includes(normCatalog)) return true;
+  return normRequested.includes(normCatalog) || normCatalog.includes(normRequested);
+};
 
 // Step 1 of Confirmada: pick services from the admin's active catalog and set m2 per service
 export default function ServiciosVisitaPanel({ visita, onSaved }) {
@@ -20,13 +37,36 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
     Object.fromEntries(saved.map((s) => [s.id_servicio, String(s.superficie_m2)]))
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const saveTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     ServicioService.getMios()
       .then((res) => {
-        if (isMounted) setCatalogo((res.data || []).filter((s) => s.activo));
+        if (!isMounted) return;
+        const activos = (res.data || []).filter((s) => s.activo);
+        setCatalogo(activos);
+        if (saved.length === 0 && visita.servicio) {
+          const matched = activos.filter((s) =>
+            matchesRequestedService(s.servicio?.nombre, visita.servicio)
+          );
+          if (matched.length > 0) {
+            setSelected((prev) => {
+              if (Object.keys(prev).length > 0) return prev;
+              return Object.fromEntries(
+                matched.map((s) => [s.id_servicio, defaultM2])
+              );
+            });
+          }
+        }
       })
       .catch((err) => {
         if (isMounted) setLoadError(getApiError(err, 'No se pudo cargar tu catálogo de servicios.'));
@@ -35,9 +75,10 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
         if (isMounted) setLoading(false);
       });
     return () => { isMounted = false; };
-  }, []);
+  }, [defaultM2, saved.length, visita.servicio]);
 
   const toggle = (id) => {
+    setJustSaved(false);
     setSelected((prev) => {
       const next = { ...prev };
       if (id in next) delete next[id];
@@ -46,18 +87,27 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
     });
   };
 
-  const setM2 = (id, value) => setSelected((prev) => ({ ...prev, [id]: value }));
+  const setM2 = (id, value) => {
+    setJustSaved(false);
+    setSelected((prev) => ({ ...prev, [id]: value }));
+  };
 
   const ids = Object.keys(selected);
   const invalid = ids.some((id) => !(Number(selected[id]) > 0));
 
   const handleSave = async () => {
     setIsSaving(true);
+    setJustSaved(false);
     setErrorMessage(null);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     try {
       const servicios = ids.map((id) => ({ id_servicio: Number(id), superficie_m2: Number(selected[id]) }));
       await VisitaService.setServicios(visita.id_solicitud, servicios);
       await onSaved('Servicios guardados.');
+      setJustSaved(true);
+      saveTimerRef.current = setTimeout(() => {
+        setJustSaved(false);
+      }, 2600);
     } catch (err) {
       setErrorMessage(getApiError(err, 'No se pudieron guardar los servicios.'));
     } finally {
@@ -121,14 +171,38 @@ export default function ServiciosVisitaPanel({ visita, onSaved }) {
         </div>
       )}
 
-      <Button
-        variant="primary"
-        onClick={handleSave}
-        disabled={isSaving || loading || ids.length === 0 || invalid}
-        style={{ backgroundColor: VERDE, borderColor: VERDE }}
-      >
-        {isSaving ? 'Guardando…' : 'Guardar servicios'}
-      </Button>
+      <div className="d-flex align-items-center gap-3 flex-wrap">
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          disabled={isSaving || loading || ids.length === 0 || invalid}
+          className={`d-inline-flex align-items-center gap-2 ${justSaved ? 'btn-servicio-guardado' : ''}`}
+          style={{ backgroundColor: VERDE, borderColor: VERDE }}
+        >
+          {isSaving ? (
+            <>
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+              Guardando…
+            </>
+          ) : justSaved ? (
+            <>
+              <CheckCircle2 size={18} className="servicio-check-icon" aria-hidden="true" />
+              Guardado
+            </>
+          ) : (
+            'Guardar servicios'
+          )}
+        </Button>
+
+        {justSaved && (
+          <span
+            className="text-success small fw-semibold d-inline-flex align-items-center gap-1 servicio-guardado-feedback"
+            role="status"
+          >
+            <CheckCircle2 size={16} aria-hidden="true" /> Servicios guardados
+          </span>
+        )}
+      </div>
       {ids.length > 0 && invalid && <p className="text-danger small mt-2 mb-0">Cada servicio necesita m² mayores a 0.</p>}
     </Card>
   );
