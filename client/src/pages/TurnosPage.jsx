@@ -293,7 +293,6 @@ export default function TurnosPage() {
               <span className="hovy-rotulo">Planificación operativa</span>
             </div>
             <h2 className="fw-bold fs-2 text-dark m-0" style={{ letterSpacing: '-0.02em' }}>Agenda de Turnos</h2>
-            <p className="text-secondary small m-0 mt-1">Planificación, seguimiento operativo, clima y mapa.</p>
           </div>
           <Button onClick={() => abrirNuevoTurno()} variant="primary" className="d-flex d-xl-none btn-sm rounded-pill shadow-sm fw-bold px-3 py-2 flex-shrink-0 ms-3 mt-1" style={{backgroundColor: VERDE, borderColor: VERDE}}>
             <Plus size={16} className="me-1" /> Turno

@@ -90,30 +90,30 @@ export default function PanelClima() {
     >
       
       {/* 1. CABECERA Y SELECTORES */}
-      <div className="clima-header d-flex align-items-start justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: 'var(--hovy-gris-100)' }}>
+      <div className="clima-header border-bottom pb-2" style={{ borderColor: 'var(--hovy-gris-100)' }}>
         
         {/* Lado Izquierdo */}
-        <div className="clima-ubicacion d-flex align-items-center gap-2 flex-shrink-1" style={{ minWidth: 0 }}>
-          <div className="clima-icono rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)' }}>
+        <div className="clima-ubicacion d-flex align-items-center gap-2">
+          <div className="clima-icono rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)' }} aria-hidden="true">
             <Sun size={16} />
           </div>
-          <div className="lh-1 text-truncate">
+          <div className="lh-1 min-w-0">
             <h2 className="m-0 fs-6 fw-bold text-truncate" style={{ color: 'var(--hovy-esmeralda-900)' }}>Clima</h2>
-            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>San salvador de Jujuy</span>
+            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>San Salvador de Jujuy</span>
           </div>
         </div>
         
-        {/* Lado Derecho - Controles fluidos con límite de ancho */}
-        <div className="clima-selectores d-flex flex-column align-items-end gap-1 flex-shrink-1" style={{ minWidth: 0, maxWidth: '135px', flex: '1 1 auto' }}>
-          <div className="badge rounded-pill fw-medium px-2 py-1 text-dark text-truncate w-100 text-end text-center" style={{ backgroundColor: 'var(--hovy-verde-100)', border: '1px solid var(--hovy-verde-200)', fontSize: 'var(--hovy-texto-xs)' }}>
+        {/* Lado Derecho */}
+        <div className="clima-selectores">
+          <div className="clima-dia-badge rounded-pill fw-medium px-2 py-1 text-dark text-center">
             {formatDayName(clima.daily.time[diaSeleccionado], diaSeleccionado)}
           </div>
           
-          <div className="d-flex align-items-center gap-1 bg-white rounded-pill pe-1 ps-1 shadow-sm w-100" style={{ border: '1px solid var(--hovy-gris-200)' }}>
-            <Clock size={12} className="text-secondary ms-1 flex-shrink-0" />
+          <div className="clima-hora-pill shadow-sm">
+            <Clock size={12} className="text-secondary flex-shrink-0" aria-hidden="true" />
             <select 
-              className="form-select form-select-sm border-0 shadow-none fw-medium text-dark bg-transparent px-1 py-0 text-truncate"
-              style={{ width: '100%', minWidth: 0, cursor: 'pointer', fontSize: 'var(--hovy-texto-xs)' }}
+              className="form-select form-select-sm shadow-none fw-medium text-dark clima-hora-select"
+              aria-label="Seleccionar hora del pronóstico"
               value={horaSeleccionada}
               onChange={(e) => setHoraSeleccionada(Number(e.target.value))}
             >
