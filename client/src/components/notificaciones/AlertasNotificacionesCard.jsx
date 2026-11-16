@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Clock, MoreVertical, X } from 'lucide-react';
+import { Clock, MoreVertical, X } from 'lucide-react';
 import Card from '../ui/Card.jsx';
 import Paginacion from './Paginacion.jsx';
 import CancelarNotificacionModal from './CancelarNotificacionModal.jsx';
@@ -14,18 +14,14 @@ const fechaMs = (notificacion) => new Date(notificacion.fecha_notificacion).getT
 const masNuevasPrimero = (a, b) => fechaMs(b) - fechaMs(a);
 
 // Sección "Alertas y Notificaciones" del Dashboard (Épica 14).
-// Shows the active notifications first and then the past ones (resolved or
-// cancelled, from the history), 3 per page, so the card never looks empty when
-// everything was already handled.
-export default function AlertasNotificacionesCard({ notificaciones, historial = [], cargando, error, onActualizar }) {
+// Shows only the active notifications (the ones still to be handled), 3 per page.
+// Resolved and cancelled ones are only reachable through "Ver historial".
+export default function AlertasNotificacionesCard({ notificaciones, cargando, error, onActualizar }) {
   const navigate = useNavigate();
   const [pagina, setPagina] = useState(1);
   const [aCancelar, setACancelar] = useState(null);
 
-  const todas = [
-    ...[...notificaciones].sort(masNuevasPrimero),
-    ...[...historial].sort(masNuevasPrimero),
-  ];
+  const todas = [...notificaciones].sort(masNuevasPrimero);
   const totalPaginas = Math.max(1, Math.ceil(todas.length / POR_PAGINA));
   // Si se eliminó la última de una página, se queda en la anterior.
   const paginaActual = Math.min(pagina, totalPaginas);
@@ -79,8 +75,6 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
                   const tipo = obtenerTipo(notificacion.tipo);
                   const Icono = tipo.Icono;
                   const destino = destinoNotificacion(notificacion);
-                  // Past notifications come with estado Resuelta / Cancelada; active ones are actionable.
-                  const pasada = notificacion.estado === 'Resuelta' || notificacion.estado === 'Cancelada';
                   return (
                     <tr key={notificacion.id_notificacion}>
                       <td className="py-3 notif-td-tipo">
@@ -96,11 +90,6 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
                         {formatearTiempo(notificacion.fecha_notificacion)}
                       </td>
                       <td className="py-3 text-end text-nowrap notif-td-acciones">
-                        {pasada ? (
-                          notificacion.estado === 'Cancelada'
-                            ? <span className="notificacion-estado cancelada"><X size={14} /> Cancelada</span>
-                            : <span className="notificacion-estado resuelta"><Check size={14} /> Resuelto</span>
-                        ) : (
                         <div className="d-inline-flex align-items-center gap-2">
                           {destino && (
                             <button
@@ -122,7 +111,6 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
                             <X size={16} />
                           </button>
                         </div>
-                        )}
                       </td>
                     </tr>
                   );
@@ -134,9 +122,7 @@ export default function AlertasNotificacionesCard({ notificaciones, historial = 
           {!cargando && todas.length > 0 && (
             <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 mt-2 border-top">
               <span className="small text-dark fw-medium">
-                {notificaciones.length === 0
-                  ? 'Sin alertas pendientes · mostrando las anteriores'
-                  : `${notificaciones.length} ${notificaciones.length === 1 ? 'alerta pendiente' : 'alertas pendientes'}`}
+                {`${notificaciones.length} ${notificaciones.length === 1 ? 'alerta pendiente' : 'alertas pendientes'}`}
               </span>
               <Paginacion pagina={paginaActual} totalPaginas={totalPaginas} onCambiar={setPagina} compacta />
             </div>
