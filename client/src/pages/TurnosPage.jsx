@@ -324,24 +324,34 @@ export default function TurnosPage() {
           </div>
 
           <div className="turnos-view-actions d-flex align-items-stretch gap-2">
-            <div className="turnos-view-switcher bg-white p-1 rounded-pill shadow-sm border d-flex flex-row flex-nowrap justify-content-center overflow-x-auto scrollbar-none" style={{ minHeight: '38px' }}>
+            <div
+              className="hovy-switch is-neutro turnos-view-switcher shadow-sm"
+              style={{ '--hovy-switch-cols': 3, '--hovy-switch-index': vistaActual === 'diaria' ? 0 : vistaActual === 'semanal' ? 1 : 2 }}
+            >
+              <span className="hovy-switch-thumb" aria-hidden="true" />
               <button 
-                className={`btn btn-sm rounded-pill fw-medium d-flex align-items-center gap-2 px-3 border-0 text-nowrap h-100 ${vistaActual === 'diaria' ? 'bg-light shadow-sm text-dark' : 'text-secondary bg-transparent'}`}
+                type="button"
+                aria-pressed={vistaActual === 'diaria'}
+                className={`btn btn-sm hovy-switch-btn turnos-view-option fw-medium ${vistaActual === 'diaria' ? 'is-active' : ''}`}
                 onClick={() => setVistaActual('diaria')}
               >
-                <LayoutDashboard size={14} className="d-none d-sm-inline" /> Diaria
+                <LayoutDashboard size={14} className="d-none d-sm-inline" aria-hidden="true" /> Diaria
               </button>
               <button 
-                className={`btn btn-sm rounded-pill fw-medium d-flex align-items-center gap-2 px-3 border-0 text-nowrap h-100 ${vistaActual === 'semanal' ? 'bg-light shadow-sm text-dark' : 'text-secondary bg-transparent'}`}
+                type="button"
+                aria-pressed={vistaActual === 'semanal'}
+                className={`btn btn-sm hovy-switch-btn turnos-view-option fw-medium ${vistaActual === 'semanal' ? 'is-active' : ''}`}
                 onClick={() => setVistaActual('semanal')}
               >
-                <CalendarIcon size={14} className="d-none d-sm-inline" /> Semanal
+                <CalendarIcon size={14} className="d-none d-sm-inline" aria-hidden="true" /> Semanal
               </button>
               <button 
-                className={`btn btn-sm rounded-pill fw-medium d-flex align-items-center gap-2 px-3 border-0 text-nowrap h-100 ${vistaActual === 'mensual' ? 'bg-light shadow-sm text-dark' : 'text-secondary bg-transparent'}`}
+                type="button"
+                aria-pressed={vistaActual === 'mensual'}
+                className={`btn btn-sm hovy-switch-btn turnos-view-option fw-medium ${vistaActual === 'mensual' ? 'is-active' : ''}`}
                 onClick={() => setVistaActual('mensual')}
               >
-                <LayoutList size={14} className="d-none d-sm-inline" /> Mensual
+                <LayoutList size={14} className="d-none d-sm-inline" aria-hidden="true" /> Mensual
               </button>
             </div>
 
@@ -400,6 +410,8 @@ export default function TurnosPage() {
       <WidgetsAgendaTurnos
         turnos={turnosVisibles}
         periodo={getTextoFecha()}
+        fechaObjetivo={fechaIsoActual}
+        ahora={ahora}
         onSelectTurno={handleSelectTurno}
       />
 

@@ -4,26 +4,62 @@ import ClimaService from '../../services/api/clima.service';
 import ClimaSkeleton from '../skeletons/ClimaSkeleton';
 import { accionable } from '../ui/accionable';
 
-export default function PanelClima() {
+const LAT_DEFECTO = -24.2335;
+const LON_DEFECTO = -65.2613;
+
+export default function PanelClima({
+  latitud = null,
+  longitud = null,
+  ubicacion = null,
+  fechaObjetivo = null,
+  horaObjetivo = null,
+}) {
   const [clima, setClima] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  const [diaSeleccionado, setDiaSeleccionado] = useState(0);
-  const [horaSeleccionada, setHoraSeleccionada] = useState(new Date().getHours());
+  const [seleccionManual, setSeleccionManual] = useState(null);
+
+  const lat = Number.isFinite(Number(latitud)) ? Number(latitud) : LAT_DEFECTO;
+  const lon = Number.isFinite(Number(longitud)) ? Number(longitud) : LON_DEFECTO;
+  const coordKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  const syncKey = `${coordKey}|${fechaObjetivo ?? ''}|${horaObjetivo ?? ''}`;
 
   useEffect(() => {
+    let cancelado = false;
     const fetchClima = async () => {
       try {
-        const data = await ClimaService.getPronosticoOperativo();
-        setClima(data);
+        const data = await ClimaService.getPronosticoOperativo(lat, lon);
+        if (!cancelado) setClima(data);
       } catch (error) {
         console.error("Error al obtener el clima:", error);
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
     };
     fetchClima();
-  }, []);
+    return () => { cancelado = true; };
+  }, [coordKey, lat, lon]);
+
+  const diasVisibles = clima?.daily?.time?.slice(0, 5);
+  const idxDiaObjetivo = diasVisibles && fechaObjetivo ? diasVisibles.indexOf(fechaObjetivo) : 0;
+  const diaPorDefecto = idxDiaObjetivo >= 0 ? idxDiaObjetivo : 0;
+  const horaPorDefecto = Number.isInteger(horaObjetivo) && horaObjetivo >= 0 && horaObjetivo <= 23
+    ? horaObjetivo
+    : (diaPorDefecto === 0 ? new Date().getHours() : 9);
+
+  const diaSeleccionado = seleccionManual?.syncKey === syncKey && seleccionManual.dia !== undefined
+    ? seleccionManual.dia
+    : diaPorDefecto;
+  const horaSeleccionada = seleccionManual?.syncKey === syncKey && seleccionManual.hora !== undefined
+    ? seleccionManual.hora
+    : horaPorDefecto;
+
+  const setDiaSeleccionado = (dia) => {
+    setSeleccionManual((prev) => ({ ...(prev?.syncKey === syncKey ? prev : { syncKey }), dia }));
+  };
+
+  const setHoraSeleccionada = (hora) => {
+    setSeleccionManual((prev) => ({ ...(prev?.syncKey === syncKey ? prev : { syncKey }), hora }));
+  };
 
   const getWeatherInfo = (code, size = 20) => {
     if (code === 0) return { text: 'Soleado • Despejado', icon: <Sun className="text-warning" size={size} /> };
@@ -67,7 +103,9 @@ export default function PanelClima() {
   }
 
   const horaActual = new Date().getHours();
-  const indexHoraExacta = (diaSeleccionado * 24) + horaSeleccionada;
+  const totalHoras = clima.hourly?.temperature_2m?.length || 1;
+  const indexHoraExacta = Math.min(Math.max(0, (diaSeleccionado * 24) + horaSeleccionada), totalHoras - 1);
+  const ubicacionVisible = ubicacion || 'San Salvador de Jujuy';
   
   const tempPrincipal = Math.round(clima.hourly.temperature_2m[indexHoraExacta]);
   const tempSensacion = Math.round(clima.hourly.apparent_temperature[indexHoraExacta]);
@@ -99,7 +137,7 @@ export default function PanelClima() {
           </div>
           <div className="lh-1 min-w-0">
             <h2 className="m-0 fs-6 fw-bold text-truncate" style={{ color: 'var(--hovy-esmeralda-900)' }}>Clima</h2>
-            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>San Salvador de Jujuy</span>
+            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }} title={ubicacionVisible}>{ubicacionVisible}</span>
           </div>
         </div>
         
