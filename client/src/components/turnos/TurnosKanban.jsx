@@ -1,9 +1,8 @@
 import { useId, useState } from 'react';
-import { MapPin, Clock, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
+import { MapPin, Clock, ChevronDown, MessageCircle } from 'lucide-react';
 import Card from '../ui/Card';
 import { obtenerEnlaceWhatsApp } from '../../services/whatsapp';
 import { PRIORIDADES_CONFIG as prioridadesConfig, compararHorarioTurnos, formatearHorarioTurno } from './agendaTurnos';
-import { VERDE } from '../../styles/colores';
 
 const buildCoordinateWhatsAppUrl = (turno) => {
   const base = obtenerEnlaceWhatsApp(turno.cliente?.telefono);
@@ -102,10 +101,10 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
         )}
 
         <div className="turnos-agenda-card-pie">
-          <span className="fw-semibold text-dark min-w-0 text-break">{turno.servicio.descripcion}</span>
-          <div className="d-flex align-items-center gap-2 flex-shrink-0">
-            {isCoordinado && (
-              urlWhatsApp ? (
+          <span className="fw-semibold text-dark min-w-0">{turno.servicio.descripcion}</span>
+          {isCoordinado && (
+            <div className="d-flex align-items-center flex-shrink-0">
+              {urlWhatsApp ? (
                 <a
                   href={urlWhatsApp}
                   target="_blank"
@@ -130,12 +129,9 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
                 >
                   <MessageCircle size={13} aria-hidden="true" /> WhatsApp
                 </button>
-              )
-            )}
-            <span className="fw-semibold text-nowrap d-flex align-items-center flex-shrink-0" style={{ color: VERDE }}>
-              {isEjecucion ? 'Ver ficha' : 'Detalle'} <ChevronRight size={14} />
-            </span>
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -152,7 +148,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
           className={`btn btn-sm rounded-pill fw-bold border shadow-sm ${colFiltro === 'TODOS' ? 'bg-dark text-white border-dark' : 'bg-white text-secondary'}`}
         >
           <span className="hovy-filter-label">Todos</span>
-          <span className={`hovy-filter-count badge rounded-circle ${colFiltro === 'TODOS' ? 'bg-secondary' : 'bg-light text-secondary border'}`}>{turnos.length}</span>
+          <span className="hovy-filter-count">({turnos.length})</span>
         </button>
         {columnasConfig.map(col => {
           const count = getTurnosPorEstado(col.id).length;
@@ -166,7 +162,7 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
             >
               <span className={`hovy-filter-dot ${col.id === 'EN_EJECUCION' ? 'turno-en-curso-dot' : `rounded-circle ${col.dotColor}`}`} style={{width: 8, height: 8}} aria-hidden="true"></span>
               <span className="hovy-filter-label">{col.title.charAt(0) + col.title.slice(1).toLowerCase()}</span>
-              <span className="hovy-filter-count badge bg-light text-secondary border rounded-circle">{count}</span>
+              <span className="hovy-filter-count">({count})</span>
             </button>
           );
         })}

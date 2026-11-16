@@ -197,11 +197,6 @@ export default function VisitasPage() {
           <span className="hovy-rotulo">Solicitudes</span>
         </div>
         <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes</h2>
-        <p className="text-secondary small m-0">
-          {vista === 'activas'
-            ? 'Solicitudes que todavía hay que atender.'
-            : 'Historial: todas las solicitudes, en cualquier estado.'}
-        </p>
       </div>
 
       <div className="row g-3" role="tablist" aria-label="Tipo de solicitud">

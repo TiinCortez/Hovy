@@ -27,7 +27,6 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
       nombre: '',
       descripcion: '',
       precio_base: isEdit ? String(servicio.precio_base ?? '') : '',
-      limite_operativo: isEdit && servicio.limite_operativo != null ? String(servicio.limite_operativo) : '',
     },
   });
   useAvisoCambiosSinGuardar(isDirty);
@@ -39,17 +38,15 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
     setErrorMessage(null);
     try {
       const precio_base = Number(data.precio_base);
-      const limite_operativo = String(data.limite_operativo).trim() === '' ? null : Number(data.limite_operativo);
 
       if (isEdit) {
-        await ServicioService.update(servicio.id_usuario_servicio, { precio_base, limite_operativo });
+        await ServicioService.update(servicio.id_usuario_servicio, { precio_base });
       } else {
         // The server finds-or-creates the type by name and reactivates removed links
         await ServicioService.create({
           nombre: data.nombre.trim(),
           descripcion: data.descripcion.trim() || undefined,
           precio_base,
-          limite_operativo,
         });
       }
       await onSaved();
@@ -117,7 +114,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                 </div>
               )}
 
-              <div className="mb-3">
+              <div>
                 <label className="form-label small fw-bold text-secondary" htmlFor="servicio-precio">Precio por m² *</label>
                 <input
                   id="servicio-precio"
@@ -132,22 +129,6 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                   })}
                 />
                 {errors.precio_base && <span id="servicio-precio-base-error" className="invalid-feedback d-block">{errors.precio_base.message}</span>}
-              </div>
-
-              <div>
-                <label className="form-label small fw-bold text-secondary" htmlFor="servicio-limite">Límite operativo</label>
-                <input
-                  id="servicio-limite"
-                  type="number"
-                  min="0"
-                  step="any"
-                  inputMode="decimal"
-                  className={`form-control bg-light rounded-3 ${errors.limite_operativo ? 'is-invalid' : ''}`} aria-invalid={errors.limite_operativo ? 'true' : undefined} aria-describedby={errors.limite_operativo ? 'servicio-limite-operativo-error' : undefined}
-                  {...register('limite_operativo', {
-                    validate: (v) => String(v).trim() === '' || nonNegative(v),
-                  })}
-                />
-                {errors.limite_operativo && <span id="servicio-limite-operativo-error" className="invalid-feedback d-block">{errors.limite_operativo.message}</span>}
               </div>
             </form>
           </div>

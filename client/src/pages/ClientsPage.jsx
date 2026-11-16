@@ -176,7 +176,7 @@ export default function ClientsPage() {
   return (
     <div className="d-flex flex-column gap-4 pb-5">
 
-      {/* Title and main action share a row (also on mobile); the description goes below */}
+      {/* Title and main action share a row (also on mobile) */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="hovy-rotulo">Directorio de clientes</span>
@@ -187,7 +187,6 @@ export default function ClientsPage() {
             <UserPlus size={16} /> Nuevo Cliente
           </Button>
         </div>
-        <p className="text-secondary small m-0 mt-1">Directorio general de clientes y gestión integral de inmuebles vinculados.</p>
       </div>
 
       <div className="row g-2 g-md-3 clientes-resumen">

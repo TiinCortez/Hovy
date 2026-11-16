@@ -191,7 +191,6 @@ export default function CobrosPage() {
             <span className="hovy-rotulo">Administración financiera</span>
           </div>
           <h2 className="fw-bold fs-2 text-dark m-0">Cobros &amp; Liquidación de Servicios</h2>
-          <p className="text-secondary small m-0">Control de pagos de turnos ejecutados, presupuestos finales y conciliación de cobranzas en terreno.</p>
         </div>
 
         <div className="d-flex align-items-center gap-1 bg-white border rounded-4 shadow-sm p-1 flex-shrink-0">

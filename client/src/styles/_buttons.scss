@@ -187,7 +187,11 @@
   .hovy-filter-count,
   .hovy-filter-dot { flex-shrink: 0; }
 
-  .hovy-filter-count { white-space: nowrap; }
+  .hovy-filter-count {
+    white-space: nowrap;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @media (max-width: 767.98px) {

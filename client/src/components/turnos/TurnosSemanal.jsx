@@ -146,13 +146,10 @@ export default function TurnosSemanal({ turnos, fechaReferencia, ahora, onSelect
 
                         <hr className="my-0 mb-2 opacity-10" />
 
-                        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-end gap-2 mt-auto">
+                        <div className="mt-auto">
                           <div className={`small fw-medium w-100 text-break ${isEjecucion ? 'turno-en-curso-text' : 'text-secondary'}`}>
                             {turno.servicio.descripcion}
                           </div>
-                          <span className={`small fw-bold text-nowrap d-flex align-items-center gap-1 align-self-end flex-shrink-0 ${isEjecucion ? 'turno-en-curso-text' : 'text-dark'}`}>
-                            Detalles <ChevronRight size={14} />
-                          </span>
                         </div>
 
                       </div>
