@@ -35,6 +35,67 @@
   padding: $hovy-espacio-6 $hovy-espacio-12 !important;
 }
 
+// Interruptor tipo píldora con relleno de borde a borde y deslizador animado.
+.hovy-switch {
+  --hovy-switch-cols: 2;
+  --hovy-switch-index: 0;
+  --hovy-switch-thumb-bg: #{$hovy-green};
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--hovy-switch-cols), minmax(0, 1fr));
+  align-items: stretch;
+  max-width: 100%;
+  padding: 0;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-300;
+  border-radius: $hovy-radio-pill;
+  overflow: hidden;
+
+  &.is-ambar { --hovy-switch-thumb-bg: #{$hovy-ambar-50}; }
+  &.is-neutro { --hovy-switch-thumb-bg: #{$hovy-oliva-100}; }
+}
+
+.hovy-switch-thumb {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: calc(100% / var(--hovy-switch-cols));
+  background-color: var(--hovy-switch-thumb-bg);
+  // Sin radio propio: la cápsula contenedora con overflow: hidden recorta el borde externo
+  // en curva y deja el corte interno recto al deslizarse de un lado al otro.
+  border-radius: 0;
+  pointer-events: none;
+  transform: translateX(calc(var(--hovy-switch-index) * 100%));
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+  }
+}
+
+.btn.hovy-switch-btn {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding-inline: $hovy-espacio-16 !important;
+  background-color: transparent !important;
+  color: $hovy-texto-secundario;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &:hover:not(.is-active) { color: $hovy-oliva-950; }
+  &.is-active { color: $hovy-blanco; }
+  &:focus-visible {
+    outline: 2px solid var(--hovy-button-focus);
+    outline-offset: -3px;
+  }
+}
+
+.hovy-switch.is-ambar .btn.hovy-switch-btn.is-active { color: $hovy-ambar-700; }
+.hovy-switch.is-neutro .btn.hovy-switch-btn.is-active { color: $hovy-oliva-950; }
+
 .btn-primary {
   --bs-btn-color: #{$hovy-blanco};
   --bs-btn-bg: #{$hovy-green};

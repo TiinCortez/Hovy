@@ -51,19 +51,28 @@ export default function PeriodoSelector({ periodo, etiqueta, anios, onChange }) 
 
       {abierto && (
         <div className="metricas-periodo-panel" role="dialog" aria-label="Seleccionar período">
-          <div className="metricas-periodo-modos" role="radiogroup" aria-label="Tipo de período">
-            {MODOS.map((modo) => (
-              <button
-                key={modo.value}
-                type="button"
-                role="radio"
-                aria-checked={periodo.modo === modo.value}
-                className={`btn btn-sm rounded-pill fw-semibold flex-grow-1 ${periodo.modo === modo.value ? 'btn-primary' : 'btn-light'}`}
-                onClick={() => onChange({ ...periodo, modo: modo.value })}
-              >
-                {modo.label}
-              </button>
-            ))}
+          <div
+            className="hovy-switch metricas-periodo-modos"
+            style={{ '--hovy-switch-cols': MODOS.length, '--hovy-switch-index': Math.max(0, MODOS.findIndex((m) => m.value === periodo.modo)) }}
+            role="radiogroup"
+            aria-label="Tipo de período"
+          >
+            <span className="hovy-switch-thumb" aria-hidden="true" />
+            {MODOS.map((modo) => {
+              const activo = periodo.modo === modo.value;
+              return (
+                <button
+                  key={modo.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={activo}
+                  className={`btn btn-sm hovy-switch-btn fw-semibold ${activo ? 'is-active' : ''}`}
+                  onClick={() => onChange({ ...periodo, modo: modo.value })}
+                >
+                  {modo.label}
+                </button>
+              );
+            })}
           </div>
 
           {periodo.modo === 'mes' && (

@@ -130,39 +130,236 @@ $form-invalid-border-color: $hovy-texto-error;
   border-top: 1px solid $hovy-border;
 }
 
-/* --- LOGIN SPLIT SCREEN --- */
-.login-container {
+/* --- LOGIN PORTAL CENTRADO --- */
+.login-portal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding: $hovy-espacio-16 $hovy-espacio-16 calc(#{$hovy-espacio-16} + env(safe-area-inset-bottom, 0px));
   background-color: $hovy-cream;
-}
+  overflow-x: hidden;
 
-.login-image-panel {
-  background: url('/login-bg.webp') center/cover no-repeat;
-  border-top-right-radius: 2rem;
-  border-bottom-right-radius: 2rem;
-  min-height: 100vh;
-  
-  @media (max-width: 991.98px) {
-    display: none;
+  @media (min-width: 768px) {
+    padding: $hovy-espacio-24 $hovy-espacio-32;
   }
 }
 
-.login-form-wrapper {
-  max-width: 450px;
+.login-portal-deco {
+  position: fixed;
+  border-radius: $hovy-radio-circulo;
+  pointer-events: none;
+
+  &--top {
+    top: -6rem;
+    right: -6rem;
+    width: 19rem;
+    height: 19rem;
+    background-color: rgba($hovy-verde-200, 0.45);
+  }
+
+  &--bottom {
+    bottom: -7rem;
+    left: -6rem;
+    width: 21rem;
+    height: 21rem;
+    background-color: rgba($hovy-crema-400, 0.75);
+  }
+}
+
+.login-topbar {
+  position: relative;
+  z-index: $hovy-capa-base;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-12;
   width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
 }
 
-.login-card {
-  background-color: transparent;
-  border: none;
-  
-  @media (min-width: 992px) {
-    background-color: $hovy-blanco;
-    border: 1px solid $hovy-border;
-    border-radius: $hovy-radio-xl;
-    padding: $hovy-espacio-48 !important;
-    box-shadow: $hovy-sombra-xl;
+.login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-10;
+  text-decoration: none;
+}
+
+.login-brand-emblema {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.login-brand-nombre {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: $hovy-texto-2xl;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: $hovy-verde-850;
+}
+
+.login-main {
+  position: relative;
+  z-index: $hovy-capa-base;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 0 auto;
+  padding-block: $hovy-espacio-24;
+}
+
+.login-portal-card {
+  width: 100%;
+  max-width: 26.25rem; // 420px
+  padding: clamp(#{$hovy-espacio-24}, 5vw, #{$hovy-espacio-32});
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-500;
+  border-radius: $hovy-radio-xl;
+  box-shadow: $hovy-sombra-xl;
+}
+
+.login-title {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(1.625rem, 4vw, #{$hovy-texto-3xl});
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: $hovy-green;
+
+  &:focus { outline: none; }
+}
+
+.login-subtitle {
+  margin: $hovy-espacio-6 0 0;
+  font-size: $hovy-texto-sm;
+  color: $hovy-texto-secundario;
+}
+
+.login-label {
+  display: block;
+  margin-bottom: $hovy-espacio-6;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-oliva-800;
+}
+
+// Contenedor único de campo: evita el anillo de foco partido entre ícono e input
+.login-field {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-8;
+  min-height: 48px;
+  padding-inline: $hovy-espacio-12;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-borde-control;
+  border-radius: $hovy-radio-md;
+  transition: border-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
+
+  &:focus-within {
+    border-color: $hovy-green;
+    box-shadow: 0 0 0 3px rgba($hovy-foco, 0.32);
   }
+
+  &.is-invalid {
+    border-color: $hovy-texto-error;
+    &:focus-within { box-shadow: 0 0 0 3px rgba($hovy-rojo-500, 0.2); }
+  }
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: $hovy-gris-900;
+    font: inherit;
+    font-size: max(1rem, 1em);
+    line-height: 1.4;
+    padding-block: $hovy-espacio-8;
+
+    &::placeholder { color: $hovy-oliva-500; }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      box-shadow: 0 0 0 100px $hovy-blanco inset;
+      -webkit-text-fill-color: $hovy-gris-900;
+    }
+  }
+}
+
+.login-field-icon {
+  color: $hovy-oliva-600;
+  flex-shrink: 0;
+}
+
+.login-eye-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+  margin-inline-end: -$hovy-espacio-6;
+  border: 0;
+  border-radius: $hovy-radio-sm;
+  background: transparent;
+  color: $hovy-oliva-600;
+  cursor: pointer;
+
+  &:hover { color: $hovy-green; background-color: $hovy-verde-50; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 1px; }
+}
+
+.login-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-4;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-green;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; border-radius: $hovy-radio-xs; }
+}
+
+.login-submit.btn {
+  min-height: 48px;
+}
+
+.login-card-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $hovy-espacio-8;
+  margin-top: $hovy-espacio-20;
+  padding-top: $hovy-espacio-16;
+  border-top: 1px solid $hovy-crema-300;
+  font-size: $hovy-texto-xs;
+  color: $hovy-texto-secundario;
+  text-align: center;
+}
+
+.login-footer {
+  position: relative;
+  z-index: $hovy-capa-base;
+  text-align: center;
+  font-size: $hovy-texto-xs;
+  font-weight: 500;
+  color: $hovy-oliva-700;
 }
 
 /* --- SIDEBAR & DASHBOARD --- */
@@ -968,9 +1165,7 @@ $form-invalid-border-color: $hovy-texto-error;
   }
 
   .turnos-view-switcher .btn {
-    flex: 1 0 auto;
-    justify-content: center;
-    padding-inline: $hovy-espacio-12 !important;
+    padding-inline: $hovy-espacio-10 !important;
   }
 
   .turnos-shared-filters {

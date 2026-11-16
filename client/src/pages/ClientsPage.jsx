@@ -250,28 +250,24 @@ export default function ClientsPage() {
       <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mt-2">
         <div className="d-flex flex-wrap align-items-center gap-2">
           {/* Switch principal: Activos vs Inactivos */}
-          <div className="bg-white p-1 rounded-pill shadow-sm border d-inline-flex flex-row flex-nowrap flex-shrink-0">
+          <div
+            className={`hovy-switch shadow-sm flex-shrink-0${estadoFiltro === 'Inactivos' ? ' is-ambar' : ''}`}
+            style={{ '--hovy-switch-cols': 2, '--hovy-switch-index': estadoFiltro === 'Inactivos' ? 1 : 0 }}
+          >
+            <span className="hovy-switch-thumb" aria-hidden="true" />
             <button
               type="button"
+              aria-pressed={estadoFiltro === 'Activos'}
               onClick={() => setEstadoFiltro('Activos')}
-              className={`btn btn-sm rounded-pill fw-bold px-3 py-1 border-0 text-nowrap ${
-                estadoFiltro === 'Activos'
-                  ? 'text-white shadow-sm'
-                  : 'text-secondary bg-transparent'
-              }`}
-              style={estadoFiltro === 'Activos' ? { backgroundColor: VERDE } : {}}
+              className={`btn btn-sm hovy-switch-btn fw-bold ${estadoFiltro === 'Activos' ? 'is-active' : ''}`}
             >
               Activos ({clientesActivos.length})
             </button>
             <button
               type="button"
+              aria-pressed={estadoFiltro === 'Inactivos'}
               onClick={() => setEstadoFiltro('Inactivos')}
-              className={`btn btn-sm rounded-pill fw-bold px-3 py-1 border-0 text-nowrap ${
-                estadoFiltro === 'Inactivos'
-                  ? 'bg-warning-subtle border border-warning-subtle shadow-sm'
-                  : 'text-secondary bg-transparent'
-              }`}
-              style={estadoFiltro === 'Inactivos' ? { color: 'var(--hovy-ambar-700)' } : {}}
+              className={`btn btn-sm hovy-switch-btn fw-bold ${estadoFiltro === 'Inactivos' ? 'is-active' : ''}`}
             >
               Inactivos ({clientesInactivos.length})
             </button>

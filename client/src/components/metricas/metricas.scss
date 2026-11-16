@@ -80,11 +80,10 @@ $metricas-duracion-barras: 0.9s; // MetricasGrafico.jsx: DURACION_ANIMACION_MS
 }
 
 .metricas-periodo-modos {
-  display: flex;
-  gap: $hovy-espacio-4;
-  padding: $hovy-espacio-4;
+  display: grid;
+  width: 100%;
   background-color: $metricas-superficie;
-  border-radius: $hovy-radio-pill;
+  border-color: $metricas-borde;
 }
 
 .metricas-periodo-campo {
