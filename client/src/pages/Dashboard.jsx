@@ -19,6 +19,7 @@ import LogisticaService from '../services/api/logistica.service';
 import NotificacionService from '../services/api/notificacion.service';
 import AlertasNotificacionesCard from '../components/notificaciones/AlertasNotificacionesCard.jsx';
 import { avisarNotificacionesActualizadas } from '../components/notificaciones/notificacionesConfig.js';
+import { esSolicitudNueva } from '../components/visitas/visitaUtils.js';
 import { compararHorarioTurnos, formatearMontoARS, obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
 import {
   avisosLogistica, etiquetaConsumo, formatearConsumo, formatearCosto, formatearKm, SIN_DATO
@@ -60,7 +61,6 @@ export default function Dashboard() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [cargandoNotificaciones, setCargandoNotificaciones] = useState(true);
   const [errorNotificaciones, setErrorNotificaciones] = useState(false);
-  const [historialNotificaciones, setHistorialNotificaciones] = useState([]);
   // Se incrementa para volver a pedir las notificaciones (tras eliminar una).
   const [versionNotificaciones, setVersionNotificaciones] = useState(0);
   const location = useLocation();
@@ -68,17 +68,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchNotificaciones = async () => {
       try {
-        // The history (resolved / cancelled) only fills the card when there are few
-        // active ones, so if it fails the card still shows the active ones.
-        const [response, historial] = await Promise.all([
-          NotificacionService.getActivas(),
-          NotificacionService.getHistorial().catch((err) => {
-            console.error('No se pudo obtener el historial de notificaciones:', err);
-            return null;
-          }),
-        ]);
+        // Only the active ones: the history lives in /notificaciones/historial.
+        const response = await NotificacionService.getActivas();
         setNotificaciones(response.data ?? []);
-        setHistorialNotificaciones(historial?.data ?? []);
         setErrorNotificaciones(false);
       } catch (err) {
         console.error('No se pudieron obtener las notificaciones:', err);
@@ -145,16 +137,18 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const fetchSolicitudesPendientes = async () => {
+    // Not only estado Pendiente: an existing client's request arrives already
+    // Confirmada (waiting for its budget) and also counts as new.
+    const fetchSolicitudesNuevas = async () => {
       try {
-        const response = await VisitaService.getPendientes();
-        setSolicitudesNuevas(response.data?.length ?? 0);
+        const response = await VisitaService.getAll();
+        setSolicitudesNuevas((response.data ?? []).filter(esSolicitudNueva).length);
       } catch (err) {
-        console.error('No se pudieron obtener las solicitudes de visita pendientes:', err);
+        console.error('No se pudieron obtener las solicitudes nuevas:', err);
       }
     };
 
-    fetchSolicitudesPendientes();
+    fetchSolicitudesNuevas();
   }, []);
 
   // Objeto JSON de prueba (Mock): solo queda el nombre del saludo.
@@ -380,7 +374,6 @@ export default function Dashboard() {
         <div className="col-12">
           <AlertasNotificacionesCard
             notificaciones={notificaciones}
-            historial={historialNotificaciones}
             cargando={cargandoNotificaciones}
             error={errorNotificaciones}
             onActualizar={handleNotificacionesActualizadas}

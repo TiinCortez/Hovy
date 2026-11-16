@@ -67,4 +67,12 @@ export const BADGE_TIPO = {
   Cancelada: 'neutro',
 };
 
-export const INTERNAL_NOTICE = 'Estimado interno - no se comunica al cliente';
+// A request nobody attended yet: any Pendiente one (new contact, or a client's first
+// turno on a property) plus an existing client's request still waiting for its budget,
+// which the bot creates already Confirmada. Same rule as the "nueva_solicitud"
+// notification (docs/migrations/018_solicitud_cliente_existente.sql).
+export const esSolicitudNueva = (visita) =>
+  visita.estado === 'Pendiente'
+  || (visita.tipo_solicitud === 'cliente' && visita.estado === 'Confirmada' && !visita.id_presupuesto);
+
+export const INTERNAL_NOTICE ='Estimado interno - no se comunica al cliente';
