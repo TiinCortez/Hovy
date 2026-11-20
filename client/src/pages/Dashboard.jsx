@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
+import AuthService from '../services/auth.service';
 import VisitaService from '../services/api/visita.service';
 import TurnoService from '../services/api/turno.service';
 import LogisticaService from '../services/api/logistica.service';
@@ -151,10 +152,7 @@ export default function Dashboard() {
     fetchSolicitudesNuevas();
   }, []);
 
-  // Objeto JSON de prueba (Mock): solo queda el nombre del saludo.
-  const mockData = {
-    usuario: "Admin"
-  };
+  const nombreUsuario = AuthService.getSession()?.user?.usuario?.trim();
 
   const hoy = obtenerAhoraTurnos().fecha;
 
@@ -198,8 +196,7 @@ export default function Dashboard() {
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="hovy-rotulo">Panel de control</span>
         </div>
-        <h2 className="fw-bold fs-2 text-dark mb-1">Hola, {mockData.usuario}</h2>
-        <p className="text-secondary m-0">Aquí tienes el resumen de tu jardín para hoy.</p>
+        <h2 className="fw-bold fs-2 text-dark m-0">{nombreUsuario ? `Hola, ${nombreUsuario}` : 'Hola'}</h2>
       </div>
 
       {/* KPIs Top (4 columnas en desktop, 2 en móvil) */}
@@ -268,26 +265,43 @@ export default function Dashboard() {
         <div className="col-12 col-lg-5 d-flex flex-column gap-4">
           
           {/* Resumen de Ganancias */}
-          <Card className="h-100">
-            <div className="d-flex justify-content-between align-items-start mb-2">
-              <h4 className="fw-bold text-dark m-0 fs-5">Resumen de Ganancias</h4>
-              <TrendingUp size={24} className="text-secondary" />
+          <Card className="h-100 dashboard-ganancias-card overflow-hidden">
+            <div className="dashboard-ganancias-deco" aria-hidden="true" />
+            <div className="dashboard-ganancias-cuerpo">
+              <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                  <h4 className="fw-bold text-dark m-0 fs-5">Resumen de Ganancias</h4>
+                  <p className="text-secondary small fw-medium m-0 mt-1">Total recaudado este mes</p>
+                </div>
+                <span className="dashboard-ganancias-icono" aria-hidden="true">
+                  <TrendingUp size={20} />
+                </span>
+              </div>
+
+              <div className="my-auto py-2">
+                <h2
+                  className="fw-bold m-0 mb-2"
+                  style={{ fontSize: 'clamp(1.85rem, 7vw, 2.75rem)', color: VERDE, letterSpacing: '-0.025em', lineHeight: 1.08, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}
+                >
+                  {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
+                </h2>
+                <span className={`dashboard-ganancias-variacion ${variacionGanancias.diferencia < 0 ? 'is-baja' : 'is-sube'}`}>
+                  {variacionGanancias.diferencia < 0
+                    ? <TrendingDown size={14} aria-hidden="true" />
+                    : <TrendingUp size={14} aria-hidden="true" />}
+                  {cargandoTurnos
+                    ? '...'
+                    : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
+                </span>
+              </div>
             </div>
-            <p className="text-secondary small fw-semibold m-0 mb-1">Total recaudado este mes</p>
-            <h2 className="fw-bold m-0 mb-1" style={{ fontSize: 'clamp(1.9rem, 8vw, 3rem)', color: VERDE, letterSpacing: '-0.02em', overflowWrap: 'anywhere' }}>
-              {cargandoTurnos ? '...' : formatearMontoARS(cobradoActual)}
-            </h2>
-            <p className={`fw-semibold small mb-5 ${variacionGanancias.diferencia < 0 ? 'text-danger' : 'text-success'}`}>
-              {variacionGanancias.diferencia < 0
-                ? <TrendingDown size={16} className="me-1"/>
-                : <TrendingUp size={16} className="me-1"/>}
-              {cargandoTurnos
-                ? '...'
-                : `${variacionGanancias.porcentaje === null ? 'Sin datos' : formatearPorcentaje(variacionGanancias.porcentaje, { conSigno: true })} respecto al mes pasado`}
-            </p>
-            <Link to="/cobros" className="text-decoration-none fw-bold mt-auto" style={{ color: VERDE }}>
-              Ver cobros <ArrowRight size={18} className="ms-1" />
-            </Link>
+
+            <div className="dashboard-ganancias-pie">
+              <span className="text-secondary small fw-semibold">Detalle mensual</span>
+              <Link to="/cobros" className="btn btn-primary btn-sm dashboard-ganancias-btn">
+                Ver cobros <ArrowRight size={15} className="dashboard-ganancias-flecha" aria-hidden="true" />
+              </Link>
+            </div>
           </Card>
 
           {/* Resumen Logística (Épica 5) */}

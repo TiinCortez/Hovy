@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import Supercluster from 'supercluster';
@@ -7,12 +7,16 @@ import 'leaflet/dist/leaflet.css';
 import {
   compararHorarioTurnos,
   formatearHorarioTurno,
-  horaAMinutos,
   obtenerAhoraTurnos,
-  tieneHorarioTurno
+  obtenerSiguienteTurnoPendiente,
+  tieneCoordenadasTurno
 } from './agendaTurnos';
 import { VERDE } from '../../styles/colores';
 import { PALETA } from '../../styles/paleta';
+
+const CENTRO_DEFECTO = [-24.233563, -65.261317];
+const ZOOM_DEFECTO = 12;
+const ZOOM_TURNO_FOCO = 15;
 
 // Colores de los marcadores: Leaflet los usa como atributos SVG, así que van con su valor (PALETA).
 const COLOR_EJECUCION = VERDE;
@@ -59,11 +63,12 @@ const badgeCantidad = (cantidad) => `
     border-radius:9px;background:${COLOR_GRUPO};color:var(--hovy-blanco);border:1.5px solid var(--hovy-blanco);
     font:600 11px/15px 'Plus Jakarta Sans',sans-serif;text-align:center;box-sizing:border-box;">${cantidad}</span>`;
 
-const crearIconoPin = (colorHex, cantidad) => L.divIcon({
+const crearIconoPin = (colorHex, cantidad, esSiguiente = false) => L.divIcon({
   className: 'custom-map-pin',
   html: `
     <div style="position:relative;width:32px;height:32px;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="${colorHex}" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      ${esSiguiente ? '<span style="position:absolute;left:50%;bottom:-3px;width:18px;height:18px;transform:translateX(-50%);border-radius:50%;background:rgba(27,48,6,0.22);border:2px solid #1B3006;"></span>' : ''}
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="${colorHex}" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="position:relative;">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
         <circle cx="12" cy="10" r="3" fill="#FFFFFF"></circle>
       </svg>
@@ -123,20 +128,15 @@ const agruparPorUbicacion = (turnos) => {
   return [...grupos.values()].map((g) => ({ ...g, turnos: ordenarTurnos(g.turnos) }));
 };
 
-// El popup abre en el turno en curso o, si no hay, en el próximo desde ahora.
-// Si todos ya pasaron, en el más reciente.
+// El popup abre en el turno en curso o en el próximo pendiente de realizar.
+// Si todos ya se realizaron, abre en el último del grupo.
 const indiceProximoTurno = (turnos, ahora = obtenerAhoraTurnos()) => {
-  const enCurso = turnos.findIndex((t) => t.estado === 'EN_EJECUCION');
-  if (enCurso !== -1) return enCurso;
-
-  const minutosAhora = ahora.segundos / 60;
-  const proximo = turnos.findIndex((t) => {
-    if (t.fechaAsignada > ahora.fecha) return true;
-    if (t.fechaAsignada < ahora.fecha) return false;
-    if (!tieneHorarioTurno(t)) return true;
-    return horaAMinutos(t.franjaHoraria.horaFin) > minutosAhora;
-  });
-  return proximo === -1 ? turnos.length - 1 : proximo;
+  const siguiente = obtenerSiguienteTurnoPendiente(turnos, ahora);
+  if (siguiente) {
+    const idx = turnos.findIndex((t) => String(t.idTurno) === String(siguiente.idTurno));
+    if (idx !== -1) return idx;
+  }
+  return Math.max(0, turnos.length - 1);
 };
 
 const estiloFlecha = {
@@ -156,8 +156,8 @@ const estiloFlecha = {
 
 // Contenido del popup. Se monta cada vez que se abre, así que siempre
 // arranca en el próximo turno.
-function PopupGrupoTurnos({ turnos, onSelectTurno }) {
-  const [indice, setIndice] = useState(() => indiceProximoTurno(turnos));
+function PopupGrupoTurnos({ turnos, ahora, onSelectTurno }) {
+  const [indice, setIndice] = useState(() => indiceProximoTurno(turnos, ahora));
   const actual = Math.min(indice, turnos.length - 1);
   const turno = turnos[actual];
   const varios = turnos.length > 1;
@@ -240,8 +240,57 @@ function PopupGrupoTurnos({ turnos, onSelectTurno }) {
   );
 }
 
+// Enfoca el mapa en el próximo turno pendiente del período visible (o encuadra los realizados).
+function EnfocarMapa({ turnoFoco, grupos, periodoKey }) {
+  const map = useMap();
+  const ultimoFocoRef = useRef(null);
+
+  useEffect(() => {
+    const tieneFoco = turnoFoco && tieneCoordenadasTurno(turnoFoco);
+    const lat = tieneFoco ? Number(turnoFoco.inmueble.latitud) : null;
+    const lng = tieneFoco ? Number(turnoFoco.inmueble.longitud) : null;
+    const clave = tieneFoco
+      ? `turno:${turnoFoco.idTurno}:${lat.toFixed(5)}:${lng.toFixed(5)}:${periodoKey}`
+      : grupos.length > 0
+        ? `grupos:${grupos.map((g) => g.key).join('|')}:${periodoKey}`
+        : `vacio:${periodoKey}`;
+
+    if (ultimoFocoRef.current === clave) return;
+    const esInicial = ultimoFocoRef.current === null;
+    ultimoFocoRef.current = clave;
+
+    const reducirMovimiento = esInicial
+      || Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+
+    if (tieneFoco) {
+      if (reducirMovimiento) map.setView([lat, lng], ZOOM_TURNO_FOCO, { animate: false });
+      else map.flyTo([lat, lng], ZOOM_TURNO_FOCO, { duration: 0.65 });
+      return;
+    }
+
+    if (grupos.length === 1) {
+      const unico = [grupos[0].lat, grupos[0].lng];
+      if (reducirMovimiento) map.setView(unico, ZOOM_TURNO_FOCO, { animate: false });
+      else map.flyTo(unico, ZOOM_TURNO_FOCO, { duration: 0.65 });
+      return;
+    }
+
+    if (grupos.length > 1) {
+      const limites = grupos.map((g) => [g.lat, g.lng]);
+      if (reducirMovimiento) map.fitBounds(limites, { padding: [40, 40], maxZoom: ZOOM_TURNO_FOCO, animate: false });
+      else map.flyToBounds(limites, { padding: [40, 40], maxZoom: ZOOM_TURNO_FOCO, duration: 0.65 });
+      return;
+    }
+
+    if (reducirMovimiento) map.setView(CENTRO_DEFECTO, ZOOM_DEFECTO, { animate: false });
+    else map.flyTo(CENTRO_DEFECTO, ZOOM_DEFECTO, { duration: 0.65 });
+  }, [map, turnoFoco, grupos, periodoKey]);
+
+  return null;
+}
+
 // Capa que decide, según el zoom, qué se dibuja: burbujas de grupo o pines.
-function CapaTurnosAgrupados({ grupos, onSelectTurno }) {
+function CapaTurnosAgrupados({ grupos, turnoFoco, ahora, onSelectTurno }) {
   const map = useMap();
   const [zoom, setZoom] = useState(() => map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
@@ -307,23 +356,47 @@ function CapaTurnosAgrupados({ grupos, onSelectTurno }) {
     }
 
     const grupo = grupoPorKey.get(elemento.properties.key);
+    const contieneSiguiente = Boolean(
+      turnoFoco && grupo.turnos.some((t) => String(t.idTurno) === String(turnoFoco.idTurno))
+    );
+    const colorPin = contieneSiguiente && colorDeGrupo(grupo.turnos) === COLOR_DEFECTO
+      ? VERDE
+      : colorDeGrupo(grupo.turnos);
+
     return (
       <Marker
         key={`grupo-${grupo.key}`}
         position={[grupo.lat, grupo.lng]}
-        icon={crearIconoPin(colorDeGrupo(grupo.turnos), grupo.turnos.length)}
+        icon={crearIconoPin(colorPin, grupo.turnos.length, contieneSiguiente)}
+        zIndexOffset={contieneSiguiente ? 500 : 0}
       >
         <Popup className="organic-map-popup" minWidth={250}>
-          <PopupGrupoTurnos turnos={grupo.turnos} onSelectTurno={onSelectTurno} />
+          <PopupGrupoTurnos
+            key={`${grupo.key}-${turnoFoco?.idTurno ?? 'none'}`}
+            turnos={grupo.turnos}
+            ahora={ahora}
+            onSelectTurno={onSelectTurno}
+          />
         </Popup>
       </Marker>
     );
   });
 }
 
-export default function MapaAgenda({ turnos = [], onSelectTurno }) {
+export default function MapaAgenda({ turnos = [], turnoFoco: turnoFocoProp, periodoKey = '', ahora, onSelectTurno }) {
   const grupos = useMemo(() => agruparPorUbicacion(turnos), [turnos]);
-  const center = [-24.233563, -65.261317];
+  const turnoFoco = useMemo(
+    () => (turnoFocoProp !== undefined ? turnoFocoProp : obtenerSiguienteTurnoPendiente(turnos.filter(tieneCoordenadasTurno), ahora)),
+    [turnoFocoProp, turnos, ahora]
+  );
+  const centroInicial = useMemo(() => {
+    if (turnoFoco && tieneCoordenadasTurno(turnoFoco)) {
+      return [Number(turnoFoco.inmueble.latitud), Number(turnoFoco.inmueble.longitud)];
+    }
+    if (grupos.length > 0) return [grupos[0].lat, grupos[0].lng];
+    return CENTRO_DEFECTO;
+  }, [turnoFoco, grupos]);
+  const zoomInicial = (turnoFoco && tieneCoordenadasTurno(turnoFoco)) || grupos.length === 1 ? ZOOM_TURNO_FOCO : ZOOM_DEFECTO;
 
   return (
     <div
@@ -336,18 +409,19 @@ export default function MapaAgenda({ turnos = [], onSelectTurno }) {
       }}
     >
       <MapContainer
-        center={center}
-        zoom={12}
+        center={centroInicial}
+        zoom={zoomInicial}
         maxZoom={ZOOM_MAX_MAPA}
         style={{ width: '100%', height: '100%', minHeight: 'var(--agenda-map-min-height, 400px)', zIndex: 0 }}
       >
         <AutoResize />
+        <EnfocarMapa turnoFoco={turnoFoco} grupos={grupos} periodoKey={periodoKey} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
           maxZoom={ZOOM_MAX_MAPA}
         />
-        <CapaTurnosAgrupados grupos={grupos} onSelectTurno={onSelectTurno} />
+        <CapaTurnosAgrupados grupos={grupos} turnoFoco={turnoFoco} ahora={ahora} onSelectTurno={onSelectTurno} />
       </MapContainer>
     </div>
   );

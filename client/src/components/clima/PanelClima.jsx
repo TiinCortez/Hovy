@@ -4,26 +4,62 @@ import ClimaService from '../../services/api/clima.service';
 import ClimaSkeleton from '../skeletons/ClimaSkeleton';
 import { accionable } from '../ui/accionable';
 
-export default function PanelClima() {
+const LAT_DEFECTO = -24.2335;
+const LON_DEFECTO = -65.2613;
+
+export default function PanelClima({
+  latitud = null,
+  longitud = null,
+  ubicacion = null,
+  fechaObjetivo = null,
+  horaObjetivo = null,
+}) {
   const [clima, setClima] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  const [diaSeleccionado, setDiaSeleccionado] = useState(0);
-  const [horaSeleccionada, setHoraSeleccionada] = useState(new Date().getHours());
+  const [seleccionManual, setSeleccionManual] = useState(null);
+
+  const lat = Number.isFinite(Number(latitud)) ? Number(latitud) : LAT_DEFECTO;
+  const lon = Number.isFinite(Number(longitud)) ? Number(longitud) : LON_DEFECTO;
+  const coordKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  const syncKey = `${coordKey}|${fechaObjetivo ?? ''}|${horaObjetivo ?? ''}`;
 
   useEffect(() => {
+    let cancelado = false;
     const fetchClima = async () => {
       try {
-        const data = await ClimaService.getPronosticoOperativo();
-        setClima(data);
+        const data = await ClimaService.getPronosticoOperativo(lat, lon);
+        if (!cancelado) setClima(data);
       } catch (error) {
         console.error("Error al obtener el clima:", error);
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
     };
     fetchClima();
-  }, []);
+    return () => { cancelado = true; };
+  }, [coordKey, lat, lon]);
+
+  const diasVisibles = clima?.daily?.time?.slice(0, 5);
+  const idxDiaObjetivo = diasVisibles && fechaObjetivo ? diasVisibles.indexOf(fechaObjetivo) : 0;
+  const diaPorDefecto = idxDiaObjetivo >= 0 ? idxDiaObjetivo : 0;
+  const horaPorDefecto = Number.isInteger(horaObjetivo) && horaObjetivo >= 0 && horaObjetivo <= 23
+    ? horaObjetivo
+    : (diaPorDefecto === 0 ? new Date().getHours() : 9);
+
+  const diaSeleccionado = seleccionManual?.syncKey === syncKey && seleccionManual.dia !== undefined
+    ? seleccionManual.dia
+    : diaPorDefecto;
+  const horaSeleccionada = seleccionManual?.syncKey === syncKey && seleccionManual.hora !== undefined
+    ? seleccionManual.hora
+    : horaPorDefecto;
+
+  const setDiaSeleccionado = (dia) => {
+    setSeleccionManual((prev) => ({ ...(prev?.syncKey === syncKey ? prev : { syncKey }), dia }));
+  };
+
+  const setHoraSeleccionada = (hora) => {
+    setSeleccionManual((prev) => ({ ...(prev?.syncKey === syncKey ? prev : { syncKey }), hora }));
+  };
 
   const getWeatherInfo = (code, size = 20) => {
     if (code === 0) return { text: 'Soleado • Despejado', icon: <Sun className="text-warning" size={size} /> };
@@ -67,7 +103,9 @@ export default function PanelClima() {
   }
 
   const horaActual = new Date().getHours();
-  const indexHoraExacta = (diaSeleccionado * 24) + horaSeleccionada;
+  const totalHoras = clima.hourly?.temperature_2m?.length || 1;
+  const indexHoraExacta = Math.min(Math.max(0, (diaSeleccionado * 24) + horaSeleccionada), totalHoras - 1);
+  const ubicacionVisible = ubicacion || 'San Salvador de Jujuy';
   
   const tempPrincipal = Math.round(clima.hourly.temperature_2m[indexHoraExacta]);
   const tempSensacion = Math.round(clima.hourly.apparent_temperature[indexHoraExacta]);
@@ -90,30 +128,30 @@ export default function PanelClima() {
     >
       
       {/* 1. CABECERA Y SELECTORES */}
-      <div className="clima-header d-flex align-items-start justify-content-between border-bottom pb-2 gap-2" style={{ borderColor: 'var(--hovy-gris-100)' }}>
+      <div className="clima-header border-bottom pb-2" style={{ borderColor: 'var(--hovy-gris-100)' }}>
         
         {/* Lado Izquierdo */}
-        <div className="clima-ubicacion d-flex align-items-center gap-2 flex-shrink-1" style={{ minWidth: 0 }}>
-          <div className="clima-icono rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)' }}>
+        <div className="clima-ubicacion d-flex align-items-center gap-2">
+          <div className="clima-icono rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)' }} aria-hidden="true">
             <Sun size={16} />
           </div>
-          <div className="lh-1 text-truncate">
+          <div className="lh-1 min-w-0">
             <h2 className="m-0 fs-6 fw-bold text-truncate" style={{ color: 'var(--hovy-esmeralda-900)' }}>Clima</h2>
-            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>San salvador de Jujuy</span>
+            <span className="small text-secondary text-truncate d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }} title={ubicacionVisible}>{ubicacionVisible}</span>
           </div>
         </div>
         
-        {/* Lado Derecho - Controles fluidos con límite de ancho */}
-        <div className="clima-selectores d-flex flex-column align-items-end gap-1 flex-shrink-1" style={{ minWidth: 0, maxWidth: '135px', flex: '1 1 auto' }}>
-          <div className="badge rounded-pill fw-medium px-2 py-1 text-dark text-truncate w-100 text-end text-center" style={{ backgroundColor: 'var(--hovy-verde-100)', border: '1px solid var(--hovy-verde-200)', fontSize: 'var(--hovy-texto-xs)' }}>
+        {/* Lado Derecho */}
+        <div className="clima-selectores">
+          <div className="clima-dia-badge rounded-pill fw-medium px-2 py-1 text-dark text-center">
             {formatDayName(clima.daily.time[diaSeleccionado], diaSeleccionado)}
           </div>
           
-          <div className="d-flex align-items-center gap-1 bg-white rounded-pill pe-1 ps-1 shadow-sm w-100" style={{ border: '1px solid var(--hovy-gris-200)' }}>
-            <Clock size={12} className="text-secondary ms-1 flex-shrink-0" />
+          <div className="clima-hora-pill shadow-sm">
+            <Clock size={12} className="text-secondary flex-shrink-0" aria-hidden="true" />
             <select 
-              className="form-select form-select-sm border-0 shadow-none fw-medium text-dark bg-transparent px-1 py-0 text-truncate"
-              style={{ width: '100%', minWidth: 0, cursor: 'pointer', fontSize: 'var(--hovy-texto-xs)' }}
+              className="form-select form-select-sm shadow-none fw-medium text-dark clima-hora-select"
+              aria-label="Seleccionar hora del pronóstico"
               value={horaSeleccionada}
               onChange={(e) => setHoraSeleccionada(Number(e.target.value))}
             >

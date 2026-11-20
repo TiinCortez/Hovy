@@ -8,27 +8,82 @@ const getAuthUrl = (endpoint) => {
   return `${cleanUrl}/auth${endpoint}`;
 };
 
+const guardarSesion = (data) => {
+  sessionStorage.setItem('accessToken', data.token);
+  sessionStorage.setItem('user', JSON.stringify(data.user));
+};
+
+const extraerError = (error, fallback) => {
+  const err = new Error(error.response?.data?.error || fallback, { cause: error });
+  if (error.response?.data?.requiereCambioPassword) {
+    err.requiereCambioPassword = true;
+  }
+  return err;
+};
+
 const login = async (email, password, navigateToComponent) => {
   try {
-    // Hacemos el POST al endpoint del backend
     const response = await httpService.post(getAuthUrl('/login'), { email, password });
 
-    // El backend devuelve { ok: true, token: "...", user: {...} }
     if (response.data.ok && response.data.token) {
-      // Guardamos el token donde http.service.js espera encontrarlo
-      sessionStorage.setItem('accessToken', response.data.token);
-      
-      // Opcional: guardamos los datos del usuario por si los necesitás en la UI
-      sessionStorage.setItem('user', JSON.stringify(response.data.user));
-
+      guardarSesion(response.data);
       navigateToComponent();
     }
   } catch (error) {
     console.error('Error de autenticación:', error);
-    
-    // http.service.js ya captura errores, extraemos el mensaje real del backend
-    const errorMessage = error.response?.data?.error || 'Usuario o clave incorrectos';
-    throw new Error(errorMessage, { cause: error });
+    throw extraerError(error, 'Usuario o clave incorrectos');
+  }
+};
+
+const cambiarPasswordInicial = async ({ email, passwordTemporal, nuevaPassword }, navigateToComponent) => {
+  try {
+    const response = await httpService.post(getAuthUrl('/cambiar-password-inicial'), {
+      email,
+      passwordTemporal,
+      nuevaPassword,
+    });
+
+    if (response.data.ok && response.data.token) {
+      guardarSesion(response.data);
+      navigateToComponent();
+    }
+    return response.data;
+  } catch (error) {
+    throw extraerError(error, 'No se pudo actualizar la contraseña');
+  }
+};
+
+const solicitarCodigoRecuperacion = async (email) => {
+  try {
+    const response = await httpService.post(getAuthUrl('/olvide-password'), { email });
+    return response.data;
+  } catch (error) {
+    throw extraerError(error, 'No se pudo enviar el código de recuperación');
+  }
+};
+
+const reenviarCodigoRecuperacion = async (email) => {
+  try {
+    const response = await httpService.post(getAuthUrl('/reenviar-codigo'), {
+      email,
+      tipo: 'recuperacion_password',
+    });
+    return response.data;
+  } catch (error) {
+    throw extraerError(error, 'No se pudo reenviar el código');
+  }
+};
+
+const restablecerPassword = async ({ email, codigo, nuevaPassword }) => {
+  try {
+    const response = await httpService.post(getAuthUrl('/restablecer-password'), {
+      email,
+      codigo,
+      nuevaPassword,
+    });
+    return response.data;
+  } catch (error) {
+    throw extraerError(error, 'No se pudo restablecer la contraseña');
   }
 };
 
@@ -51,6 +106,10 @@ const getSession = () => {
 
 const AuthService = {
   login,
+  cambiarPasswordInicial,
+  solicitarCodigoRecuperacion,
+  reenviarCodigoRecuperacion,
+  restablecerPassword,
   logout,
   getSession,
 };

@@ -78,6 +78,35 @@ export function compararHorarioTurnos(a, b) {
   return inicioA - inicioB;
 }
 
+export function tieneCoordenadasTurno(turno) {
+  const lat = Number(turno?.inmueble?.latitud);
+  const lng = Number(turno?.inmueble?.longitud);
+  return Number.isFinite(lat) && Number.isFinite(lng);
+}
+
+// Próximo turno pendiente de realizarse (prioriza el que está en ejecución,
+// luego el siguiente según fecha y hora actual; si todos vencieron, el primero pendiente).
+export function obtenerSiguienteTurnoPendiente(turnos = [], ahora = obtenerAhoraTurnos()) {
+  const pendientes = [...turnos]
+    .filter((t) => t && t.estado !== 'REALIZADO' && t.estado !== 'CANCELADO')
+    .sort((a, b) => (a.fechaAsignada || '').localeCompare(b.fechaAsignada || '') || compararHorarioTurnos(a, b));
+
+  if (pendientes.length === 0) return null;
+
+  const enEjecucion = pendientes.find((t) => t.estado === 'EN_EJECUCION');
+  if (enEjecucion) return enEjecucion;
+
+  const minutosAhora = ahora.segundos / 60;
+  const proximo = pendientes.find((t) => {
+    if (t.fechaAsignada > ahora.fecha) return true;
+    if (t.fechaAsignada < ahora.fecha) return false;
+    if (!tieneHorarioTurno(t)) return true;
+    return horaAMinutos(t.franjaHoraria.horaFin) > minutosAhora;
+  });
+
+  return proximo || pendientes[0];
+}
+
 export function formatearHoraCorta(hora) {
   if (typeof hora !== 'string') return '';
   const limpia = hora.trim();

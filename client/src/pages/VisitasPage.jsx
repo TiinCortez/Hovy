@@ -197,11 +197,6 @@ export default function VisitasPage() {
           <span className="hovy-rotulo">Solicitudes</span>
         </div>
         <h2 className="fw-bold fs-2 text-dark m-0">Solicitudes</h2>
-        <p className="text-secondary small m-0">
-          {vista === 'activas'
-            ? 'Solicitudes que todavía hay que atender.'
-            : 'Historial: todas las solicitudes, en cualquier estado.'}
-        </p>
       </div>
 
       <div className="row g-3" role="tablist" aria-label="Tipo de solicitud">
@@ -249,7 +244,13 @@ export default function VisitasPage() {
         ))}
       </div>
 
-      <div className="btn-group bg-white rounded-pill border shadow-sm p-1 flex-shrink-0 align-self-start align-self-md-center" role="tablist" aria-label="Pendientes o historial">
+      <div
+        className="hovy-switch shadow-sm flex-shrink-0 align-self-start align-self-md-center"
+        style={{ '--hovy-switch-cols': 2, '--hovy-switch-index': vista === 'historial' ? 1 : 0 }}
+        role="tablist"
+        aria-label="Pendientes o historial"
+      >
+        <span className="hovy-switch-thumb" aria-hidden="true" />
         {VISTAS.map(({ value, label, icon: Icon }) => {
           const activo = vista === value;
           return (
@@ -259,10 +260,9 @@ export default function VisitasPage() {
               role="tab"
               aria-selected={activo}
               onClick={() => { setVista(value); setActiveTab('Todas'); }}
-              className={`btn btn-sm rounded-pill fw-semibold d-flex align-items-center gap-1 px-3 border-0 ${activo ? 'text-white' : 'text-secondary'}`}
-              style={activo ? { backgroundColor: VERDE } : undefined}
+              className={`btn btn-sm hovy-switch-btn fw-semibold ${activo ? 'is-active' : ''}`}
             >
-              <Icon size={14} /> {label} ({countsVista[value]})
+              <Icon size={14} aria-hidden="true" /> {label} ({countsVista[value]})
             </button>
           );
         })}

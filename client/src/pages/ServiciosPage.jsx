@@ -80,7 +80,7 @@ export default function ServiciosPage() {
   return (
     <div className="d-flex flex-column gap-4 pb-5">
 
-      {/* Title and main action share a row (also on mobile); the description goes below */}
+      {/* Title and main action share a row (also on mobile) */}
       <div>
         <div className="d-flex align-items-center gap-2 mb-1">
           <span className="hovy-rotulo">Catálogo Operativo</span>
@@ -96,7 +96,6 @@ export default function ServiciosPage() {
             <Plus size={16} /> Nuevo Servicio
           </Button>
         </div>
-        <p className="text-secondary small m-0 mt-1">Servicios que ofrecés, con su precio por m² y límite operativo.</p>
       </div>
 
       <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mt-2">
@@ -130,59 +129,52 @@ export default function ServiciosPage() {
           </p>
         </Card>
       ) : (
-        <div className="row g-3">
-          {filteredServicios.map((servicio) => (
-            <div key={servicio.id_usuario_servicio} className="col-12 col-lg-6 col-xl-4">
-              <Card className="h-100 p-4 shadow-sm border-0 rounded-4 d-flex flex-column bg-white">
+        <div className="servicios-grid">
+          {filteredServicios.map((servicio) => {
+            const nombre = servicio.servicio?.nombre || '';
+            const descripcion = servicio.servicio?.descripcion;
 
-                <div className="d-flex align-items-start gap-3 mb-3">
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 text-success"
-                    style={{ width: '48px', height: '48px', backgroundColor: 'var(--hovy-verde-100)' }}
-                  >
-                    <Wrench size={22} />
+            return (
+              <article key={servicio.id_usuario_servicio} className="servicio-card">
+                <header className="servicio-card-header">
+                  <div className="servicio-card-icono" aria-hidden="true">
+                    <Wrench size={20} />
                   </div>
-                  <div className="flex-grow-1 overflow-hidden mt-1">
-                    <h5 className="fw-bold text-dark m-0 fs-5 text-truncate" title={servicio.servicio?.nombre}>{servicio.servicio?.nombre}</h5>
-                    <p className="text-secondary small m-0 text-truncate" title={servicio.servicio?.descripcion}>
-                      {servicio.servicio?.descripcion || 'Sin descripción'}
-                    </p>
-                  </div>
+                  <h3 className="servicio-card-titulo" title={nombre}>{nombre}</h3>
+                </header>
+
+                <p className={`servicio-card-descripcion${descripcion ? '' : ' is-empty'}`} title={descripcion || undefined}>
+                  {descripcion || 'Sin descripción'}
+                </p>
+
+                <div className="servicio-card-precio">
+                  <span className="servicio-card-precio-label">Precio por m²</span>
+                  <span className="servicio-card-precio-valor">{formatPrice(servicio.precio_base)}</span>
                 </div>
 
-                <div className="row g-0 mb-4 bg-light rounded-3 border overflow-hidden">
-                  <div className="col-6 p-2 px-3 border-end">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Precio por m²</span>
-                    <span className="fw-bold text-dark small">{formatPrice(servicio.precio_base)}</span>
-                  </div>
-                  <div className="col-6 p-2 px-3">
-                    <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Límite operativo</span>
-                    <span className="fw-bold text-dark small">{servicio.limite_operativo ?? '-'}</span>
-                  </div>
-                </div>
-
-                <div className="d-flex align-items-center gap-2 mt-auto">
+                <footer className="servicio-card-acciones">
                   <Button
                     variant="light"
-                    className="flex-grow-1 rounded-pill text-dark fw-bold small d-flex align-items-center justify-content-center gap-2 py-2 bg-light border shadow-sm"
+                    size="sm"
+                    className="flex-grow-1"
                     onClick={() => setModal({ mode: 'edit', servicio })}
                   >
-                    <Pencil size={16} /> Editar
+                    <Pencil size={15} aria-hidden="true" /> Editar
                   </Button>
                   <Button
                     variant="light"
                     icon
-                    className="text-danger"
-                    aria-label={`Eliminar ${servicio.servicio?.nombre}`}
+                    className="servicio-card-eliminar"
+                    aria-label={`Eliminar ${nombre}`}
                     title="Eliminar"
                     onClick={() => setModal({ mode: 'delete', servicio })}
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={17} aria-hidden="true" />
                   </Button>
-                </div>
-              </Card>
-            </div>
-          ))}
+                </footer>
+              </article>
+            );
+          })}
         </div>
       )}
 

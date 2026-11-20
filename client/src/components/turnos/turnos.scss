@@ -6,22 +6,17 @@
   .turnos-page-actions { width: auto; max-width: 100%; min-width: 0; align-items: center; }
 
   .turnos-view-switcher {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    flex: 0 1 21rem;
-    width: 21rem;
+    display: grid;
+    width: 100%;
     min-width: 0;
-    gap: $hovy-espacio-4;
-    padding: $hovy-espacio-4;
-    background-color: $hovy-blanco;
-    border: 1px solid $hovy-oliva-200;
-    border-radius: $hovy-radio-md;
-    box-shadow: $hovy-sombra-sm;
+
+    @media (min-width: 576px) {
+      flex: 0 1 21rem;
+      width: 21rem;
+    }
   }
 
   .turnos-view-option {
-    flex: 1 1 0;
     min-width: 0;
     white-space: nowrap;
   }
@@ -104,7 +99,7 @@
 .turnos-agenda-card {
   min-width: 0;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   padding: $hovy-espacio-14 $hovy-espacio-16;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-crema-300;
