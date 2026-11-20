@@ -5,7 +5,6 @@ import {
   Wrench,
   CalendarDays,
   Clock,
-  StickyNote,
   CheckCircle2,
   MessageCircle,
 } from 'lucide-react';
@@ -17,6 +16,7 @@ import {
   getEstadoLabel,
   formatFecha,
   FRANJA_TEXTO,
+  horarioSolicitado,
   mensajeWhatsapp,
 } from './visitaUtils';
 import { VERDE } from '../../styles/colores';
@@ -32,6 +32,10 @@ export default function VisitaDetalleCard({
   const franja = FRANJA_TEXTO[visita.franja_preferida] ?? FRANJA_TEXTO.Indistinto;
   const yaContactada = visita.estado !== 'Pendiente';
   const estadoLabel = getEstadoLabel(visita.estado);
+  const solicitado = horarioSolicitado(visita);
+  const horarioElegido = solicitado.desde && solicitado.hasta
+    ? `${solicitado.desde} a ${solicitado.hasta}`
+    : visita.nota_horario?.trim() || null;
 
   return (
     <Card className={className}>
@@ -61,9 +65,10 @@ export default function VisitaDetalleCard({
                 {estadoLabel}
               </Badge>
               {visita.estado === 'Realizada' && (
-                <span className="badge rounded-pill px-2.5 py-1 fw-semibold bg-success text-white" style={{ fontSize: '11px' }}>
+                <Badge tipo="exito" conPunto={false}>
+                  <CheckCircle2 size={13} aria-hidden="true" />
                   Turno asignado
-                </span>
+                </Badge>
               )}
             </div>
             <p className="text-secondary small m-0 mt-1">
@@ -99,28 +104,37 @@ export default function VisitaDetalleCard({
       </div>
 
       {/* Cuerpo en 2 columnas */}
-      <div className="row g-3 g-lg-4">
+      <div className="row g-3 g-lg-4 align-items-stretch">
         {/* Columna Principal: Detalles del Servicio y Ubicación */}
         <div className="col-12 col-lg-7 d-flex flex-column gap-3">
           <h6 className="text-secondary text-uppercase fw-bold m-0" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
             Detalles del servicio
           </h6>
 
-          <div className="row g-3">
+          <div className="row g-3 flex-grow-1">
             {visita.servicio && (
               <div className={`col-12 ${visita.superficie_aproximada ? 'col-sm-6' : ''}`}>
-                <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex align-items-start gap-2.5">
+                <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex align-items-center gap-3">
                   <div
-                    className="p-2 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--hovy-verde-100)', color: 'var(--hovy-verde-700)', border: '1px solid var(--hovy-verde-200)' }}
+                    className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      backgroundColor: 'var(--hovy-verde-100)',
+                      color: 'var(--hovy-verde-700)',
+                      border: '1px solid var(--hovy-verde-200)',
+                    }}
                   >
-                    <Wrench size={18} />
+                    <Wrench size={20} />
                   </div>
-                  <div>
-                    <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
+                  <div className="min-w-0">
+                    <span
+                      className="text-secondary text-uppercase fw-bold d-block mb-1"
+                      style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.04em' }}
+                    >
                       Servicio solicitado
                     </span>
-                    <span className="fw-bold text-dark small">{visita.servicio}</span>
+                    <span className="fw-bold text-dark fs-6 d-block text-truncate">{visita.servicio}</span>
                   </div>
                 </div>
               </div>
@@ -128,103 +142,129 @@ export default function VisitaDetalleCard({
 
             {visita.superficie_aproximada && (
               <div className={`col-12 ${visita.servicio ? 'col-sm-6' : ''}`}>
-                <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex align-items-start gap-2.5">
-                  <div className="p-2 rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0">
-                    <Ruler size={18} />
+                <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle d-flex align-items-center gap-3">
+                  <div
+                    className="rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0 d-flex align-items-center justify-content-center"
+                    style={{ width: 44, height: 44 }}
+                  >
+                    <Ruler size={20} />
                   </div>
-                  <div>
-                    <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
+                  <div className="min-w-0">
+                    <span
+                      className="text-secondary text-uppercase fw-bold d-block mb-1"
+                      style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.04em' }}
+                    >
                       Superficie aproximada
                     </span>
-                    <span className="fw-bold text-dark small">{visita.superficie_aproximada} m²</span>
+                    <span className="fw-bold text-dark fs-6 d-block">{visita.superficie_aproximada} m²</span>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="col-12">
-              <div className="p-3 bg-light rounded-4 border border-light-subtle d-flex align-items-start gap-2.5">
-                <div className="p-2 rounded-3 bg-white text-primary border border-light-subtle flex-shrink-0">
-                  <MapPin size={18} />
+            <div className="col-12 d-flex">
+              <div className="p-3 bg-light rounded-4 border border-light-subtle d-flex align-items-center gap-3 w-100 h-100">
+                <div
+                  className="rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0 d-flex align-items-center justify-content-center"
+                  style={{ width: 44, height: 44 }}
+                >
+                  <MapPin size={20} className="text-success" />
                 </div>
-                <div className="flex-grow-1">
-                  <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
+                <div className="flex-grow-1 min-w-0">
+                  <span
+                    className="text-secondary text-uppercase fw-bold d-block mb-1"
+                    style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.04em' }}
+                  >
                     Ubicación de la visita
                   </span>
-                  <span className="fw-semibold text-dark small d-block">
+                  <span className="fw-bold text-dark d-block">
                     {visita.direccion}
                     {visita.barrio && `, ${visita.barrio}`}
                   </span>
                   {visita.provincia && (
-                    <span className="text-secondary small d-block">{visita.provincia}</span>
+                    <span className="text-secondary small d-block mt-1">{visita.provincia}</span>
                   )}
                 </div>
               </div>
             </div>
-
-            {visita.nota_horario && (
-              <div className="col-12">
-                <div className="p-3 bg-light rounded-4 border border-light-subtle d-flex align-items-start gap-2.5">
-                  <div className="p-2 rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0">
-                    <StickyNote size={18} />
-                  </div>
-                  <div>
-                    <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
-                      Nota sobre el horario
-                    </span>
-                    <span className="fw-medium text-dark small">{visita.nota_horario}</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Columna Lateral: Preferencias del Cliente y Contacto */}
-        <div className="col-12 col-lg-5">
-          <div className="p-3 bg-light rounded-4 border border-light-subtle h-100 d-flex flex-column justify-content-between">
-            <div>
-              <h6 className="text-secondary text-uppercase fw-bold mb-3" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
-                Preferencias del cliente
-              </h6>
+        <div className="col-12 col-lg-5 d-flex flex-column gap-3">
+          <h6 className="text-secondary text-uppercase fw-bold m-0" style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.05em' }}>
+            Preferencias del cliente
+          </h6>
 
-              <div className="d-flex flex-column gap-3">
-                {visita.fecha_preferida && (
-                  <div className="d-flex align-items-center gap-3 pb-2.5 border-bottom border-light-subtle">
-                    <CalendarDays size={18} className="text-secondary flex-shrink-0" />
-                    <div>
-                      <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '10px' }}>
-                        Fecha preferida
-                      </span>
-                      <span className="fw-bold text-dark small">{visita.fecha_preferida}</span>
-                    </div>
+          <div className="p-3 bg-light rounded-4 border border-light-subtle flex-grow-1 d-flex flex-column justify-content-between">
+            <div className="d-flex flex-column gap-2">
+              {(visita.fecha_preferida || horarioElegido) && (
+                <div className="d-flex align-items-center gap-3 pb-2 border-bottom border-light-subtle">
+                  <div
+                    className="rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0 d-flex align-items-center justify-content-center"
+                    style={{ width: 40, height: 40 }}
+                  >
+                    <CalendarDays size={18} className="text-secondary" />
                   </div>
-                )}
-
-                <div className="d-flex align-items-center gap-3 pb-2.5 border-bottom border-light-subtle">
-                  <Clock size={18} className="text-secondary flex-shrink-0" />
-                  <div>
-                    <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '10px' }}>
-                      Disponibilidad
+                  <div className="min-w-0">
+                    <span
+                      className="text-secondary text-uppercase fw-bold d-block mb-1"
+                      style={{ fontSize: '11px', letterSpacing: '0.04em' }}
+                    >
+                      Fecha preferida
                     </span>
-                    <span className="fw-bold text-dark small text-capitalize">{franja}</span>
+                    <span className="fw-bold text-dark fs-6 d-block">
+                      {visita.fecha_preferida}
+                      {visita.fecha_preferida && horarioElegido && ' · '}
+                      {horarioElegido && (
+                        <span className="fw-semibold text-secondary">
+                          {solicitado.desde ? `Horario: ${horarioElegido}` : horarioElegido}
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </div>
+              )}
 
-                <div className="d-flex align-items-center gap-3">
-                  <Phone size={18} className="text-secondary flex-shrink-0" />
-                  <div>
-                    <span className="text-secondary text-uppercase fw-bold d-block" style={{ fontSize: '10px' }}>
-                      Teléfono
-                    </span>
-                    <span className="fw-bold text-dark small">+{visita.telefono}</span>
-                  </div>
+              <div className="d-flex align-items-center gap-3 pb-2 border-bottom border-light-subtle">
+                <div
+                  className="rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0 d-flex align-items-center justify-content-center"
+                  style={{ width: 40, height: 40 }}
+                >
+                  <Clock size={18} className="text-secondary" />
+                </div>
+                <div className="min-w-0">
+                  <span
+                    className="text-secondary text-uppercase fw-bold d-block mb-1"
+                    style={{ fontSize: '11px', letterSpacing: '0.04em' }}
+                  >
+                    Disponibilidad
+                  </span>
+                  <span className="fw-bold text-dark fs-6 d-block text-capitalize">{franja}</span>
+                </div>
+              </div>
+
+              <div className="d-flex align-items-center gap-3 pt-1">
+                <div
+                  className="rounded-3 bg-white text-secondary border border-light-subtle flex-shrink-0 d-flex align-items-center justify-content-center"
+                  style={{ width: 40, height: 40 }}
+                >
+                  <Phone size={18} className="text-secondary" />
+                </div>
+                <div className="min-w-0">
+                  <span
+                    className="text-secondary text-uppercase fw-bold d-block mb-1"
+                    style={{ fontSize: '11px', letterSpacing: '0.04em' }}
+                  >
+                    Teléfono
+                  </span>
+                  <span className="fw-bold text-dark fs-6 d-block">+{visita.telefono}</span>
                 </div>
               </div>
             </div>
 
             {!yaContactada && (
-              <div className="pt-2 border-top border-light-subtle mt-3">
+              <div className="pt-3 border-top border-light-subtle mt-3">
                 <p className="text-secondary text-center m-0" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
                   Al presionar Contactar, pasará a "Contactada" automáticamente.
                 </p>

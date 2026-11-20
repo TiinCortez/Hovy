@@ -420,11 +420,11 @@ export default function TurnosPage() {
       <div className="w-100 min-w-0">
         {loading ? (
           vistaActual === 'diaria' ? (
-            <div className="row g-3 g-xl-4 align-items-start">
-              <div className="col-12 col-lg-7 col-xl-8 min-w-0">
+            <div className="turnos-cockpit-layout d-flex flex-column flex-xl-row align-items-start gap-3 gap-xl-4">
+              <div className="turnos-cockpit-main flex-grow-1 min-w-0 w-100">
                 <TurnosSkeleton />
               </div>
-              <div className="col-12 col-lg-5 col-xl-4 min-w-0">
+              <div className="turnos-cockpit-sidebar flex-shrink-0 min-w-0 w-100">
                 <WidgetsAgendaTurnos
                   turnos={turnosVisibles}
                   periodo={getTextoFecha()}
@@ -441,14 +441,14 @@ export default function TurnosPage() {
         ) : (
           <>
             {vistaActual === 'diaria' && (
-              <div className="row g-3 g-xl-4 align-items-start">
-                <div className="col-12 col-lg-7 col-xl-8 min-w-0">
+              <div className="turnos-cockpit-layout d-flex flex-column flex-xl-row align-items-start gap-3 gap-xl-4">
+                <div className="turnos-cockpit-main flex-grow-1 min-w-0 w-100">
                   <TurnosKanban
                     turnos={turnosDiarios}
                     onSelectTurno={handleSelectTurno}
                   />
                 </div>
-                <div className="col-12 col-lg-5 col-xl-4 min-w-0">
+                <div className="turnos-cockpit-sidebar flex-shrink-0 min-w-0 w-100">
                   <WidgetsAgendaTurnos
                     turnos={turnosVisibles}
                     periodo={getTextoFecha()}

@@ -1,4 +1,23 @@
 @use '../../styles/tokens' as *;
+
+.turnos-cockpit-layout {
+  min-width: 0;
+  width: 100%;
+
+  @media (min-width: 1200px) {
+    .turnos-cockpit-main {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .turnos-cockpit-sidebar {
+      flex: 0 0 340px;
+      width: 340px;
+      max-width: 340px;
+    }
+  }
+}
+
 .turnos-widgets {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);

@@ -198,14 +198,14 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
                     key={d.iso}
                     type="button"
                     onClick={() => handleFecha(d.iso)}
-                    className={`btn rounded-4 p-2.5 text-center d-flex flex-column align-items-center justify-content-between flex-shrink-0 border shadow-sm transition ${
+                    className={`btn rounded-4 p-2 text-center d-flex flex-column align-items-center justify-content-between flex-shrink-0 border shadow-sm transition ${
                       isSelected
                         ? 'text-white'
                         : 'bg-white text-dark border-light-subtle'
                     }`}
                     style={{
-                      minWidth: '82px',
-                      height: '92px',
+                      minWidth: '86px',
+                      height: '96px',
                       backgroundColor: isSelected ? 'var(--hovy-verde-900)' : 'var(--hovy-blanco)',
                       borderColor: isSelected ? 'var(--hovy-verde-900)' : undefined,
                     }}
@@ -226,15 +226,21 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
 
                     {d.esSolicitado ? (
                       <span
-                        className="badge rounded-pill fw-bold text-dark px-1.5 py-0.5"
-                        style={{ backgroundColor: 'var(--hovy-ambar-400)', fontSize: '9px' }}
+                        className="rounded-pill fw-bold text-dark d-inline-block"
+                        style={{
+                          backgroundColor: 'var(--hovy-ambar-400)',
+                          fontSize: '10px',
+                          padding: '3px 8px',
+                          lineHeight: 1.1,
+                          letterSpacing: '0.03em',
+                        }}
                       >
                         PEDIDO
                       </span>
                     ) : (
                       <span
                         className="small"
-                        style={{ fontSize: '9px', opacity: isSelected ? 0.9 : 0.6 }}
+                        style={{ fontSize: '10px', opacity: isSelected ? 0.9 : 0.6 }}
                       >
                         {d.diaNombre}
                       </span>
@@ -289,7 +295,7 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
                 <div className="d-flex flex-wrap gap-2">
                   <Button
                     variant={slotKey === '' ? 'primary' : 'light'}
-                    className="rounded-pill small px-3 py-1.5"
+                    className="rounded-pill small px-3 py-2"
                     style={slotKey === '' ? { backgroundColor: VERDE, borderColor: VERDE } : undefined}
                     onClick={() => setSlotKey('')}
                   >
@@ -304,7 +310,7 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
                         key={key}
                         type="button"
                         onClick={() => setSlotKey(key)}
-                        className={`btn btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 border shadow-sm transition ${
+                        className={`btn btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 border shadow-sm transition ${
                           isSelected
                             ? 'text-white'
                             : 'bg-white text-dark border-light-subtle'
@@ -314,8 +320,14 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
                         <span>{hhmm(s.inicio_desde)} - {hhmm(s.hasta)}</span>
                         {esSlotPedido && (
                           <span
-                            className={`badge rounded-pill fw-bold ${isSelected ? 'bg-warning text-dark' : 'bg-warning-subtle text-warning-emphasis'}`}
-                            style={{ fontSize: '9px' }}
+                            className={`rounded-pill fw-bold d-inline-block ${isSelected ? 'text-dark' : 'bg-warning-subtle text-warning-emphasis'}`}
+                            style={{
+                              backgroundColor: isSelected ? 'var(--hovy-ambar-400)' : undefined,
+                              fontSize: '10px',
+                              padding: '3px 8px',
+                              lineHeight: 1.1,
+                              letterSpacing: '0.03em',
+                            }}
                           >
                             PEDIDO
                           </span>
