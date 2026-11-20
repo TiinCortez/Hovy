@@ -4,6 +4,28 @@
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: $hovy-espacio-16;
   align-items: stretch;
+
+  &.is-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: $hovy-espacio-16;
+    grid-template-columns: none;
+    width: 100%;
+
+    .turnos-widget-map {
+      padding: $hovy-espacio-12 $hovy-espacio-16;
+    }
+
+    .turnos-tools-map {
+      --agenda-map-min-height: 200px;
+      height: 200px;
+    }
+
+    .turnos-widget-clima .clima-panel {
+      padding: $hovy-espacio-12 $hovy-espacio-16 !important;
+      gap: $hovy-espacio-10 !important;
+    }
+  }
 }
 
 .turnos-widget {

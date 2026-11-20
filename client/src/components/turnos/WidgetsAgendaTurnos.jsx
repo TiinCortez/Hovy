@@ -7,7 +7,7 @@ import './herramientasTurnos.scss';
 const PanelClima = lazy(() => import('../clima/PanelClima'));
 const MapaAgenda = lazy(() => import('./MapaAgenda'));
 
-export default function WidgetsAgendaTurnos({ turnos, periodo, onSelectTurno }) {
+export default function WidgetsAgendaTurnos({ turnos, periodo, onSelectTurno, layout = 'grid' }) {
   const mapaRef = useRef(null);
   const [mapaFullscreen, setMapaFullscreen] = useState(false);
   const [mapaAmpliado, setMapaAmpliado] = useState(false);
@@ -65,7 +65,7 @@ export default function WidgetsAgendaTurnos({ turnos, periodo, onSelectTurno }) 
   };
 
   return (
-    <div className="turnos-widgets">
+    <div className={`turnos-widgets ${layout === 'stacked' ? 'is-stacked' : ''}`}>
       <section className="turnos-widget turnos-widget-map" aria-labelledby="turnos-widget-map-title">
         <header className="turnos-widget-header">
           <div className="d-flex align-items-center gap-2 min-w-0">

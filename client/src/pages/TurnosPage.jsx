@@ -398,22 +398,52 @@ export default function TurnosPage() {
         </div>
       </div>
 
-      <WidgetsAgendaTurnos
-        turnos={turnosVisibles}
-        periodo={getTextoFecha()}
-        onSelectTurno={handleSelectTurno}
-      />
+      {vistaActual !== 'diaria' && (
+        <WidgetsAgendaTurnos
+          turnos={turnosVisibles}
+          periodo={getTextoFecha()}
+          onSelectTurno={handleSelectTurno}
+        />
+      )}
 
       <div className="w-100 min-w-0">
         {loading ? (
-          <TurnosSkeleton />
+          vistaActual === 'diaria' ? (
+            <div className="row g-3 g-xl-4 align-items-start">
+              <div className="col-12 col-lg-7 col-xl-8 min-w-0">
+                <TurnosSkeleton />
+              </div>
+              <div className="col-12 col-lg-5 col-xl-4 min-w-0">
+                <WidgetsAgendaTurnos
+                  turnos={turnosVisibles}
+                  periodo={getTextoFecha()}
+                  onSelectTurno={handleSelectTurno}
+                  layout="stacked"
+                />
+              </div>
+            </div>
+          ) : (
+            <TurnosSkeleton />
+          )
         ) : (
           <>
             {vistaActual === 'diaria' && (
-              <TurnosKanban
-                turnos={turnosDiarios}
-                onSelectTurno={handleSelectTurno}
-              />
+              <div className="row g-3 g-xl-4 align-items-start">
+                <div className="col-12 col-lg-7 col-xl-8 min-w-0">
+                  <TurnosKanban
+                    turnos={turnosDiarios}
+                    onSelectTurno={handleSelectTurno}
+                  />
+                </div>
+                <div className="col-12 col-lg-5 col-xl-4 min-w-0">
+                  <WidgetsAgendaTurnos
+                    turnos={turnosVisibles}
+                    periodo={getTextoFecha()}
+                    onSelectTurno={handleSelectTurno}
+                    layout="stacked"
+                  />
+                </div>
+              </div>
             )}
             {vistaActual === 'semanal' && (
               <TurnosSemanal
