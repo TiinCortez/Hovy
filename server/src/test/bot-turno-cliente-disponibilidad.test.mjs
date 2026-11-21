@@ -19,9 +19,12 @@ const espia = (resultado = { data: [] }) => {
   return { llamadas, consultar };
 };
 
+// 2026-11-13 15:00 in Argentina (UTC-3).
+const AHORA_TARDE = new Date('2026-11-13T18:00:00Z');
+
 test('consultarDisponibilidadCliente: con fecha pide solo los horarios de ese día', async () => {
   const { llamadas, consultar } = espia({ data: [{ fecha: '2026-11-20', disponibles: [{ inicio_desde: '09:00', hasta: '11:00' }] }] });
-  const resultado = await consultarDisponibilidadCliente({ query: { fecha: '2026-11-20' }, consultar });
+  const resultado = await consultarDisponibilidadCliente({ query: { fecha: '2026-11-20' }, consultar, ahora: AHORA_TARDE });
   assert.deepEqual(llamadas, [{ fecha: '2026-11-20' }]);
   assert.equal(resultado.data[0].disponibles[0].inicio_desde, '09:00');
 });
@@ -41,9 +44,6 @@ test('consultarDisponibilidadCliente: ignora los parámetros que el cliente no p
   });
   assert.deepEqual(llamadas, [{ fecha: '2026-11-20' }]);
 });
-
-// 2026-11-13 15:00 in Argentina (UTC-3).
-const AHORA_TARDE = new Date('2026-11-13T18:00:00Z');
 
 test('consultarDisponibilidadCliente: de hoy no ofrece horarios que ya empezaron', async () => {
   const { consultar } = espia({ data: [{ fecha: '2026-11-13', disponibles: [
