@@ -38,10 +38,10 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: $hovy-espacio-16;
+  gap: $hovy-espacio-12;
   min-width: 0;
 
-  @media (min-width: 768px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 640px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (min-width: 1200px) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
   &.is-filtered { grid-template-columns: minmax(0, 1fr); }
@@ -99,30 +99,31 @@
 .turnos-agenda-card {
   min-width: 0;
   overflow: hidden;
-  overflow-wrap: break-word;
-  padding: $hovy-espacio-14 $hovy-espacio-16;
+  padding: $hovy-espacio-12 $hovy-espacio-14;
   background-color: $hovy-blanco;
   border: 1px solid $hovy-crema-300;
   border-radius: $hovy-radio-lg;
   cursor: pointer;
   transition: border-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
 
-  &:hover { border-color: $hovy-crema-600; box-shadow: $hovy-sombra-md; }
+  &:hover { border-color: $hovy-verde-400; box-shadow: $hovy-sombra-sm; }
   &:focus-visible { outline: 2px solid $hovy-verde-500; outline-offset: 2px; }
 }
 
 .turnos-agenda-card-hora {
-  font-size: $hovy-texto-base;
+  font-size: $hovy-texto-sm;
   font-weight: 700;
   color: $hovy-gris-900;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .turnos-agenda-card-cliente {
-  margin: $hovy-espacio-8 0 $hovy-espacio-2;
+  margin: $hovy-espacio-6 0 $hovy-espacio-2;
   font-size: $hovy-texto-base;
   font-weight: 700;
   color: $hovy-gris-900;
+  line-height: 1.3;
 }
 
 .turnos-agenda-card-direccion {
@@ -130,7 +131,8 @@
   align-items: flex-start;
   gap: $hovy-espacio-4;
   font-size: $hovy-texto-sm;
-  color: $hovy-gris-500;
+  color: $hovy-gris-600;
+  line-height: 1.4;
 }
 
 .turnos-agenda-card-pie {
@@ -138,10 +140,22 @@
   align-items: center;
   justify-content: space-between;
   gap: $hovy-espacio-8;
-  margin-top: $hovy-espacio-12;
-  padding-top: $hovy-espacio-10;
-  border-top: 1px solid $hovy-crema-100;
+  margin-top: $hovy-espacio-10;
+  padding-top: $hovy-espacio-8;
+  border-top: 1px solid $hovy-crema-200;
   font-size: $hovy-texto-sm;
+}
+
+.turnos-agenda-servicio-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background-color: $hovy-crema-100;
+  color: $hovy-verde-800;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-pill;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  max-width: 100%;
 }
 
 // Small label used for the priority and the "en curso / realizado" states

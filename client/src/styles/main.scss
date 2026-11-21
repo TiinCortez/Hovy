@@ -627,6 +627,8 @@ $form-invalid-border-color: $hovy-texto-error;
   &:hover { background-color: rgba($hovy-verde-900, 0.05); }
 }
 .max-w-1280 { max-width: 1280px; }
+.max-w-1440 { max-width: 1440px; }
+.max-w-1600 { max-width: 1600px; }
 
 // Popover de notificaciones (campana del Header). En desktop/tablet cuelga
 // del botón como un dropdown normal; en mobile el botón queda lejos del borde

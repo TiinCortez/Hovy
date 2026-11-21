@@ -269,7 +269,7 @@ export default function VisitasPage() {
       </div>
       </div>
 
-      <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-3">
+      <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
         <div className="input-group bg-white rounded-pill px-3 py-2 border shadow-sm flex-grow-1" style={{ maxWidth: '360px' }}>
           <span className="input-group-text bg-transparent border-0 text-secondary p-0 me-2"><Search size={18} /></span>
           <input
@@ -282,7 +282,7 @@ export default function VisitasPage() {
           />
         </div>
         <select
-          className="form-select rounded-pill border shadow-sm small w-auto"
+          className="form-select bg-white rounded-pill border shadow-sm text-secondary small py-2 w-auto flex-shrink-0 ms-lg-auto"
           aria-label="Ordenar por fecha"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}

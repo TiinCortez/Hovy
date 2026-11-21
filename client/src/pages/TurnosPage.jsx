@@ -407,24 +407,58 @@ export default function TurnosPage() {
         </div>
       </div>
 
-      <WidgetsAgendaTurnos
-        turnos={turnosVisibles}
-        periodo={getTextoFecha()}
-        fechaObjetivo={fechaIsoActual}
-        ahora={ahora}
-        onSelectTurno={handleSelectTurno}
-      />
+      {vistaActual !== 'diaria' && (
+        <WidgetsAgendaTurnos
+          turnos={turnosVisibles}
+          periodo={getTextoFecha()}
+          fechaObjetivo={fechaIsoActual}
+          ahora={ahora}
+          onSelectTurno={handleSelectTurno}
+        />
+      )}
 
       <div className="w-100 min-w-0">
         {loading ? (
-          <TurnosSkeleton />
+          vistaActual === 'diaria' ? (
+            <div className="turnos-cockpit-layout d-flex flex-column flex-xl-row align-items-start gap-3 gap-xl-4">
+              <div className="turnos-cockpit-main flex-grow-1 min-w-0 w-100">
+                <TurnosSkeleton />
+              </div>
+              <div className="turnos-cockpit-sidebar flex-shrink-0 min-w-0 w-100">
+                <WidgetsAgendaTurnos
+                  turnos={turnosVisibles}
+                  periodo={getTextoFecha()}
+                  fechaObjetivo={fechaIsoActual}
+                  ahora={ahora}
+                  onSelectTurno={handleSelectTurno}
+                  layout="stacked"
+                />
+              </div>
+            </div>
+          ) : (
+            <TurnosSkeleton />
+          )
         ) : (
           <>
             {vistaActual === 'diaria' && (
-              <TurnosKanban
-                turnos={turnosDiarios}
-                onSelectTurno={handleSelectTurno}
-              />
+              <div className="turnos-cockpit-layout d-flex flex-column flex-xl-row align-items-start gap-3 gap-xl-4">
+                <div className="turnos-cockpit-main flex-grow-1 min-w-0 w-100">
+                  <TurnosKanban
+                    turnos={turnosDiarios}
+                    onSelectTurno={handleSelectTurno}
+                  />
+                </div>
+                <div className="turnos-cockpit-sidebar flex-shrink-0 min-w-0 w-100">
+                  <WidgetsAgendaTurnos
+                    turnos={turnosVisibles}
+                    periodo={getTextoFecha()}
+                    fechaObjetivo={fechaIsoActual}
+                    ahora={ahora}
+                    onSelectTurno={handleSelectTurno}
+                    layout="stacked"
+                  />
+                </div>
+              </div>
             )}
             {vistaActual === 'semanal' && (
               <TurnosSemanal

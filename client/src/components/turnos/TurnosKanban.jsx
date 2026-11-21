@@ -71,17 +71,17 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
       >
         <div className="d-flex align-items-center justify-content-between gap-2">
           <span className="turnos-agenda-card-hora d-flex align-items-center gap-1">
-            <Clock size={14} className="text-secondary" aria-hidden="true" />
-            {formatearHorarioTurno(turno)}
+            <Clock size={14} className="text-secondary flex-shrink-0" aria-hidden="true" />
+            <span>{formatearHorarioTurno(turno)}</span>
           </span>
-          <span className={`turnos-agenda-etiqueta ${pConf.code === 'P1' ? 'turnos-agenda-etiqueta--p1' : ''}`}>
+          <span className={`turnos-agenda-etiqueta flex-shrink-0 ${pConf.code === 'P1' ? 'turnos-agenda-etiqueta--p1' : ''}`}>
             {etiquetaPrioridad}
           </span>
         </div>
 
         <h6 className="turnos-agenda-card-cliente">{turno.cliente.nombre}</h6>
         <div className="turnos-agenda-card-direccion">
-          <MapPin size={13} className="mt-1 flex-shrink-0" aria-hidden="true" />
+          <MapPin size={13} className="mt-1 flex-shrink-0 text-secondary" aria-hidden="true" />
           <span className="min-w-0">{turno.inmueble.direccion}</span>
         </div>
 
@@ -101,7 +101,9 @@ export default function TurnosKanban({ turnos, onSelectTurno }) {
         )}
 
         <div className="turnos-agenda-card-pie">
-          <span className="fw-semibold text-dark min-w-0">{turno.servicio.descripcion}</span>
+          <span className="turnos-agenda-servicio-badge text-truncate">
+            {turno.servicio.descripcion}
+          </span>
           {isCoordinado && (
             <div className="d-flex align-items-center flex-shrink-0">
               {urlWhatsApp ? (

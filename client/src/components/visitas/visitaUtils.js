@@ -9,6 +9,15 @@ export const PRIORIDADES = [
   { value: 'P3_Casual', label: 'P3 - Cliente casual' },
 ];
 
+export const FRANJA_TEXTO = {
+  Mañana: 'por la mañana',
+  Tarde: 'por la tarde',
+  Indistinto: 'en cualquier horario',
+};
+
+export const mensajeWhatsapp = (nombre) =>
+  `Hola ${nombre}, como esta? Gracias por comunicarse con hovy. ¿Continuamos con la asignacion de la visita para poder realizar un presupuesto?`;
+
 export const formatMoney = (value) => `$${Number(value || 0).toLocaleString('es-AR')}`;
 
 export const formatFecha = (valor) => {

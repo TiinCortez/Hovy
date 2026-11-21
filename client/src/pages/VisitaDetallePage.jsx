@@ -2,20 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  MessageCircle,
-  User,
-  Phone,
-  MapPin,
-  Ruler,
-  Wrench,
-  CalendarDays,
-  Clock,
-  StickyNote,
-  CheckCircle2,
   AlertTriangle,
   XCircle,
 } from 'lucide-react';
-import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import { useAvisos } from '../components/ui/avisosContext';
 import VisitaService from '../services/api/visita.service';
@@ -23,24 +12,9 @@ import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import CancelarVisitaModal from '../components/visitas/CancelarVisitaModal.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
-import { BADGE_TIPO, getEstadoLabel } from '../components/visitas/visitaUtils';
-import Badge from '../components/ui/Badge';
+import VisitaDetalleCard from '../components/visitas/VisitaDetalleCard.jsx';
 import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
-import { VERDE } from '../styles/colores';
-
-const FRANJA_TEXTO = {
-  Mañana: 'por la mañana',
-  Tarde: 'por la tarde',
-  Indistinto: 'en cualquier horario',
-};
-
-const mensajeWhatsapp = (nombre) =>
-  `Hola ${nombre}, como esta? Gracias por comunicarse con hovy. ¿Continuamos con la asignacion de la visita para poder realizar un presupuesto?`;
-
-const formatFecha = (valor) => {
-  if (!valor) return null;
-  return new Date(valor).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' });
-};
+import { mensajeWhatsapp } from '../components/visitas/visitaUtils';
 
 export default function VisitaDetallePage() {
   const { avisar } = useAvisos();
@@ -120,10 +94,6 @@ export default function VisitaDetallePage() {
     );
   }
 
-  const franja = FRANJA_TEXTO[visita.franja_preferida] ?? FRANJA_TEXTO.Indistinto;
-  const yaContactada = visita.estado !== 'Pendiente';
-  const estadoLabel = getEstadoLabel(visita.estado);
-
   return (
     <div className="d-flex flex-column gap-4 pb-5">
       <div>
@@ -135,121 +105,11 @@ export default function VisitaDetallePage() {
         </Link>
       </div>
 
-      <Card className="p-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 pb-4 border-bottom">
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-4 d-flex align-items-center justify-content-center fw-bold text-success flex-shrink-0"
-              style={{ width: 56, height: 56, backgroundColor: 'var(--hovy-verde-100)', fontSize: 'var(--hovy-texto-xl)', border: '1px solid var(--hovy-verde-200)' }}
-            >
-              {visita.nombre?.[0]?.toUpperCase()}{visita.apellido?.[0]?.toUpperCase()}
-            </div>
-            <div>
-              <h2 className="fw-bold text-dark m-0 fs-4">{visita.nombre} {visita.apellido}</h2>
-              <p className="text-secondary small m-0">Solicitud de visita #{visita.id_solicitud}</p>
-            </div>
-          </div>
-
-          <div className="d-flex flex-column align-items-end gap-1">
-            <Badge tipo={BADGE_TIPO[estadoLabel] || 'pendiente'} conPunto={false}>
-              {yaContactada ? <CheckCircle2 size={14} aria-hidden="true" /> : <Clock size={14} aria-hidden="true" />}
-              {estadoLabel}
-            </Badge>
-            {visita.estado === 'Realizada' && (
-              <span className="badge rounded-pill px-3 py-2 fw-semibold bg-success text-white">Turno asignado</span>
-            )}
-          </div>
-        </div>
-
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-6">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-              <Phone size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Teléfono</div>
-              <div className="fw-medium text-dark small">+{visita.telefono}</div>
-            </div>
-          </div>
-          <div className="col-12 col-md-6">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-              <User size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Disponibilidad</div>
-              <div className="fw-medium text-dark small text-capitalize">{franja}</div>
-            </div>
-          </div>
-          <div className="col-12">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-              <MapPin size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Dirección</div>
-              <div className="fw-medium text-dark small">
-                {visita.direccion}
-                {visita.barrio && `, ${visita.barrio}`}
-                {visita.provincia && `, ${visita.provincia}`}
-              </div>
-            </div>
-          </div>
-          {visita.superficie_aproximada && (
-            <div className="col-12 col-md-6">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <Ruler size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Superficie aproximada</div>
-                <div className="fw-medium text-dark small">{visita.superficie_aproximada} m²</div>
-              </div>
-            </div>
-          )}
-          {visita.servicio && (
-            <div className="col-12 col-md-6">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <Wrench size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Servicio solicitado</div>
-                <div className="fw-medium text-dark small">{visita.servicio}</div>
-              </div>
-            </div>
-          )}
-          {visita.fecha_preferida && (
-            <div className="col-12 col-md-6">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <CalendarDays size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Fecha preferida</div>
-                <div className="fw-medium text-dark small">{visita.fecha_preferida}</div>
-              </div>
-            </div>
-          )}
-          {visita.nota_horario && (
-            <div className="col-12">
-              <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-                <StickyNote size={18} className="text-secondary mb-1" />
-                <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Nota sobre el horario</div>
-                <div className="fw-medium text-dark small">{visita.nota_horario}</div>
-              </div>
-            </div>
-          )}
-          <div className="col-12">
-            <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">
-              <Clock size={18} className="text-secondary mb-1" />
-              <div className="text-secondary text-uppercase fw-bold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Solicitada el</div>
-              <div className="fw-medium text-dark small">{formatFecha(visita.created_at)}</div>
-            </div>
-          </div>
-        </div>
-
-        {!yaContactada && (
-          <>
-            <Button
-              variant="primary"
-              className="w-100 w-md-auto justify-content-center"
-              style={{ backgroundColor: VERDE, borderColor: VERDE }}
-              onClick={handleContactar}
-              disabled={contactando}
-            >
-              <MessageCircle size={18} />
-              {contactando ? 'Abriendo WhatsApp…' : 'Contactar'}
-            </Button>
-            <p className="text-secondary text-center mt-2 mb-0" style={{ fontSize: 'var(--hovy-texto-xs)' }}>
-              Al presionar Contactar, la solicitud pasará a "Contactada" automáticamente.
-            </p>
-          </>
-        )}
-      </Card>
+      <VisitaDetalleCard
+        visita={visita}
+        onContactar={handleContactar}
+        contactando={contactando}
+      />
 
       {feedback && (
         <div className={`alert alert-${feedback.type} rounded-3 m-0 small fw-medium`} role={feedback.type === 'danger' ? 'alert' : 'status'}>
