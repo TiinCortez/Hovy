@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, MoreVertical, X } from 'lucide-react';
+import { Clock, X } from 'lucide-react';
 import Card from '../ui/Card.jsx';
 import Paginacion from './Paginacion.jsx';
 import CancelarNotificacionModal from './CancelarNotificacionModal.jsx';
@@ -45,7 +45,6 @@ export default function AlertasNotificacionesCard({ notificaciones, cargando, er
           >
             <Clock size={14} /> <span className="d-none d-sm-inline">Ver historial</span>
           </Link>
-          <button type="button" className="btn btn-light btn-icon" aria-label="Opciones"><MoreVertical size={20}/></button>
         </div>
       </div>
 
