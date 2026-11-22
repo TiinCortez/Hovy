@@ -31,6 +31,10 @@ export function validarVariablesEntorno() {
     advertencias.push('BOT_API_KEY no está configurada. Las llamadas del bot de WhatsApp (n8n) serán rechazadas.');
   }
 
+  if (!process.env.N8N_AVISO_TURNO_URL) {
+    advertencias.push('N8N_AVISO_TURNO_URL no está configurada. No se enviará el resumen del turno por WhatsApp al asignarlo (el turno se agenda igual).');
+  }
+
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.EMAIL_FROM) {
     advertencias.push('SMTP_HOST, SMTP_USER, SMTP_PASS o EMAIL_FROM no están configurados. El envío de correos (recuperación de contraseña / bienvenidas) fallará.');
   }

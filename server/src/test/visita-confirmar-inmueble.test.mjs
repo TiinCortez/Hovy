@@ -153,3 +153,138 @@ test('agendarTurnoVisita: un turno agendado desde solicitudes se crea en estado 
   assert.equal(insertTurno.estado, 'Confirmado');
   assert.equal(resultado.turno.estado, 'Confirmado');
 });
+
+// ---- Aviso del turno por WhatsApp al agendar desde una solicitud ---------------------------
+
+const respuestasAgendar = () => ({
+  'solicitudes_visita:select': {
+    data: { ...SOLICITUD_BASE, estado: 'Confirmada', id_inmueble: 7, id_presupuesto: 15 },
+    error: null,
+  },
+  'presupuestos:select': (c) => {
+    const campos = c.ops.find(([o]) => o === 'select')[1];
+    return campos.includes('monto_total')
+      ? { data: { monto_total: 17400 }, error: null }
+      : { data: { id_presupuesto: 15, estado: 'Aceptado' }, error: null };
+  },
+  'detalle_presupuesto:select': { data: [{ servicio: { nombre: 'Corte de césped' } }], error: null },
+  'turnos:select': (c) => {
+    const campos = c.ops.find(([o]) => o === 'select')[1];
+    return campos.includes('inmueble:inmuebles')
+      ? {
+        data: {
+          id_turno: 501, id_presupuesto: 15, fecha_programada: '2099-12-20', inicio_desde: '09:00:00', hasta: '11:00:00', estado: 'Confirmado',
+          inmueble: { direccion: 'Capitán Martel 1900', provincia: 'Córdoba', cliente: { nombre: 'Lucas', telefono: '5493514330429' } },
+        },
+        error: null,
+      }
+      : { data: [], error: null };
+  },
+  'turnos:insert': (c) => ({ data: { id_turno: 501, ...c.ops.find(([o]) => o === 'insert')[1] }, error: null }),
+  'solicitudes_visita:update': (c) => ({ data: { ...SOLICITUD_BASE, ...c.ops.find(([o]) => o === 'update')[1] }, error: null }),
+});
+
+const BODY_TURNO = { fecha_programada: '2099-12-20', inicio_desde: '09:00', hasta: '11:00', prioridad: 'P3_Casual' };
+
+const conAvisoConfigurado = (t) => {
+  const anterior = { url: process.env.N8N_AVISO_TURNO_URL, clave: process.env.BOT_API_KEY };
+  process.env.N8N_AVISO_TURNO_URL = 'https://n8n.test/webhook/aviso-turno';
+  process.env.BOT_API_KEY = 'clave-de-prueba';
+  t.after(() => {
+    if (anterior.url === undefined) delete process.env.N8N_AVISO_TURNO_URL; else process.env.N8N_AVISO_TURNO_URL = anterior.url;
+    if (anterior.clave === undefined) delete process.env.BOT_API_KEY; else process.env.BOT_API_KEY = anterior.clave;
+  });
+};
+
+test('agendarTurnoVisita: avisa al cliente por WhatsApp una sola vez, con el precio final y los datos del turno', async (t) => {
+  conAvisoConfigurado(t);
+  mockBase(t, respuestasAgendar());
+  const llamadas = [];
+  t.mock.method(globalThis, 'fetch', async (url, opciones) => {
+    llamadas.push({ url, body: JSON.parse(opciones.body), clave: opciones.headers['x-api-key'] });
+    return { ok: true, status: 200, json: async () => ({ ok: true, enviado: true }) };
+  });
+
+  const resultado = await agendarTurnoVisita(30, BODY_TURNO);
+
+  assert.equal(resultado.error, undefined);
+  assert.deepEqual(resultado.aviso, { enviado: true, motivo: null });
+  assert.equal(llamadas.length, 1, 'un solo envío por turno');
+  assert.equal(llamadas[0].url, 'https://n8n.test/webhook/aviso-turno');
+  assert.equal(llamadas[0].clave, 'clave-de-prueba');
+  assert.deepEqual(llamadas[0].body, {
+    telefono: '5493514330429',
+    nombre: 'Lucas',
+    servicio: 'Corte de césped',
+    fecha: '2099-12-20',
+    hora_desde: '09:00',
+    hora_hasta: '11:00',
+    direccion: 'Capitán Martel 1900, Córdoba',
+    total: 17400,
+  });
+});
+
+test('agendarTurnoVisita: si n8n falla o el cliente está fuera de las 24 h, el turno se agenda igual', async (t) => {
+  conAvisoConfigurado(t);
+  mockBase(t, respuestasAgendar());
+  let llamadas = 0;
+  t.mock.method(globalThis, 'fetch', async () => {
+    llamadas += 1;
+    return { ok: true, status: 200, json: async () => ({ ok: false, enviado: false, motivo: 'fuera_de_ventana' }) };
+  });
+
+  const resultado = await agendarTurnoVisita(30, BODY_TURNO);
+
+  assert.equal(resultado.error, undefined);
+  assert.equal(resultado.turno.id_turno, 501);
+  assert.equal(resultado.solicitudFinal.estado, 'Realizada');
+  assert.deepEqual(resultado.aviso, { enviado: false, motivo: 'fuera_de_ventana' });
+  assert.equal(llamadas, 1, 'no se reintenta');
+});
+
+test('agendarTurnoVisita: con n8n caído el turno se agenda y el aviso queda como no enviado', async (t) => {
+  conAvisoConfigurado(t);
+  mockBase(t, respuestasAgendar());
+  t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('fetch failed'); });
+
+  const resultado = await agendarTurnoVisita(30, BODY_TURNO);
+
+  assert.equal(resultado.error, undefined);
+  assert.equal(resultado.turno.id_turno, 501);
+  assert.deepEqual(resultado.aviso, { enviado: false, motivo: 'sin_conexion' });
+});
+
+test('agendarTurnoVisita: sin el webhook configurado no se llama a nadie', async (t) => {
+  const anterior = process.env.N8N_AVISO_TURNO_URL;
+  delete process.env.N8N_AVISO_TURNO_URL;
+  t.after(() => { if (anterior !== undefined) process.env.N8N_AVISO_TURNO_URL = anterior; });
+  mockBase(t, respuestasAgendar());
+  let llamadas = 0;
+  t.mock.method(globalThis, 'fetch', async () => { llamadas += 1; });
+
+  const resultado = await agendarTurnoVisita(30, BODY_TURNO);
+
+  assert.equal(resultado.error, undefined);
+  assert.deepEqual(resultado.aviso, { enviado: false, motivo: 'no_configurado' });
+  assert.equal(llamadas, 0);
+});
+
+test('agendarTurnoVisita: un presupuesto sin precio final no dispara el aviso', async (t) => {
+  conAvisoConfigurado(t);
+  const respuestas = respuestasAgendar();
+  respuestas['presupuestos:select'] = (c) => {
+    const campos = c.ops.find(([o]) => o === 'select')[1];
+    return campos.includes('monto_total')
+      ? { data: { monto_total: 0 }, error: null }
+      : { data: { id_presupuesto: 15, estado: 'Aceptado' }, error: null };
+  };
+  mockBase(t, respuestas);
+  let llamadas = 0;
+  t.mock.method(globalThis, 'fetch', async () => { llamadas += 1; });
+
+  const resultado = await agendarTurnoVisita(30, BODY_TURNO);
+
+  assert.equal(resultado.error, undefined);
+  assert.deepEqual(resultado.aviso, { enviado: false, motivo: 'sin_precio' });
+  assert.equal(llamadas, 0);
+});

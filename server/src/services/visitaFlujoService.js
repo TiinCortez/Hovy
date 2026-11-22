@@ -10,6 +10,7 @@ import { hoyEnArgentina, sumarDias, validarFechaNoPasada } from '../utils/fechaA
 import { PRIORIDADES_VALIDAS } from '../controllers/turnosController.js';
 import { estaVacio, falla } from '../utils/solicitudesVisita.js';
 import { buscarSolicitud, exigirPresupuestoAceptado } from './presupuestoService.js';
+import { avisarTurnoPorId } from './avisoTurnoService.js';
 
 // Visit workflow shared by the two channels: the WhatsApp bot (staff routes,
 // botStaffController.js) and the web panel (visitasFlujoController.js).
@@ -420,5 +421,8 @@ export const agendarTurnoVisita = async (idSolicitud, body) => {
     return falla(409, 'La solicitud ya fue procesada por otra conversación mientras se agendaba el turno.');
   }
 
-  return { solicitud, solicitudFinal, turno, conFranja: vinoInicio };
+  // Resumen del turno por WhatsApp con el precio final (texto libre, sin costo). Nunca falla el agendado.
+  const aviso = await avisarTurnoPorId(turno.id_turno);
+
+  return { solicitud, solicitudFinal, turno, conFranja: vinoInicio, aviso };
 };

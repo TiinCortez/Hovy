@@ -337,12 +337,13 @@ export const crearTurnoDesdeSolicitud = async (req, res) => {
     const resultado = await agendarTurnoVisita(idSolicitud, body);
     if (resultado.error) return responderErrorServicio(res, resultado.error);
 
-    const { solicitud, solicitudFinal, turno, conFranja } = resultado;
+    const { solicitud, solicitudFinal, turno, conFranja, aviso } = resultado;
 
     return res.status(201).json({
       ok: true,
       mensaje: `Turno agendado para ${solicitud.nombre} ${solicitud.apellido} el ${body.fecha_programada}${conFranja ? ` de ${body.inicio_desde} a ${body.hasta}` : ''}.`,
       data: { solicitud: solicitudFinal, turno },
+      aviso_whatsapp: aviso,
     });
   } catch (err) {
     console.error('Error inesperado al agendar el turno desde la solicitud de visita:', err);

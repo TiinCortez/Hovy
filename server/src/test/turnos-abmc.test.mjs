@@ -161,3 +161,73 @@ test('la modificación actualiza inmueble, servicio y monto_total del presupuest
   assert.equal(updatePresupuesto.update.monto_estimado, 60000);
   assert.equal(updatePresupuesto.update.monto_total, 52000);
 });
+
+// ---- Aviso del turno por WhatsApp al agendar desde la agenda del panel ----------------------
+
+const REGISTRO_CON_CLIENTE = {
+  ...actual,
+  estado: 'Coordinado',
+  inmueble: { direccion: 'Capitán Martel 1900', provincia: 'Córdoba', cliente: { nombre: 'Lucas', telefono: '5493514330429' } },
+};
+const BODY_ALTA = { id_inmueble: 1, id_servicio: 2, fecha_programada: '2026-10-07', inicio_desde: '13:00', hasta: '15:00', prioridad: 'P2_FIJO' };
+
+const conAvisoConfigurado = (t) => {
+  const anterior = { url: process.env.N8N_AVISO_TURNO_URL, clave: process.env.BOT_API_KEY };
+  process.env.N8N_AVISO_TURNO_URL = 'https://n8n.test/webhook/aviso-turno';
+  process.env.BOT_API_KEY = 'clave-de-prueba';
+  t.after(() => {
+    if (anterior.url === undefined) delete process.env.N8N_AVISO_TURNO_URL; else process.env.N8N_AVISO_TURNO_URL = anterior.url;
+    if (anterior.clave === undefined) delete process.env.BOT_API_KEY; else process.env.BOT_API_KEY = anterior.clave;
+  });
+};
+
+test('el alta avisa al cliente por WhatsApp una sola vez, con el precio final del presupuesto', async (t) => {
+  conAvisoConfigurado(t);
+  const { res } = preparar(t, { registro: REGISTRO_CON_CLIENTE });
+  const enviados = [];
+  globalThis.fetch.mock.mockImplementation(async (url, opciones) => {
+    enviados.push(JSON.parse(opciones.body));
+    return { ok: true, status: 200, json: async () => ({ ok: true, enviado: true }) };
+  });
+
+  await createTurno({ body: BODY_ALTA, user: { sub: 1 } }, res);
+
+  assert.equal(res.codigo, 201);
+  assert.deepEqual(res.body.aviso_whatsapp, { enviado: true, motivo: null });
+  assert.equal(enviados.length, 1, 'un solo envío por turno');
+  assert.deepEqual(enviados[0], {
+    telefono: '5493514330429',
+    nombre: 'Lucas',
+    servicio: 'Mantenimiento regular de césped',
+    fecha: '2026-10-07',
+    hora_desde: '13:00',
+    hora_hasta: '15:00',
+    direccion: 'Capitán Martel 1900, Córdoba',
+    total: 60000,
+  });
+});
+
+test('el alta responde 201 aunque el aviso falle (n8n caído) o el cliente esté fuera de las 24 h', async (t) => {
+  conAvisoConfigurado(t);
+  const { res } = preparar(t, { registro: REGISTRO_CON_CLIENTE });
+  globalThis.fetch.mock.mockImplementation(async () => { throw new TypeError('fetch failed'); });
+
+  await createTurno({ body: BODY_ALTA, user: { sub: 1 } }, res);
+
+  assert.equal(res.codigo, 201);
+  assert.deepEqual(res.body.aviso_whatsapp, { enviado: false, motivo: 'sin_conexion' });
+  assert.ok(res.body.data, 'el turno se devuelve igual');
+});
+
+test('el alta no avisa un turno cancelado', async (t) => {
+  conAvisoConfigurado(t);
+  const { res } = preparar(t, { registro: { ...REGISTRO_CON_CLIENTE, estado: 'Cancelado' } });
+  let llamadas = 0;
+  globalThis.fetch.mock.mockImplementation(async () => { llamadas += 1; });
+
+  await createTurno({ body: { ...BODY_ALTA, estado: 'CANCELADO' }, user: { sub: 1 } }, res);
+
+  assert.equal(res.codigo, 201);
+  assert.deepEqual(res.body.aviso_whatsapp, { enviado: false, motivo: 'turno_cancelado' });
+  assert.equal(llamadas, 0);
+});
