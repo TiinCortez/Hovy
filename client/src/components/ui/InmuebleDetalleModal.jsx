@@ -1,4 +1,4 @@
-import { MapPin, Maximize, Trash2, Edit2, Navigation, Home } from 'lucide-react';
+import { MapPin, Maximize, Trash2, Edit2, Navigation, Home, AlertTriangle } from 'lucide-react';
 import Button from './Button';
 import InmuebleMapa from './InmuebleMapa';
 import { obtenerCoordenadas } from './inmuebleUbicacion';
@@ -109,6 +109,16 @@ export default function InmuebleDetalleModal({ isOpen, onClose, inmuebleData, on
               <h6 className="text-secondary fw-bold small text-uppercase mb-3 d-flex align-items-center gap-2" style={{ letterSpacing: '0.05em' }}>
                 <Maximize size={16} /> Superficies
               </h6>
+              {/* 0 es un valor simbólico: el cliente no conocía los m² al registrar el inmueble por WhatsApp */}
+              {Number(inmuebleData.superficie_total) === 0 && (
+                <div className="alert alert-warning d-flex align-items-start gap-2 rounded-3 small mb-3" role="alert">
+                  <AlertTriangle size={18} className="flex-shrink-0 mt-1" />
+                  <span>
+                    <strong>Superficie sin medir.</strong> Un 0 significa que el cliente no sabía los metros cuadrados
+                    al registrar el inmueble. Hay que calcularlos en la visita y cargarlos antes de presupuestar.
+                  </span>
+                </div>
+              )}
               <div className="row g-3">
                 <div className="col-12 col-md-4">
                   <div className="p-3 bg-light rounded-4 h-100 border border-light-subtle">

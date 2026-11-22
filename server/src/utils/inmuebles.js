@@ -157,8 +157,15 @@ export const validarDatosInmueble = (datos, { parcial = false } = {}) => {
       continue;
     }
 
-    if (mayorACero && numero <= 0) {
+    // En el alta, superficie_total = 0 es un valor simbólico: el cliente no sabe
+    // los m2 y se miden en la visita. Sigue siendo obligatoria (no puede faltar)
+    // y en una modificación el 0 se rechaza: ahí el dato tiene que ser real.
+    const permiteCero = campo === 'superficie_total' && !parcial;
+
+    if (mayorACero && !permiteCero && numero <= 0) {
       errores.push(`${campo} tiene que ser mayor a 0.`);
+    } else if (permiteCero && numero < 0) {
+      errores.push(`${campo} no puede ser negativo.`);
     } else if (!mayorACero && numero < 0) {
       errores.push(`${campo} no puede ser negativo.`);
     }

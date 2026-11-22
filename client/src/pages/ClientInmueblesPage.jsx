@@ -630,7 +630,9 @@ export default function ClientInmueblesPage() {
                               <MapPin size={16} className="text-secondary" />
                               <span>{inmueble.barrio || 'Sin barrio'}, {inmueble.provincia}</span>
                               <span className="text-muted px-1">•</span>
-                              <span className="fw-medium text-dark">{inmueble.superficie_total} m²</span>
+                              {Number(inmueble.superficie_total) === 0
+                                ? <span className="badge text-bg-warning" title="El cliente no sabía los m² al registrarlo. Hay que calcularlos en la visita.">m² sin medir</span>
+                                : <span className="fw-medium text-dark">{inmueble.superficie_total} m²</span>}
                             </div>
                             <div className="d-flex align-items-center gap-2 mt-1">
                               <Clock size={16} className="text-secondary" />
@@ -640,7 +642,7 @@ export default function ClientInmueblesPage() {
 
                           <div className="d-flex d-md-none flex-column gap-2 text-secondary small mt-3">
                             <div className="d-flex align-items-start gap-2"><MapPin size={16} className="text-secondary mt-1" /><span>{inmueble.direccion}</span></div>
-                            <div className="d-flex align-items-start gap-2"><Building2 size={16} className="text-secondary mt-1" /><span>{inmueble.superficie_total} m²</span></div>
+                            <div className="d-flex align-items-start gap-2"><Building2 size={16} className="text-secondary mt-1" />{Number(inmueble.superficie_total) === 0 ? <span className="badge text-bg-warning" title="El cliente no sabía los m² al registrarlo. Hay que calcularlos en la visita.">m² sin medir</span> : <span>{inmueble.superficie_total} m²</span>}</div>
                           </div>
                         </div>
                         

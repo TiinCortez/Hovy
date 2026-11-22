@@ -35,7 +35,10 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
   useAvisoCambiosSinGuardar(isDirty);
 
   // Usamos el hook useWatch (recomendado por React Hook Form para evitar problemas de memoización)
-  const supTotal = useWatch({ control, name: 'superficie_total' }) || 0;
+  const supTotalRaw = useWatch({ control, name: 'superficie_total' });
+  const supTotal = supTotalRaw || 0;
+  // 0 es un valor simbólico: el cliente no sabía los m² y se miden en la visita.
+  const supTotalSinMedir = supTotalRaw !== '' && supTotalRaw !== undefined && supTotalRaw !== null && Number(supTotalRaw) === 0;
   const supConstruida = useWatch({ control, name: 'superficie_construida' }) || 0;
   const supMantenibleCalculada = Math.max(0, parseFloat(supTotal) - parseFloat(supConstruida)).toFixed(2);
   const [latitud, longitud] = useWatch({ control, name: ['latitud', 'longitud'] });
@@ -327,10 +330,15 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                       step="0.01" 
                       className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`} aria-invalid={errors.superficie_total ? 'true' : undefined} aria-describedby={errors.superficie_total ? 'inmueble-superficie-total-error' : undefined}
                       placeholder="Ej: 450.00"
-                      {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 1, message: 'Debe ser > 0'}, deps: ['superficie_construida'] })} 
+                      {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 0, message: 'No puede ser negativa'}, deps: ['superficie_construida'] })}
                     />
                   </div>
                   {errors.superficie_total && <div id="inmueble-superficie-total-error" className="invalid-feedback d-block">{errors.superficie_total.message}</div>}
+                  {supTotalSinMedir && (
+                    <div className="text-warning-emphasis small mt-1">
+                      0 = sin medir (el cliente no sabe los m²). Hay que calcularlos en la visita.
+                    </div>
+                  )}
                 </div>
 
                 <div className="col-6 col-md-4">
