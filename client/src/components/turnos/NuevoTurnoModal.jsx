@@ -21,6 +21,8 @@ import {
 } from './agendaTurnos';
 import Modal from '../ui/Modal';
 import { CAPAS } from '../../styles/capas';
+import { useAvisos } from '../ui/avisosContext';
+import { resumenAvisoWhatsapp } from './avisoWhatsapp';
 
 const normalizarBusqueda = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
@@ -28,6 +30,7 @@ export default function NuevoTurnoModal({
   isOpen, onClose, onTurnoCreated, turnosExistentes = [], datosClima, fechaInicial, horaInicioInicial
 }) {
   const navigate = useNavigate();
+  const { avisar } = useAvisos();
   const ahora = useRelojTurnos();
   const [pasoActual, setPasoActual] = useState(1);
 
@@ -337,6 +340,9 @@ export default function NuevoTurnoModal({
 
       const response = await TurnoService.create(payload);
       onTurnoCreated(response.data);
+      // Resultado del resumen por WhatsApp: si no se pudo avisar, el admin tiene que saberlo.
+      const aviso = resumenAvisoWhatsapp(response.aviso_whatsapp);
+      if (aviso) avisar(aviso.mensaje, { tipo: aviso.tipo, duracion: aviso.duracion });
       onClose();
     } catch (err) {
       setError(err.response?.data?.error || 'Ocurrió un error de red al agendar el turno. Intenta nuevamente.');
