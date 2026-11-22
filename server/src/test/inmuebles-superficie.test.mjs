@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validarDatosInmueble } from '../utils/inmuebles.js';
+import { validarDatosInmueble, pasaASinMedir } from '../utils/inmuebles.js';
 
 // El cliente que registra un inmueble por WhatsApp puede no saber los m2.
 // En el alta, superficie_total = 0 es un valor simbólico ("sin medir"): se mide en la visita.
@@ -49,4 +49,23 @@ test('modificación: superficie_total real sigue válida', () => {
 test('otros campos numéricos no cambian: tiempo_promedio_min en 0 sigue rechazado', () => {
   const errores = validarDatosInmueble({ ...base, superficie_total: 0, tiempo_promedio_min: 0 }, { parcial: false });
   assert.match(errores.join(' '), /tiempo_promedio_min/);
+});
+
+// Edición web: el 0 solo se permite si el inmueble ya estaba sin medir.
+test('edición: pasar un inmueble ya medido a 0 es un cambio inválido', () => {
+  assert.equal(pasaASinMedir(450, 0), true);
+  assert.equal(pasaASinMedir('450.00', '0'), true);
+});
+
+test('edición: un inmueble ya sin medir puede seguir en 0 (no se bloquea editar otros datos)', () => {
+  assert.equal(pasaASinMedir(0, 0), false);
+  assert.equal(pasaASinMedir('0.00', '0'), false);
+});
+
+test('edición: cargar m² reales, o no tocar la superficie, no es pasar a sin medir', () => {
+  assert.equal(pasaASinMedir(0, 300), false);
+  assert.equal(pasaASinMedir(450, 500), false);
+  assert.equal(pasaASinMedir(450, undefined), false);
+  assert.equal(pasaASinMedir(450, ''), false);
+  assert.equal(pasaASinMedir(450, null), false);
 });

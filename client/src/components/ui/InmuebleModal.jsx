@@ -330,7 +330,7 @@ export default function InmuebleModal({ isOpen, onClose, inmuebleData, idCliente
                       step="0.01" 
                       className={`form-control bg-light border-start-0 small ${errors.superficie_total ? 'is-invalid' : ''}`} aria-invalid={errors.superficie_total ? 'true' : undefined} aria-describedby={errors.superficie_total ? 'inmueble-superficie-total-error' : undefined}
                       placeholder="Ej: 450.00"
-                      {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 0, message: 'No puede ser negativa'}, deps: ['superficie_construida'] })}
+                      {...register('superficie_total', { required: 'La superficie total es obligatoria', min: { value: 0, message: 'No puede ser negativa'}, validate: (v) => !(isEditMode && v !== '' && Number(v) === 0 && Number(inmuebleData.superficie_total) !== 0) || 'Este inmueble ya tiene m² cargados: ingresá un valor mayor a 0', deps: ['superficie_construida'] })}
                     />
                   </div>
                   {errors.superficie_total && <div id="inmueble-superficie-total-error" className="invalid-feedback d-block">{errors.superficie_total.message}</div>}
