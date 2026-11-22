@@ -196,6 +196,8 @@ test('el alta avisa al cliente por WhatsApp una sola vez, con el precio final de
   assert.deepEqual(res.body.aviso_whatsapp, { enviado: true, motivo: null });
   assert.equal(enviados.length, 1, 'un solo envío por turno');
   assert.deepEqual(enviados[0], {
+    id_turno: 7,
+    estado: 'Coordinado',
     telefono: '5493514330429',
     nombre: 'Lucas',
     servicio: 'Mantenimiento regular de césped',

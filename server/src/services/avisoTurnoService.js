@@ -37,6 +37,9 @@ export const armarDatosAviso = ({ turno, inmueble, cliente, servicios, total } =
   return {
     ok: true,
     body: {
+      // id y estado: el workflow agrega los botones Confirmar / Cancelar solo si el turno está Coordinado.
+      id_turno: turno.id_turno ?? null,
+      estado: turno.estado ?? null,
       telefono,
       nombre: cliente?.nombre ?? '',
       servicio: nombres.length > 0 ? nombres.join(', ') : SERVICIO_GENERICO,

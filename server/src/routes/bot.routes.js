@@ -23,7 +23,11 @@ import {
   sugerirUbicacion,
   validarDireccionEscrita,
 } from '../controllers/botInmueblesController.js';
-import { getTurnosFuturosDelCliente } from '../controllers/botTurnosClienteController.js';
+import {
+  getTurnosFuturosDelCliente,
+  confirmarTurnoCliente,
+  cancelarTurnoCliente,
+} from '../controllers/botTurnosClienteController.js';
 import { crearSolicitudClienteBot, consultarDisponibilidadClienteBot } from '../controllers/botSolicitudesClienteController.js';
 import { listarServiciosBot } from '../controllers/botServiciosController.js';
 import { logisticaStaff } from '../controllers/logisticaController.js';
@@ -120,6 +124,13 @@ router.delete('/clientes/:telefono/inmuebles/:id/baja', resolverClientePorTelefo
 // Turnos futuros del cliente (Coordinado, Confirmado, En ejecución).
 // GET    /api/bot/clientes/:telefono/turnos?limite=20
 router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFuturosDelCliente);
+
+// El cliente responde el aviso del turno (botones Confirmar / Cancelar). Cancelar marca el turno
+// como Cancelado y libera el horario; no borra nada.
+// POST   /api/bot/clientes/:telefono/turnos/:id/confirmar
+// POST   /api/bot/clientes/:telefono/turnos/:id/cancelar
+router.post('/clientes/:telefono/turnos/:id/confirmar', resolverClientePorTelefono, confirmarTurnoCliente);
+router.post('/clientes/:telefono/turnos/:id/cancelar', resolverClientePorTelefono, cancelarTurnoCliente);
 
 // Pedido de turno de un cliente existente: elige inmueble, servicio y fecha, y
 // llega a "Solicitudes -> Clientes" listo para presupuesto (estado Confirmada).
