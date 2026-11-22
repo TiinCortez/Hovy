@@ -21,6 +21,7 @@ const TURNO = {
 // Cliente de base falso: registra cada consulta y responde por "operacion".
 const baseFalsa = ({ lectura = { data: TURNO, error: null }, escritura } = {}) => {
   const consultas = [];
+  let lecturasHechas = 0;
   const cliente = {
     from(tabla) {
       const consulta = { tabla, ops: [] };
@@ -31,7 +32,10 @@ const baseFalsa = ({ lectura = { data: TURNO, error: null }, escritura } = {}) =
       }
       builder.maybeSingle = () => {
         const esEscritura = consulta.ops.some(([o]) => o === 'update' || o === 'delete');
-        if (!esEscritura) return Promise.resolve(lectura);
+        if (!esEscritura) {
+          lecturasHechas += 1;
+          return Promise.resolve(typeof lectura === 'function' ? lectura(lecturasHechas) : lectura);
+        }
         const valor = escritura === undefined
           ? { data: { ...TURNO, ...consulta.ops.find(([o]) => o === 'update')[1] }, error: null }
           : escritura;
@@ -186,4 +190,47 @@ test('cancelar: id inválido da 400 sin consultar', async () => {
   const r = await cancelar(cliente, { idTurno: 'xx' });
   assert.equal(r.error.status, 400);
   assert.equal(consultas.length, 0);
+});
+
+// ---- Toques duplicados que se pisan (dos entregas del mismo botón a la vez) ------------------
+
+const sinFila = { data: null, error: null };
+// Primera lectura: el turno como estaba al tocar; segunda lectura (después del UPDATE sin fila): el estado actual.
+const lecturas = (primera, segunda) => (n) => ({ data: n === 1 ? primera : segunda, error: null });
+
+test('confirmar: si el UPDATE no encuentra fila porque otro toque ya lo confirmó, responde éxito (idempotente)', async () => {
+  const { cliente, consultas } = baseFalsa({ lectura: lecturas(TURNO, { ...TURNO, estado: 'Confirmado' }), escritura: sinFila });
+  const r = await confirmar(cliente);
+  assert.equal(r.error, undefined);
+  assert.equal(r.data.estado, 'Confirmado');
+  assert.equal(r.data.ya_aplicado, true);
+  assert.equal(escrituras(consultas).length, 1, 'no reintenta la escritura');
+});
+
+test('confirmar: si el UPDATE no encuentra fila y el turno quedó en otro estado (cancelado), sigue siendo 409', async () => {
+  const { cliente } = baseFalsa({ lectura: lecturas(TURNO, { ...TURNO, estado: 'Cancelado' }), escritura: sinFila });
+  const r = await confirmar(cliente);
+  assert.equal(r.error.status, 409);
+});
+
+test('cancelar: si el UPDATE no encuentra fila porque otro toque ya lo canceló, responde éxito (idempotente)', async () => {
+  const { cliente, consultas } = baseFalsa({ lectura: lecturas(TURNO, { ...TURNO, estado: 'Cancelado' }), escritura: sinFila });
+  const r = await cancelar(cliente);
+  assert.equal(r.error, undefined);
+  assert.equal(r.data.estado, 'Cancelado');
+  assert.equal(r.data.ya_aplicado, true);
+  assert.equal(escrituras(consultas).length, 1);
+});
+
+test('cancelar: si el UPDATE no encuentra fila y el turno pasó a otro estado (en ejecución), sigue siendo 409', async () => {
+  const { cliente } = baseFalsa({ lectura: lecturas(TURNO, { ...TURNO, estado: 'En ejecución' }), escritura: sinFila });
+  const r = await cancelar(cliente);
+  assert.equal(r.error.status, 409);
+});
+
+test('si la relectura falla o el turno desapareció, se conserva el 409 original (no se inventa un éxito)', async () => {
+  const sinTurno = baseFalsa({ lectura: (n) => (n === 1 ? { data: TURNO, error: null } : { data: null, error: null }), escritura: sinFila });
+  assert.equal((await cancelar(sinTurno.cliente)).error.status, 409);
+  const conError = baseFalsa({ lectura: (n) => (n === 1 ? { data: TURNO, error: null } : { data: null, error: { code: 'XX000' } }), escritura: sinFila });
+  assert.equal((await confirmar(conError.cliente)).error.status, 409);
 });
