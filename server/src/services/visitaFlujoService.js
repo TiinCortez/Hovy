@@ -287,7 +287,15 @@ export const confirmarVisita = async (idSolicitud, body) => {
   // amerita una transacción distribuida.
   const { data: solicitudConfirmada, error: errorUpdate } = await supabaseAdmin
     .from('solicitudes_visita')
-    .update({ id_cliente: idCliente, id_inmueble: inmueble.id_inmueble, estado: 'Confirmada' })
+    // superficie_aproximada pasa a ser la medida verificada en la visita: es el valor
+    // por defecto de los m2 de los servicios (panel y PUT .../servicios). Si no, una
+    // solicitud con 0 (el cliente no sabia los m2) los seguiria proponiendo en 0.
+    .update({
+      id_cliente: idCliente,
+      id_inmueble: inmueble.id_inmueble,
+      estado: 'Confirmada',
+      superficie_aproximada: Number(superficieTotal),
+    })
     .eq('id_solicitud', idSolicitud)
     .eq('estado', 'Contactada')
     .select()
