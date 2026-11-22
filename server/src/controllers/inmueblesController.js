@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "../config/supabase.js";
+import { pasaASinMedir } from "../utils/inmuebles.js";
 
 // Función auxiliar para geocodificar con Nominatim
 const geocodificarDireccion = async (direccion, provincia, barrio) => {
@@ -185,6 +186,14 @@ export const updateInmueble = async (req, res) => {
       return res.status(404).json({
         ok: false,
         error: "Inmueble no encontrado"
+      });
+    }
+
+    // El 0 ("sin medir") es solo para el alta: un inmueble que ya tiene m2 no puede volver a 0.
+    if (pasaASinMedir(inmuebleActual.superficie_total, camposAActualizar.superficie_total)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Este inmueble ya tiene m² cargados: ingresá una superficie total mayor a 0"
       });
     }
 

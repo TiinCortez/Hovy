@@ -107,6 +107,15 @@ export const tomarCamposEditables = (body) => {
   return datos;
 };
 
+// superficie_total = 0 es un valor simbólico ("sin medir") pensado para el alta.
+// En una modificación solo se tolera si el inmueble YA estaba sin medir (así se
+// pueden editar otros datos sin obligar a cargar los m2). Pasar un inmueble ya
+// medido a 0 borraría un dato real y dejaría el inmueble sin poder presupuestarse.
+export const pasaASinMedir = (superficieActual, superficieNueva) =>
+  !estaVacio(superficieNueva) &&
+  Number(superficieNueva) === 0 &&
+  Number(superficieActual) !== 0;
+
 // Devuelve un array de errores (vacío si está todo bien), para que el caller
 // arme un único mensaje en vez de cortar en el primer problema: por WhatsApp,
 // que el bot tenga que repreguntar de a un campo por vez es una conversación
@@ -157,8 +166,15 @@ export const validarDatosInmueble = (datos, { parcial = false } = {}) => {
       continue;
     }
 
-    if (mayorACero && numero <= 0) {
+    // En el alta, superficie_total = 0 es un valor simbólico: el cliente no sabe
+    // los m2 y se miden en la visita. Sigue siendo obligatoria (no puede faltar)
+    // y en una modificación el 0 se rechaza: ahí el dato tiene que ser real.
+    const permiteCero = campo === 'superficie_total' && !parcial;
+
+    if (mayorACero && !permiteCero && numero <= 0) {
       errores.push(`${campo} tiene que ser mayor a 0.`);
+    } else if (permiteCero && numero < 0) {
+      errores.push(`${campo} no puede ser negativo.`);
     } else if (!mayorACero && numero < 0) {
       errores.push(`${campo} no puede ser negativo.`);
     }
