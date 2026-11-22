@@ -210,6 +210,17 @@ const cargarTurnoDelCliente = async (cliente, idCliente, idTurno) => {
   return { turno: data };
 };
 
+// Si el UPDATE no encontró fila, puede ser que otro toque (reintento de la entrega o doble toque)
+// ya hizo el mismo cambio entre la lectura y la escritura. Se relee: si el turno ya está en el
+// estado pedido, es éxito (idempotente); si quedó en otro estado, es un 409 real.
+const resolverCarrera = async (cliente, idCliente, id, estadoEsperado, mensajeConflicto) => {
+  const relectura = await cargarTurnoDelCliente(cliente, idCliente, id);
+  if (!relectura.error && relectura.turno.estado === estadoEsperado) {
+    return { data: resumenTurnoCliente(relectura.turno, estadoEsperado, true) };
+  }
+  return falla(409, mensajeConflicto);
+};
+
 export const confirmarTurnoDelCliente = async ({ idCliente, idTurno, ahora = new Date(), cliente = supabaseAdmin } = {}) => {
   const id = parsearIdSolicitud(idTurno);
   if (!id) return falla(400, 'El id del turno tiene que ser un número entero positivo.');
@@ -235,7 +246,7 @@ export const confirmarTurnoDelCliente = async ({ idCliente, idTurno, ahora = new
     console.error('[turnosCliente] error al confirmar el turno:', error?.code || 'error');
     return falla(500, ERROR_DB_RESPUESTA);
   }
-  if (!data) return falla(409, 'El turno cambió de estado mientras lo confirmabas. Revisalo de nuevo.');
+  if (!data) return resolverCarrera(cliente, idCliente, id, 'Confirmado', 'El turno cambió de estado mientras lo confirmabas. Revisalo de nuevo.');
 
   return { data: resumenTurnoCliente(data, 'Confirmado', false) };
 };
@@ -268,7 +279,7 @@ export const cancelarTurnoDelCliente = async ({ idCliente, idTurno, ahora = new 
     console.error('[turnosCliente] error al cancelar el turno:', error?.code || 'error');
     return falla(500, ERROR_DB_RESPUESTA);
   }
-  if (!data) return falla(409, 'El turno cambió de estado mientras lo cancelabas. Revisalo de nuevo.');
+  if (!data) return resolverCarrera(cliente, idCliente, id, 'Cancelado', 'El turno cambió de estado mientras lo cancelabas. Revisalo de nuevo.');
 
   return { data: resumenTurnoCliente(data, 'Cancelado', false) };
 };
