@@ -2,6 +2,7 @@ import { supabaseAdmin } from '../config/supabase.js';
 import { validarFechaAltaTurno } from '../utils/turnosFecha.js';
 import { validarSolapamientoTurno } from '../utils/algoritmoAgenda.js';
 import { guardarPresupuestoParaTurno } from '../services/presupuestoService.js';
+import { avisarTurnoAsignado } from '../services/avisoTurnoService.js';
 import { responderErrorServicio } from '../utils/solicitudesVisita.js';
 
 // Lo que espera estrictamente la DB de Supabase para sus CHECK constraints
@@ -296,7 +297,16 @@ export const createTurno = async (req, res) => {
       },
     });
 
-    res.status(201).json({ ok: true, data: turnoFormateado });
+    // Resumen del turno por WhatsApp (texto libre, sin costo). Nunca frena ni hace fallar el alta.
+    const aviso = await avisarTurnoAsignado({
+      turno: data,
+      inmueble: data.inmueble,
+      cliente: data.inmueble?.cliente,
+      servicios: nombresServicio,
+      total: resultadoPresupuesto.presupuesto.monto_total,
+    });
+
+    res.status(201).json({ ok: true, data: turnoFormateado, aviso_whatsapp: aviso });
   } catch (error) {
     console.error('Error al crear turno:', error);
     res.status(500).json({ ok: false, error: 'No se pudo agendar el turno. Verifique los datos de entrada.' });
