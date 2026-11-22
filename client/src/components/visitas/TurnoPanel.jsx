@@ -5,6 +5,8 @@ import Button from '../ui/Button';
 import VisitaService from '../../services/api/visita.service';
 import { PRIORIDADES, getApiError, formatDia, hhmm, horarioSolicitado, slotSolicitado } from './visitaUtils';
 import { VERDE } from '../../styles/colores';
+import { useAvisos } from '../ui/avisosContext';
+import { resumenAvisoWhatsapp } from '../turnos/avisoWhatsapp';
 
 const todayISO = () => {
   const d = new Date();
@@ -15,6 +17,7 @@ const todayISO = () => {
 // Step 4 of Confirmada: pick day + slot (or no specific slot) and book the turno.
 // `enabled` is false until the final price is accepted (the backend would answer 409).
 export default function TurnoPanel({ visita, enabled, onSaved }) {
+  const { avisar } = useAvisos();
   const solicitado = horarioSolicitado(visita);
   // Preload requested date if valid and future, otherwise default to today
   const fechaInicial = solicitado.fecha && solicitado.fecha >= todayISO() ? solicitado.fecha : todayISO();
@@ -127,8 +130,11 @@ export default function TurnoPanel({ visita, enabled, onSaved }) {
         payload.inicio_desde = inicio;
         payload.hasta = hasta;
       }
-      await VisitaService.agendarTurno(visita.id_solicitud, payload);
+      const respuesta = await VisitaService.agendarTurno(visita.id_solicitud, payload);
       await onSaved('Turno asignado.');
+      // Resultado del resumen por WhatsApp: si no se pudo avisar, el admin tiene que saberlo.
+      const aviso = resumenAvisoWhatsapp(respuesta?.aviso_whatsapp);
+      if (aviso) avisar(aviso.mensaje, { tipo: aviso.tipo, duracion: aviso.duracion });
     } catch (err) {
       setErrorMessage(getApiError(err, 'No se pudo asignar el turno.'));
     } finally {
