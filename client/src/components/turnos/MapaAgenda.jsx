@@ -34,14 +34,20 @@ const ZOOM_MAX_MAPA = 19;
 // grupo, aunque haya turnos en provincias distintas.
 const ZOOM_VISTA_PAIS = 5;
 
-// Recalcula el tamaño del mapa cuando cambia su contenedor
-function AutoResize() {
+// Recalcula el tamaño del mapa cuando cambia su contenedor o su modo expandido
+function AutoResize({ expandido }) {
   const map = useMap();
   useEffect(() => {
     const ro = new ResizeObserver(() => map.invalidateSize());
     ro.observe(map.getContainer());
     return () => ro.disconnect();
   }, [map]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => map.invalidateSize({ animate: false }));
+    return () => cancelAnimationFrame(id);
+  }, [map, expandido]);
+
   return null;
 }
 
@@ -154,9 +160,57 @@ const estiloFlecha = {
   flexShrink: 0
 };
 
+// Popup de Leaflet que adapta sus dimensiones y padding entre vista compacta y ampliada.
+function PopupTurnoAdaptativo({ expandido, children }) {
+  const popupRef = useRef(null);
+
+  useEffect(() => {
+    const popup = popupRef.current;
+    if (!popup) return undefined;
+
+    const claseModo = expandido ? 'organic-map-popup--ampliada' : 'organic-map-popup--compacta';
+    const padding = expandido ? 24 : 8;
+
+    popup.options.minWidth = expandido ? 250 : 165;
+    popup.options.maxWidth = expandido ? 310 : 205;
+    popup.options.className = `organic-map-popup ${claseModo}`;
+    popup.options.autoPanPaddingTopLeft = L.point(padding, padding);
+    popup.options.autoPanPaddingBottomRight = L.point(padding, padding);
+
+    const elemento = popup.getElement?.();
+    if (elemento) {
+      elemento.classList.toggle('organic-map-popup--ampliada', expandido);
+      elemento.classList.toggle('organic-map-popup--compacta', !expandido);
+    }
+
+    if (!popup.isOpen?.()) return undefined;
+
+    popup.update();
+    const id = requestAnimationFrame(() => {
+      if (popup.isOpen?.()) popup.update();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [expandido]);
+
+  const padding = expandido ? 24 : 8;
+
+  return (
+    <Popup
+      ref={popupRef}
+      className={`organic-map-popup ${expandido ? 'organic-map-popup--ampliada' : 'organic-map-popup--compacta'}`}
+      minWidth={expandido ? 250 : 165}
+      maxWidth={expandido ? 310 : 205}
+      autoPanPaddingTopLeft={[padding, padding]}
+      autoPanPaddingBottomRight={[padding, padding]}
+    >
+      {children}
+    </Popup>
+  );
+}
+
 // Contenido del popup. Se monta cada vez que se abre, así que siempre
 // arranca en el próximo turno.
-function PopupGrupoTurnos({ turnos, ahora, onSelectTurno }) {
+function PopupGrupoTurnos({ turnos, ahora, expandido = false, onSelectTurno }) {
   const [indice, setIndice] = useState(() => indiceProximoTurno(turnos, ahora));
   const actual = Math.min(indice, turnos.length - 1);
   const turno = turnos[actual];
@@ -164,6 +218,61 @@ function PopupGrupoTurnos({ turnos, ahora, onSelectTurno }) {
   const badgeStyle = getBadgeStyle(turno.estado);
 
   const mover = (paso) => setIndice((i) => (i + paso + turnos.length) % turnos.length);
+
+  if (!expandido) {
+    const nombreCliente = [turno.cliente?.nombre, turno.cliente?.apellido].filter(Boolean).join(' ') || 'Cliente';
+
+    return (
+      <div className="mapa-popup-compacto">
+        {varios && (
+          <div className="mapa-popup-compacto-nav">
+            <button
+              type="button"
+              className="mapa-popup-compacto-flecha"
+              aria-label="Turno anterior"
+              onClick={() => mover(-1)}
+            >
+              <ChevronLeft size={12} />
+            </button>
+            <span>{actual + 1}/{turnos.length}</span>
+            <button
+              type="button"
+              className="mapa-popup-compacto-flecha"
+              aria-label="Turno siguiente"
+              onClick={() => mover(1)}
+            >
+              <ChevronRight size={12} />
+            </button>
+          </div>
+        )}
+
+        <div className={`mapa-popup-compacto-cabecera ${varios ? '' : 'con-espacio-cerrar'}`.trim()}>
+          <strong className="mapa-popup-compacto-cliente" title={nombreCliente}>
+            {nombreCliente}
+          </strong>
+          <span className="mapa-popup-compacto-estado" style={badgeStyle}>
+            {turno.estado.replace('_', ' ')}
+          </span>
+        </div>
+
+        <div className="mapa-popup-compacto-pie">
+          <span className="mapa-popup-compacto-hora">
+            {formatearHorarioTurno(turno)}
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm p-0 text-decoration-none mapa-popup-compacto-detalle d-flex align-items-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectTurno?.(turno.idTurno);
+            }}
+          >
+            Detalle &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-2" style={{ minWidth: '230px', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
@@ -290,7 +399,7 @@ function EnfocarMapa({ turnoFoco, grupos, periodoKey }) {
 }
 
 // Capa que decide, según el zoom, qué se dibuja: burbujas de grupo o pines.
-function CapaTurnosAgrupados({ grupos, turnoFoco, ahora, onSelectTurno }) {
+function CapaTurnosAgrupados({ grupos, turnoFoco, ahora, expandido, onSelectTurno }) {
   const map = useMap();
   const [zoom, setZoom] = useState(() => map.getZoom());
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) });
@@ -370,20 +479,21 @@ function CapaTurnosAgrupados({ grupos, turnoFoco, ahora, onSelectTurno }) {
         icon={crearIconoPin(colorPin, grupo.turnos.length, contieneSiguiente)}
         zIndexOffset={contieneSiguiente ? 500 : 0}
       >
-        <Popup className="organic-map-popup" minWidth={250}>
+        <PopupTurnoAdaptativo expandido={expandido}>
           <PopupGrupoTurnos
             key={`${grupo.key}-${turnoFoco?.idTurno ?? 'none'}`}
             turnos={grupo.turnos}
             ahora={ahora}
+            expandido={expandido}
             onSelectTurno={onSelectTurno}
           />
-        </Popup>
+        </PopupTurnoAdaptativo>
       </Marker>
     );
   });
 }
 
-export default function MapaAgenda({ turnos = [], turnoFoco: turnoFocoProp, periodoKey = '', ahora, onSelectTurno }) {
+export default function MapaAgenda({ turnos = [], turnoFoco: turnoFocoProp, periodoKey = '', ahora, expandido = false, onSelectTurno }) {
   const grupos = useMemo(() => agruparPorUbicacion(turnos), [turnos]);
   const turnoFoco = useMemo(
     () => (turnoFocoProp !== undefined ? turnoFocoProp : obtenerSiguienteTurnoPendiente(turnos.filter(tieneCoordenadasTurno), ahora)),
@@ -414,14 +524,14 @@ export default function MapaAgenda({ turnos = [], turnoFoco: turnoFocoProp, peri
         maxZoom={ZOOM_MAX_MAPA}
         style={{ width: '100%', height: '100%', minHeight: 'var(--agenda-map-min-height, 400px)', zIndex: 0 }}
       >
-        <AutoResize />
+        <AutoResize expandido={expandido} />
         <EnfocarMapa turnoFoco={turnoFoco} grupos={grupos} periodoKey={periodoKey} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
           maxZoom={ZOOM_MAX_MAPA}
         />
-        <CapaTurnosAgrupados grupos={grupos} turnoFoco={turnoFoco} ahora={ahora} onSelectTurno={onSelectTurno} />
+        <CapaTurnosAgrupados grupos={grupos} turnoFoco={turnoFoco} ahora={ahora} expandido={expandido} onSelectTurno={onSelectTurno} />
       </MapContainer>
     </div>
   );

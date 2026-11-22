@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Map, Maximize2, Minimize2 } from 'lucide-react';
 import Button from '../ui/Button';
 import ClimaSkeleton from '../skeletons/ClimaSkeleton';
@@ -16,11 +16,7 @@ const PanelClima = lazy(() => import('../clima/PanelClima'));
 const MapaAgenda = lazy(() => import('./MapaAgenda'));
 
 export default function WidgetsAgendaTurnos({ turnos, periodo, fechaObjetivo, ahora, onSelectTurno, layout = 'grid' }) {
-  const mapaRef = useRef(null);
-  const [mapaFullscreen, setMapaFullscreen] = useState(false);
-  const [mapaAmpliado, setMapaAmpliado] = useState(false);
-  const [errorMapa, setErrorMapa] = useState(null);
-  const mapaExpandido = mapaFullscreen || mapaAmpliado;
+  const [mapaExpandido, setMapaExpandido] = useState(false);
 
   const { siguienteTurno, turnoFoco } = useMemo(() => {
     const referencia = ahora || obtenerAhoraTurnos();
@@ -61,53 +57,20 @@ export default function WidgetsAgendaTurnos({ turnos, periodo, fechaObjetivo, ah
     return 'Seleccioná un marcador para consultar sus turnos y abrir el detalle.';
   }, [turnoFoco, turnos.length]);
 
+  // Cerrar el mapa ampliado con Escape.
   useEffect(() => {
-    const actualizarFullscreen = () => {
-      setMapaFullscreen(Boolean(mapaRef.current && document.fullscreenElement === mapaRef.current));
-    };
-    document.addEventListener('fullscreenchange', actualizarFullscreen);
-    return () => document.removeEventListener('fullscreenchange', actualizarFullscreen);
-  }, []);
-
-  // Fallback expanded mode (no Fullscreen API): close it with Escape.
-  useEffect(() => {
-    if (!mapaAmpliado) return undefined;
+    if (!mapaExpandido) return undefined;
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') setMapaAmpliado(false);
+      if (event.key === 'Escape') setMapaExpandido(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [mapaAmpliado]);
+  }, [mapaExpandido]);
 
-  const salirDePantallaCompleta = async () => {
-    if (mapaRef.current && document.fullscreenElement === mapaRef.current) {
-      await document.exitFullscreen();
-    }
-    setMapaAmpliado(false);
-  };
+  const toggleMapaExpandido = () => setMapaExpandido((actual) => !actual);
 
-  const toggleFullscreen = async () => {
-    setErrorMapa(null);
-    try {
-      if (mapaExpandido) {
-        await salirDePantallaCompleta();
-      } else if (!document.fullscreenEnabled || !mapaRef.current.requestFullscreen) {
-        setMapaAmpliado(true);
-      } else {
-        await mapaRef.current.requestFullscreen();
-      }
-    } catch {
-      setMapaAmpliado(true);
-    }
-  };
-
-  const seleccionarTurno = async (idTurno) => {
-    try {
-      await salirDePantallaCompleta();
-    } catch {
-      setErrorMapa('No se pudo salir de pantalla completa. Usá el botón de restaurar o la tecla Esc.');
-      return;
-    }
+  const seleccionarTurno = (idTurno) => {
+    setMapaExpandido(false);
     onSelectTurno(idTurno);
   };
 
@@ -126,29 +89,43 @@ export default function WidgetsAgendaTurnos({ turnos, periodo, fechaObjetivo, ah
           </div>
         </header>
 
-        <div ref={mapaRef} className={`turnos-tools-map ${mapaExpandido ? 'mapa-fullscreen' : ''} ${mapaAmpliado ? 'is-expanded' : ''}`}>
-          <Button
-            variant="light"
-            icon
-            className="turnos-tools-expand"
-            onClick={toggleFullscreen}
-            aria-label={mapaExpandido ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
-            title={mapaExpandido ? 'Salir de pantalla completa' : 'Mapa en pantalla completa'}
-            aria-pressed={mapaExpandido}
-          >
-            {mapaExpandido ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
-          </Button>
-          <Suspense fallback={<div className="turnos-tools-loading" role="status">Cargando mapa…</div>}>
-            <MapaAgenda
-              turnos={turnos}
-              turnoFoco={turnoFoco}
-              periodoKey={periodo}
-              ahora={ahora}
-              onSelectTurno={seleccionarTurno}
+        <div className="turnos-tools-map-slot">
+          {mapaExpandido && (
+            <div
+              className="turnos-map-backdrop"
+              aria-hidden="true"
+              onClick={() => setMapaExpandido(false)}
             />
-          </Suspense>
+          )}
+          <div
+            className={`turnos-tools-map ${mapaExpandido ? 'is-expanded' : ''}`}
+            role={mapaExpandido ? 'dialog' : undefined}
+            aria-modal={mapaExpandido || undefined}
+            aria-label={mapaExpandido ? 'Mapa de turnos ampliado' : undefined}
+          >
+            <Button
+              variant="light"
+              icon
+              className="turnos-tools-expand"
+              onClick={toggleMapaExpandido}
+              aria-label={mapaExpandido ? 'Minimizar mapa' : 'Ampliar mapa'}
+              title={mapaExpandido ? 'Minimizar mapa' : 'Ampliar mapa'}
+              aria-pressed={mapaExpandido}
+            >
+              {mapaExpandido ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
+            </Button>
+            <Suspense fallback={<div className="turnos-tools-loading" role="status">Cargando mapa…</div>}>
+              <MapaAgenda
+                turnos={turnos}
+                turnoFoco={turnoFoco}
+                periodoKey={periodo}
+                ahora={ahora}
+                expandido={mapaExpandido}
+                onSelectTurno={seleccionarTurno}
+              />
+            </Suspense>
+          </div>
         </div>
-        {errorMapa && <p className="small text-danger m-0" role="alert">{errorMapa}</p>}
         <p className="turnos-tools-hint">{hintMapa}</p>
       </section>
 
