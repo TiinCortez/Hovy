@@ -243,6 +243,8 @@ test('agendarTurnoVisita: avisa al cliente por WhatsApp una sola vez, con el pre
   assert.equal(llamadas[0].url, 'https://n8n.test/webhook/aviso-turno');
   assert.equal(llamadas[0].clave, 'clave-de-prueba');
   assert.deepEqual(llamadas[0].body, {
+    id_turno: 501,
+    estado: 'Confirmado',
     telefono: '5493514330429',
     nombre: 'Lucas',
     servicio: 'Corte de césped',

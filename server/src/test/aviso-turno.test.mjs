@@ -32,6 +32,8 @@ test('armarDatosAviso: arma el cuerpo que espera el workflow de n8n', () => {
   const r = armarDatosAviso(DATOS);
   assert.equal(r.ok, true);
   assert.deepEqual(r.body, {
+    id_turno: 12,
+    estado: 'Confirmado',
     telefono: '5493510000000',
     nombre: 'Juan',
     servicio: 'Corte de césped',

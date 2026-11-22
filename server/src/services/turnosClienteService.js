@@ -168,3 +168,107 @@ export const obtenerTurnosFuturosCliente = async ({
     return falla(500, ERROR_DB);
   }
 };
+
+// ---- Responder un turno desde WhatsApp: confirmar o cancelar ---------------------------------
+//
+// El cliente toca [Confirmar] o [Cancelar] en el aviso del turno. Reglas:
+//  - Solo opera sobre sus turnos: el id_cliente sale del teléfono del que escribe (nunca del
+//    body) y va en la misma consulta, así un turno ajeno se ve igual que uno inexistente (404).
+//  - Cancelar NO borra: marca el turno como Cancelado (igual que el panel). El hueco se libera
+//    porque la agenda ignora los turnos cancelados, y quedan el presupuesto y el historial.
+//  - Idempotente: repetir el mismo toque no falla ni escribe de nuevo.
+//  - La condición de estado va en el mismo UPDATE, para que dos toques a la vez no se pisen.
+//  - La base puede rechazar la cancelación (trigger: el turno ya tiene un trabajo registrado).
+
+const ERROR_DB_RESPUESTA = 'No se pudo actualizar el turno. Intentá de nuevo más tarde.';
+const MOTIVO_CANCELACION_CLIENTE = 'Cancelado por el cliente (WhatsApp)';
+const COLUMNAS_TURNO_CLIENTE = 'id_turno, estado, fecha_programada, inicio_desde, hasta, inmueble:inmuebles!inner(id_cliente, direccion)';
+
+const resumenTurnoCliente = (turno, estado, yaAplicado) => ({
+  id_turno: turno.id_turno,
+  estado,
+  fecha: turno.fecha_programada,
+  hora_inicio: formatearHoraCorta(turno.inicio_desde),
+  hora_fin: formatearHoraCorta(turno.hasta),
+  direccion: turno.inmueble?.direccion ?? null,
+  ya_aplicado: yaAplicado,
+});
+
+const cargarTurnoDelCliente = async (cliente, idCliente, idTurno) => {
+  const { data, error } = await cliente
+    .from('turnos')
+    .select(COLUMNAS_TURNO_CLIENTE)
+    .eq('id_turno', idTurno)
+    .eq('inmueble.id_cliente', idCliente)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[turnosCliente] error al leer el turno del cliente:', error?.code || 'error');
+    return { error: { status: 500, message: ERROR_DB_RESPUESTA } };
+  }
+  if (!data) return falla(404, 'No encontré ese turno.');
+  return { turno: data };
+};
+
+export const confirmarTurnoDelCliente = async ({ idCliente, idTurno, ahora = new Date(), cliente = supabaseAdmin } = {}) => {
+  const id = parsearIdSolicitud(idTurno);
+  if (!id) return falla(400, 'El id del turno tiene que ser un número entero positivo.');
+
+  const lectura = await cargarTurnoDelCliente(cliente, idCliente, id);
+  if (lectura.error) return lectura;
+  const { turno } = lectura;
+
+  if (turno.estado === 'Confirmado') return { data: resumenTurnoCliente(turno, 'Confirmado', true) };
+  if (turno.estado === 'Cancelado') return falla(409, 'Ese turno ya fue cancelado.');
+  if (turno.estado !== 'Coordinado') return falla(409, 'Ese turno ya no se puede confirmar.');
+  if (String(turno.fecha_programada).slice(0, 10) < hoyEnArgentina(ahora)) return falla(409, 'Ese turno ya pasó.');
+
+  const { data, error } = await cliente
+    .from('turnos')
+    .update({ estado: 'Confirmado' })
+    .eq('id_turno', id)
+    .eq('estado', 'Coordinado')
+    .select(COLUMNAS_TURNO_CLIENTE)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[turnosCliente] error al confirmar el turno:', error?.code || 'error');
+    return falla(500, ERROR_DB_RESPUESTA);
+  }
+  if (!data) return falla(409, 'El turno cambió de estado mientras lo confirmabas. Revisalo de nuevo.');
+
+  return { data: resumenTurnoCliente(data, 'Confirmado', false) };
+};
+
+export const cancelarTurnoDelCliente = async ({ idCliente, idTurno, ahora = new Date(), cliente = supabaseAdmin } = {}) => {
+  const id = parsearIdSolicitud(idTurno);
+  if (!id) return falla(400, 'El id del turno tiene que ser un número entero positivo.');
+
+  const lectura = await cargarTurnoDelCliente(cliente, idCliente, id);
+  if (lectura.error) return lectura;
+  const { turno } = lectura;
+
+  if (turno.estado === 'Cancelado') return { data: resumenTurnoCliente(turno, 'Cancelado', true) };
+  if (!['Coordinado', 'Confirmado'].includes(turno.estado)) {
+    return falla(409, 'Ese turno ya no se puede cancelar: está en curso o ya se realizó.');
+  }
+  if (String(turno.fecha_programada).slice(0, 10) < hoyEnArgentina(ahora)) return falla(409, 'Ese turno ya pasó.');
+
+  const { data, error } = await cliente
+    .from('turnos')
+    .update({ estado: 'Cancelado', motivo_cancelacion: MOTIVO_CANCELACION_CLIENTE })
+    .eq('id_turno', id)
+    .in('estado', ['Coordinado', 'Confirmado'])
+    .select(COLUMNAS_TURNO_CLIENTE)
+    .maybeSingle();
+
+  // P0001 = trg_turno_cancelado: el turno ya tiene un trabajo registrado.
+  if (error?.code === 'P0001') return falla(409, error.message);
+  if (error) {
+    console.error('[turnosCliente] error al cancelar el turno:', error?.code || 'error');
+    return falla(500, ERROR_DB_RESPUESTA);
+  }
+  if (!data) return falla(409, 'El turno cambió de estado mientras lo cancelabas. Revisalo de nuevo.');
+
+  return { data: resumenTurnoCliente(data, 'Cancelado', false) };
+};
