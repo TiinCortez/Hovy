@@ -35,7 +35,13 @@
       padding: $hovy-espacio-12 $hovy-espacio-16;
     }
 
-    .turnos-tools-map {
+    .turnos-tools-map-slot {
+      flex: 0 0 auto;
+      height: 200px;
+      min-height: 200px;
+    }
+
+    .turnos-tools-map:not(.is-expanded) {
       --agenda-map-min-height: 200px;
       height: 200px;
     }
@@ -169,24 +175,172 @@
   }
 }
 
+.turnos-tools-map-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 230px;
+}
+
+.turnos-map-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: $hovy-capa-menu;
+  background: rgba($hovy-verde-900, 0.28);
+  backdrop-filter: blur(2px);
+}
+
 .turnos-tools-map {
   --agenda-map-min-height: 230px;
   position: relative;
   flex: 1;
+  width: 100%;
+  height: 100%;
   min-width: 0;
 
-  &.mapa-fullscreen {
+  &.is-expanded {
     --agenda-map-min-height: 0px;
-    width: 100vw;
-    height: 100dvh;
-    padding: $hovy-espacio-16;
-    background: $hovy-crema-100;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(82vw, 980px);
+    height: clamp(380px, 56dvh, 620px);
+    max-height: 82dvh;
+    z-index: $hovy-capa-modal;
+    padding: 0;
+    background: $hovy-crema-50;
+    border-radius: $hovy-radio-xl;
+    box-shadow: $hovy-sombra-xl;
+    overflow: hidden;
+
+    > .card {
+      height: 100% !important;
+      border-radius: inherit !important;
+      border-color: $hovy-crema-400 !important;
+    }
+  }
+}
+
+.organic-map-popup--compacta {
+  .leaflet-popup-content-wrapper {
+    border-radius: $hovy-radio-md;
+    box-shadow: $hovy-sombra-md;
   }
 
-  &.is-expanded {
-    position: fixed;
-    inset: 0;
-    z-index: $hovy-capa-aviso;
+  .leaflet-popup-content {
+    margin: 8px 10px;
+  }
+
+  .leaflet-popup-close-button {
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
+    line-height: 20px;
+    top: 4px;
+    right: 4px;
+    color: $hovy-oliva-700;
+  }
+}
+
+.mapa-popup-compacto {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-width: 155px;
+  max-width: 195px;
+}
+
+.mapa-popup-compacto-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-right: 18px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid $hovy-crema-300;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  color: $hovy-oliva-950;
+}
+
+.mapa-popup-compacto-flecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: $hovy-radio-circulo;
+  border: 1px solid $hovy-crema-300;
+  background: $hovy-blanco;
+  color: $hovy-green;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mapa-popup-compacto-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+
+  &.con-espacio-cerrar {
+    padding-right: 18px;
+  }
+}
+
+.mapa-popup-compacto-cliente {
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  color: $hovy-oliva-950;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapa-popup-compacto-estado {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: $hovy-radio-pill;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mapa-popup-compacto-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid $hovy-crema-300;
+}
+
+.mapa-popup-compacto-hora {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: $hovy-radio-pill;
+  background: $hovy-green;
+  color: $hovy-blanco;
+  white-space: nowrap;
+}
+
+.mapa-popup-compacto-detalle {
+  border: 0;
+  background: transparent;
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  color: $hovy-green;
+  white-space: nowrap;
+
+  &:hover {
+    color: $hovy-verde-700;
   }
 }
 
@@ -223,7 +377,20 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .turnos-tools-map {
+  .turnos-tools-map-slot {
+    min-height: 220px;
+  }
+
+  .turnos-tools-map:not(.is-expanded) {
     --agenda-map-min-height: 220px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .turnos-tools-map.is-expanded {
+    width: 94vw;
+    height: clamp(320px, 62dvh, 560px);
+    max-height: 84dvh;
+    border-radius: $hovy-radio-lg;
   }
 }
