@@ -80,7 +80,37 @@ test('confirmarVisita: una solicitud de cliente con inmueble ya cargado actualiz
   ]);
   assert.equal(resultado.inmueble.id_inmueble, 7);
   const solicitudUpdate = opDe(consultas, 'solicitudes_visita', 'update').ops.find(([o]) => o === 'update')[1];
-  assert.deepEqual(solicitudUpdate, { id_cliente: 42, id_inmueble: 7, estado: 'Confirmada' });
+  // La solicitud queda con la medida verificada: es el valor por defecto de los m2 de los servicios.
+  assert.deepEqual(solicitudUpdate, { id_cliente: 42, id_inmueble: 7, estado: 'Confirmada', superficie_aproximada: 420 });
+});
+
+test('confirmarVisita: una solicitud con superficie 0 (cliente que no sabia los m2) queda con la medida real de la visita', async (t) => {
+  const consultas = mockBase(t, {
+    'solicitudes_visita:select': { data: { ...SOLICITUD_BASE, id_inmueble: 7, superficie_aproximada: 0 }, error: null },
+    'inmuebles:update': { data: { id_inmueble: 7, superficie_total: 300 }, error: null },
+    'solicitudes_visita:update': (c) => ({ data: { ...SOLICITUD_BASE, ...c.ops.find(([o]) => o === 'update')[1] }, error: null }),
+  });
+
+  const resultado = await confirmarVisita(30, { tipo_inmueble: 'Lote Vacio', superficie_total: 300 });
+
+  assert.equal(resultado.error, undefined);
+  const solicitudUpdate = opDe(consultas, 'solicitudes_visita', 'update').ops.find(([o]) => o === 'update')[1];
+  assert.equal(solicitudUpdate.superficie_aproximada, 300);
+  assert.equal(resultado.solicitudConfirmada.superficie_aproximada, 300);
+});
+
+test('confirmarVisita: sin superficie en el body usa la de la solicitud y la conserva', async (t) => {
+  const consultas = mockBase(t, {
+    'solicitudes_visita:select': { data: SOLICITUD_BASE, error: null },
+    'inmuebles:insert': (c) => ({ data: { id_inmueble: 99, ...c.ops.find(([o]) => o === 'insert')[1] }, error: null }),
+    'solicitudes_visita:update': (c) => ({ data: { ...SOLICITUD_BASE, ...c.ops.find(([o]) => o === 'update')[1] }, error: null }),
+  });
+
+  const resultado = await confirmarVisita(30, { tipo_inmueble: 'Lote Vacio' });
+
+  assert.equal(resultado.error, undefined);
+  const solicitudUpdate = opDe(consultas, 'solicitudes_visita', 'update').ops.find(([o]) => o === 'update')[1];
+  assert.equal(solicitudUpdate.superficie_aproximada, 500);
 });
 
 test('confirmarVisita: si el inmueble de la solicitud ya no es del cliente o fue dado de baja devuelve 409 y no confirma', async (t) => {

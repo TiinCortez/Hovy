@@ -26,7 +26,8 @@ const matchesRequestedService = (catalogName, requestedService) => {
 
 // Step 1 of Confirmada: pick services from the admin's active catalog and set m2 per service
 export default function ServiciosVisitaPanel({ visita, onSaved }) {
-  const defaultM2 = visita.superficie_aproximada != null ? String(visita.superficie_aproximada) : '';
+  // 0 significa "sin medir" (el cliente no sabia los m2): no se propone como valor por defecto.
+  const defaultM2 = Number(visita.superficie_aproximada) > 0 ? String(visita.superficie_aproximada) : '';
   const saved = Array.isArray(visita.servicios) ? visita.servicios : [];
 
   const [catalogo, setCatalogo] = useState([]);
