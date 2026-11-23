@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { getClientes, createCliente, updateCliente } from '../controllers/clientesController.js';
+import { getHistorialTurnosCliente } from '../controllers/historialTurnosClienteController.js';
 
 const router = Router();
 
 // GET /api/clientes
 router.get('/', getClientes);
+
+// GET /api/clientes/:idCliente/turnos
+router.get('/:idCliente/turnos', getHistorialTurnosCliente);
 
 // POST /api/clientes
 router.post('/', createCliente);
