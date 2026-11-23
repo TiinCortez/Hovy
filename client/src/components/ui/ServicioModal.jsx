@@ -25,7 +25,7 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
   const { register, handleSubmit, formState: { errors, isDirty } } = useForm({
     defaultValues: {
       nombre: '',
-      descripcion: '',
+      descripcion: isEdit ? (servicio.servicio?.descripcion || '') : '',
       precio_base: isEdit ? String(servicio.precio_base ?? '') : '',
     },
   });
@@ -40,7 +40,10 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
       const precio_base = Number(data.precio_base);
 
       if (isEdit) {
-        await ServicioService.update(servicio.id_usuario_servicio, { precio_base });
+        await ServicioService.update(servicio.id_usuario_servicio, {
+          precio_base,
+          descripcion: data.descripcion.trim(),
+        });
       } else {
         // The server finds-or-creates the type by name and reactivates removed links
         await ServicioService.create({
@@ -102,17 +105,16 @@ export default function ServicioModal({ isOpen, onClose, servicio, tipos, onSave
                 )}
               </div>
 
-              {!isEdit && (
-                <div className="mb-3">
-                  <label className="form-label small fw-bold text-secondary" htmlFor="servicio-descripcion">Descripción</label>
-                  <textarea
-                    id="servicio-descripcion"
-                    rows={2}
-                    className="form-control bg-light rounded-3"
-                    {...register('descripcion')}
-                  />
-                </div>
-              )}
+              <div className="mb-3">
+                <label className="form-label small fw-bold text-secondary" htmlFor="servicio-descripcion">Descripción</label>
+                <textarea
+                  id="servicio-descripcion"
+                  rows={3}
+                  placeholder="Opcional: detallá qué incluye este servicio…"
+                  className="form-control bg-light rounded-3"
+                  {...register('descripcion')}
+                />
+              </div>
 
               <div>
                 <label className="form-label small fw-bold text-secondary" htmlFor="servicio-precio">Precio por m² *</label>
