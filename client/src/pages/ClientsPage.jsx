@@ -1,10 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Users, Building2, CheckCircle2, Search,
-  UserPlus, Phone, Mail, MoreVertical,
-  Calendar, Briefcase, User, LayoutGrid, MessageCircle, Edit2, Trash2, RotateCcw
-} from 'lucide-react';
+import { Archive, Search, UserPlus, X } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useAvisos } from '../components/ui/avisosContext';
@@ -13,42 +9,47 @@ import EditClientModal from '../components/ui/EditClientModal';
 import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
-import { obtenerEnlaceWhatsApp } from '../services/whatsapp';
 import ClientesSkeleton from '../components/skeletons/ClientesSkeleton';
-import { VERDE } from '../styles/colores';
-import Badge from '../components/ui/Badge';
-import { CAPAS } from '../styles/capas';
+import ClienteCard from '../components/clientes/ClienteCard';
+import ClientePanelDetalle from '../components/clientes/ClientePanelDetalle';
+import { obtenerAhoraTurnos } from '../components/turnos/agendaTurnos';
+import {
+  esClienteInactivo,
+  filtrarYOrdenarClientes,
+  normalizarTipoCliente,
+  obtenerClaveCliente,
+  obtenerInmueblesCliente,
+  obtenerProximoTurnoCliente,
+} from '../components/clientes/clientesUtils';
+import '../components/clientes/clientes.scss';
+
+const FILTROS_TIPO = [
+  { key: 'Todos', label: 'Todos' },
+  { key: 'Fijo', label: 'Fijos' },
+  { key: 'Casual', label: 'Casuales' },
+  { key: 'Empresa', label: 'Empresas' },
+];
 
 export default function ClientsPage() {
   const { avisar } = useAvisos();
   const navigate = useNavigate();
-  const [estadoFiltro, setEstadoFiltro] = useState('Activos');
-  const [activeFilter, setActiveFilter] = useState('Todos');
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const [ordenarAz, setOrdenarAz] = useState(false);
+  const [segmento, setSegmento] = useState('Todos'); // 'Todos' | 'Fijo' | 'Casual' | 'Empresa' | 'Inactivos'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [orden, setOrden] = useState('recientes'); // 'recientes' | 'az' | 'proximo'
 
   const [clients, setClients] = useState([]);
   const [inmuebles, setInmuebles] = useState([]);
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const [editingClient, setEditingClient] = useState(null);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    const handleClickOutside = () => setOpenMenuId(null);
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setOpenMenuId(null);
-    };
-    window.addEventListener('click', handleClickOutside);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('click', handleClickOutside);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [openMenuId]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [cambiandoEstado, setCambiandoEstado] = useState(false);
+
+  const ultimoTriggerRef = useRef(null);
+  const hoyIso = obtenerAhoraTurnos().fecha;
 
   useEffect(() => {
     let isMounted = true;
@@ -65,27 +66,27 @@ export default function ClientsPage() {
           TurnoService.getAll().catch((err) => {
             console.error('Error al cargar turnos:', err);
             return { data: [] };
-          })
+          }),
         ]);
 
-        if (isMounted) {
-          if (clientsResponse.data) {
-            const sortedClients = clientsResponse.data.sort((a, b) => new Date(b.fecha_alta) - new Date(a.fecha_alta));
-            setClients(sortedClients);
-          }
+        if (!isMounted) return;
 
-          const inmsData = inmueblesResponse.data?.data || inmueblesResponse.data || [];
-          setInmuebles(Array.isArray(inmsData) ? inmsData : []);
-
-          const turnosData = turnosResponse.data || [];
-          setTurnos(Array.isArray(turnosData) ? turnosData : []);
+        if (Array.isArray(clientsResponse?.data)) {
+          const sortedClients = [...clientsResponse.data].sort(
+            (a, b) => new Date(b.fecha_alta || 0) - new Date(a.fecha_alta || 0),
+          );
+          setClients(sortedClients);
         }
+
+        const inmsData = inmueblesResponse?.data?.data || inmueblesResponse?.data || [];
+        setInmuebles(Array.isArray(inmsData) ? inmsData : []);
+
+        const turnosData = turnosResponse?.data || [];
+        setTurnos(Array.isArray(turnosData) ? turnosData : []);
       } catch (error) {
         console.error('Error al cargar datos desde el servidor:', error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -93,444 +94,292 @@ export default function ClientsPage() {
     return () => { isMounted = false; };
   }, []);
 
+  // Conteos de segmentos (resumen + filtro unificados)
+  const conteos = useMemo(() => {
+    const resultado = { Todos: 0, Fijo: 0, Casual: 0, Empresa: 0, Inactivos: 0 };
+    clients.forEach((cliente) => {
+      if (esClienteInactivo(cliente)) {
+        resultado.Inactivos += 1;
+      } else {
+        resultado.Todos += 1;
+        const tipo = normalizarTipoCliente(cliente.tipo_cliente);
+        if (tipo in resultado) resultado[tipo] += 1;
+      }
+    });
+    return resultado;
+  }, [clients]);
+
+  // Próximo turno e inmuebles indexados por cliente para evitar recálculos por tarjeta
+  const proximosPorClave = useMemo(() => {
+    const mapa = new Map();
+    clients.forEach((cliente) => {
+      const clave = obtenerClaveCliente(cliente);
+      mapa.set(clave, obtenerProximoTurnoCliente(cliente, turnos, hoyIso));
+    });
+    return mapa;
+  }, [clients, turnos, hoyIso]);
+
+  const inmueblesPorClave = useMemo(() => {
+    const mapa = new Map();
+    clients.forEach((cliente) => {
+      const clave = obtenerClaveCliente(cliente);
+      mapa.set(clave, obtenerInmueblesCliente(cliente, inmuebles));
+    });
+    return mapa;
+  }, [clients, inmuebles]);
+
+  const filteredClients = useMemo(
+    () => filtrarYOrdenarClientes(clients, {
+      segmento,
+      busqueda: searchTerm,
+      orden,
+      proximosPorClave,
+    }),
+    [clients, segmento, searchTerm, orden, proximosPorClave],
+  );
+
+  const selectedClient = useMemo(
+    () => (selectedKey ? clients.find((c) => obtenerClaveCliente(c) === selectedKey) || null : null),
+    [clients, selectedKey],
+  );
+
   const handleClientCreated = (newClient) => {
-    setClients(prev => [newClient, ...prev]);
+    setClients((prev) => [newClient, ...prev]);
   };
 
   const handleClientUpdated = (updatedClient) => {
-    setClients(prev => prev.map(c =>
-      (c.id_cliente && updatedClient.id_cliente && c.id_cliente === updatedClient.id_cliente) ||
-      c.telefono === editingClient?.telefono
+    const claveEditada = editingClient ? obtenerClaveCliente(editingClient) : null;
+    setClients((prev) => prev.map((c) => (
+      (c.id_cliente && updatedClient.id_cliente && c.id_cliente === updatedClient.id_cliente)
+      || c.telefono === editingClient?.telefono
         ? { ...c, ...updatedClient }
         : c
-    ));
+    )));
+
+    if (claveEditada && selectedKey === claveEditada) {
+      setSelectedKey(obtenerClaveCliente(updatedClient));
+    }
   };
 
   const handleEstadoChange = async (cliente, nuevoEstado) => {
+    setCambiandoEstado(true);
     try {
-      // Usamos el servicio existente para hacer el PUT al backend
       await ClienteService.update(cliente.telefono, { estado: nuevoEstado });
-      // Actualizamos el estado local de React para reflejar el cambio al instante
-      setClients(prev => prev.map(c =>
+      setClients((prev) => prev.map((c) => (
         c.telefono === cliente.telefono ? { ...c, estado: nuevoEstado } : c
-      ));
+      )));
     } catch (error) {
       console.error('Error al cambiar el estado del cliente:', error);
       avisar('No se pudo cambiar el estado del cliente. Intentá de nuevo.');
+    } finally {
+      setCambiandoEstado(false);
     }
   };
 
-  const getClientIcon = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return Briefcase;
-    if (tipo === 'Fijo') return LayoutGrid;
-    return User;
-  };
-
-  const getClientColor = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'var(--hovy-verde-100)';
-    if (tipo === 'Fijo') return 'var(--hovy-verde-50)';
-    return 'var(--hovy-rojo-50)';
-  };
-
-  const getClientTextColor = (tipo) => {
-    if (tipo === 'Empresa' || tipo === 'EMPRESA') return 'text-success';
-    if (tipo === 'Fijo') return 'text-success';
-    return 'text-danger-emphasis';
-  };
-
-  const clientesActivos = clients.filter(c => c.estado !== 'Inactivo');
-  const clientesInactivos = clients.filter(c => c.estado === 'Inactivo');
-
-  const baseClients = estadoFiltro === 'Inactivos' ? clientesInactivos : clientesActivos;
-
-  const filteredClients = baseClients.filter(client => {
-    const fullName = `${client.nombre || ''} ${client.apellido || ''}`.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = fullName.includes(search) || (client.telefono || '').includes(search) || (client.razon_social || '').toLowerCase().includes(search);
-
-    // Si no coincide con la búsqueda de texto dentro del grupo actual, lo descartamos
-    if (!matchesSearch) return false;
-
-    // Si estamos viendo Inactivos, mostramos todos los inactivos que coincidan con la búsqueda
-    if (estadoFiltro === 'Inactivos') return true;
-
-    // Dentro de Activos, filtramos por categoría
-    if (activeFilter === 'Todos') return true;
-    if (activeFilter === 'Empresas') return (client.tipo_cliente === 'Empresa' || client.tipo_cliente === 'EMPRESA');
-    if (activeFilter === 'Particulares' || activeFilter === 'Casual') return (client.tipo_cliente === 'Casual' || client.tipo_cliente === 'Particular');
-    if (activeFilter === 'Fijo') return client.tipo_cliente === 'Fijo';
-
-    return true;
-  }).sort((a, b) => {
-    // NUEVA LÓGICA DE ORDENAMIENTO
-    if (ordenarAz) {
-      const nombreA = `${a.nombre || ''} ${a.apellido || ''}`.trim().toLowerCase() || (a.razon_social || '').toLowerCase();
-      const nombreB = `${b.nombre || ''} ${b.apellido || ''}`.trim().toLowerCase() || (b.razon_social || '').toLowerCase();
-      return nombreA.localeCompare(nombreB);
+  const handleSeleccionarCliente = (cliente, triggerEl) => {
+    const clave = obtenerClaveCliente(cliente);
+    if (selectedKey === clave) {
+      setSelectedKey(null);
+      return;
     }
+    ultimoTriggerRef.current = triggerEl || null;
+    setSelectedKey(clave);
+  };
 
-    // Fallback: ordenar por los más recientes
-    return new Date(b.fecha_alta) - new Date(a.fecha_alta);
-  });
+  const handleCerrarPanel = () => {
+    setSelectedKey(null);
+    const trigger = ultimoTriggerRef.current;
+    if (trigger && trigger.isConnected) {
+      window.requestAnimationFrame(() => trigger.focus());
+    }
+  };
+
+  const handleAbrirFicha = (cliente) => {
+    const idRuta = cliente.id_cliente || cliente.telefono;
+    navigate(`/clients/${idRuta}/inmuebles`);
+  };
+
+  const handleLimpiarFiltros = () => {
+    setSearchTerm('');
+    setSegmento('Todos');
+  };
+
+  const panelAbierto = Boolean(selectedClient);
 
   return (
     <div className="d-flex flex-column gap-4 pb-5">
+      {/* Cabecera: título + buscador protagonista + acción principal */}
+      <div className="clientes-cabecera">
+        <h1 className="clientes-titulo">Clientes</h1>
 
-      {/* Title and main action share a row (also on mobile) */}
-      <div>
-        <div className="d-flex align-items-center gap-2 mb-1">
-          <span className="hovy-rotulo">Directorio de clientes</span>
-        </div>
-        <div className="d-flex align-items-center justify-content-between gap-3">
-          <h2 className="fw-bold fs-2 text-dark m-0">Clientes</h2>
-          <Button variant="primary" className="text-nowrap flex-shrink-0" onClick={() => setIsModalOpen(true)}>
-            <UserPlus size={16} /> Nuevo Cliente
+        <div className="clientes-cabecera-controles">
+          <div className="clientes-buscador">
+            <label htmlFor="clientes-buscar" className="visually-hidden">
+              Buscar clientes por nombre, teléfono o correo
+            </label>
+            <Search size={17} className="text-secondary flex-shrink-0" aria-hidden="true" />
+            <input
+              id="clientes-buscar"
+              type="search"
+              placeholder={segmento === 'Inactivos' ? 'Buscar en inactivos…' : 'Buscar cliente o teléfono…'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clientes-buscador-limpiar"
+                aria-label="Limpiar búsqueda"
+                onClick={() => setSearchTerm('')}
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          <Button
+            variant="primary"
+            className="text-nowrap flex-shrink-0"
+            aria-label="Nuevo Cliente"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <UserPlus size={16} aria-hidden="true" />
+            <span className="d-none d-sm-inline">Nuevo Cliente</span>
           </Button>
         </div>
       </div>
 
-      <div className="row g-2 g-md-3 clientes-resumen">
-        <div className="col-6 col-xl-3">
-          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">TOTAL ACTIVOS</span>
-              <div className="clientes-resumen-icono text-success"><Users size={18} /></div>
-            </div>
-            <div>
-              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">{clientesActivos.length}</h3>
-              <Badge tipo="exito" conPunto={false} className="mt-2">Clientes activos</Badge>
-            </div>
-          </Card>
-        </div>
-
-        <div className="col-6 col-xl-3">
-          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">EMPRESAS / FIJOS</span>
-              <div className="clientes-resumen-icono text-secondary"><Building2 size={18} /></div>
-            </div>
-            <div>
-              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
-                {clientesActivos.filter(c => c.tipo_cliente === 'Empresa' || c.tipo_cliente === 'EMPRESA' || c.tipo_cliente === 'Fijo').length}
-              </h3>
-              <p className="clientes-resumen-detalle text-secondary m-0 mt-2">Cuentas corporativas y regulares</p>
-            </div>
-          </Card>
-        </div>
-
-        <div className="col-6 col-xl-3">
-          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">CASUALES</span>
-              <div className="clientes-resumen-icono text-success"><CheckCircle2 size={18} /></div>
-            </div>
-            <div>
-              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">
-                {clientesActivos.filter(c => c.tipo_cliente === 'Casual').length}
-              </h3>
-              <Badge tipo="exito" conPunto={false} className="mt-2">Servicios esporádicos</Badge>
-            </div>
-          </Card>
-        </div>
-
-        <div className="col-6 col-xl-3">
-          <Card className="clientes-resumen-card h-100 shadow-sm border-0 rounded-4">
-            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-              <span className="clientes-resumen-titulo text-secondary fw-bold text-uppercase">CON PAGOS PENDIENTES</span>
-              <div className="clientes-resumen-icono text-danger"><Calendar size={18} /></div>
-            </div>
-            <div>
-              <h3 className="clientes-resumen-cifra fw-bold text-dark m-0">0</h3>
-              <p className="clientes-resumen-detalle text-danger m-0 mt-2 fw-medium">$0 ARS <span className="text-secondary fw-normal">saldo acumulado</span></p>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3 mt-2">
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          {/* Switch principal: Activos vs Inactivos */}
-          <div
-            className={`hovy-switch shadow-sm flex-shrink-0${estadoFiltro === 'Inactivos' ? ' is-ambar' : ''}`}
-            style={{ '--hovy-switch-cols': 2, '--hovy-switch-index': estadoFiltro === 'Inactivos' ? 1 : 0 }}
-          >
-            <span className="hovy-switch-thumb" aria-hidden="true" />
-            <button
-              type="button"
-              aria-pressed={estadoFiltro === 'Activos'}
-              onClick={() => setEstadoFiltro('Activos')}
-              className={`btn btn-sm hovy-switch-btn fw-bold ${estadoFiltro === 'Activos' ? 'is-active' : ''}`}
-            >
-              Activos ({clientesActivos.length})
-            </button>
-            <button
-              type="button"
-              aria-pressed={estadoFiltro === 'Inactivos'}
-              onClick={() => setEstadoFiltro('Inactivos')}
-              className={`btn btn-sm hovy-switch-btn fw-bold ${estadoFiltro === 'Inactivos' ? 'is-active' : ''}`}
-            >
-              Inactivos ({clientesInactivos.length})
-            </button>
-          </div>
-
-          <div className="input-group bg-white rounded-pill px-3 py-2 border shadow-sm flex-grow-1" style={{ maxWidth: '280px', minWidth: '220px' }}>
-            <span className="input-group-text bg-transparent border-0 text-secondary p-0 me-2"><Search size={18} /></span>
-            <input
-              type="text"
-              className="form-control bg-transparent border-0 shadow-none text-dark small p-0"
-              placeholder={estadoFiltro === 'Inactivos' ? 'Buscar en inactivos…' : 'Buscar en activos…'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Sub-filtros exclusivos dentro de Activos */}
-        {estadoFiltro === 'Activos' && (
-          <div className="hovy-filter-group flex-grow-1" role="group" aria-label="Filtrar clientes por tipo">
-            {['Todos', 'Empresas', 'Fijo', 'Casual'].map((filter) => {
-              let count = 0;
-              if (filter === 'Todos') count = clientesActivos.length;
-              if (filter === 'Empresas') count = clientesActivos.filter(c => c.tipo_cliente === 'Empresa' || c.tipo_cliente === 'EMPRESA').length;
-              if (filter === 'Fijo') count = clientesActivos.filter(c => c.tipo_cliente === 'Fijo').length;
-              if (filter === 'Casual') count = clientesActivos.filter(c => c.tipo_cliente === 'Casual').length;
-
-              return (
-                <button
-                  key={filter}
-                  type="button"
-                  aria-pressed={activeFilter === filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`btn btn-sm rounded-pill fw-medium shadow-sm border ${
-                    activeFilter === filter
-                      ? 'btn-primary'
-                      : 'bg-white text-secondary'
-                  }`}
-                  style={activeFilter === filter ? { backgroundColor: VERDE, borderColor: VERDE } : {}}
-                >
-                  <span className="hovy-filter-label">{filter}</span>
-                  <span className="hovy-filter-count">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <select
-          className="form-select bg-white rounded-pill border shadow-sm text-secondary small py-2 w-auto flex-shrink-0 ms-lg-auto"
-          value={ordenarAz ? 'az' : 'recientes'}
-          onChange={(e) => setOrdenarAz(e.target.value === 'az')}
-        >
-          <option value="recientes">Ordenar: Más recientes</option>
-          <option value="az">Ordenar: Alfabético</option>
-        </select>
-
-      </div>
-
-      {loading ? (
-        <ClientesSkeleton />
-      ) : filteredClients.length === 0 ? (
-        <Card className="p-5 text-center border-0 shadow-sm rounded-4"><p className="text-secondary m-0">No se encontraron clientes con esos filtros.</p></Card>
-      ) : (
-        <div className="row g-3">
-          {filteredClients.map((client) => {
-            const initials = `${client.nombre?.[0] || ''}${client.apellido?.[0] || ''}`.toUpperCase() || 'CL';
-            const fullName = `${client.nombre || ''} ${client.apellido || ''}`.trim() || client.razon_social;
-
-            const isInactivo = client.estado === 'Inactivo';
-            const clientKey = client.id_cliente || client.telefono;
-            const isMenuOpen = openMenuId === clientKey;
-
-            const ClientIcon = getClientIcon(client.tipo_cliente);
-            const cardBgColor = getClientColor(client.tipo_cliente);
-            const cardTextColor = getClientTextColor(client.tipo_cliente);
-
-            const enlaceWhatsApp = obtenerEnlaceWhatsApp(client.telefono);
-
-            // Cantidad de inmuebles registrados
-            const cantidadInmuebles = inmuebles.filter(
-              (inm) => String(inm.id_cliente) === String(client.id_cliente)
-            ).length;
-
-            // Próximo turno/servicio agendado
-            const hoyStr = new Date().toISOString().split('T')[0];
-            const proximoTurno = turnos
-              .filter((t) => {
-                if (t.estado === 'CANCELADO' || t.estado === 'REALIZADO') return false;
-                const matchId = client.id_cliente && t.cliente?.id_cliente && String(t.cliente.id_cliente) === String(client.id_cliente);
-                const matchTel = client.telefono && t.cliente?.telefono && String(t.cliente.telefono) === String(client.telefono);
-                return (matchId || matchTel) && t.fechaAsignada && t.fechaAsignada >= hoyStr;
-              })
-              .sort((a, b) => a.fechaAsignada.localeCompare(b.fechaAsignada))[0];
-
-            const fechaProximoTurno = proximoTurno?.fechaAsignada
-              ? (() => {
-                  const [y, m, d] = proximoTurno.fechaAsignada.split('-').map(Number);
-                  return new Date(y, m - 1, d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
-                })()
-              : null;
-
+      {/* Barra unificada: chips de resumen/filtro + acceso secundario a inactivos + orden */}
+      <div className="clientes-barra-filtros">
+        <div className="clientes-chips" role="group" aria-label="Filtrar clientes activos por tipo">
+          {FILTROS_TIPO.map(({ key, label }) => {
+            const activo = segmento === key;
             return (
-              <div key={clientKey} className="col-12 col-md-6 col-xl-4">
-                <Card
-                  className="h-100 p-3 shadow-sm border-0 rounded-4 d-flex flex-column justify-content-between bg-white position-relative"
-                  style={{ cursor: 'pointer', transition: 'transform var(--hovy-duracion-rapida) ease, box-shadow var(--hovy-duracion-rapida) ease' }}
-                  onClick={() => navigate(`/clients/${client.id_cliente}/inmuebles`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      navigate(`/clients/${client.id_cliente}/inmuebles`);
-                    }
-                  }}
-                >
-                  <div>
-                    <div className="d-flex align-items-start gap-3 mb-2">
-                      <div
-                        className={`rounded-3 d-flex align-items-center justify-content-center fw-bold fs-6 flex-shrink-0 ${cardTextColor}`}
-                        style={{ width: '40px', height: '40px', backgroundColor: cardBgColor }}
-                      >
-                        {initials}
-                      </div>
-                      <div className="flex-grow-1 min-w-0">
-                        <div className="d-flex justify-content-between align-items-start gap-2">
-                          <h6 className="fw-bold text-dark m-0 fs-6 text-truncate" title={fullName}>{fullName}</h6>
-                          <div className="position-relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="light"
-                              icon
-                              aria-label="Opciones del cliente"
-                              aria-expanded={isMenuOpen}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(isMenuOpen ? null : clientKey);
-                              }}
-                            >
-                              <MoreVertical size={16} />
-                            </Button>
-
-                            {isMenuOpen && (
-                              <div
-                                className="position-absolute end-0 mt-1 bg-white rounded-3 shadow border py-1"
-                                style={{ minWidth: '175px', zIndex: CAPAS.menu }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <button
-                                  type="button"
-                                  className="w-100 btn btn-sm text-start px-3 py-2 d-flex align-items-center gap-2 text-dark border-0 rounded-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    setEditingClient(client);
-                                  }}
-                                >
-                                  <Edit2 size={14} className="text-secondary" />
-                                  <span>Editar Cliente</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`w-100 btn btn-sm text-start px-3 py-2 d-flex align-items-center gap-2 border-0 rounded-0 ${isInactivo ? 'text-success' : 'text-danger'}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    handleEstadoChange(client, isInactivo ? 'Activo' : 'Inactivo');
-                                  }}
-                                >
-                                  {isInactivo ? (
-                                    <>
-                                      <RotateCcw size={14} />
-                                      <span>Restaurar Cliente</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Trash2 size={14} />
-                                      <span>Eliminar Cliente</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-secondary small m-0 text-truncate" style={{ fontSize: 'var(--hovy-texto-xs)' }}>{client.razon_social || 'Cliente Estándar'}</p>
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 small fw-medium d-flex align-items-center gap-1">
-                        <ClientIcon size={12}/> {client.tipo_cliente}
-                      </span>
-                    </div>
-
-                    <div className="d-flex flex-column gap-1 text-secondary small mb-3">
-                      <div className="d-flex align-items-center justify-content-between gap-2">
-                        <div className="d-flex align-items-center gap-2 text-truncate">
-                          <Phone size={14} className="flex-shrink-0 text-secondary" />
-                          <span className="text-truncate">{client.telefono}</span>
-                        </div>
-                        {enlaceWhatsApp && (
-                          <a
-                            href={enlaceWhatsApp}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline-success border-0 p-1 px-2 d-inline-flex align-items-center gap-1 text-decoration-none rounded-pill flex-shrink-0"
-                            style={{ fontSize: 'var(--hovy-texto-xs)', backgroundColor: 'var(--hovy-verde-100)' }}
-                            title={`Contactar a ${fullName} por WhatsApp`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MessageCircle size={13} />
-                            <span>WhatsApp</span>
-                          </a>
-                        )}
-                      </div>
-                      {client.email && (
-                        <div className="d-flex align-items-center gap-2 text-truncate">
-                          <Mail size={14} className="flex-shrink-0 text-secondary" />
-                          <span className="text-truncate" title={client.email}>{client.email}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="row g-0 bg-light rounded-3 border overflow-hidden mt-auto">
-                    <div className="col-5 p-2 px-2 border-end">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Inmuebles</span>
-                      <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
-                        <Building2 size={13} className="text-secondary" /> {cantidadInmuebles > 0 ? cantidadInmuebles : '-'}
-                      </span>
-                    </div>
-                    <div className="col-7 p-2 px-2">
-                      <span className="text-secondary d-block fw-semibold mb-1" style={{ fontSize: 'var(--hovy-texto-xs)' }}>Próximo servicio</span>
-                      <div className="d-flex flex-column">
-                        <span className="fw-bold text-dark small d-flex align-items-center gap-1 text-truncate">
-                          <Calendar size={13} className={fechaProximoTurno ? 'text-success' : 'text-secondary'} /> {fechaProximoTurno || '-'}
-                          {proximoTurno?.franjaHoraria?.horaInicio && (<span className="text-secondary" style={{ fontSize: 'var(--hovy-texto-md)' }}>{proximoTurno.franjaHoraria.horaInicio.slice(0, 5)} hs</span>)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
+              <button
+                key={key}
+                type="button"
+                aria-pressed={activo}
+                className={`clientes-chip${activo ? ' is-active' : ''}`}
+                onClick={() => setSegmento(key)}
+              >
+                <span>{label}</span>
+                <span className="clientes-chip-conteo">{conteos[key]}</span>
+              </button>
             );
           })}
         </div>
-      )}
 
-      {!loading && filteredClients.length > 0 && (
-        <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 pt-3 mt-2">
-          <span className="text-secondary small fw-medium">
-            Mostrando {filteredClients.length} cliente(s)
-          </span>
-          <div className="d-flex align-items-center gap-1">
-            <button className="btn btn-sm btn-white text-secondary border shadow-sm px-2 bg-white" disabled>&lt;</button>
-            <button className="btn btn-sm btn-primary border shadow-sm px-3" style={{backgroundColor: VERDE, borderColor: VERDE}}>1</button>
-            <button className="btn btn-sm btn-white text-secondary border shadow-sm px-2 bg-white" disabled>&gt;</button>
-          </div>
+        <div className="clientes-barra-secundaria">
+          <button
+            type="button"
+            aria-pressed={segmento === 'Inactivos'}
+            className={`clientes-inactivos-btn${segmento === 'Inactivos' ? ' is-active' : ''}`}
+            onClick={() => setSegmento((prev) => (prev === 'Inactivos' ? 'Todos' : 'Inactivos'))}
+          >
+            <Archive size={15} aria-hidden="true" />
+            <span>Inactivos ({conteos.Inactivos})</span>
+          </button>
+
+          <select
+            className="form-select clientes-orden"
+            aria-label="Ordenar clientes"
+            value={orden}
+            onChange={(e) => setOrden(e.target.value)}
+          >
+            <option value="recientes">Más recientes</option>
+            <option value="az">Alfabético (A–Z)</option>
+            <option value="proximo">Próximo servicio</option>
+          </select>
+        </div>
+      </div>
+
+      {segmento === 'Inactivos' && (
+        <div className="clientes-aviso-inactivos" role="status">
+          <span>Estás viendo clientes inactivos. Tocá uno para revisar sus datos o restaurarlo.</span>
+          <button type="button" onClick={() => setSegmento('Todos')}>
+            Volver a activos
+          </button>
         </div>
       )}
 
-      <NewClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onClientCreated={handleClientCreated} />
+      {/* Contenido principal: Master-Detail (grilla destilada + panel lateral) */}
+      {loading ? (
+        <ClientesSkeleton />
+      ) : filteredClients.length === 0 ? (
+        <Card className="p-5 text-center border-0 shadow-sm rounded-4">
+          <p className="fw-semibold text-dark mb-1">
+            {clients.length === 0
+              ? 'Todavía no hay clientes registrados'
+              : searchTerm
+                ? 'No hay coincidencias para tu búsqueda'
+                : 'No hay clientes en esta categoría'}
+          </p>
+          <p className="text-secondary small mb-3">
+            {clients.length === 0
+              ? 'Agregá tu primer cliente para gestionar sus inmuebles y turnos.'
+              : 'Probá limpiando los filtros o cambiando de categoría.'}
+          </p>
+          <div>
+            {clients.length === 0 ? (
+              <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                <UserPlus size={16} aria-hidden="true" /> Nuevo Cliente
+              </Button>
+            ) : (
+              <Button variant="light" className="border bg-white" onClick={handleLimpiarFiltros}>
+                Ver todos los activos
+              </Button>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <div className="clientes-layout">
+          <div className="clientes-grid-contenedor">
+            <ul className={`clientes-grid${panelAbierto ? ' con-panel' : ''}`} role="list">
+              {filteredClients.map((cliente) => {
+                const clave = obtenerClaveCliente(cliente);
+                const inmueblesCliente = inmueblesPorClave.get(clave) || [];
+                const proximoTurno = proximosPorClave.get(clave) || null;
+
+                return (
+                  <ClienteCard
+                    key={clave}
+                    cliente={cliente}
+                    cantidadInmuebles={inmueblesCliente.length}
+                    proximoTurno={proximoTurno}
+                    seleccionado={selectedKey === clave}
+                    onSeleccionar={handleSeleccionarCliente}
+                  />
+                );
+              })}
+            </ul>
+
+            <p className="clientes-pie-conteo mt-3 mb-0">
+              Mostrando {filteredClients.length} {filteredClients.length === 1 ? 'cliente' : 'clientes'}
+            </p>
+          </div>
+
+          {selectedClient && (
+            <ClientePanelDetalle
+              cliente={selectedClient}
+              inmuebles={inmueblesPorClave.get(obtenerClaveCliente(selectedClient)) || []}
+              proximoTurno={proximosPorClave.get(obtenerClaveCliente(selectedClient)) || null}
+              cambiandoEstado={cambiandoEstado}
+              bloqueadoPorModal={isModalOpen || Boolean(editingClient)}
+              onCerrar={handleCerrarPanel}
+              onAbrirFicha={handleAbrirFicha}
+              onEditar={(cliente) => setEditingClient(cliente)}
+              onCambiarEstado={handleEstadoChange}
+            />
+          )}
+        </div>
+      )}
+
+      <NewClientModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onClientCreated={handleClientCreated}
+      />
+
       <EditClientModal
         isOpen={Boolean(editingClient)}
         onClose={() => setEditingClient(null)}
