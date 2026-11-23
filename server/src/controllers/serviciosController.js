@@ -23,6 +23,11 @@ const esNumeroNoNegativo = (valor) => {
   return Number.isFinite(n) && n >= 0;
 };
 
+const textoOpcional = (valor) => {
+  const limpio = typeof valor === 'string' ? valor.trim() : '';
+  return limpio === '' ? null : limpio;
+};
+
 // GET /api/servicios
 export const getCatalogo = async (req, res) => {
   try {
@@ -113,10 +118,6 @@ export const createServicio = async (req, res) => {
         return res.status(400).json({ ok: false, error: `${campo} debe ser texto` });
       }
     }
-    const textoOpcional = (valor) => {
-      const limpio = typeof valor === 'string' ? valor.trim() : '';
-      return limpio === '' ? null : limpio;
-    };
 
     // 1) Find the type by normalized name, or create it.
     const busqueda = await buscarTipoPorNombre(nombreLimpio);
@@ -206,7 +207,7 @@ export const updateServicio = async (req, res) => {
       return res.status(400).json({ ok: false, error: "id inválido" });
     }
 
-    const { precio_base, limite_operativo, activo } = req.body || {};
+    const { precio_base, limite_operativo, activo, descripcion } = req.body || {};
     const cambios = {};
 
     if (precio_base !== undefined) {
@@ -231,18 +232,55 @@ export const updateServicio = async (req, res) => {
       cambios.activo = activo;
     }
 
-    if (Object.keys(cambios).length === 0) {
+    const hayDescripcion = descripcion !== undefined;
+    if (hayDescripcion && descripcion !== null && typeof descripcion !== 'string') {
+      return res.status(400).json({ ok: false, error: "descripcion debe ser texto" });
+    }
+
+    if (Object.keys(cambios).length === 0 && !hayDescripcion) {
       return res.status(400).json({ ok: false, error: "No hay campos para actualizar" });
     }
 
-    // Filtering by id_usuario guarantees ownership; other users' rows yield 404.
-    const { data, error } = await supabaseAdmin
+    // Ownership check first: other users' rows yield 404 before touching servicios_catalogo.
+    const { data: existente, error: errorBuscar } = await supabaseAdmin
       .from('usuario_servicio')
-      .update(cambios)
+      .select('id_usuario_servicio, id_servicio')
       .eq('id_usuario_servicio', Number(id))
       .eq('id_usuario', idUsuario)
-      .select(SELECT_MIO)
       .maybeSingle();
+
+    if (errorBuscar) return errorInterno(res, errorBuscar, 'updateServicio/buscar');
+    if (!existente) {
+      return res.status(404).json({ ok: false, error: "Servicio no encontrado" });
+    }
+
+    if (hayDescripcion) {
+      const { error: errorDescripcion } = await supabaseAdmin
+        .from('servicios_catalogo')
+        .update({ descripcion: textoOpcional(descripcion) })
+        .eq('id_servicio', existente.id_servicio);
+
+      if (errorDescripcion) return errorInterno(res, errorDescripcion, 'updateServicio/descripcion');
+    }
+
+    let data;
+    let error;
+    if (Object.keys(cambios).length > 0) {
+      ({ data, error } = await supabaseAdmin
+        .from('usuario_servicio')
+        .update(cambios)
+        .eq('id_usuario_servicio', Number(id))
+        .eq('id_usuario', idUsuario)
+        .select(SELECT_MIO)
+        .maybeSingle());
+    } else {
+      ({ data, error } = await supabaseAdmin
+        .from('usuario_servicio')
+        .select(SELECT_MIO)
+        .eq('id_usuario_servicio', Number(id))
+        .eq('id_usuario', idUsuario)
+        .maybeSingle());
+    }
 
     if (error) return errorInterno(res, error, 'updateServicio');
     if (!data) {
