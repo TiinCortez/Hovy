@@ -90,13 +90,39 @@ test('vendedor: con más de un administrador conectado y sin configuración no a
   assert.match(r.error.message, /más de una cuenta/);
 });
 
-test('vendedor: MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO fija la cuenta si esa conexión está vigente', async () => {
-  const { cliente, consultas } = baseFalsa({ mercadopago_conexion: { data: { id_usuario: 4 }, error: null } });
+test('vendedor: MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO fija la cuenta si esa conexión está vigente y es de un administrador', async () => {
+  const { cliente, consultas } = baseFalsa({
+    mercadopago_conexion: { data: { id_usuario: 4 }, error: null },
+    usuarios: { data: { id: 4 }, error: null },
+  });
   const r = await resolverVendedorDeCobros({ cliente, env: { MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO: '4' } });
   assert.deepEqual(r, { data: { idUsuario: 4 } });
   const conexion = consultas.find((c) => c.tabla === 'mercadopago_conexion');
   assert.deepEqual(filtro(conexion, 'eq', 'id_usuario').slice(1), ['id_usuario', 4]);
   assert.deepEqual(filtro(conexion, 'eq', 'estado').slice(1), ['estado', 'Conectada']);
+  const usuarios = consultas.find((c) => c.tabla === 'usuarios');
+  assert.deepEqual(filtro(usuarios, 'eq', 'id').slice(1), ['id', 4]);
+  assert.deepEqual(filtro(usuarios, 'eq', 'rol').slice(1), ['rol', 'admin']);
+});
+
+test('vendedor: la cuenta fijada por configuración que NO es de un administrador se rechaza (503), sin desviar la plata al staff', async () => {
+  const { cliente } = baseFalsa({
+    mercadopago_conexion: { data: { id_usuario: 4 }, error: null },
+    usuarios: { data: null, error: null },
+  });
+  const r = await resolverVendedorDeCobros({ cliente, env: { MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO: '4' } });
+  assert.equal(r.error.status, 503);
+  assert.doesNotMatch(r.error.message, /administrador|rol|configur/i, 'el cliente no ve detalles internos');
+});
+
+test('vendedor: un error de base al verificar el rol de la cuenta fijada devuelve 500 sin filtrar el detalle', async () => {
+  const { cliente } = baseFalsa({
+    mercadopago_conexion: { data: { id_usuario: 4 }, error: null },
+    usuarios: { data: null, error: { code: 'XX000', message: 'detalle interno secreto' } },
+  });
+  const r = await resolverVendedorDeCobros({ cliente, env: { MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO: '4' } });
+  assert.equal(r.error.status, 500);
+  assert.doesNotMatch(r.error.message, /secreto/);
 });
 
 test('vendedor: la cuenta fijada por configuración pero desconectada da 503 (no cae en otra)', async () => {

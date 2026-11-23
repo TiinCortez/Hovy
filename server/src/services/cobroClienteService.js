@@ -51,6 +51,23 @@ export const resolverVendedorDeCobros = async ({ cliente = supabaseAdmin, env = 
         .maybeSingle();
       if (error) return falla(500, ERROR_DB);
       if (!data) return falla(503, MENSAJE_SIN_CUENTA);
+
+      // La cuenta fijada por configuración también tiene que ser de un administrador (igual que la
+      // búsqueda automática): un id mal puesto no puede mandar la plata de los clientes a una cuenta del staff.
+      const { data: admin, error: errRol } = await cliente
+        .from('usuarios')
+        .select('id')
+        .eq('id', id)
+        .eq('rol', 'admin')
+        .maybeSingle();
+      if (errRol) {
+        console.error('[cobroCliente] no se pudo verificar el rol de la cuenta de cobro configurada');
+        return falla(500, ERROR_DB);
+      }
+      if (!admin) {
+        console.error('[cobroCliente] MERCADOPAGO_COBRO_CLIENTES_ID_USUARIO no es de un administrador: no se genera el cobro');
+        return falla(503, MENSAJE_SIN_CUENTA);
+      }
       return { data: { idUsuario: id } };
     }
 
