@@ -2,7 +2,7 @@
 // GET /api/turnos con el mismo criterio que la vista de Cobros: turnos Realizados,
 // monto final del presupuesto y flag `cobrado`.
 import { cambiarMesTurnos, formatearMontoARS } from '../turnos/agendaTurnos';
-import { montoFinal, cobroAtrasado, etiquetaMes, normalizar } from '../cobros/cobrosUtils';
+import { montoFinal, montoPagado, montoPendiente, cobroAtrasado, etiquetaMes, normalizar } from '../cobros/cobrosUtils';
 
 export const MESES_POR_PAGINA = 6;
 
@@ -130,12 +130,14 @@ const totalizar = (turnos) => {
   let traslado = 0;
   let trasladoKm = 0;
   turnos.forEach((turno) => {
-    const monto = montoFinal(turno);
     if (turno.cobrado) {
-      cobrado += monto;
+      cobrado += montoFinal(turno);
       cantidadCobrados += 1;
     } else {
-      porCobrar += monto;
+      // Same criteria as Cobros: a partial payment is already collected,
+      // only the remainder is still pending.
+      cobrado += montoPagado(turno);
+      porCobrar += montoPendiente(turno);
     }
     traslado += montoTraslado(turno);
     trasladoKm += kmTraslado(turno);
