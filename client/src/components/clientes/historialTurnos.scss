@@ -1,0 +1,368 @@
+@use '../../styles/tokens' as *;
+
+.historial-turnos-barra {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-10;
+  padding-bottom: $hovy-espacio-12;
+  margin-bottom: $hovy-espacio-12;
+  border-bottom: 1px solid $hovy-crema-300;
+}
+
+.historial-turnos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $hovy-espacio-6;
+}
+
+.historial-turnos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  padding: $hovy-espacio-6 $hovy-espacio-12;
+  border-radius: $hovy-radio-pill;
+  border: 1px solid $hovy-crema-400;
+  background-color: $hovy-crema-50;
+  color: $hovy-oliva-700;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
+
+  &:hover {
+    background-color: $hovy-crema-100;
+    border-color: $hovy-oliva-300;
+    color: $hovy-oliva-950;
+  }
+
+  &.is-active {
+    background-color: $hovy-green;
+    border-color: $hovy-green;
+    color: $hovy-blanco;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+}
+
+.historial-turnos-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 $hovy-espacio-4;
+  border-radius: $hovy-radio-pill;
+  background-color: rgba($hovy-verde-900, 0.08);
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  .historial-turnos-chip.is-active & {
+    background-color: rgba($hovy-blanco, 0.22);
+    color: $hovy-blanco;
+  }
+}
+
+.historial-turnos-inmueble-filtro {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-8;
+
+  label {
+    font-size: $hovy-texto-xs;
+    font-weight: 600;
+    color: $hovy-oliva-700;
+    white-space: nowrap;
+  }
+
+  select {
+    font-size: $hovy-texto-sm;
+    border-color: $hovy-crema-400;
+    border-radius: $hovy-radio-pill;
+    max-width: 100%;
+  }
+}
+
+.historial-turnos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-10;
+}
+
+.historial-turnos-item {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+  width: 100%;
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-xs;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease, background-color $hovy-duracion-rapida ease;
+
+  &:hover {
+    border-color: $hovy-verde-400;
+    background-color: $hovy-crema-50;
+    box-shadow: $hovy-sombra-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+}
+
+.historial-turnos-item-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-8;
+}
+
+.historial-turnos-item-fecha {
+  font-size: $hovy-texto-sm;
+  font-weight: 700;
+  color: $hovy-oliva-950;
+  font-variant-numeric: tabular-nums;
+}
+
+.historial-turnos-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $hovy-espacio-6;
+}
+
+.historial-turnos-item-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-8;
+}
+
+.historial-turnos-item-info {
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.historial-turnos-item-servicio {
+  font-size: $hovy-texto-md;
+  font-weight: 700;
+  color: $hovy-oliva-950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historial-turnos-item-dir {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-4;
+  margin-top: $hovy-espacio-2;
+  font-size: $hovy-texto-xs;
+  color: $hovy-gris-600;
+  min-width: 0;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.historial-turnos-item-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-4;
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  color: $hovy-green;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.historial-estado-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
+  border-radius: $hovy-radio-pill;
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--realizado {
+    background-color: $hovy-verde-100;
+    color: $hovy-verde-700;
+    border: 1px solid $hovy-verde-200;
+  }
+
+  &--confirmado {
+    background-color: $hovy-azul-50;
+    color: $hovy-azul-700;
+    border: 1px solid $hovy-azul-200;
+  }
+
+  &--coordinado {
+    background-color: $hovy-terracota-50;
+    color: $hovy-terracota-700;
+    border: 1px solid $hovy-terracota-200;
+  }
+
+  &--en-ejecucion {
+    background-color: $hovy-verde-100;
+    color: $hovy-green;
+    border: 1px solid $hovy-oliva-300;
+  }
+
+  &--cancelado {
+    background-color: $hovy-rojo-50;
+    color: $hovy-rojo-700;
+    border: 1px solid $hovy-rojo-100;
+  }
+}
+
+.historial-cobro-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
+  border-radius: $hovy-radio-pill;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--cobrado {
+    background-color: $hovy-verde-100;
+    color: $hovy-verde-700;
+  }
+
+  &--parcial {
+    background-color: $hovy-ambar-50;
+    color: $hovy-ambar-700;
+    border: 1px solid $hovy-ambar-200;
+  }
+
+  &--pendiente {
+    background-color: $hovy-crema-100;
+    color: $hovy-oliva-700;
+    border: 1px solid $hovy-crema-300;
+  }
+}
+
+.historial-prioridad-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: $hovy-espacio-2 $hovy-espacio-8;
+  border-radius: $hovy-radio-pill;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  background-color: $hovy-crema-100;
+  color: $hovy-oliva-700;
+  border: 1px solid $hovy-crema-300;
+
+  &--p1 {
+    background-color: $hovy-rojo-50;
+    color: $hovy-rojo-700;
+    border-color: $hovy-rojo-100;
+  }
+
+  &--p2 {
+    background-color: $hovy-verde-100;
+    color: $hovy-verde-700;
+    border-color: $hovy-verde-200;
+  }
+}
+
+.historial-turnos-vacio {
+  padding: $hovy-espacio-24 $hovy-espacio-16;
+  text-align: center;
+  background-color: $hovy-crema-50;
+  border: 1px dashed $hovy-oliva-300;
+  border-radius: $hovy-radio-lg;
+}
+
+/* --- Modal de detalle solo lectura --- */
+.historial-detalle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: $hovy-espacio-12;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.historial-detalle-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-16;
+  background-color: $hovy-crema-50;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: $hovy-espacio-6;
+    margin: 0;
+    font-size: $hovy-texto-xs;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $hovy-oliva-700;
+  }
+}
+
+.historial-detalle-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: $hovy-espacio-12;
+  font-size: $hovy-texto-sm;
+
+  span {
+    color: $hovy-gris-600;
+  }
+
+  strong {
+    color: $hovy-oliva-950;
+    text-align: right;
+  }
+}
+
+.historial-detalle-pagos {
+  list-style: none;
+  margin: $hovy-espacio-4 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-6;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $hovy-espacio-8;
+    padding: $hovy-espacio-8 $hovy-espacio-10;
+    background-color: $hovy-blanco;
+    border: 1px solid $hovy-crema-300;
+    border-radius: $hovy-radio-md;
+    font-size: $hovy-texto-xs;
+  }
+}
+
+.historial-detalle-cancelacion {
+  padding: $hovy-espacio-12 $hovy-espacio-16;
+  background-color: $hovy-rojo-50;
+  border: 1px solid $hovy-rojo-100;
+  border-radius: $hovy-radio-lg;
+  color: $hovy-rojo-700;
+  font-size: $hovy-texto-sm;
+}
