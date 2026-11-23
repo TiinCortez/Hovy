@@ -7,8 +7,8 @@ import { obtenerResumenFlujoVisita } from '../services/presupuestoService.js';
 //
 // Las que están en Pendiente son las notificaciones del panel.
 
-// Copia literal del CHECK de docs/supabase-solicitudes-visita-contactada.sql.
-export const ESTADOS_VISITA_VALIDOS = ['Pendiente', 'Contactada', 'Confirmada', 'Realizada', 'Cancelada'];
+// Copia literal del CHECK de docs/migrations/020_rechazo_solicitud_visita.sql.
+export const ESTADOS_VISITA_VALIDOS = ['Pendiente', 'Contactada', 'Confirmada', 'Realizada', 'Cancelada', 'Rechazada'];
 
 // GET /api/visitas?estado=Pendiente
 //
