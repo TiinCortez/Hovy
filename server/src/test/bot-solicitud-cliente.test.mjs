@@ -376,3 +376,60 @@ test('bot.routes: POST /clientes/:telefono/solicitudes resuelve el cliente por t
   const nombres = capa.route.stack.map((s) => s.handle.name);
   assert.deepEqual(nombres, ['resolverClientePorTelefono', 'crearSolicitudClienteBot']);
 });
+
+// ---- several services ---------------------------------------------------------
+
+test('crearSolicitudCliente: con id_servicios guarda todos los servicios y los precarga con los m² del inmueble', async () => {
+  const db = crearDb(respuestasOk());
+  const { id_servicio, ...sinUno } = BODY_OK;
+  const resultado = await ejecutar({ ...sinUno, id_servicios: [3, 5] }, db);
+  assert.equal(resultado.error, undefined);
+  assert.equal(insertDe(db, 'solicitudes_visita').servicio, 'Cortar Pasto, Poda de árboles');
+  assert.deepEqual(insertDe(db, 'solicitud_servicio'), [
+    { id_solicitud: 90, id_servicio: 3, superficie_m2: 120 },
+    { id_solicitud: 90, id_servicio: 5, superficie_m2: 120 },
+  ]);
+  assert.deepEqual(resultado.servicios.map((s) => s.id_servicio), [3, 5]);
+  assert.equal(resultado.servicio.nombre, 'Cortar Pasto', 'servicio sigue siendo el primero');
+  assert.equal(resultado.servicioCargado, true);
+});
+
+test('crearSolicitudCliente: id_servicios repetidos se guardan una sola vez', async () => {
+  const db = crearDb(respuestasOk());
+  const resultado = await ejecutar({ id_inmueble: 7, id_servicios: [5, '5', 3] }, db);
+  assert.deepEqual(resultado.servicios.map((s) => s.id_servicio), [5, 3]);
+  assert.equal(insertDe(db, 'solicitudes_visita').servicio, 'Poda de árboles, Cortar Pasto');
+});
+
+test('crearSolicitudCliente: id_servicios vacío, inválido o con un servicio fuera del catálogo devuelve 400', async () => {
+  for (const id_servicios of [[], [3, 'abc'], 'texto']) {
+    const db = crearDb(respuestasOk());
+    const resultado = await ejecutar({ id_inmueble: 7, id_servicios }, db);
+    assert.equal(resultado.error.status, 400, JSON.stringify(id_servicios));
+    assert.match(resultado.error.message, /id_servicios/);
+    assert.equal(db.consultas.length, 0);
+  }
+  const db = crearDb(respuestasOk());
+  const resultado = await ejecutar({ id_inmueble: 7, id_servicios: [3, 99] }, db);
+  assert.equal(resultado.error.status, 400);
+  assert.match(resultado.error.message, /El servicio 99 no está disponible/);
+  assert.equal(insertDe(db, 'solicitudes_visita'), undefined);
+});
+
+test('crearSolicitudCliente: más de 10 servicios devuelve 400', async () => {
+  const db = crearDb(respuestasOk());
+  const resultado = await ejecutar({ id_inmueble: 7, id_servicios: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] }, db);
+  assert.equal(resultado.error.status, 400);
+  assert.match(resultado.error.message, /10/);
+});
+
+test('crearSolicitudClienteBot: con varios servicios el mensaje los nombra a todos', async () => {
+  const res = { status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
+  await crearSolicitudClienteBot(
+    { cliente: CLIENTE, body: {} },
+    res,
+    { crear: async () => ({ solicitud: { id_solicitud: 90, direccion: 'Capitán Martel 1900' }, servicio: SERVICIOS[0], servicios: SERVICIOS, servicioCargado: true }) },
+  );
+  assert.equal(res.code, 201);
+  assert.match(res.body.mensaje, /Recibimos tu pedido de Cortar Pasto y Poda de árboles para Capitán Martel 1900/);
+});

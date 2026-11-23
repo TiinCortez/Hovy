@@ -107,6 +107,28 @@ const superficieDelInmueble = (inmueble) => {
   return null;
 };
 
+// A WhatsApp list holds up to 10 rows, so no request can carry more services.
+export const MAX_SERVICIOS_SOLICITUD = 10;
+
+// Services of the request: `id_servicios` (array, several services) or the
+// original `id_servicio` (one). Returns { ids } without repeats, or { error }.
+const leerIdsServicios = (body) => {
+  if (body.id_servicios === undefined) {
+    const id = parsearIdSolicitud(body.id_servicio);
+    return id ? { ids: [id] } : { error: 'id_servicio es obligatorio y tiene que ser un número entero positivo.' };
+  }
+  const lista = body.id_servicios;
+  const ids = Array.isArray(lista) ? lista.map((valor) => parsearIdSolicitud(valor)) : [];
+  if (ids.length === 0 || ids.some((id) => !id)) {
+    return { error: 'id_servicios tiene que ser una lista de números enteros positivos, con al menos uno.' };
+  }
+  const unicos = [...new Set(ids)];
+  if (unicos.length > MAX_SERVICIOS_SOLICITUD) {
+    return { error: `id_servicios admite como máximo ${MAX_SERVICIOS_SOLICITUD} servicios.` };
+  }
+  return { ids: unicos };
+};
+
 export const crearSolicitudCliente = async ({
   cliente,
   body = {},
@@ -126,8 +148,9 @@ export const crearSolicitudCliente = async ({
   const idInmueble = parsearIdSolicitud(body.id_inmueble);
   if (!idInmueble) errores.push('id_inmueble es obligatorio y tiene que ser un número entero positivo.');
 
-  const idServicio = parsearIdSolicitud(body.id_servicio);
-  if (!idServicio) errores.push('id_servicio es obligatorio y tiene que ser un número entero positivo.');
+  const pedidos = leerIdsServicios(body);
+  if (pedidos.error) errores.push(pedidos.error);
+  const idsServicios = pedidos.ids ?? [];
 
   // Optional chosen slot (the bot shows the free slots of the day and the client
   // taps one). It is a preference, not a reservation: it defines the franja when
@@ -172,10 +195,15 @@ export const crearSolicitudCliente = async ({
   const catalogo = await listarServicios();
   if (catalogo.error) return catalogo;
 
-  const servicio = (catalogo.data ?? []).find((item) => Number(item.id_servicio) === idServicio);
-  if (!servicio) {
-    return falla(400, `El servicio ${idServicio} no está disponible. Elegí uno de la lista de servicios.`);
+  const servicios = [];
+  for (const idServicio of idsServicios) {
+    const elegido = (catalogo.data ?? []).find((item) => Number(item.id_servicio) === idServicio);
+    if (!elegido) {
+      return falla(400, `El servicio ${idServicio} no está disponible. Elegí uno de la lista de servicios.`);
+    }
+    servicios.push(elegido);
   }
+  const servicio = servicios[0];
 
   // A bot retry (or a double tap) must not create a second open request for the
   // same property: open = client request still waiting for its turno.
@@ -229,7 +257,7 @@ export const crearSolicitudCliente = async ({
       latitud: inmueble.latitud ?? null,
       longitud: inmueble.longitud ?? null,
       superficie_aproximada: superficie,
-      servicio: servicio.nombre,
+      servicio: servicios.map((s) => s.nombre).join(', '),
       fecha_preferida: fechaPreferida,
       franja_preferida: franja,
       nota_horario: notaConHorario(horario, textoOpcional(body.nota_horario)),
@@ -251,15 +279,18 @@ export const crearSolicitudCliente = async ({
     return falla(500, 'No se pudo registrar el pedido. Intentá de nuevo más tarde.');
   }
 
-  // Preload the chosen service with the property's m2 so the internal estimate
+  // Preload the chosen services with the property's m2 so the internal estimate
   // is ready for the admin. If it fails the request is still valid: the admin
   // loads the service by hand, as with any confirmed visit. With a pending visit
   // there is no estimate yet: the declared m2 are not a basis to price on.
   let servicioCargado = false;
   if (superficie !== null && !requiereVisita) {
+    const filas = idsServicios.map((idServicio) => ({
+      id_solicitud: solicitud.id_solicitud, id_servicio: idServicio, superficie_m2: superficie,
+    }));
     const { error: errorServicio } = await db
       .from('solicitud_servicio')
-      .insert({ id_solicitud: solicitud.id_solicitud, id_servicio: idServicio, superficie_m2: superficie });
+      .insert(filas.length === 1 ? filas[0] : filas);
 
     if (errorServicio) {
       console.error('Error al precargar el servicio del pedido del cliente:', errorServicio);
@@ -268,5 +299,5 @@ export const crearSolicitudCliente = async ({
     }
   }
 
-  return { solicitud, servicio, servicioCargado, requiereVisita };
+  return { solicitud, servicio, servicios, servicioCargado, requiereVisita };
 };

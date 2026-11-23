@@ -132,9 +132,10 @@ export default function VisitaDetalleCard({
                       className="text-secondary text-uppercase fw-bold d-block mb-1"
                       style={{ fontSize: 'var(--hovy-texto-xs)', letterSpacing: '0.04em' }}
                     >
-                      Servicio solicitado
+                      {visita.servicio.includes(', ') ? 'Servicios solicitados' : 'Servicio solicitado'}
                     </span>
-                    <span className="fw-bold text-dark fs-6 d-block text-truncate">{visita.servicio}</span>
+                    {/* Several services come joined with ", " from the bot: wrap instead of cutting them off. */}
+                    <span className="fw-bold text-dark fs-6 d-block text-break">{visita.servicio}</span>
                   </div>
                 </div>
               </div>

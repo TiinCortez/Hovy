@@ -29,6 +29,31 @@ const estaVacio = (valor) =>
 
 const textoOpcional = (valor) => (estaVacio(valor) ? null : String(valor).trim());
 
+// A WhatsApp list holds up to 10 rows, so no request can carry more services.
+const MAX_SERVICIOS_VISITA = 10;
+
+// Requested services, as written in the `servicio` column: `servicios` (array
+// of names, several services) wins over the original `servicio` (one name).
+// The names are joined with ", " without repeats (case-insensitive). The staff
+// loads the priced services later, on the visit (PUT .../visitas/:id/servicios).
+export const leerServiciosVisita = (body = {}) => {
+  if (body.servicios === undefined) return { valor: textoOpcional(body.servicio) };
+  const lista = body.servicios;
+  if (!Array.isArray(lista) || lista.some((nombre) => typeof nombre !== 'string')) {
+    return { error: 'servicios tiene que ser una lista de nombres de servicio.' };
+  }
+  const vistos = new Set();
+  const nombres = [];
+  for (const nombre of lista.map((n) => n.trim()).filter(Boolean)) {
+    const clave = nombre.toLowerCase();
+    if (!vistos.has(clave)) { vistos.add(clave); nombres.push(nombre); }
+  }
+  if (nombres.length > MAX_SERVICIOS_VISITA) {
+    return { error: `servicios admite como máximo ${MAX_SERVICIOS_VISITA} servicios.` };
+  }
+  return { valor: nombres.length > 0 ? nombres.join(', ') : null };
+};
+
 // Si el número ya es cliente, la solicitud queda enlazada desde el alta. Un
 // error acá no frena la solicitud: id_cliente es nullable y se puede enlazar
 // después, cuando se concrete la visita.
@@ -112,6 +137,9 @@ export const crearSolicitudVisita = async (req, res) => {
     }
   }
 
+  const serviciosPedidos = leerServiciosVisita(body);
+  if (serviciosPedidos.error) errores.push(serviciosPedidos.error);
+
   if (errores.length > 0) {
     return res.status(400).json({ ok: false, error: errores.join(' ') });
   }
@@ -160,7 +188,7 @@ export const crearSolicitudVisita = async (req, res) => {
         apellido: String(body.apellido).trim(),
         ...direccion,
         superficie_aproximada: superficieAproximada,
-        servicio: textoOpcional(body.servicio),
+        servicio: serviciosPedidos.valor,
         fecha_preferida: fechaPreferida,
         franja_preferida: franja,
         nota_horario: textoOpcional(body.nota_horario),

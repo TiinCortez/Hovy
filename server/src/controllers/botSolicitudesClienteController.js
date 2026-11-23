@@ -2,7 +2,7 @@ import { responderErrorServicio } from '../utils/solicitudesVisita.js';
 import { crearSolicitudCliente, consultarDisponibilidadCliente } from '../services/solicitudClienteService.js';
 
 // POST /api/bot/clientes/:telefono/solicitudes
-// body: { id_inmueble, id_servicio, fecha_preferida?, franja_preferida?, hora_desde?, hora_hasta?, nota_horario? }
+// body: { id_inmueble, id_servicio | id_servicios[], fecha_preferida?, franja_preferida?, hora_desde?, hora_hasta?, nota_horario? }
 // hora_desde/hora_hasta (HH:MM): the slot the client tapped; a preference, not a reservation.
 //
 // An existing client asks for a turno on one of their properties. The request
@@ -17,6 +17,8 @@ export const crearSolicitudClienteBot = async (req, res, deps) => {
     if (resultado.error) return responderErrorServicio(res, resultado.error);
 
     const { solicitud, servicio, servicioCargado, requiereVisita = false } = resultado;
+    const nombres = (resultado.servicios?.length ? resultado.servicios : [servicio]).map((s) => s.nombre);
+    const pedido = nombres.length > 1 ? nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] : nombres[0];
 
     // First turno on the property: nobody measured it yet, so the budget waits
     // for the physical visit (see crearSolicitudCliente).
@@ -26,7 +28,7 @@ export const crearSolicitudClienteBot = async (req, res, deps) => {
 
     return res.status(201).json({
       ok: true,
-      mensaje: `Recibimos tu pedido de ${servicio.nombre} para ${solicitud.direccion}. ${siguientePaso}`,
+      mensaje: `Recibimos tu pedido de ${pedido} para ${solicitud.direccion}. ${siguientePaso}`,
       data: solicitud,
       servicio_cargado: servicioCargado,
       requiere_visita: requiereVisita,
