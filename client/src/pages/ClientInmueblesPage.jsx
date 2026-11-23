@@ -4,7 +4,7 @@ import {
   ArrowLeft, MoreVertical, CheckCircle2, Shield, 
   Mail, FileText, Edit2, Phone, MapPin, Building2, Calendar,
   Search, Plus, Clock, User, RotateCcw, Trash2,
-  ChevronDown, ChevronUp, Bell, AlertTriangle, MessageCircle, Filter
+  ChevronDown, ChevronUp, Bell, AlertTriangle, MessageCircle, Filter, History
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -15,6 +15,7 @@ import InmuebleDetalleModal from '../components/ui/InmuebleDetalleModal';
 import { obtenerEnlaceUbicacionWhatsApp } from '../components/ui/inmuebleUbicacion';
 import TurnoDetalleModal from '../components/turnos/TurnoDetalleModal';
 import ModificarTurnoModal from '../components/turnos/ModificarTurnoModal';
+import HistorialTurnosClienteModal from '../components/clientes/HistorialTurnosClienteModal';
 import ClienteService from '../services/api/cliente.service';
 import InmuebleService from '../services/api/inmueble.service';
 import TurnoService from '../services/api/turno.service';
@@ -44,6 +45,7 @@ export default function ClientInmueblesPage() {
   const [turnos, setTurnos] = useState([]);
   const [isTurnoDetalleOpen, setIsTurnoDetalleOpen] = useState(false);
   const [isModificarTurnoOpen, setIsModificarTurnoOpen] = useState(false);
+  const [isHistorialOpen, setIsHistorialOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // NUEVOS ESTADOS PARA BUSCADOR Y FILTROS
@@ -401,7 +403,14 @@ export default function ClientInmueblesPage() {
               </Button>
             )}
 
-            
+            <Button
+              variant="light"
+              className="btn-sm border shadow-sm bg-white text-dark fw-semibold"
+              onClick={() => setIsHistorialOpen(true)}
+            >
+              <History size={16} aria-hidden="true" /> Historial
+            </Button>
+
             <Button 
               variant="light" 
               className="btn-sm border shadow-sm bg-white text-dark fw-semibold"
@@ -766,6 +775,15 @@ export default function ClientInmueblesPage() {
         }}
         onChangeState={handleChangeTurnoState}
       />
+
+      {isHistorialOpen && (
+        <HistorialTurnosClienteModal
+          onClose={() => setIsHistorialOpen(false)}
+          idCliente={cliente.id_cliente}
+          nombreCliente={nombreMostrar}
+          inmuebles={inmuebles}
+        />
+      )}
 
       {inmuebleABorrar && (
         <ConfirmarModal

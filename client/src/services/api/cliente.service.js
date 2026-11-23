@@ -17,6 +17,12 @@ const ClienteService = {
   update: async (telefono, clienteData) => {
     const response = await httpService.put(`/clientes/${telefono}`, clienteData);
     return response.data;
+  },
+
+  // Obtener el historial de turnos del cliente (solo lectura)
+  getHistorialTurnos: async (idCliente) => {
+    const response = await httpService.get(`/clientes/${idCliente}/turnos`);
+    return response.data;
   }
 };
 
