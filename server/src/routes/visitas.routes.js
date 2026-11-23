@@ -16,6 +16,7 @@ import {
   obtenerEstimadoVisitaStaff,
   cancelarSolicitudVisita,
 } from '../controllers/botPresupuestoStaffController.js';
+import { rechazarSolicitudVisita } from '../controllers/rechazoVisitaController.js';
 
 const router = Router();
 
@@ -45,6 +46,9 @@ router.get('/:id/estimado', usarAdminDelJwt, obtenerEstimadoVisitaStaff);
 router.post('/:id/presupuesto', usarAdminDelJwt, cargarPresupuestoStaff);
 // POST /api/visitas/:id/cancelar    (Confirmada -> Cancelada)
 router.post('/:id/cancelar', usarAdminDelJwt, cancelarSolicitudVisita);
+// POST /api/visitas/:id/rechazar    (contacto nuevo Pendiente/Contactada -> Rechazada, body: { motivo? })
+// Borra la sesión de WhatsApp del número y le avisa el motivo (ventana de 24 h).
+router.post('/:id/rechazar', usarAdminDelJwt, rechazarSolicitudVisita);
 // GET  /api/visitas/:id/disponibilidad?fecha=&desde=&hasta=&dias=&limite=
 // (:id solo ubica la visita en la pantalla; la disponibilidad es de la agenda)
 router.get('/:id/disponibilidad', usarAdminDelJwt, consultarDisponibilidadStaff);

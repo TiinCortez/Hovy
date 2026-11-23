@@ -53,7 +53,7 @@ const VISTAS = [
 
 const TABS_POR_VISTA = {
   activas: ['Todas', 'Pendiente', 'Contactada'],
-  historial: ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada'],
+  historial: ['Todas', 'Pendiente', 'Contactada', 'Confirmada', 'Cancelada', 'Rechazada'],
 };
 
 // Client requests arrive Confirmada (property already measured) or Pendiente
@@ -86,6 +86,7 @@ const BADGE_TIPO = {
   Contactada: 'info',
   Confirmada: 'exito',
   Cancelada: 'neutro',
+  Rechazada: 'neutro',
 };
 
 // Compact status badge (top right) and secondary chips (under the name)
@@ -100,6 +101,7 @@ const EMPTY_TEXT = {
   Contactada: 'No hay solicitudes en estado Contactada.',
   Confirmada: 'No hay solicitudes en estado Confirmada.',
   Cancelada: 'No hay solicitudes en estado Cancelada.',
+  Rechazada: 'No hay solicitudes rechazadas.',
 };
 
 const time = (visita) => new Date(visita.created_at).getTime() || 0;
@@ -159,7 +161,7 @@ export default function VisitasPage() {
   const tabs = tabsDe(vista, grupo);
 
   const counts = useMemo(() => {
-    const result = { Todas: visitasDelGrupo.length, Pendiente: 0, Contactada: 0, Confirmada: 0, Cancelada: 0 };
+    const result = { Todas: visitasDelGrupo.length, Pendiente: 0, Contactada: 0, Confirmada: 0, Cancelada: 0, Rechazada: 0 };
     visitasDelGrupo.forEach((v) => {
       const tab = getTab(v);
       if (tab in result) result[tab] += 1;

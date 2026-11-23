@@ -11,6 +11,7 @@ import VisitaService from '../services/api/visita.service';
 import ConfirmarVisitaForm from '../components/visitas/ConfirmarVisitaForm.jsx';
 import FlujoConfirmada from '../components/visitas/FlujoConfirmada.jsx';
 import CancelarVisitaModal from '../components/visitas/CancelarVisitaModal.jsx';
+import RechazarVisitaModal from '../components/visitas/RechazarVisitaModal.jsx';
 import ResumenVisitaPanel from '../components/visitas/ResumenVisitaPanel.jsx';
 import VisitaDetalleCard from '../components/visitas/VisitaDetalleCard.jsx';
 import VisitaDetalleSkeleton from '../components/skeletons/VisitaDetalleSkeleton';
@@ -26,6 +27,7 @@ export default function VisitaDetallePage() {
   const [contactando, setContactando] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [showReject, setShowReject] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -134,6 +136,30 @@ export default function VisitaDetallePage() {
             refreshVisita('Visita cancelada.');
           }}
         />
+      )}
+      {visita.tipo_solicitud !== 'cliente' && visita.id_cliente == null && ['Pendiente', 'Contactada'].includes(visita.estado) && (
+        <div>
+          <Button variant="light" className="text-danger d-flex align-items-center gap-2" onClick={() => setShowReject(true)}>
+            <XCircle size={18} /> Rechazar solicitud
+          </Button>
+        </div>
+      )}
+      {showReject && (
+        <RechazarVisitaModal
+          idSolicitud={visita.id_solicitud}
+          onClose={() => setShowReject(false)}
+          onRejected={(respuesta) => {
+            setShowReject(false);
+            refreshVisita(respuesta?.aviso_enviado
+              ? 'Solicitud rechazada. Le avisamos por WhatsApp.'
+              : 'Solicitud rechazada. No le pudimos avisar por WhatsApp (puede que no haya escrito en las últimas 24 h).');
+          }}
+        />
+      )}
+      {visita.estado === 'Rechazada' && (
+        <p className="text-secondary small m-0">
+          Esta solicitud fue rechazada{visita.motivo_rechazo ? `. Motivo: ${visita.motivo_rechazo}` : ''}. No admite más cambios.
+        </p>
       )}
       {visita.estado === 'Confirmada' && <FlujoConfirmada visita={visita} onRefresh={refreshVisita} />}
       {visita.estado === 'Realizada' && <ResumenVisitaPanel visita={visita} />}

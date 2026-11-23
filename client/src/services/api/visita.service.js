@@ -49,6 +49,12 @@ const VisitaService = {
     return response.data;
   },
 
+  // New contact Pendiente/Contactada -> Rechazada. The reason is optional and is sent to the person.
+  rechazar: async (idSolicitud, motivo) => {
+    const response = await httpService.post(`/visitas/${idSolicitud}/rechazar`, motivo ? { motivo } : {});
+    return response.data;
+  },
+
   // params: { fecha?, desde?, hasta?, dias?, limite? } -> data: [{ fecha, disponibles: [{ inicio_desde, hasta }] }]
   getDisponibilidad: async (idSolicitud, params) => {
     const response = await httpService.get(`/visitas/${idSolicitud}/disponibilidad`, { params });
