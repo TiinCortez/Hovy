@@ -24,6 +24,11 @@ import {
   validarDireccionEscrita,
 } from '../controllers/botInmueblesController.js';
 import {
+  getDeudasDelCliente,
+  crearCobroCliente,
+  consultarCobroCliente,
+} from '../controllers/botCobrosClienteController.js';
+import {
   getTurnosFuturosDelCliente,
   confirmarTurnoCliente,
   cancelarTurnoCliente,
@@ -131,6 +136,14 @@ router.get('/clientes/:telefono/turnos', resolverClientePorTelefono, getTurnosFu
 // POST   /api/bot/clientes/:telefono/turnos/:id/cancelar
 router.post('/clientes/:telefono/turnos/:id/confirmar', resolverClientePorTelefono, confirmarTurnoCliente);
 router.post('/clientes/:telefono/turnos/:id/cancelar', resolverClientePorTelefono, cancelarTurnoCliente);
+
+// Deudas y pago por Mercado Pago del cliente (solo sus turnos; el pago entra a la cuenta del administrador).
+// GET    /api/bot/clientes/:telefono/deudas
+// POST   /api/bot/clientes/:telefono/turnos/:id/cobro   { monto? }  -> link de pago (total o parcial)
+// GET    /api/bot/clientes/:telefono/turnos/:id/cobro               -> "¿ya pagué?"
+router.get('/clientes/:telefono/deudas', resolverClientePorTelefono, getDeudasDelCliente);
+router.post('/clientes/:telefono/turnos/:id/cobro', resolverClientePorTelefono, crearCobroCliente);
+router.get('/clientes/:telefono/turnos/:id/cobro', resolverClientePorTelefono, consultarCobroCliente);
 
 // Pedido de turno de un cliente existente: elige inmueble, servicio y fecha, y
 // llega a "Solicitudes -> Clientes" listo para presupuesto (estado Confirmada).
