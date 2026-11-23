@@ -30,11 +30,29 @@ export const armarMensajePendientesCobro = (turnos) => {
   return lineas.join('\n');
 };
 
-export const obtenerTurnosPendientesCobro = async ({ limite = 20, cliente = supabaseAdmin } = {}) => {
+// Sin idCliente trae los de todos los clientes (uso del staff). Con idCliente, solo los turnos de los
+// inmuebles de ese cliente (uso del propio cliente por WhatsApp).
+export const obtenerTurnosPendientesCobro = async ({ limite = 20, idCliente = null, cliente = supabaseAdmin } = {}) => {
   const limiteNum = Math.max(1, Math.min(100, Number(limite) || 20));
 
   try {
-    const { data: turnos, error: errTurnos } = await cliente
+    let idsInmueble = null;
+    if (idCliente !== null && idCliente !== undefined) {
+      const { data: inmuebles, error: errInmuebles } = await cliente
+        .from('inmuebles')
+        .select('id_inmueble')
+        .eq('id_cliente', idCliente);
+
+      if (errInmuebles) {
+        console.error('[turnosPendientesCobro] error al leer inmuebles del cliente:', errInmuebles);
+        return falla(500, ERROR_DB);
+      }
+
+      idsInmueble = (inmuebles ?? []).map((i) => i.id_inmueble);
+      if (idsInmueble.length === 0) return { data: [], mensaje: armarMensajePendientesCobro([]) };
+    }
+
+    let consultaTurnos = cliente
       .from('turnos')
       .select(`
         id_turno,
@@ -65,7 +83,11 @@ export const obtenerTurnosPendientesCobro = async ({ limite = 20, cliente = supa
         )
       `)
       .eq('estado', 'Realizado')
-      .eq('cobrado', false)
+      .eq('cobrado', false);
+
+    if (idsInmueble) consultaTurnos = consultaTurnos.in('id_inmueble', idsInmueble);
+
+    const { data: turnos, error: errTurnos } = await consultaTurnos
       .order('fecha_programada', { ascending: true })
       .order('inicio_desde', { ascending: true })
       .limit(limiteNum);
