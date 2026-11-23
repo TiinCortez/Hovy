@@ -206,6 +206,10 @@ export default function ClientsPage() {
 
   const panelAbierto = Boolean(selectedClient);
 
+  if (loading) {
+    return <ClientesSkeleton />;
+  }
+
   return (
     <div className="d-flex flex-column gap-4 pb-5">
       {/* Cabecera: título + buscador protagonista + acción principal */}
@@ -303,9 +307,7 @@ export default function ClientsPage() {
       )}
 
       {/* Contenido principal: Master-Detail (grilla destilada + panel lateral) */}
-      {loading ? (
-        <ClientesSkeleton />
-      ) : filteredClients.length === 0 ? (
+      {filteredClients.length === 0 ? (
         <Card className="p-5 text-center border-0 shadow-sm rounded-4">
           <p className="fw-semibold text-dark mb-1">
             {clients.length === 0

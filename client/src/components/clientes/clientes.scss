@@ -340,6 +340,7 @@
 
 .clientes-card-identidad {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: $hovy-espacio-12;
   min-width: 0;
@@ -921,6 +922,52 @@
   font-size: $hovy-texto-sm;
   font-variant-numeric: tabular-nums;
   color: $hovy-oliva-700;
+}
+
+/* --- Skeleton de página completa --- */
+.clientes-card.is-skeleton {
+  pointer-events: none;
+
+  &:hover {
+    border-color: $hovy-crema-300;
+    box-shadow: $hovy-sombra-sm;
+  }
+}
+
+.clientes-skeleton-buscador {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  @media (min-width: 768px) {
+    width: 300px;
+    flex: 0 1 300px;
+  }
+}
+
+.clientes-skeleton-cta {
+  width: 44px;
+  flex-shrink: 0;
+
+  @media (min-width: 576px) {
+    width: 9.25rem;
+  }
+}
+
+// Móvil muestra 5 tarjetas, tablet (md) 8 (4x2) y desktop (xl) 12 (4x3) para cubrir todo el viewport.
+.clientes-skeleton-extra-md {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.clientes-skeleton-extra-xl {
+  display: none;
+
+  @media (min-width: 1200px) {
+    display: flex;
+  }
 }
 
 @keyframes clientesDrawerIn {
