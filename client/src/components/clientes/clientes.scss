@@ -1,0 +1,949 @@
+@use '../../styles/tokens' as *;
+
+// Estilos de la vista de Clientes: tarjetas destiladas + panel lateral (master-detail).
+
+/* --- Cabecera y buscador protagonista --- */
+.clientes-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-12;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: $hovy-espacio-16;
+  }
+}
+
+.clientes-titulo {
+  margin: 0;
+  font-size: $hovy-texto-3xl;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: $hovy-oliva-950;
+
+  @media (min-width: 768px) {
+    font-size: $hovy-texto-4xl;
+  }
+}
+
+.clientes-cabecera-controles {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-10;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: auto;
+  }
+}
+
+.clientes-buscador {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-8;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 42px;
+  padding: $hovy-espacio-8 $hovy-espacio-14;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-oliva-300;
+  border-radius: $hovy-radio-pill;
+  box-shadow: $hovy-sombra-xs;
+  transition: border-color $hovy-duracion-rapida ease, box-shadow $hovy-duracion-rapida ease;
+
+  &:focus-within {
+    border-color: $hovy-green;
+    box-shadow: 0 0 0 3px rgba($hovy-verde-500, 0.25);
+  }
+
+  @media (min-width: 768px) {
+    width: 300px;
+    flex: 0 1 300px;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    font-size: $hovy-texto-md;
+    color: $hovy-oliva-950;
+    background: transparent;
+    border: 0;
+    outline: none;
+
+    &::placeholder {
+      color: $hovy-oliva-600;
+    }
+  }
+}
+
+.clientes-buscador-limpiar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  color: $hovy-oliva-600;
+  background: transparent;
+  border: 0;
+  border-radius: $hovy-radio-circulo;
+  cursor: pointer;
+
+  &:hover { color: $hovy-oliva-950; background-color: $hovy-crema-200; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+}
+
+/* --- Barra unificada de resumen + filtros --- */
+.clientes-barra-filtros {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-10;
+
+  @media (min-width: 992px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.clientes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $hovy-espacio-8;
+}
+
+.clientes-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  min-height: 36px;
+  padding: $hovy-espacio-6 $hovy-espacio-14;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-oliva-800;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-pill;
+  box-shadow: $hovy-sombra-xs;
+  cursor: pointer;
+  transition:
+    background-color $hovy-duracion-rapida ease,
+    border-color $hovy-duracion-rapida ease,
+    color $hovy-duracion-rapida ease;
+
+  &:hover:not(.is-active) {
+    background-color: $hovy-crema-50;
+    border-color: $hovy-crema-500;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+
+  &.is-active {
+    color: $hovy-blanco;
+    background-color: $hovy-green;
+    border-color: $hovy-green;
+
+    .clientes-chip-conteo {
+      color: $hovy-blanco;
+      background-color: rgba($hovy-blanco, 0.18);
+    }
+  }
+}
+
+.clientes-chip-conteo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 1px $hovy-espacio-6;
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-oliva-700;
+  background-color: $hovy-crema-200;
+  border-radius: $hovy-radio-pill;
+}
+
+.clientes-barra-secundaria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $hovy-espacio-8;
+}
+
+.clientes-inactivos-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  min-height: 36px;
+  padding: $hovy-espacio-6 $hovy-espacio-12;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-oliva-700;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: $hovy-radio-pill;
+  cursor: pointer;
+  transition:
+    background-color $hovy-duracion-rapida ease,
+    border-color $hovy-duracion-rapida ease,
+    color $hovy-duracion-rapida ease;
+
+  &:hover:not(.is-active) {
+    background-color: rgba($hovy-blanco, 0.7);
+    color: $hovy-oliva-950;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+
+  &.is-active {
+    color: $hovy-ambar-700;
+    background-color: $hovy-ambar-50;
+    border-color: $hovy-ambar-200;
+  }
+}
+
+.form-select.clientes-orden {
+  width: auto;
+  min-height: 36px;
+  padding-block: $hovy-espacio-6;
+  padding-inline: $hovy-espacio-14 $hovy-espacio-32;
+  font-size: $hovy-texto-sm;
+  font-weight: 500;
+  color: $hovy-texto-secundario;
+  background-color: $hovy-blanco;
+  border-color: $hovy-crema-300;
+  border-radius: $hovy-radio-pill;
+  box-shadow: $hovy-sombra-xs;
+  cursor: pointer;
+}
+
+.clientes-aviso-inactivos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-8;
+  padding: $hovy-espacio-10 $hovy-espacio-16;
+  font-size: $hovy-texto-sm;
+  color: $hovy-ambar-700;
+  background-color: $hovy-ambar-50;
+  border: 1px solid $hovy-ambar-200;
+  border-radius: $hovy-radio-md;
+
+  button {
+    padding: 0;
+    font-size: $hovy-texto-sm;
+    font-weight: 700;
+    color: inherit;
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+  }
+}
+
+/* --- Layout Master-Detail --- */
+.clientes-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: $hovy-espacio-20;
+}
+
+.clientes-grid-contenedor {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.clientes-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: $hovy-espacio-14;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  // Cuando el panel lateral está abierto en desktop, la grilla pasa a 2 columnas para mantener aire.
+  &.con-panel {
+    @media (min-width: 992px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    @media (min-width: 1200px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+/* --- Tarjeta destilada (altura uniforme, sin cajas anidadas) --- */
+.clientes-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: $hovy-espacio-14;
+  height: 100%;
+  padding: $hovy-espacio-16;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-lg;
+  box-shadow: $hovy-sombra-sm;
+  transition:
+    border-color $hovy-duracion-rapida ease,
+    box-shadow $hovy-duracion-rapida ease,
+    transform $hovy-duracion-rapida ease;
+
+  &:hover {
+    border-color: $hovy-oliva-400;
+    box-shadow: $hovy-sombra-md;
+  }
+
+  &:has(.clientes-card-trigger:focus-visible) {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+
+  &.is-selected {
+    border-color: $hovy-green;
+    box-shadow: 0 0 0 2px rgba($hovy-green, 0.14), $hovy-sombra-md;
+  }
+}
+
+.clientes-card-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-10;
+}
+
+.clientes-card-identidad {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-12;
+  min-width: 0;
+}
+
+.clientes-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  font-size: $hovy-texto-sm;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: $hovy-radio-md;
+
+  &--casual {
+    color: $hovy-oliva-900;
+    background-color: $hovy-oliva-100;
+  }
+
+  &--fijo {
+    color: $hovy-verde-850;
+    background-color: $hovy-verde-200;
+  }
+
+  &--empresa {
+    color: $hovy-crema-200;
+    background-color: $hovy-green;
+  }
+
+  &--inactivo {
+    color: $hovy-oliva-600;
+    background-color: $hovy-crema-300;
+  }
+
+  &--lg {
+    width: 46px;
+    height: 46px;
+    font-size: $hovy-texto-md;
+    border-radius: 14px;
+  }
+}
+
+.clientes-card-titulo-wrap {
+  min-width: 0;
+}
+
+.clientes-card-nombre {
+  margin: 0;
+  font-size: $hovy-texto-base;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+// Botón nativo estirado sobre la tarjeta (evita anidar <a> dentro de role="button").
+.clientes-card-trigger {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  font: inherit;
+  color: $hovy-oliva-950;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.clientes-card-meta-tipo {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  margin-top: $hovy-espacio-2;
+}
+
+.clientes-tipo-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $hovy-espacio-8;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  line-height: 1.3;
+  border-radius: $hovy-radio-pill;
+
+  &--fijo {
+    color: $hovy-verde-800;
+    background-color: $hovy-verde-100;
+  }
+
+  &--empresa {
+    color: $hovy-verde-850;
+    background-color: $hovy-verde-200;
+  }
+
+  &--casual {
+    color: $hovy-oliva-700;
+    background-color: $hovy-crema-200;
+  }
+
+  &--inactivo {
+    color: $hovy-ambar-700;
+    background-color: $hovy-ambar-50;
+  }
+}
+
+.clientes-tipo-sutil {
+  font-size: $hovy-texto-xs;
+  font-weight: 500;
+  color: $hovy-oliva-600;
+}
+
+.clientes-card-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: $hovy-oliva-500;
+  transition: transform $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
+
+  .clientes-card:hover &,
+  .clientes-card.is-selected & {
+    color: $hovy-green;
+    transform: translateX(2px);
+  }
+}
+
+/* Capa 2: señal operativa única */
+.clientes-card-operativa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $hovy-espacio-8;
+  min-height: 26px;
+  font-size: $hovy-texto-sm;
+  font-variant-numeric: tabular-nums;
+}
+
+.clientes-dato-inmuebles {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  font-weight: 500;
+  color: $hovy-oliva-800;
+
+  svg { color: $hovy-oliva-600; flex-shrink: 0; }
+}
+
+.clientes-sep {
+  color: $hovy-crema-500;
+}
+
+.clientes-chip-turno {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  padding: 2px $hovy-espacio-10;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-verde-850;
+  background-color: $hovy-verde-100;
+  border-radius: $hovy-radio-pill;
+}
+
+.clientes-punto-turno {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background-color: $hovy-esmeralda-600;
+  border-radius: $hovy-radio-circulo;
+}
+
+/* Capa 3: pie limpio con teléfono y acceso directo a WhatsApp */
+.clientes-card-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-8;
+  padding-top: $hovy-espacio-12;
+  border-top: 1px solid $hovy-crema-100;
+}
+
+.clientes-telefono {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: $hovy-texto-sm;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-texto-secundario;
+}
+
+.clientes-wa-btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  flex-shrink: 0;
+  color: $hovy-esmeralda-600;
+  background-color: $hovy-verde-100;
+  border-radius: $hovy-radio-circulo;
+  text-decoration: none;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
+
+  &:hover {
+    color: $hovy-verde-850;
+    background-color: $hovy-verde-200;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* --- Panel lateral de vista rápida (Desktop sticky / Mobile bottom sheet) --- */
+.clientes-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: $hovy-capa-menu;
+  background-color: rgba($hovy-verde-950, 0.42);
+  animation: clientesFadeIn $hovy-duracion-rapida ease-out;
+
+  @media (min-width: 992px) {
+    display: none;
+  }
+}
+
+.clientes-panel {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: $hovy-capa-menu;
+  display: flex;
+  flex-direction: column;
+  max-height: 84dvh;
+  background-color: $hovy-blanco;
+  border-top: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-xl $hovy-radio-xl 0 0;
+  box-shadow: $hovy-sombra-xl;
+  overflow: hidden;
+  animation: clientesSheetIn $hovy-duracion-media cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (min-width: 992px) {
+    position: sticky;
+    top: 0;
+    inset-inline: auto;
+    bottom: auto;
+    z-index: $hovy-capa-base;
+    width: 368px;
+    flex-shrink: 0;
+    max-height: calc(100vh - 120px);
+    border: 1px solid $hovy-crema-300;
+    border-radius: $hovy-radio-lg;
+    box-shadow: $hovy-sombra-md;
+    animation: clientesDrawerIn $hovy-duracion-media cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.clientes-panel-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $hovy-espacio-12;
+  padding: $hovy-espacio-20;
+  background-color: $hovy-crema-50;
+  border-bottom: 1px solid $hovy-crema-300;
+}
+
+.clientes-panel-nombre {
+  margin: 0;
+  font-size: $hovy-texto-lg;
+  font-weight: 700;
+  line-height: 1.25;
+  color: $hovy-oliva-950;
+  overflow-wrap: anywhere;
+}
+
+.clientes-panel-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  font-size: $hovy-texto-xs;
+  font-weight: 600;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: $hovy-radio-circulo;
+    background-color: currentColor;
+  }
+
+  &.is-activo { color: $hovy-esmeralda-600; }
+  &.is-inactivo { color: $hovy-ambar-700; }
+}
+
+.clientes-panel-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  flex-shrink: 0;
+  color: $hovy-texto-secundario;
+  background: transparent;
+  border: 0;
+  border-radius: $hovy-radio-circulo;
+  cursor: pointer;
+  transition: background-color $hovy-duracion-rapida ease, color $hovy-duracion-rapida ease;
+
+  &:hover { background-color: $hovy-crema-300; color: $hovy-oliva-950; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+
+  @media (pointer: coarse) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.clientes-panel-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-20;
+  padding: $hovy-espacio-20;
+  padding-bottom: calc(#{$hovy-espacio-20} + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+
+.clientes-panel-acciones-rapidas {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-8;
+}
+
+.clientes-panel-wa {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $hovy-espacio-8;
+  min-height: 40px;
+  padding: $hovy-espacio-8 $hovy-espacio-14;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-verde-850;
+  background-color: $hovy-verde-100;
+  border: 1px solid transparent;
+  border-radius: $hovy-radio-md;
+  text-decoration: none;
+  transition: background-color $hovy-duracion-rapida ease;
+
+  &:hover {
+    color: $hovy-verde-900;
+    background-color: $hovy-verde-200;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hovy-foco;
+    outline-offset: 2px;
+  }
+}
+
+.clientes-panel-copiar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $hovy-espacio-6;
+  min-height: 40px;
+  padding: $hovy-espacio-8 $hovy-espacio-12;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-oliva-900;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-md;
+  cursor: pointer;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease;
+
+  &:hover { background-color: $hovy-crema-100; border-color: $hovy-crema-500; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+}
+
+.clientes-panel-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+}
+
+.clientes-panel-rotulo {
+  margin: 0;
+  font-size: $hovy-texto-xs;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $hovy-oliva-600;
+}
+
+.clientes-panel-fila-dato {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-12;
+  padding-block: $hovy-espacio-8;
+  font-size: $hovy-texto-sm;
+  border-bottom: 1px solid $hovy-crema-100;
+
+  &:last-child { border-bottom: 0; }
+}
+
+.clientes-panel-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  color: $hovy-texto-secundario;
+  flex-shrink: 0;
+}
+
+.clientes-panel-valor {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-oliva-950;
+  text-align: right;
+
+  &.is-vacio {
+    font-weight: 500;
+    color: $hovy-oliva-500;
+  }
+}
+
+.clientes-panel-servicio {
+  padding: $hovy-espacio-12;
+  background-color: $hovy-verde-50;
+  border: 1px solid $hovy-verde-200;
+  border-radius: $hovy-radio-md;
+}
+
+.clientes-panel-servicio-fecha {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-6;
+  font-size: $hovy-texto-sm;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-verde-850;
+}
+
+.clientes-panel-servicio-desc {
+  margin-top: $hovy-espacio-4;
+  font-size: $hovy-texto-sm;
+  font-weight: 500;
+  color: $hovy-verde-600;
+}
+
+.clientes-panel-servicio-lugar {
+  display: flex;
+  align-items: center;
+  gap: $hovy-espacio-4;
+  margin-top: $hovy-espacio-4;
+  font-size: $hovy-texto-xs;
+  color: $hovy-oliva-700;
+}
+
+.clientes-panel-inmuebles {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-6;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clientes-panel-inmueble {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $hovy-espacio-10;
+  padding: $hovy-espacio-10 $hovy-espacio-12;
+  background-color: $hovy-crema-50;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-md;
+  font-size: $hovy-texto-xs;
+}
+
+.clientes-panel-inmueble-dir {
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-oliva-950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clientes-panel-inmueble-sub {
+  color: $hovy-oliva-600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clientes-panel-inmueble-m2 {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-oliva-800;
+
+  &.is-sin-medir {
+    color: $hovy-ambar-700;
+  }
+}
+
+.clientes-panel-pie {
+  display: flex;
+  flex-direction: column;
+  gap: $hovy-espacio-8;
+  padding-top: $hovy-espacio-6;
+}
+
+.clientes-panel-secundarias {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $hovy-espacio-8;
+}
+
+.clientes-panel-btn-sec {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $hovy-espacio-6;
+  min-height: 38px;
+  padding: $hovy-espacio-8 $hovy-espacio-12;
+  font-size: $hovy-texto-sm;
+  font-weight: 600;
+  color: $hovy-oliva-900;
+  background-color: $hovy-blanco;
+  border: 1px solid $hovy-crema-300;
+  border-radius: $hovy-radio-boton;
+  cursor: pointer;
+  transition: background-color $hovy-duracion-rapida ease, border-color $hovy-duracion-rapida ease;
+
+  &:hover:not(:disabled) { background-color: $hovy-crema-100; border-color: $hovy-crema-500; }
+  &:focus-visible { outline: 2px solid $hovy-foco; outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: wait; }
+
+  &.is-peligro { color: $hovy-texto-error; }
+  &.is-exito { color: $hovy-texto-exito; }
+}
+
+.clientes-pie-conteo {
+  font-size: $hovy-texto-sm;
+  font-variant-numeric: tabular-nums;
+  color: $hovy-oliva-700;
+}
+
+@keyframes clientesDrawerIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes clientesSheetIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes clientesFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clientes-panel,
+  .clientes-panel-backdrop,
+  .clientes-card,
+  .clientes-card-chevron {
+    animation: none;
+    transition: none;
+  }
+}
