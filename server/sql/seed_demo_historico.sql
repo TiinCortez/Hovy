@@ -2,7 +2,7 @@
 -- Datos DEMO históricos (dic 2025 - sep 2026) para "Evolución de ingresos y cobranzas"
 -- Ejecutar en Supabase > SQL Editor. Es idempotente: si ya hay filas DEMO-SEED no vuelve a insertar.
 -- Todo queda marcado con 'DEMO-SEED' (presupuestos.nota, trabajos.observaciones,
--- pagos.referencia_comprobante, movimientos_cuenta.concepto) y se revierte con revert_demo_historico.sql
+-- pagos.referencia_comprobante = 'DEMO-SEED-<id_trabajo>', movimientos_cuenta.concepto) y se revierte con revert_demo_historico.sql
 -- Cada trabajo: presupuesto Aceptado -> detalle -> turno Realizado/cobrado -> trabajo ejecutado
 --               -> movimiento Débito + Crédito (mismo monto, saldo de cuentas queda igual) -> pago Aprobado.
 -- Se desactivan los triggers solo dentro de esta transacción (la tabla de movimientos es de solo-agregar
@@ -177,7 +177,7 @@ BEGIN
     INSERT INTO movimientos_cuenta(id_cuenta,tipo,monto,concepto,fecha,id_presupuesto,id_trabajo)
       VALUES (r.id_cuenta,'Credito',v_total,'DEMO-SEED',(r.fecha+r.fin)::timestamptz,v_pres,v_trab) RETURNING id_movimiento INTO v_cred;
     INSERT INTO pagos(id_cliente,id_trabajo,id_movimiento,monto,medio_pago,referencia_comprobante,estado,fecha_pago,id_usuario_registro)
-      VALUES (r.id_cliente,v_trab,v_cred,v_total,r.medio,'DEMO-SEED','Aprobado',(r.fecha+r.fin)::timestamptz,r.usuario);
+      VALUES (r.id_cliente,v_trab,v_cred,v_total,r.medio,'DEMO-SEED-'||v_trab,'Aprobado',(r.fecha+r.fin)::timestamptz,r.usuario);
   END LOOP;
 END $$;
 
