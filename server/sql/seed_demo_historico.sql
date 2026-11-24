@@ -2,21 +2,23 @@
 -- Datos DEMO históricos (dic 2025 - sep 2026) para "Evolución de ingresos y cobranzas"
 -- Ejecutar en Supabase > SQL Editor. Es idempotente: si ya hay filas DEMO-SEED no vuelve a insertar.
 -- Todo queda marcado con 'DEMO-SEED' (presupuestos.nota, trabajos.observaciones,
--- pagos.referencia_comprobante = 'DEMO-SEED-<id_trabajo>', movimientos_cuenta.concepto) y se revierte con revert_demo_historico.sql
+-- pagos.referencia_comprobante, movimientos_cuenta.concepto) y se revierte con revert_demo_historico.sql
 -- Cada trabajo: presupuesto Aceptado -> detalle -> turno Realizado/cobrado -> trabajo ejecutado
 --               -> movimiento Débito + Crédito (mismo monto, saldo de cuentas queda igual) -> pago Aprobado.
--- Se desactivan los triggers solo dentro de esta transacción (la tabla de movimientos es de solo-agregar
+-- Se desactivan los triggers solo dentro del bloque DO (una transacción) (la tabla de movimientos es de solo-agregar
 -- y los triggers generarían débitos con fecha de hoy).
 -- =====================================================================
-BEGIN;
-SET LOCAL session_replication_role = replica;
-
-CREATE TEMP TABLE _seed(
-  id_cliente int, id_cuenta int, id_inmueble int, fecha date, emision timestamptz, servicio int, m2 numeric,
-  subtotal numeric, traslado numeric, km numeric, medio text, usuario bigint, prioridad text,
-  ini time, fin time, dur int, precio_comb numeric, consumo numeric, _x numeric) ON COMMIT DROP;
-
-INSERT INTO _seed VALUES
+DO $$
+DECLARE r record; v_pres int; v_turno int; v_trab int; v_cred int; v_total numeric;
+BEGIN
+  PERFORM set_config('session_replication_role','replica',true);  -- triggers off solo en esta transaccion
+  IF EXISTS (SELECT 1 FROM presupuestos WHERE nota='DEMO-SEED' AND fecha_emision < '2026-10-01' AND id_presupuesto <> 94) THEN
+    RAISE NOTICE 'Ya existen datos DEMO-SEED, no se inserta nada.'; RETURN;
+  END IF;
+  -- Corrige la fecha del débito generado por la prueba inicial (presupuesto 94), si existe.
+  UPDATE movimientos_cuenta SET fecha = TIMESTAMPTZ '2025-12-10 08:30:00+00'
+   WHERE id_presupuesto = 94 AND tipo='Debito' AND EXISTS (SELECT 1 FROM presupuestos WHERE id_presupuesto=94 AND nota='DEMO-SEED');
+  FOR r IN SELECT * FROM (VALUES
   (88,18,52,DATE '2025-12-02',TIMESTAMPTZ '2025-11-23 15:00:00-03',2,300,100000.00,2989.03,13.31,'Efectivo',4,'P3_Casual',TIME '16:30:00',TIME '18:30:00',120,2642.00,8.5,0.0),
   (88,18,65,DATE '2025-12-04',TIMESTAMPTZ '2025-12-02 15:00:00-03',6,400,30000.00,3056.40,13.61,'Efectivo',8,'P2_Fijo',TIME '16:30:00',TIME '18:30:00',120,2642.00,8.5,0.0),
   (82,8,49,DATE '2025-12-10',TIMESTAMPTZ '2025-12-02 15:00:00-03',2,350,50000.00,3644.77,16.23,'Efectivo',4,'P3_Casual',TIME '08:30:00',TIME '11:00:00',150,2642.00,8.5,0.0),
@@ -148,18 +150,9 @@ INSERT INTO _seed VALUES
   (93,15,57,DATE '2026-09-21',TIMESTAMPTZ '2026-09-15 15:00:00-03',6,400,402700.00,187370.14,1048.87,'Efectivo',4,'P3_Casual',TIME '08:30:00',TIME '11:00:00',150,2552.00,7.0,0.0),
   (82,8,49,DATE '2026-09-25',TIMESTAMPTZ '2026-09-16 15:00:00-03',5,95,80000.00,1042.00,4.64,'Efectivo',4,'P3_Casual',TIME '08:30:00',TIME '11:00:00',150,2642.00,8.5,0.0),
   (93,15,57,DATE '2026-09-28',TIMESTAMPTZ '2026-09-20 15:00:00-03',6,67,521000.00,186375.11,1043.30,'Efectivo',8,'P2_Fijo',TIME '16:30:00',TIME '18:30:00',120,2552.00,7.0,0.0),
-  (88,18,65,DATE '2026-09-29',TIMESTAMPTZ '2026-09-26 15:00:00-03',2,200,112246.86,4237.64,18.87,'Efectivo',8,'P2_Fijo',TIME '16:30:00',TIME '18:30:00',120,2642.00,8.5,0.0);
-
-DO $$
-DECLARE r _seed%ROWTYPE; v_pres int; v_turno int; v_trab int; v_cred int; v_total numeric;
-BEGIN
-  IF EXISTS (SELECT 1 FROM presupuestos WHERE nota='DEMO-SEED' AND fecha_emision < '2026-10-01' AND id_presupuesto <> 94) THEN
-    RAISE NOTICE 'Ya existen datos DEMO-SEED, no se inserta nada.'; RETURN;
-  END IF;
-  -- Corrige la fecha del débito generado por la prueba inicial (presupuesto 94), si existe.
-  UPDATE movimientos_cuenta SET fecha = TIMESTAMPTZ '2025-12-10 08:30:00+00'
-   WHERE id_presupuesto = 94 AND tipo='Debito' AND EXISTS (SELECT 1 FROM presupuestos WHERE id_presupuesto=94 AND nota='DEMO-SEED');
-  FOR r IN SELECT * FROM _seed ORDER BY fecha, ini LOOP
+  (88,18,65,DATE '2026-09-29',TIMESTAMPTZ '2026-09-26 15:00:00-03',2,200,112246.86,4237.64,18.87,'Efectivo',8,'P2_Fijo',TIME '16:30:00',TIME '18:30:00',120,2642.00,8.5,0.0)
+  ) AS s(id_cliente,id_cuenta,id_inmueble,fecha,emision,servicio,m2,subtotal,traslado,km,medio,usuario,prioridad,ini,fin,dur,precio_comb,consumo,_x)
+  ORDER BY fecha, ini LOOP
     v_total := r.subtotal + r.traslado;
     INSERT INTO presupuestos(id_cliente,id_inmueble,tipo_presupuesto,recargo_logistico,monto_subtotal,descuento,monto_total,estado,
         fecha_emision,nota,monto_estimado,monto_traslado,traslado_km,traslado_consumo_100km,traslado_precio_unidad,
@@ -177,11 +170,10 @@ BEGIN
     INSERT INTO movimientos_cuenta(id_cuenta,tipo,monto,concepto,fecha,id_presupuesto,id_trabajo)
       VALUES (r.id_cuenta,'Credito',v_total,'DEMO-SEED',(r.fecha+r.fin)::timestamptz,v_pres,v_trab) RETURNING id_movimiento INTO v_cred;
     INSERT INTO pagos(id_cliente,id_trabajo,id_movimiento,monto,medio_pago,referencia_comprobante,estado,fecha_pago,id_usuario_registro)
-      VALUES (r.id_cliente,v_trab,v_cred,v_total,r.medio,'DEMO-SEED-'||v_trab,'Aprobado',(r.fecha+r.fin)::timestamptz,r.usuario);
+      VALUES (r.id_cliente,v_trab,v_cred,v_total,r.medio,'DEMO-SEED-'||v_trab,'Aprobado',(r.fecha+r.fin)::timestamptz,r.usuario::bigint);
   END LOOP;
 END $$;
 
 -- Verificación: debe mostrar un mes por fila (cobrado = lo que dibuja el gráfico)
 SELECT to_char(t.fecha_ejecucion,'YYYY-MM') mes, count(*) pagos, sum(p.monto) cobrado
   FROM pagos p JOIN trabajos_ejecutados t USING(id_trabajo) WHERE p.estado='Aprobado' GROUP BY 1 ORDER BY 1;
-COMMIT;
